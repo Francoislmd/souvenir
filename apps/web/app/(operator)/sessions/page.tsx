@@ -2,8 +2,21 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { startOfDay, endOfDay } from "@/lib/dates";
+import { formatEuros } from "@/lib/format";
 import { NewDeliverySheet } from "@/components/NewDeliverySheet";
 import { StatusBadge } from "@/components/StatusBadge";
+
+function formatSentAt(date: Date | null): string {
+  if (!date) return "—";
+  return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function maskEmail(email: string | null): string {
+  if (!email) return "—";
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  return `${local.slice(0, 2)}…@${domain}`;
+}
 
 export default async function SessionsPage() {
   const { operator } = await requireOperatorUser();
@@ -12,7 +25,12 @@ export default async function SessionsPage() {
   const [session, pastSessions] = await Promise.all([
     prisma.session.findFirst({
       where: { operatorId: operator.id, date: { gte: startOfDay(now), lte: endOfDay(now) } },
-      include: { deliveries: { include: { media: true }, orderBy: { createdAt: "desc" } } },
+      include: {
+        deliveries: {
+          include: { media: true, order: true },
+          orderBy: { createdAt: "desc" },
+        },
+      },
       orderBy: { date: "desc" },
     }),
     prisma.session.findMany({
@@ -64,32 +82,44 @@ export default async function SessionsPage() {
               <thead>
                 <tr className="border-b border-border text-xs font-medium uppercase tracking-wide text-ink-2">
                   <th className="px-2 py-2">Code</th>
+                  <th className="px-2 py-2">Client</th>
                   <th className="px-2 py-2">Médias</th>
+                  <th className="px-2 py-2">Envoyé à</th>
                   <th className="px-2 py-2">Statut</th>
-                  <th className="px-2 py-2">Galerie</th>
+                  <th className="px-2 py-2 text-right">Prix</th>
                   <th className="px-2 py-2" />
                 </tr>
               </thead>
               <tbody>
                 {deliveries.map((delivery) => {
-                  const videoCount = delivery.media.filter((media) => media.kind === "VIDEO").length;
-                  const failedCount = delivery.media.filter((media) => media.status === "FAILED").length;
+                  const videoCount = delivery.media.filter((m) => m.kind === "VIDEO").length;
+                  const photoCount = delivery.media.filter((m) => m.kind === "PHOTO").length;
+                  const failedCount = delivery.media.filter((m) => m.status === "FAILED").length;
                   return (
                     <tr key={delivery.id} className="border-b border-border last:border-0">
-                      <td className="px-2 py-3 font-mono text-xs font-semibold text-ink">{delivery.code}</td>
-                      <td className="px-2 py-3 text-ink-2">
-                        {delivery.media.length}
-                        {videoCount > 0 ? ` + ${videoCount} 🎬` : ""}
+                      <td className="px-2 py-3 font-mono text-xs font-bold text-ink">{delivery.code}</td>
+                      <td className="px-2 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          {delivery.clientName ? (
+                            <span className="text-xs font-medium text-ink">{delivery.clientName}</span>
+                          ) : null}
+                          <span className="text-xs text-ink-2">{maskEmail(delivery.clientEmail)}</span>
+                        </div>
+                      </td>
+                      <td className="px-2 py-3 text-xs text-ink-2">
+                        {photoCount > 0 ? `${photoCount} 📷` : ""}
+                        {videoCount > 0 ? ` ${videoCount} 🎬` : ""}
                         {failedCount > 0 ? (
-                          <span className="ml-1 text-danger">
-                            · {failedCount} échec{failedCount > 1 ? "s" : ""}
-                          </span>
+                          <span className="ml-1 text-danger">· {failedCount} échec{failedCount > 1 ? "s" : ""}</span>
                         ) : null}
                       </td>
+                      <td className="px-2 py-3 text-xs text-ink-2">{formatSentAt(delivery.sentAt)}</td>
                       <td className="px-2 py-3">
                         <StatusBadge status={delivery.status} />
                       </td>
-                      <td className="px-2 py-3 font-mono text-xs text-accent">/g/{delivery.code}</td>
+                      <td className="px-2 py-3 text-right text-xs font-semibold text-ink">
+                        {delivery.order ? formatEuros(delivery.order.amountCents) : "—"}
+                      </td>
                       <td className="px-2 py-3 text-right">
                         <Link
                           href={`/sessions/${delivery.id}`}
@@ -113,14 +143,20 @@ export default async function SessionsPage() {
                   href={`/sessions/${delivery.id}`}
                   className="flex items-center justify-between gap-3 rounded-card bg-canvas px-4 py-4 transition active:scale-[0.99]"
                 >
-                  <div className="flex flex-col">
-                    <span className="text-lg font-semibold tracking-wide text-ink">{delivery.code}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-base font-bold tracking-wide text-ink">{delivery.code}</span>
                     <span className="text-xs text-ink-2">
-                      {delivery.media.length} média{delivery.media.length > 1 ? "s" : ""}
-                      {delivery.clientName ? ` · ${delivery.clientName}` : ""}
+                      {delivery.clientName ?? maskEmail(delivery.clientEmail)} ·{" "}
+                      {delivery.media.length} média{delivery.media.length > 1 ? "s" : ""} ·{" "}
+                      {formatSentAt(delivery.sentAt)}
                     </span>
                   </div>
-                  <StatusBadge status={delivery.status} />
+                  <div className="flex flex-col items-end gap-1">
+                    <StatusBadge status={delivery.status} />
+                    {delivery.order ? (
+                      <span className="text-xs font-semibold text-ink">{formatEuros(delivery.order.amountCents)}</span>
+                    ) : null}
+                  </div>
                 </Link>
               </li>
             ))}
@@ -132,7 +168,7 @@ export default async function SessionsPage() {
         <section className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-ink-2">Sessions précédentes</h2>
           {pastSessions.map((past) => {
-            const purchased = past.deliveries.filter((delivery) => delivery.status === "PURCHASED").length;
+            const purchased = past.deliveries.filter((d) => d.status === "PURCHASED").length;
             return (
               <div key={past.id} className="flex items-center justify-between rounded-card border border-border bg-surface px-4 py-3">
                 <div>
@@ -140,8 +176,7 @@ export default async function SessionsPage() {
                   <p className="text-xs text-ink-2">{past.date.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</p>
                 </div>
                 <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-medium text-ink-2">
-                  {past.deliveries.length} livraison{past.deliveries.length > 1 ? "s" : ""} · {purchased} payée
-                  {purchased === 1 ? "" : "s"}
+                  {past.deliveries.length} livraison{past.deliveries.length > 1 ? "s" : ""} · {purchased} payée{purchased === 1 ? "" : "s"}
                 </span>
               </div>
             );

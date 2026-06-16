@@ -188,7 +188,6 @@ export function ImportWizard({
   }
 
   const sendableGroups = groups.filter((group) => group.mediaIds.length > 0 && (group.clientEmail || group.clientPhone));
-  const allUploaded = uploadStatus.total > 0 && uploadStatus.done === uploadStatus.total;
 
   async function handleSend(): Promise<void> {
     setSendError(null);
@@ -196,7 +195,16 @@ export function ImportWizard({
     setSending(true);
 
     try {
-      // Resolve IDB item IDs → DB media IDs (available after upload)
+      // Attendre silencieusement que les uploads se terminent (max 30 s)
+      const deadline = Date.now() + 30_000;
+      while (Date.now() < deadline) {
+        const items = await getUploadItemsForOwner(batchId);
+        const pending = items.filter((i) => i.status === "queued" || i.status === "uploading");
+        if (pending.length === 0) break;
+        await new Promise((r) => setTimeout(r, 800));
+      }
+
+      // Résoudre IDB item IDs → DB media IDs
       const idbItems = await getUploadItemsForOwner(batchId);
       const idbToMediaId = new Map(
         idbItems.filter((item) => item.mediaId).map((item) => [item.id, item.mediaId as string]),
@@ -210,7 +218,7 @@ export function ImportWizard({
         .filter((group) => group.mediaIds.length > 0);
 
       if (resolvedGroups.length === 0) {
-        setSendError("Les photos sont encore en cours d'envoi — réessaie dans quelques secondes.");
+        setSendError("Aucune photo n'est encore prête — patiente quelques secondes et réessaie.");
         setSending(false);
         return;
       }
@@ -359,14 +367,10 @@ export function ImportWizard({
           <button
             type="button"
             onClick={handleSend}
-            disabled={sendableGroups.length === 0 || sending || !allUploaded}
+            disabled={sendableGroups.length === 0 || sending}
             className="flex h-14 items-center justify-center rounded-control bg-accent text-base font-semibold text-white shadow-card transition hover:bg-accent-hover active:scale-[0.99] disabled:opacity-60"
           >
-            {sending
-              ? "Envoi en cours…"
-              : !allUploaded && uploadStatus.total > 0
-                ? `Upload en cours (${uploadStatus.done}/${uploadStatus.total})…`
-                : `Envoyer à tout le monde (${sendableGroups.length})`}
+            {sending ? "Envoi en cours…" : `Envoyer à tout le monde (${sendableGroups.length})`}
           </button>
         </section>
       ) : null}
