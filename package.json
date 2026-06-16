@@ -1,0 +1,19 @@
+{
+  "name": "souvenir",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm --filter @souvenir/web dev",
+    "worker": "pnpm --filter @souvenir/worker dev",
+    "build": "pnpm --filter @souvenir/web build",
+    "db:push": "pnpm --filter @souvenir/db db:push",
+    "db:studio": "pnpm --filter @souvenir/db db:studio",
+    "db:seed": "pnpm --filter @souvenir/db db:seed",
+    "setup:storage": "pnpm --filter @souvenir/worker setup:storage",
+    "lint": "pnpm --filter @souvenir/web lint",
+    "typecheck": "pnpm -r --parallel typecheck"
+  }
+}

@@ -1,0 +1,191 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Operator {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  logoUrl         String?
+  location        String?
+  stripeAccountId String?
+  stripeOnboarded Boolean   @default(false)
+  packPriceCents  Int       @default(2900)
+  feePercent      Int       @default(20)
+  defaultMode     Mode      @default(BOUTIQUE)
+  googleReviewUrl String?
+  instagramHandle String?
+  whatsappNumber  String?
+  deliveryMessageTemplate String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  users    User[]
+  sessions Session[]
+  events   Event[]
+}
+
+enum Mode {
+  BOUTIQUE
+  MARKETING
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  role       Role     @default(MONITEUR)
+  operatorId String
+  createdAt  DateTime @default(now())
+
+  operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  @@index([operatorId])
+}
+
+enum Role {
+  ADMIN
+  MONITEUR
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  operatorId String
+  date       DateTime @default(now())
+  label      String?
+  mode       Mode
+  createdAt  DateTime @default(now())
+
+  operator   Operator   @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  deliveries Delivery[]
+  importBatches ImportBatch[]
+
+  @@index([operatorId])
+}
+
+model ImportBatch {
+  id        String   @id @default(cuid())
+  sessionId String
+  status    String   @default("uploading") // uploading | sorted | done
+  createdAt DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  media   Media[]
+
+  @@index([sessionId])
+}
+
+model Delivery {
+  id           String         @id @default(cuid())
+  sessionId    String
+  code         String         @unique
+  token        String         @unique
+  title        String?
+  clientName   String?
+  clientPhone  String?
+  clientEmail  String?
+  consentImage Boolean        @default(false)
+  consentEmail Boolean        @default(false)
+  status         DeliveryStatus @default(CREATED)
+  claimedAt      DateTime?
+  whatsappOptInAt DateTime?
+  reviewSentAt   DateTime?
+  sentAt         DateTime?
+  createdAt    DateTime       @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  media   Media[]
+  order   Order?
+  events  Event[]
+
+  @@index([sessionId])
+}
+
+enum DeliveryStatus {
+  CREATED
+  CLAIMED
+  DELIVERED
+  PURCHASED
+}
+
+model Media {
+  id            String      @id @default(cuid())
+  deliveryId    String?
+  importBatchId String?
+  kind          MediaKind
+  originalKey String
+  previewKey  String?
+  thumbKey    String?
+  status      MediaStatus @default(UPLOADED)
+  durationSec Int?
+  sizeBytes   Int?
+  createdAt   DateTime    @default(now())
+
+  delivery    Delivery?    @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  jobs        ProcessingJob[]
+
+  @@index([deliveryId])
+  @@index([importBatchId])
+}
+
+enum MediaKind {
+  PHOTO
+  VIDEO
+}
+
+enum MediaStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  deliveryId      String   @unique
+  amountCents     Int
+  feeCents        Int
+  stripePaymentId String   @unique
+  status          String
+  createdAt       DateTime @default(now())
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+}
+
+model ProcessingJob {
+  id        String    @id @default(cuid())
+  mediaId   String
+  kind      String
+  status    String    @default("pending")
+  attempts  Int       @default(0)
+  lockedAt  DateTime?
+  createdAt DateTime  @default(now())
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([mediaId])
+}
+
+model Event {
+  id         String   @id @default(cuid())
+  deliveryId String?
+  operatorId String
+  name       String
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  operator Operator  @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  delivery Delivery? @relation(fields: [deliveryId], references: [id], onDelete: SetNull)
+
+  @@index([operatorId])
+  @@index([deliveryId])
+  @@index([name])
+}

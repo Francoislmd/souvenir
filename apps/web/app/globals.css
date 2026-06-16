@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Palette "Souvenir" — chaleureuse, outdoor : papier crème en fond, encre
+     chaude pour le texte, tangerine comme couleur de marque. */
+  --canvas: #faf7f4;
+  --surface: #ffffff;
+  --border: #ece4dc;
+  --border-strong: #ddd0c2;
+  --ink: #1f1b17;
+  --ink-2: #6e6259;
+  --muted: #a89c90;
+
+  /* Marque Souvenir — fixe, indépendante du thème opérateur (cf. .wm/Logo).
+     Utilisée pour le badge "via Souvenir" et la marque Souvenir elle-même.
+     --brand-gradient = signature "ciel" (cf. LogoMark) : bleu ciel → indigo. */
+  --brand: #4f46e5;
+  --brand-hover: #4338ca;
+  --brand-tint: #eef2ff;
+  --brand-gradient: linear-gradient(135deg, #7dd3fc 0%, #3b82f6 55%, #4f46e5 100%);
+
+  /* Accent = couleur de l'opérateur dans la galerie client (cf. .op-theme).
+     Valeur par défaut = bleu Souvenir, surchargée inline par operator.brandColor. */
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-tint: #eef2ff;
+
+  --success: #16a34a;
+  --success-tint: #f0fdf4;
+  --warning: #d97706;
+  --warning-tint: #fffbeb;
+  --danger: #dc2626;
+  --danger-tint: #fef2f2;
+}
+
+body {
+  color: var(--ink);
+  background: var(--canvas);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Nav flottante de la landing : pilule blanche translucide, façon Alan. */
+  .nav-pill {
+    background: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(255 255 255 / 0.6);
+  }
+
+  /* Sheet de paiement embarqué (CheckoutSheet) : glissement depuis le bas. */
+  @keyframes checkout-sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .shadow-card {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 6px -1px rgb(0 0 0 / 0.06);
+  }
+
+  /* Aperçu basse-déf (mode Boutique verrouillé) : flou léger façon contenu
+     "sensible"/payant Instagram — l'image floutée reste lisible en formes et
+     couleurs, un simple pictogramme cadenas centré (cercle translucide, pas
+     de bouton ni de texte) signale le verrou. */
+  .wm {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .wm-lock {
+    display: flex;
+    height: 40px;
+    width: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 0.32);
+    color: #fff;
+    backdrop-filter: blur(3px);
+  }
+  /* Flou léger appliqué à l'image : empêche de voir les détails sans masquer
+     totalement la composition. Le scale compense les bords flous. */
+  .wm-blurred {
+    transform: scale(1.04);
+    filter: blur(5px);
+  }
+
+  /* Empêche l'enregistrement des aperçus (clic droit / appui long mobile) :
+     pas de menu "Enregistrer l'image" sur iOS/Android, pas de sélection. */
+  .media-protected {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+}
