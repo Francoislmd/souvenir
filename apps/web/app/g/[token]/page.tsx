@@ -59,18 +59,23 @@ export default async function GalleryPage({
   const unlocked = isMarketing || delivery.status === "PURCHASED";
 
   const priorOpens = await prisma.event.count({ where: { deliveryId: delivery.id, name: "gallery_opened" } });
-  await track("gallery_opened", { operatorId: operator.id, deliveryId: delivery.id });
 
-  // Parcours simplifié : le scan ouvre la galerie directement, donc la 1ère ouverture
-  // EST le claim (dénominateur de l'attach rate) et vaut consentement implicite.
+  // Parcours simplifié : la 1ère ouverture est le claim et vaut consentement implicite.
+  // track + claim en parallèle — aucune dépendance entre les deux.
   let consentImage = delivery.consentImage;
+  const sideEffects: Promise<unknown>[] = [
+    track("gallery_opened", { operatorId: operator.id, deliveryId: delivery.id }),
+  ];
   if (priorOpens === 0) {
     consentImage = true;
-    await prisma.delivery.update({
-      where: { id: delivery.id },
-      data: { consentImage: true, status: "CLAIMED", claimedAt: new Date() },
-    });
+    sideEffects.push(
+      prisma.delivery.update({
+        where: { id: delivery.id },
+        data: { consentImage: true, status: "CLAIMED", claimedAt: new Date() },
+      }),
+    );
   }
+  await Promise.all(sideEffects);
 
   const media: GalleryMedia[] = delivery.media.map((item) => ({
     id: item.id,

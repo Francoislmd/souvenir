@@ -1,4 +1,4 @@
-import type { DeliveryStatus, EventName } from "@souvenir/db";
+import type { DeliveryStatus } from "@souvenir/db";
 import { prisma } from "./prisma";
 
 export interface AttachRate {
@@ -21,18 +21,19 @@ export interface FunnelStep {
   count: number;
 }
 
-async function countDistinctDeliveries(operatorId: string, name: EventName): Promise<number> {
-  const rows = await prisma.event.findMany({
-    where: { operatorId, name, deliveryId: { not: null } },
-    select: { deliveryId: true },
-    distinct: ["deliveryId"],
-  });
-  return rows.length;
+// COUNT(DISTINCT) en SQL — évite de charger toutes les lignes en mémoire.
+async function countDistinctDeliveries(operatorId: string, name: string): Promise<number> {
+  const result = await prisma.$queryRaw<[{ count: bigint }]>`
+    SELECT COUNT(DISTINCT "deliveryId") as count
+    FROM "Event"
+    WHERE "operatorId" = ${operatorId}
+      AND name = ${name}
+      AND "deliveryId" IS NOT NULL
+  `;
+  return Number(result[0]?.count ?? 0);
 }
 
 export async function getFunnel(operatorId: string): Promise<FunnelStep[]> {
-  // Le scan ouvre directement la galerie : "récupérée" et "ouverte" sont
-  // désormais le même événement (1ère ouverture = claim).
   const [created, opened, checkout, paid] = await Promise.all([
     prisma.delivery.count({ where: { session: { operatorId } } }),
     prisma.delivery.count({ where: { session: { operatorId }, claimedAt: { not: null } } }),
@@ -57,15 +58,16 @@ export interface GmvSummary {
 }
 
 export async function getGmv(operatorId: string): Promise<GmvSummary> {
-  const orders = await prisma.order.findMany({
+  const agg = await prisma.order.aggregate({
     where: { delivery: { session: { operatorId } }, status: "succeeded" },
-    select: { amountCents: true, feeCents: true },
+    _sum: { amountCents: true, feeCents: true },
+    _count: true,
   });
 
-  const totalCents = orders.reduce((sum, order) => sum + order.amountCents, 0);
-  const souvenirCents = orders.reduce((sum, order) => sum + order.feeCents, 0);
+  const totalCents = agg._sum.amountCents ?? 0;
+  const souvenirCents = agg._sum.feeCents ?? 0;
   const operatorCents = totalCents - souvenirCents;
-  const orderCount = orders.length;
+  const orderCount = agg._count;
   const averageCents = orderCount > 0 ? Math.round(totalCents / orderCount) : 0;
 
   return { totalCents, operatorCents, souvenirCents, averageCents, orderCount };
@@ -75,7 +77,7 @@ function median(values: number[]): number | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!;
 }
 
 export async function getMedianClaimDelaySec(operatorId: string): Promise<number | null> {
@@ -85,7 +87,7 @@ export async function getMedianClaimDelaySec(operatorId: string): Promise<number
   });
 
   const delays = deliveries
-    .map((delivery) => (delivery.claimedAt!.getTime() - delivery.createdAt.getTime()) / 1000)
+    .map((d) => (d.claimedAt!.getTime() - d.createdAt.getTime()) / 1000)
     .filter((delay) => delay >= 0);
 
   return median(delays);
@@ -98,7 +100,7 @@ export async function getMedianPurchaseDelaySec(operatorId: string): Promise<num
   });
 
   const delays = deliveries
-    .map((delivery) => (delivery.order!.createdAt.getTime() - delivery.claimedAt!.getTime()) / 1000)
+    .map((d) => (d.order!.createdAt.getTime() - d.claimedAt!.getTime()) / 1000)
     .filter((delay) => delay >= 0);
 
   return median(delays);
@@ -122,13 +124,13 @@ export async function getRecentDeliveries(operatorId: string, limit = 6): Promis
     take: limit,
   });
 
-  return deliveries.map((delivery) => ({
-    id: delivery.id,
-    code: delivery.code,
-    clientName: delivery.clientName,
-    clientEmail: delivery.clientEmail,
-    status: delivery.status,
-    amountCents: delivery.order?.amountCents ?? null,
-    createdAt: delivery.createdAt,
+  return deliveries.map((d) => ({
+    id: d.id,
+    code: d.code,
+    clientName: d.clientName,
+    clientEmail: d.clientEmail,
+    status: d.status,
+    amountCents: d.order?.amountCents ?? null,
+    createdAt: d.createdAt,
   }));
 }
