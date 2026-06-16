@@ -21,8 +21,8 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-const BRAND_GRADIENT = "linear-gradient(135deg, #FFC857 0%, #FF6F3C 55%, #F0386B 100%)";
-const BRAND_PINK = "#F0386B";
+const BRAND_GRADIENT = "linear-gradient(135deg, #7DD3FC 0%, #3B82F6 55%, #4F46E5 100%)";
+const BRAND_PINK = "#4F46E5";
 
 export function renderDeliveryEmailHtml({
   operatorName,
@@ -49,7 +49,7 @@ export function renderDeliveryEmailHtml({
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td style="padding:0 4px 20px 4px; text-align:center;">
-            <span style="font-size:13px; font-weight:800; letter-spacing:0.08em; color:#F0386B; text-transform:uppercase;">Souvenir</span>
+            <span style="font-size:13px; font-weight:800; letter-spacing:0.08em; color:#4F46E5; text-transform:uppercase;">Souvenir</span>
             <span style="font-size:13px; color:#C9BDB3;"> &middot; </span>
             <span style="font-size:13px; font-weight:600; color:#6E6259;">${safeOperatorName}</span>
           </td>

@@ -13,13 +13,31 @@ export default async function ImportBatchPage({ params }: { params: { batchId: s
   if (!batch) notFound();
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-ink">Livraison groupée</h1>
-        <p className="text-sm text-ink-2">Upload tout le lot, puis répartis les photos par personne.</p>
+    <div className="relative min-h-[calc(100vh-80px)] overflow-hidden">
+      {/* Decorative background — Souvenir brand palette */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+        <div
+          className="absolute -top-24 -right-16 h-[480px] w-[420px] rounded-full blur-[150px]"
+          style={{ background: "#7DD3FC", opacity: 0.28 }}
+        />
+        <div
+          className="absolute top-[35%] -left-20 h-[460px] w-[400px] rounded-full blur-[130px]"
+          style={{ background: "#4F46E5", opacity: 0.15 }}
+        />
+        <div
+          className="absolute bottom-0 right-0 h-[440px] w-[380px] rounded-full blur-[120px]"
+          style={{ background: "#818CF8", opacity: 0.14 }}
+        />
       </div>
 
-      <ImportWizard batchId={batch.id} operatorName={operator.name} messageTemplate={operator.deliveryMessageTemplate} />
-    </main>
+      <main className="relative z-[1] mx-auto flex w-full max-w-xl flex-col gap-6">
+        <div>
+          <h1 className="font-display text-2xl font-extrabold text-ink">Livraison groupée</h1>
+          <p className="mt-1 text-sm text-ink-2">Upload tout le lot, puis répartis les photos par personne.</p>
+        </div>
+
+        <ImportWizard batchId={batch.id} operatorName={operator.name} messageTemplate={operator.deliveryMessageTemplate} />
+      </main>
+    </div>
   );
 }

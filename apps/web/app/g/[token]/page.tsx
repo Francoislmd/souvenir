@@ -199,15 +199,15 @@ export default async function GalleryPage({
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
           className="absolute -top-32 right-0 h-[500px] w-[420px] rounded-full blur-[150px]"
-          style={{ background: CLIENT_BRAND_COLOR, opacity: 0.18 }}
+          style={{ background: "#7DD3FC", opacity: 0.28 }}
         />
         <div
-          className="absolute top-[38%] -left-24 h-[460px] w-[380px] rounded-full bg-violet-600 blur-[130px]"
-          style={{ opacity: 0.12 }}
+          className="absolute top-[38%] -left-24 h-[460px] w-[380px] rounded-full blur-[130px]"
+          style={{ background: "#3B82F6", opacity: 0.15 }}
         />
         <div
-          className="absolute bottom-32 right-0 h-[420px] w-[360px] rounded-full bg-indigo-500 blur-[120px]"
-          style={{ opacity: 0.09 }}
+          className="absolute bottom-32 right-0 h-[420px] w-[360px] rounded-full blur-[120px]"
+          style={{ background: "#4F46E5", opacity: 0.12 }}
         />
       </div>
 

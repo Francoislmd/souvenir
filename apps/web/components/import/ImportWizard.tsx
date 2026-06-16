@@ -368,7 +368,8 @@ export function ImportWizard({
             type="button"
             onClick={handleSend}
             disabled={sendableGroups.length === 0 || sending}
-            className="flex h-14 items-center justify-center rounded-control bg-accent text-base font-semibold text-white shadow-card transition hover:bg-accent-hover active:scale-[0.99] disabled:opacity-60"
+            className="flex h-14 items-center justify-center rounded-full text-base font-semibold text-white shadow-card transition active:scale-[0.99] disabled:opacity-60"
+            style={{ background: "var(--brand-gradient)" }}
           >
             {sending ? "Envoi en cours…" : `Envoyer à tout le monde (${sendableGroups.length})`}
           </button>
