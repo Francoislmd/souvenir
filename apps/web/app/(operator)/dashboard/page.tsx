@@ -8,7 +8,7 @@ import {
   getRecentDeliveries,
   type FunnelStep,
 } from "@/lib/metrics";
-import { formatEuros, formatDuration, maskPhone } from "@/lib/format";
+import { formatEuros, formatDuration } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export default async function DashboardPage() {
@@ -105,7 +105,7 @@ export default async function DashboardPage() {
                 <tr className="border-b border-border text-xs font-medium uppercase tracking-wide text-ink-2">
                   <th className="px-2 py-2">Code</th>
                   <th className="px-2 py-2">Client</th>
-                  <th className="px-2 py-2">Médias</th>
+                  <th className="px-2 py-2">Date</th>
                   <th className="px-2 py-2">Statut</th>
                   <th className="px-2 py-2 text-right">Montant</th>
                 </tr>
@@ -114,12 +114,19 @@ export default async function DashboardPage() {
                 {recent.map((delivery) => (
                   <tr key={delivery.id} className="border-b border-border last:border-0">
                     <td className="px-2 py-3 font-mono text-xs font-semibold text-ink">{delivery.code}</td>
-                    <td className="px-2 py-3 text-ink-2">
-                      {delivery.clientPhone ? maskPhone(delivery.clientPhone) : "—"}
+                    <td className="px-2 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        {delivery.clientName ? (
+                          <span className="text-xs font-medium text-ink">{delivery.clientName}</span>
+                        ) : null}
+                        <span className="text-xs text-ink-2">
+                          {delivery.clientEmail ? maskEmail(delivery.clientEmail) : "—"}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-2 py-3 text-ink-2">
-                      {delivery.mediaCount}
-                      {delivery.videoCount > 0 ? ` + ${delivery.videoCount} 🎬` : ""}
+                    <td className="px-2 py-3 text-xs text-ink-2">
+                      {delivery.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}{" "}
+                      {delivery.createdAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                     </td>
                     <td className="px-2 py-3">
                       <StatusBadge status={delivery.status} />
@@ -133,10 +140,16 @@ export default async function DashboardPage() {
             </table>
           </div>
         )}
-        <p className="mt-3 text-xs text-ink-2">Téléphones masqués · RGPD §11</p>
+        <p className="mt-3 text-xs text-ink-2">Emails masqués · RGPD §11</p>
       </section>
     </main>
   );
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  return `${local.slice(0, 2)}…@${domain}`;
 }
 
 function MetricCard({ label, value }: { label: string; value: string }) {

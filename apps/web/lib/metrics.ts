@@ -107,17 +107,17 @@ export async function getMedianPurchaseDelaySec(operatorId: string): Promise<num
 export interface RecentDelivery {
   id: string;
   code: string;
-  clientPhone: string | null;
-  mediaCount: number;
-  videoCount: number;
+  clientName: string | null;
+  clientEmail: string | null;
   status: DeliveryStatus;
   amountCents: number | null;
+  createdAt: Date;
 }
 
 export async function getRecentDeliveries(operatorId: string, limit = 6): Promise<RecentDelivery[]> {
   const deliveries = await prisma.delivery.findMany({
     where: { session: { operatorId } },
-    include: { media: { select: { kind: true } }, order: { select: { amountCents: true } } },
+    include: { order: { select: { amountCents: true } } },
     orderBy: { createdAt: "desc" },
     take: limit,
   });
@@ -125,10 +125,10 @@ export async function getRecentDeliveries(operatorId: string, limit = 6): Promis
   return deliveries.map((delivery) => ({
     id: delivery.id,
     code: delivery.code,
-    clientPhone: delivery.clientPhone,
-    mediaCount: delivery.media.length,
-    videoCount: delivery.media.filter((media) => media.kind === "VIDEO").length,
+    clientName: delivery.clientName,
+    clientEmail: delivery.clientEmail,
     status: delivery.status,
     amountCents: delivery.order?.amountCents ?? null,
+    createdAt: delivery.createdAt,
   }));
 }

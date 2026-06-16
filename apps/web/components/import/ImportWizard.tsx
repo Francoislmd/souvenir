@@ -56,7 +56,7 @@ export function ImportWizard({
   const [sendError, setSendError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<FinalizeResult[] | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ total: 0, done: 0, hasError: false, failedMediaIds: [] });
+  const [, setUploadStatus] = useState<UploadStatus>({ total: 0, done: 0, hasError: false, failedMediaIds: [] });
   const objectUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
