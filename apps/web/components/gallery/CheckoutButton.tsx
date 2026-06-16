@@ -5,7 +5,15 @@ import { formatEuros } from "@/lib/format";
 import { stripePromise } from "@/lib/stripe-client";
 import { CheckoutSheet } from "./CheckoutSheet";
 
-export function CheckoutButton({ deliveryId, priceCents }: { deliveryId: string; priceCents: number }) {
+export function CheckoutButton({
+  deliveryId,
+  priceCents,
+  inline = false,
+}: {
+  deliveryId: string;
+  priceCents: number;
+  inline?: boolean;
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -45,28 +53,42 @@ export function CheckoutButton({ deliveryId, priceCents }: { deliveryId: string;
     }
   }
 
+  const buttonLabel = loading ? (
+    "Chargement…"
+  ) : (
+    <>
+      Débloquer mes souvenirs
+      <span className="flex h-10 items-center rounded-full bg-white/15 px-4 text-base">{formatEuros(priceCents)}</span>
+    </>
+  );
+
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 p-4">
-        <button
-          type="button"
-          onClick={handleClick}
-          disabled={loading}
-          className="flex h-14 items-center gap-3 rounded-full bg-accent pl-6 pr-2 text-base font-semibold text-white shadow-xl shadow-black/20 transition hover:bg-accent-hover active:scale-[0.99] disabled:opacity-60"
-        >
-          {loading ? (
-            "Chargement…"
-          ) : (
-            <>
-              Débloquer mes souvenirs
-              <span className="flex h-10 items-center rounded-full bg-white/15 px-4 text-base">
-                {formatEuros(priceCents)}
-              </span>
-            </>
-          )}
-        </button>
-        {error ? <p className="rounded-full bg-surface px-3 py-1 text-center text-xs text-danger shadow-card">{error}</p> : null}
-      </div>
+      {inline ? (
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={handleClick}
+            disabled={loading}
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-accent pl-6 pr-2 text-base font-semibold text-white shadow-card transition hover:bg-accent-hover active:scale-[0.99] disabled:opacity-60"
+          >
+            {buttonLabel}
+          </button>
+          {error ? <p className="text-center text-xs text-danger">{error}</p> : null}
+        </div>
+      ) : (
+        <div className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 p-4">
+          <button
+            type="button"
+            onClick={handleClick}
+            disabled={loading}
+            className="flex h-14 items-center gap-3 rounded-full bg-accent pl-6 pr-2 text-base font-semibold text-white shadow-xl shadow-black/20 transition hover:bg-accent-hover active:scale-[0.99] disabled:opacity-60"
+          >
+            {buttonLabel}
+          </button>
+          {error ? <p className="rounded-full bg-surface px-3 py-1 text-center text-xs text-danger shadow-card">{error}</p> : null}
+        </div>
+      )}
 
       {clientSecret ? (
         <CheckoutSheet

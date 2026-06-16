@@ -10,10 +10,12 @@ export function MediaFeed({
   media,
   token,
   locked,
+  gridClassName,
 }: {
   media: GalleryMedia[];
   token: string;
   locked: boolean;
+  gridClassName?: string;
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -21,7 +23,7 @@ export function MediaFeed({
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-0.5">
+      <div className={gridClassName ?? "grid grid-cols-3 gap-0.5"}>
         {media.map((item, index) => (
           <MediaTile key={item.id} item={item} locked={locked} onOpen={() => setActiveIndex(index)} />
         ))}
