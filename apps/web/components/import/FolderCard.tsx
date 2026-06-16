@@ -34,15 +34,18 @@ export function FolderCard({
           </span>
           <span className="text-sm font-semibold text-ink">{group.label}</span>
         </span>
-        {group.mediaIds.length === 0 ? (
-          <button type="button" onClick={onRemove} className="text-xs font-medium text-ink-2 hover:text-danger">
-            Supprimer
-          </button>
-        ) : (
-          <span className="text-xs text-ink-2">
-            {group.mediaIds.length} média{group.mediaIds.length > 1 ? "s" : ""}
-          </span>
-        )}
+        <span className="flex items-center gap-3">
+          {group.mediaIds.length > 0 ? (
+            <span className="text-xs text-ink-2">
+              {group.mediaIds.length} média{group.mediaIds.length > 1 ? "s" : ""}
+            </span>
+          ) : null}
+          {otherGroups.length > 0 ? (
+            <button type="button" onClick={onRemove} className="text-xs font-medium text-ink-2 hover:text-danger">
+              Supprimer
+            </button>
+          ) : null}
+        </span>
       </div>
 
       {group.mediaIds.length > 0 ? (

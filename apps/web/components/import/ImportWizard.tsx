@@ -158,7 +158,15 @@ export function ImportWizard({
   }
 
   function removeGroup(groupId: string): void {
-    setGroups((prev) => prev.filter((group) => group.id !== groupId));
+    setGroups((prev) => {
+      const removed = prev.find((g) => g.id === groupId);
+      const remaining = prev.filter((g) => g.id !== groupId);
+      if (!removed || remaining.length === 0) return remaining;
+      if (removed.mediaIds.length === 0) return remaining;
+      // Redistribute orphaned media to the first remaining group
+      const [first, ...rest] = remaining;
+      return [{ ...first, mediaIds: [...first.mediaIds, ...removed.mediaIds] }, ...rest];
+    });
   }
 
   const sendableGroups = groups.filter((group) => group.mediaIds.length > 0 && (group.clientEmail || group.clientPhone));
@@ -287,20 +295,6 @@ export function ImportWizard({
 
       {step === 2 ? (
         <section className="flex flex-col gap-3">
-          {!allUploaded && uploadStatus.total > 0 ? (
-            <div className="flex items-center gap-3 rounded-card border border-border bg-canvas px-4 py-3">
-              <span className="animate-spin text-base">✨</span>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-ink">
-                  Upload en cours… {uploadStatus.done} / {uploadStatus.total}
-                </span>
-                {uploadStatus.hasError ? (
-                  <span className="text-xs text-warning">Le réseau a coupé — reprend tout seul</span>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-
           {groups.map((group, index) => (
             <FolderCard
               key={group.id}
