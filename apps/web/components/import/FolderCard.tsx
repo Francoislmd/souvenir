@@ -13,6 +13,8 @@ export function FolderCard({
   otherGroups,
   onChange,
   onMoveMedia,
+  onCopyMedia,
+  onRemoveMedia,
   onRemove,
 }: {
   group: ImportGroup;
@@ -21,6 +23,8 @@ export function FolderCard({
   otherGroups: { id: string; label: string }[];
   onChange: (patch: Partial<ImportGroup>) => void;
   onMoveMedia: (mediaId: string, targetGroupId: string | "new") => void;
+  onCopyMedia: (mediaId: string, targetGroupId: string) => void;
+  onRemoveMedia: (mediaId: string) => void;
   onRemove: () => void;
 }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -72,30 +76,48 @@ export function FolderCard({
                   ⋯
                 </button>
                 {openMenu === mediaId ? (
-                  <div className="absolute right-1 top-8 z-10 flex w-40 flex-col overflow-hidden rounded-control border border-border bg-surface py-1 shadow-card">
-                    <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">Déplacer vers</p>
-                    {otherGroups.map((other) => (
-                      <button
-                        key={other.id}
-                        type="button"
-                        onClick={() => {
-                          onMoveMedia(mediaId, other.id);
-                          setOpenMenu(null);
-                        }}
-                        className="px-3 py-1.5 text-left text-sm text-ink hover:bg-canvas"
-                      >
-                        {other.label}
-                      </button>
-                    ))}
+                  <div className="absolute right-1 top-8 z-10 flex w-44 flex-col overflow-hidden rounded-control border border-border bg-surface py-1 shadow-card">
+                    {otherGroups.length > 0 ? (
+                      <>
+                        <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">Déplacer vers</p>
+                        {otherGroups.map((other) => (
+                          <button
+                            key={other.id}
+                            type="button"
+                            onClick={() => { onMoveMedia(mediaId, other.id); setOpenMenu(null); }}
+                            className="px-3 py-1.5 text-left text-sm text-ink hover:bg-canvas"
+                          >
+                            {other.label}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => { onMoveMedia(mediaId, "new"); setOpenMenu(null); }}
+                          className="px-3 py-1.5 text-left text-sm font-medium text-accent hover:bg-accent-tint"
+                        >
+                          + Nouveau dossier
+                        </button>
+                        <hr className="my-1 border-border" />
+                        <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">Copier aussi dans</p>
+                        {otherGroups.map((other) => (
+                          <button
+                            key={`copy-${other.id}`}
+                            type="button"
+                            onClick={() => { onCopyMedia(mediaId, other.id); setOpenMenu(null); }}
+                            className="px-3 py-1.5 text-left text-sm text-ink hover:bg-canvas"
+                          >
+                            {other.label}
+                          </button>
+                        ))}
+                        <hr className="my-1 border-border" />
+                      </>
+                    ) : null}
                     <button
                       type="button"
-                      onClick={() => {
-                        onMoveMedia(mediaId, "new");
-                        setOpenMenu(null);
-                      }}
-                      className="px-3 py-1.5 text-left text-sm font-medium text-accent hover:bg-accent-tint"
+                      onClick={() => { onRemoveMedia(mediaId); setOpenMenu(null); }}
+                      className="px-3 py-1.5 text-left text-sm font-medium text-danger hover:bg-danger-tint"
                     >
-                      + Nouveau dossier
+                      Retirer ce média
                     </button>
                   </div>
                 ) : null}

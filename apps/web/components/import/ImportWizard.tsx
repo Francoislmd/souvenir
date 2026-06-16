@@ -141,6 +141,23 @@ export function ImportWizard({
     });
   }
 
+  function copyMedia(mediaId: string, targetGroupId: string): void {
+    setGroups((prev) =>
+      prev.map((group) => {
+        if (group.id !== targetGroupId || group.mediaIds.includes(mediaId)) return group;
+        return { ...group, mediaIds: [...group.mediaIds, mediaId] };
+      }),
+    );
+  }
+
+  function removeMedia(groupId: string, mediaId: string): void {
+    setGroups((prev) =>
+      prev.map((group) =>
+        group.id === groupId ? { ...group, mediaIds: group.mediaIds.filter((id) => id !== mediaId) } : group,
+      ),
+    );
+  }
+
   function addEmptyGroup(): void {
     setGroups((prev) => [
       ...prev,
@@ -310,6 +327,8 @@ export function ImportWizard({
                 })}
               onChange={(patch) => updateGroup(group.id, patch)}
               onMoveMedia={(mediaId, target) => moveMedia(group.id, mediaId, target)}
+              onCopyMedia={(mediaId, targetGroupId) => copyMedia(mediaId, targetGroupId)}
+              onRemoveMedia={(mediaId) => removeMedia(group.id, mediaId)}
               onRemove={() => removeGroup(group.id)}
             />
           ))}

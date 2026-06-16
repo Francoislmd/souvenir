@@ -44,12 +44,18 @@ export async function POST(request: Request, { params }: { params: { batchId: st
     }
 
     const batchMediaIds = new Set(batch.media.map((media) => media.id));
+    const claimedMediaIds = new Set<string>(); // track media already assigned to a delivery
 
     const deliveries: { id: string; code: string; clientName: string | null; emailSent: boolean; smsSent: boolean; sendErrors: string[] }[] = [];
 
     for (const group of parsed.data.groups) {
-      const mediaIds = group.mediaIds.filter((id) => batchMediaIds.has(id));
-      if (mediaIds.length === 0) continue;
+      const allGroupMediaIds = group.mediaIds.filter((id) => batchMediaIds.has(id));
+      if (allGroupMediaIds.length === 0) continue;
+
+      // Split between first-claim (direct assign) and copies (media shared across groups)
+      const directIds = allGroupMediaIds.filter((id) => !claimedMediaIds.has(id));
+      const copyIds = allGroupMediaIds.filter((id) => claimedMediaIds.has(id));
+      directIds.forEach((id) => claimedMediaIds.add(id));
 
       const code = await generateUniqueCode();
 
@@ -65,10 +71,29 @@ export async function POST(request: Request, { params }: { params: { batchId: st
         },
       });
 
-      await prisma.media.updateMany({
-        where: { id: { in: mediaIds }, importBatchId: batch.id },
-        data: { deliveryId: delivery.id, importBatchId: null },
-      });
+      if (directIds.length > 0) {
+        await prisma.media.updateMany({
+          where: { id: { in: directIds }, importBatchId: batch.id },
+          data: { deliveryId: delivery.id, importBatchId: null },
+        });
+      }
+
+      if (copyIds.length > 0) {
+        // Photo shared across multiple groups → clone the media record
+        const originals = await prisma.media.findMany({ where: { id: { in: copyIds } } });
+        await prisma.media.createMany({
+          data: originals.map((m) => ({
+            deliveryId: delivery.id,
+            kind: m.kind,
+            originalKey: m.originalKey,
+            previewKey: m.previewKey,
+            thumbKey: m.thumbKey,
+            status: m.status,
+            durationSec: m.durationSec,
+            sizeBytes: m.sizeBytes,
+          })),
+        });
+      }
 
       await track("delivery_created", { operatorId: operator.id, deliveryId: delivery.id });
 
