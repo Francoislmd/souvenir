@@ -60,8 +60,9 @@ export function ImportWizard({
   const objectUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
+    const urls = objectUrlsRef.current;
     return () => {
-      for (const url of objectUrlsRef.current) {
+      for (const url of urls) {
         URL.revokeObjectURL(url);
       }
     };
