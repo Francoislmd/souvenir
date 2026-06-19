@@ -90,14 +90,16 @@ export function MediaLightbox({
           >
             <source src={item.previewUrl} />
           </video>
-        ) : (
-          <div
-            role="img"
-            aria-label=""
-            className={`media-protected h-full w-full bg-contain bg-center bg-no-repeat ${isLocked ? "wm-blurred" : ""}`}
-            style={{ backgroundImage: item.previewUrl ? `url(${item.previewUrl})` : undefined }}
+        ) : item.previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={item.id}
+            src={item.previewUrl}
+            alt=""
+            draggable={false}
+            className={`media-protected h-full w-full object-contain ${isLocked ? "wm-blurred" : ""}`}
           />
-        )}
+        ) : null}
 
         {isLocked ? (
           <div className="wm">

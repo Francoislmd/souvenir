@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
+    after: true,
     serverComponentsExternalPackages: ["@prisma/client", "prisma"],
     outputFileTracingIncludes: {
       "/**": [

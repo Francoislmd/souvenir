@@ -64,13 +64,14 @@ export default function Home() {
         <div className="relative mx-auto hidden h-[34rem] w-full md:block">
           {/* Back card */}
           <SocialCard
-            className="absolute left-0 top-10 -rotate-[8deg] scale-[0.87] opacity-80"
+            className="absolute left-0 top-10 -rotate-[8deg] scale-[0.87] opacity-85"
             photo="/hero-jetski.jpg"
             school="Nautique Côte d'Azur"
             location="Antibes · Jet ski"
             initials="NA"
             avatarColor="#0EA5E9"
             likes={34}
+            photoCount={8}
             isSmall
           />
 
@@ -83,6 +84,7 @@ export default function Home() {
             initials="VP"
             avatarColor="#4F46E5"
             likes={61}
+            photoCount={14}
           />
 
           {/* Floating badges */}
@@ -280,6 +282,7 @@ function SocialCard({
   avatarColor,
   likes,
   isSmall = false,
+  photoCount = 12,
 }: {
   className?: string;
   photo: string;
@@ -289,23 +292,36 @@ function SocialCard({
   avatarColor: string;
   likes: number;
   isSmall?: boolean;
+  photoCount?: number;
 }) {
-  const w = isSmall ? "w-[195px]" : "w-[235px]";
+  const w = isSmall ? "w-[195px]" : "w-[252px]";
   return (
-    <div className={`${w} overflow-hidden rounded-[22px] bg-white shadow-2xl ${className}`}>
+    <div
+      className={`${w} overflow-hidden rounded-[22px] bg-white ${className}`}
+      style={{
+        boxShadow:
+          "0 24px 64px -12px rgba(0,0,0,0.22), 0 4px 16px -4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,1)",
+      }}
+    >
       {/* Header */}
       <div className="flex items-center gap-2.5 px-3 py-2.5">
         <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-          style={{ background: avatarColor }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+          style={{
+            background: avatarColor,
+            boxShadow: "0 0 0 2px white, 0 0 0 3.5px rgba(0,0,0,0.08)",
+          }}
         >
           {initials}
         </span>
         <div className="flex min-w-0 flex-col leading-tight">
-          <span className="truncate text-[11px] font-semibold text-[#0F172A]">{school}</span>
+          <span className="truncate text-[11.5px] font-semibold text-[#0F172A]">{school}</span>
           <span className="truncate text-[10px] text-[#94A3B8]">{location}</span>
         </div>
-        <span className="ml-auto shrink-0 rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#4F46E5]">
+        <span
+          className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+          style={{ background: "linear-gradient(135deg, #818CF8 0%, #4F46E5 100%)" }}
+        >
           HD
         </span>
       </div>
@@ -317,23 +333,44 @@ function SocialCard({
           alt={school}
           fill
           className="object-cover"
-          sizes={isSmall ? "195px" : "235px"}
+          sizes={isSmall ? "195px" : "252px"}
         />
-        {/* Subtle gradient bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
+        {/* Photo count pill */}
+        {!isSmall && (
+          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/30 px-2 py-1 backdrop-blur-sm">
+            <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 text-white" stroke="currentColor" strokeWidth="1.3">
+              <path d="M10 8.5a.75.75 0 0 1-.75.75H2.75A.75.75 0 0 1 2 8.5v-5c0-.414.336-.75.75-.75H3.5l.75-1h3.5l.75 1h.75c.414 0 .75.336.75.75v5Z" strokeLinejoin="round" />
+              <circle cx="6" cy="6.25" r="1.5" />
+            </svg>
+            <span className="text-[9.5px] font-semibold text-white">{photoCount}</span>
+          </div>
+        )}
         {/* Lock badge */}
-        <div className="absolute bottom-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 backdrop-blur-sm">
+        <div className="absolute bottom-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 backdrop-blur-sm ring-1 ring-white/20">
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-white">
-            <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-            <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 px-3 py-2.5">
-        <span className="text-[11px] text-[#475569]">❤️ {likes}</span>
-        <span className="text-[11px] text-[#475569]">📤 Partager</span>
+      <div className="flex items-center gap-3 border-t border-[#F1F5F9] px-3 py-2.5">
+        <span className="flex items-center gap-1 text-[#F43F5E]">
+          <svg viewBox="0 0 14 14" fill="#F43F5E" className="h-3 w-3">
+            <path d="M7 12S1.5 8.5 1.5 4.5a3.5 3.5 0 0 1 5.5-2.88A3.5 3.5 0 0 1 12.5 4.5C12.5 8.5 7 12 7 12Z" />
+          </svg>
+          <span className="text-[11px] font-medium">{likes}</span>
+        </span>
+        <span className="flex items-center gap-1.5 text-[#64748B]">
+          <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth="1.4">
+            <path d="M7 9V2.5M4.5 5 7 2.5 9.5 5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2.5 8.5v2.25c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75V8.5" strokeLinecap="round" />
+          </svg>
+          <span className="text-[11px]">Partager</span>
+        </span>
         <span className="ml-auto text-[10px] text-[#94A3B8]">il y a 3 min</span>
       </div>
     </div>

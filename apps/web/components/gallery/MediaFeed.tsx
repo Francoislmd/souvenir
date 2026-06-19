@@ -6,6 +6,8 @@ import { MediaLightbox } from "./MediaLightbox";
 
 export type { GalleryMedia };
 
+const PRIORITY_COUNT = 6; // premières tuiles eager (2 lignes × 3 colonnes)
+
 export function MediaFeed({
   media,
   token,
@@ -25,7 +27,13 @@ export function MediaFeed({
     <>
       <div className={gridClassName ?? "grid grid-cols-3 gap-0.5"}>
         {media.map((item, index) => (
-          <MediaTile key={item.id} item={item} locked={locked} onOpen={() => setActiveIndex(index)} />
+          <MediaTile
+            key={item.id}
+            item={item}
+            locked={locked}
+            priority={index < PRIORITY_COUNT}
+            onOpen={() => setActiveIndex(index)}
+          />
         ))}
       </div>
 

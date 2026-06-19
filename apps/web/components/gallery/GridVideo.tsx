@@ -29,7 +29,7 @@ export function GridVideo({ previewUrl, thumbUrl }: { previewUrl: string; thumbU
       muted
       loop
       playsInline
-      preload="metadata"
+      preload="none"
       poster={thumbUrl ?? undefined}
       onContextMenu={(event) => event.preventDefault()}
       className="media-protected h-full w-full bg-black object-cover"

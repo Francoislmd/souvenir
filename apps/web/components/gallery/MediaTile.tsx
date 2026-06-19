@@ -14,10 +14,12 @@ export interface GalleryMedia {
 export function MediaTile({
   item,
   locked,
+  priority,
   onOpen,
 }: {
   item: GalleryMedia;
   locked: boolean;
+  priority?: boolean;
   onOpen: () => void;
 }) {
   const isLocked = locked && item.status === "READY";
@@ -36,14 +38,17 @@ export function MediaTile({
         </div>
       ) : item.kind === "VIDEO" && item.previewUrl ? (
         <GridVideo previewUrl={item.previewUrl} thumbUrl={item.thumbUrl} />
-      ) : (
-        <div
-          role="img"
-          aria-label=""
-          className={`media-protected h-full w-full bg-cover bg-center ${isLocked ? "wm-blurred" : ""}`}
-          style={{ backgroundImage: item.previewUrl ? `url(${item.previewUrl})` : undefined }}
+      ) : item.previewUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.previewUrl}
+          alt=""
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          draggable={false}
+          className={`media-protected h-full w-full object-cover ${isLocked ? "wm-blurred" : ""}`}
         />
-      )}
+      ) : null}
 
       {item.kind === "VIDEO" && item.status === "READY" ? (
         <span className="absolute right-1.5 top-1.5 z-[2] flex h-6 w-6 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm">
