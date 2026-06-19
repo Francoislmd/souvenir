@@ -3,11 +3,13 @@
 export function ReviewLink({
   token,
   href,
+  platform,
   className,
   children,
 }: {
   token: string;
   href: string;
+  platform: "google" | "trustpilot" | "tripadvisor";
   className?: string;
   children: React.ReactNode;
 }) {
@@ -15,7 +17,7 @@ export function ReviewLink({
     void fetch(`/api/gallery/${token}/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "review_link_clicked" }),
+      body: JSON.stringify({ name: "review_link_clicked", meta: { platform } }),
     });
   }
 

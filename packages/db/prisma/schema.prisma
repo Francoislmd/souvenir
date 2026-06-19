@@ -20,9 +20,12 @@ model Operator {
   packPriceCents  Int       @default(2900)
   feePercent      Int       @default(20)
   defaultMode     Mode      @default(BOUTIQUE)
-  googleReviewUrl String?
-  instagramHandle String?
-  whatsappNumber  String?
+  googleReviewUrl      String?
+  trustpilotUrl        String?
+  tripadvisorUrl       String?
+  instagramHandle      String?
+  instagramPostCaption String?
+  whatsappNumber       String?
   deliveryMessageTemplate String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

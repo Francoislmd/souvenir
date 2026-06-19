@@ -10,7 +10,10 @@ const schema = z.object({
   packPriceCents: z.number().int().min(0).optional(),
   defaultMode: z.nativeEnum(Mode).optional(),
   googleReviewUrl: z.string().optional(),
+  trustpilotUrl: z.string().optional(),
+  tripadvisorUrl: z.string().optional(),
   instagramHandle: z.string().optional(),
+  instagramPostCaption: z.string().optional(),
   whatsappNumber: z.string().optional(),
   deliveryMessageTemplate: z.string().optional(),
 });
@@ -27,7 +30,18 @@ export async function PATCH(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const { logoUrl, location, googleReviewUrl, instagramHandle, whatsappNumber, deliveryMessageTemplate, ...rest } = parsed.data;
+  const {
+    logoUrl,
+    location,
+    googleReviewUrl,
+    trustpilotUrl,
+    tripadvisorUrl,
+    instagramHandle,
+    instagramPostCaption,
+    whatsappNumber,
+    deliveryMessageTemplate,
+    ...rest
+  } = parsed.data;
 
   const operator = await prisma.operator.update({
     where: { id: dbUser.operatorId },
@@ -36,7 +50,10 @@ export async function PATCH(request: Request): Promise<Response> {
       ...(logoUrl !== undefined && { logoUrl: logoUrl || null }),
       ...(location !== undefined && { location: location || null }),
       ...(googleReviewUrl !== undefined && { googleReviewUrl: googleReviewUrl || null }),
+      ...(trustpilotUrl !== undefined && { trustpilotUrl: trustpilotUrl || null }),
+      ...(tripadvisorUrl !== undefined && { tripadvisorUrl: tripadvisorUrl || null }),
       ...(instagramHandle !== undefined && { instagramHandle: instagramHandle || null }),
+      ...(instagramPostCaption !== undefined && { instagramPostCaption: instagramPostCaption || null }),
       ...(whatsappNumber !== undefined && { whatsappNumber: whatsappNumber || null }),
       ...(deliveryMessageTemplate !== undefined && { deliveryMessageTemplate: deliveryMessageTemplate || null }),
     },

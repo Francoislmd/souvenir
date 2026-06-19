@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import type { Operator } from "@souvenir/db";
-import { DEFAULT_DELIVERY_MESSAGE } from "@/lib/message-templates";
+import { DEFAULT_DELIVERY_MESSAGE, DEFAULT_INSTAGRAM_CAPTION } from "@/lib/message-templates";
 
 type ModeOption = "BOUTIQUE" | "MARKETING";
 
@@ -16,7 +16,10 @@ export function SettingsForm({ operator }: { operator: Operator }) {
   const [packPrice, setPackPrice] = useState((operator.packPriceCents / 100).toString());
   const [defaultMode, setDefaultMode] = useState<ModeOption>(operator.defaultMode);
   const [googleReviewUrl, setGoogleReviewUrl] = useState(operator.googleReviewUrl ?? "");
+  const [trustpilotUrl, setTrustpilotUrl] = useState(operator.trustpilotUrl ?? "");
+  const [tripadvisorUrl, setTripadvisorUrl] = useState(operator.tripadvisorUrl ?? "");
   const [instagramHandle, setInstagramHandle] = useState(operator.instagramHandle ?? "");
+  const [instagramPostCaption, setInstagramPostCaption] = useState(operator.instagramPostCaption ?? "");
   const [whatsappNumber, setWhatsappNumber] = useState(operator.whatsappNumber ?? "");
   const [deliveryMessageTemplate, setDeliveryMessageTemplate] = useState(
     operator.deliveryMessageTemplate ?? DEFAULT_DELIVERY_MESSAGE,
@@ -65,7 +68,10 @@ export function SettingsForm({ operator }: { operator: Operator }) {
         packPriceCents: Math.round(Number(packPrice) * 100),
         defaultMode,
         googleReviewUrl,
+        trustpilotUrl,
+        tripadvisorUrl,
         instagramHandle,
+        instagramPostCaption,
         whatsappNumber,
         deliveryMessageTemplate,
       }),
@@ -200,6 +206,28 @@ export function SettingsForm({ operator }: { operator: Operator }) {
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
+            Lien Trustpilot
+            <input
+              type="url"
+              placeholder="https://fr.trustpilot.com/review/…"
+              value={trustpilotUrl}
+              onChange={(event) => setTrustpilotUrl(event.target.value)}
+              className={inputClass}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
+            Lien TripAdvisor
+            <input
+              type="url"
+              placeholder="https://www.tripadvisor.fr/…"
+              value={tripadvisorUrl}
+              onChange={(event) => setTripadvisorUrl(event.target.value)}
+              className={inputClass}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
             Compte Instagram
             <input
               placeholder="volpassionannecy"
@@ -207,6 +235,21 @@ export function SettingsForm({ operator }: { operator: Operator }) {
               onChange={(event) => setInstagramHandle(event.target.value)}
               className={inputClass}
             />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
+            Texte de partage Instagram
+            <textarea
+              rows={2}
+              placeholder={DEFAULT_INSTAGRAM_CAPTION}
+              value={instagramPostCaption}
+              onChange={(event) => setInstagramPostCaption(event.target.value)}
+              className="min-h-[64px] rounded-control border border-border bg-surface px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+            <span className="text-xs font-normal text-ink-2">
+              Variables : <code>{"{instagramHandle}"}</code> (ton compte) et <code>{"{operatorName}"}</code> (ton école).
+              Laisse vide pour utiliser le texte par défaut.
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">

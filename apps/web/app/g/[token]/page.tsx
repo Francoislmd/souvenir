@@ -12,6 +12,7 @@ import { ReviewLink } from "@/components/gallery/ReviewLink";
 import { actionCardClass, ActionCardContent } from "@/components/gallery/ActionCard";
 import { CheckoutButton } from "@/components/gallery/CheckoutButton";
 import { MarketingCtas } from "@/components/gallery/MarketingCtas";
+import { InstagramShareButton } from "@/components/gallery/InstagramShareButton";
 import { ConsentToggle } from "@/components/gallery/ConsentToggle";
 import { PurchaseSuccessRefresher } from "@/components/gallery/PurchaseSuccessRefresher";
 import { UnlockCelebration } from "@/components/gallery/UnlockCelebration";
@@ -131,7 +132,7 @@ export default async function GalleryPage({
           <p className="text-sm text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
         </div>
       </div>
-      <div className="flex gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <a href={`/api/gallery/${delivery.token}/zip`} className={actionCardClass}>
           <ActionCardContent
             icon={
@@ -149,7 +150,7 @@ export default async function GalleryPage({
           />
         </a>
         {operator.googleReviewUrl ? (
-          <ReviewLink token={delivery.token} href={operator.googleReviewUrl} className={actionCardClass}>
+          <ReviewLink token={delivery.token} href={operator.googleReviewUrl} platform="google" className={actionCardClass}>
             <ActionCardContent
               icon={
                 <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
@@ -161,9 +162,56 @@ export default async function GalleryPage({
                   />
                 </svg>
               }
-              label="Laisser un avis"
+              label="Google"
             />
           </ReviewLink>
+        ) : null}
+        {operator.trustpilotUrl ? (
+          <ReviewLink token={delivery.token} href={operator.trustpilotUrl} platform="trustpilot" className={actionCardClass}>
+            <ActionCardContent
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                  <path
+                    d="M12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61Z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+              label="Trustpilot"
+            />
+          </ReviewLink>
+        ) : null}
+        {operator.tripadvisorUrl ? (
+          <ReviewLink token={delivery.token} href={operator.tripadvisorUrl} platform="tripadvisor" className={actionCardClass}>
+            <ActionCardContent
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                  <circle cx="7" cy="13" r="3" stroke="currentColor" strokeWidth="1.6" />
+                  <circle cx="17" cy="13" r="3" stroke="currentColor" strokeWidth="1.6" />
+                  <path
+                    d="M2 9s2-1 5-1 7 2 7 2 3-2 5-2M9.5 6.5 12 4l2.5 2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+              label="TripAdvisor"
+            />
+          </ReviewLink>
+        ) : null}
+        {operator.instagramHandle ? (
+          <InstagramShareButton
+            token={delivery.token}
+            operator={{
+              name: operator.name,
+              instagramHandle: operator.instagramHandle,
+              instagramPostCaption: operator.instagramPostCaption,
+            }}
+          />
         ) : null}
       </div>
     </div>
@@ -256,7 +304,10 @@ export default async function GalleryPage({
                 operator={{
                   name: operator.name,
                   googleReviewUrl: operator.googleReviewUrl,
+                  trustpilotUrl: operator.trustpilotUrl,
+                  tripadvisorUrl: operator.tripadvisorUrl,
                   instagramHandle: operator.instagramHandle,
+                  instagramPostCaption: operator.instagramPostCaption,
                 }}
                 initialEmail={delivery.clientEmail}
               />

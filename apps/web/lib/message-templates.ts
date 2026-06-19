@@ -12,6 +12,19 @@ export function renderDeliveryMessage(
     .trim();
 }
 
+export const DEFAULT_INSTAGRAM_CAPTION = "Mon expérience avec @{instagramHandle} 🤩 #outdoor";
+
+export function renderInstagramCaption(
+  template: string | null | undefined,
+  vars: { instagramHandle: string; operatorName: string },
+): string {
+  const base = template && template.trim() ? template : DEFAULT_INSTAGRAM_CAPTION;
+  return base
+    .replace(/\{instagramHandle\}/g, vars.instagramHandle)
+    .replace(/\{operatorName\}/g, vars.operatorName)
+    .trim();
+}
+
 /** Titre par défaut de la galerie, prérempli et personnalisable par l'opérateur. */
 export function defaultGalleryTitle(clientName: string): string {
   const firstName = clientName.trim().split(/\s+/)[0];
