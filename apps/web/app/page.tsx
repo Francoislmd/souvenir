@@ -105,118 +105,92 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 3 piliers ─── */}
-      <section className="relative z-10 bg-surface py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center">
-            <span className="text-sm font-semibold uppercase tracking-wide text-brand">
-              Trois résultats. Une seule action.
-            </span>
-            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-              Tes clients sont ton meilleur levier marketing.
+      {/* ─── Feature 1 : Galerie client ─── */}
+      <section id="comment-ca-marche" className="relative z-10 bg-surface py-20 md:py-28">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-6 md:grid-cols-2 md:gap-20">
+          <div>
+            <span className="text-sm font-semibold uppercase tracking-wide text-brand">Pour tes clients</span>
+            <h2 className="mt-3 font-display text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+              Une galerie personnalisée,<br />livrée instantanément.
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-base text-ink-2">
-              La photo n&apos;est que le moyen. Souvenir l&apos;utilise pour générer des revenus,
-              de la visibilité et t&apos;enlever toute la gestion.
+            <p className="mt-4 text-base leading-relaxed text-ink-2">
+              Ton moniteur uploade depuis son téléphone — même en 4G pourrie. Chaque client reçoit
+              son lien par email ou SMS. La galerie s&apos;ouvre sans app, sans compte.
             </p>
+            <div className="mt-8 inline-flex items-end gap-3">
+              <span className="font-display text-5xl font-extrabold text-ink">&lt;&nbsp;2&nbsp;min</span>
+              <span className="mb-1.5 text-sm text-ink-2">entre l&apos;upload et<br />la galerie disponible</span>
+            </div>
           </div>
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            <PillarCard
-              gradient="linear-gradient(135deg, #DCFCE7 0%, #A7F3D0 100%)"
-              iconGradient="linear-gradient(135deg, #16A34A, #065F46)"
-              icon={<EuroIcon />}
-              title="Revenus passifs"
-              description="Chaque client reçoit ses photos en aperçu. Pour les débloquer en HD, il paye. Tu touches 80 % — sans rien faire."
-              stat="~29 € par achat"
-            />
-            <PillarCard
-              gradient="linear-gradient(135deg, #FEF9C3 0%, #FDE68A 100%)"
-              iconGradient="linear-gradient(135deg, #CA8A04, #92400E)"
-              icon={<MegaphoneIcon />}
-              title="Visibilité organique"
-              description="Une belle galerie = une photo partagée sur Instagram, un avis Google laissé. Chaque aventure devient de la pub gratuite."
-              stat="3× plus d'avis"
-            />
-            <PillarCard
-              gradient="linear-gradient(135deg, #EEF2FF 0%, #C7D2FE 100%)"
-              iconGradient="linear-gradient(135deg, #4F46E5, #7C3AED)"
-              icon={<BoltIcon />}
-              title="Zéro gestion"
-              description="Envoi automatique, paiement intégré, consentements RGPD horodatés. Souvenir s'occupe de tout."
-              stat="< 2 min par session"
-            />
+          <div className="flex justify-center md:justify-end">
+            <GalleryPhone />
           </div>
         </div>
       </section>
 
-      {/* ─── Comment ça marche ─── */}
-      <section id="comment-ca-marche" className="relative z-10 py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center">
-            <span className="text-sm font-semibold uppercase tracking-wide text-brand">Comment ça marche</span>
-            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-              Simple pour toi. Magique pour tes clients.
+      {/* ─── Feature 2 : Encaissement — dark ─── */}
+      <section className="relative z-10 overflow-hidden bg-ink py-20 md:py-28">
+        <div
+          className="pointer-events-none absolute -top-32 right-[-10%] h-[28rem] w-[28rem] rounded-full opacity-20 blur-3xl"
+          style={{ background: "var(--brand-gradient)" }}
+        />
+        <div className="relative mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-6 md:grid-cols-2 md:gap-20">
+          <div className="flex justify-center md:justify-start">
+            <CheckoutPhone />
+          </div>
+          <div>
+            <span className="text-sm font-semibold uppercase tracking-wide text-brand">Pour toi</span>
+            <h2 className="mt-3 font-display text-3xl font-extrabold leading-tight tracking-tight text-canvas sm:text-4xl">
+              Tu touches 80 %<br />sur chaque vente.
             </h2>
-          </div>
-
-          <div className="mt-12 grid gap-4 sm:grid-cols-3">
-            <StepCard
-              step="1"
-              tint="#EEF2FF"
-              color="#4F46E5"
-              title="Upload en 2 minutes"
-              description="Après chaque session, ton moniteur sélectionne les médias depuis son téléphone. Même en 4G pourrie."
-            />
-            <StepCard
-              step="2"
-              tint="#DCFCE7"
-              color="#16A34A"
-              title="La galerie se crée toute seule"
-              description="Chaque client reçoit un lien personnel par email ou SMS. Sa galerie s'ouvre sans app, sans compte."
-            />
-            <StepCard
-              step="3"
-              tint="#FEF9C3"
-              color="#CA8A04"
-              title="Il achète, partage, commente"
-              description="Paiement HD en un clic, partage Instagram, avis Google. Toi, tu vois tout dans ton dashboard."
-            />
-          </div>
-
-          {/* Timeline connector */}
-          <div className="relative mt-12 overflow-hidden rounded-card border border-border bg-surface p-6 sm:p-8 shadow-card">
-            <div
-              className="pointer-events-none absolute right-0 top-0 h-full w-1/3 rounded-r-card"
-              style={{ background: "linear-gradient(to right, transparent, var(--accent-tint))" }}
-            />
-            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-around sm:gap-0">
-              <Metric label="Délai moyen upload → galerie" value="< 2 min" />
-              <div className="hidden h-10 w-px bg-border sm:block" />
-              <Metric label="Taux d'achat observé (pilote)" value="≥ 20 %" />
-              <div className="hidden h-10 w-px bg-border sm:block" />
-              <Metric label="Part opérateur sur chaque vente" value="80 %" />
+            <p className="mt-4 text-base leading-relaxed text-canvas/70">
+              En mode Boutique, tes clients débloquent leurs photos en HD en un clic. Stripe vire
+              ta part automatiquement — tu ne touches à rien.
+            </p>
+            <div className="mt-8 inline-flex items-end gap-3">
+              <span className="font-display text-5xl font-extrabold text-canvas">~29&nbsp;€</span>
+              <span className="mb-1.5 text-sm text-canvas/60">par achat<br />en moyenne</span>
+            </div>
+            <div className="mt-6 flex items-center gap-2 text-sm text-canvas/50">
+              <ShieldIcon />
+              <span>Consentements RGPD horodatés, rétention 90 j.</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Conformité RGPD ─── */}
-      <section className="relative z-10 bg-surface py-16">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600">
-              <ShieldIcon />
-            </span>
-            <div>
-              <h3 className="font-display text-xl font-extrabold text-ink sm:text-2xl">
-                Conformité RGPD incluse, sans effort.
-              </h3>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-base">
-                Consentements image et email horodatés, droit à l&apos;effacement, rétention 90 jours — tout est géré automatiquement.
-                Tu livres tes clients en toute sérénité.
-              </p>
-            </div>
+      {/* ─── Feature 3 : Dashboard zéro gestion ─── */}
+      <section className="relative z-10 bg-canvas py-20 md:py-28">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-6 md:grid-cols-2 md:gap-20">
+          <div>
+            <span className="text-sm font-semibold uppercase tracking-wide text-brand">Pour ton école</span>
+            <h2 className="mt-3 font-display text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+              Souvenir s&apos;occupe<br />de tout. Vraiment.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-ink-2">
+              Envoi automatique, paiement Stripe intégré, avis Google collectés, dashboard
+              en temps réel. Toi, tu fais du sport.
+            </p>
+            <ul className="mt-8 space-y-3">
+              {[
+                "Envoi email + SMS automatique à chaque client",
+                "Split 80/20 versé sans action de ta part",
+                "Attach rate, GMV, funnel : tout dans ton dashboard",
+                "Onboarding en quelques minutes, 0 € fixe",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm text-ink-2">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#EAF7EE] text-[#16A34A]">
+                    <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex justify-center md:justify-end">
+            <DashboardPreview />
           </div>
         </div>
       </section>
@@ -413,76 +387,115 @@ function FloatingBadge({
   );
 }
 
-/* ─── Pillar Card ─── */
-function PillarCard({
-  gradient,
-  iconGradient,
-  icon,
-  title,
-  description,
-  stat,
-}: {
-  gradient: string;
-  iconGradient: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  stat: string;
-}) {
+/* ─── Checkout Phone ─── */
+function CheckoutPhone({ className = "" }: { className?: string }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card">
-      {/* Tinted top band */}
-      <div className="flex items-center gap-3 p-5 pb-4" style={{ background: gradient }}>
-        <span
-          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow"
-          style={{ background: iconGradient }}
-        >
-          {icon}
+    <div className={`relative ${className}`} style={{ width: 210, height: 428 }}>
+      <div
+        className="absolute inset-0 rounded-[38px] bg-[#1C1C1E]"
+        style={{ boxShadow: "0 36px 90px -14px rgba(0,0,0,0.5), 0 10px 28px -6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}
+      />
+      <div className="absolute -right-[3px] top-[86px] h-[48px] w-[3px] rounded-r-full bg-[#2C2C2E]" />
+      <div className="absolute -left-[3px] top-[76px] h-[30px] w-[3px] rounded-l-full bg-[#2C2C2E]" />
+      <div className="absolute -left-[3px] top-[114px] h-[54px] w-[3px] rounded-l-full bg-[#2C2C2E]" />
+      <div className="absolute -left-[3px] top-[176px] h-[54px] w-[3px] rounded-l-full bg-[#2C2C2E]" />
+      <div className="absolute inset-[3px] overflow-hidden rounded-[35px] bg-[#FAF7F4]">
+        {/* Status bar */}
+        <div className="relative flex h-9 items-center justify-between bg-[#FAF7F4] px-4 pt-1">
+          <span className="text-[9px] font-semibold text-[#1F1B17]">17:34</span>
+          <div className="absolute left-1/2 top-2 h-[18px] w-[68px] -translate-x-1/2 rounded-full bg-[#1C1C1E]" />
+        </div>
+        {/* Locked preview */}
+        <div className="relative mx-2.5 overflow-hidden rounded-[14px]" style={{ height: 160 }}>
+          <Image src="/hero-paragliding.jpg" fill className="object-cover" alt="" sizes="200px" style={{ filter: "blur(6px)", transform: "scale(1.05)" }} />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+              <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4 text-white">
+                <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <p className="text-[10px] font-semibold text-white">14 photos · 2 vidéos</p>
+          </div>
+        </div>
+        {/* Checkout card */}
+        <div className="mx-2.5 mt-3 overflow-hidden rounded-[14px] border border-[#ECE4DC] bg-white">
+          <div className="flex items-start justify-between p-3 pb-2">
+            <div>
+              <p className="text-[11px] font-bold text-[#1F1B17]">Pack HD · Vol Passion Annecy</p>
+              <p className="text-[9px] text-[#A89C90]">14 photos + 2 vidéos originaux</p>
+            </div>
+            <span className="font-display text-[15px] font-extrabold text-[#1F1B17]">29 €</span>
+          </div>
+          <div className="mx-3 mb-2 flex items-center gap-2 rounded-[8px] border border-[#ECE4DC] bg-[#FAF7F4] px-2.5 py-2">
+            <svg viewBox="0 0 16 12" fill="none" className="h-3 w-3.5 shrink-0 text-[#A89C90]">
+              <rect x="0.5" y="0.5" width="15" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M0 4h16" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+            <span className="text-[9px] text-[#A89C90]">•••• •••• •••• 4242</span>
+          </div>
+          <div
+            className="mx-3 mb-3 rounded-full py-2.5 text-center text-[10px] font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #818CF8 0%, #4F46E5 100%)" }}
+          >
+            Payer 29 €
+          </div>
+        </div>
+        {/* Powered by */}
+        <p className="mt-1.5 text-center text-[8px] text-[#A89C90]">Paiement sécurisé · Stripe</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Dashboard Preview ─── */
+function DashboardPreview() {
+  return (
+    <div
+      className="w-full max-w-[340px] overflow-hidden rounded-[20px] bg-white"
+      style={{ boxShadow: "0 24px 60px -10px rgba(0,0,0,0.16), 0 8px 20px -4px rgba(0,0,0,0.08)" }}
+    >
+      <div className="flex items-center justify-between border-b border-[#ECE4DC] px-5 py-4">
+        <div>
+          <p className="text-[10px] text-[#A89C90]">Session du jour</p>
+          <p className="text-[13px] font-semibold text-[#1F1B17]">Vendredi 14 juin</p>
+        </div>
+        <span className="rounded-full bg-[#EAF7EE] px-2.5 py-1 text-[10px] font-semibold text-[#16A34A]">
+          3 livrées
         </span>
-        <p className="text-base font-bold text-ink">{title}</p>
       </div>
-      <div className="flex flex-1 flex-col p-5 pt-4">
-        <p className="flex-1 text-sm leading-relaxed text-ink-2">{description}</p>
-        <p className="mt-4 text-sm font-bold text-ink">{stat}</p>
+      <div className="grid grid-cols-3 divide-x divide-[#ECE4DC]">
+        {[
+          { value: "24 %", label: "Attach rate" },
+          { value: "87 €", label: "GMV" },
+          { value: "3", label: "Galeries" },
+        ].map((s) => (
+          <div key={s.label} className="px-3 py-4 text-center">
+            <p className="font-display text-[19px] font-extrabold text-[#1F1B17]">{s.value}</p>
+            <p className="mt-0.5 text-[10px] text-[#A89C90]">{s.label}</p>
+          </div>
+        ))}
       </div>
-    </div>
-  );
-}
-
-/* ─── Step Card ─── */
-function StepCard({
-  step,
-  tint,
-  color,
-  title,
-  description,
-}: {
-  step: string;
-  tint: string;
-  color: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-card border border-border bg-surface p-6 shadow-card">
-      <span
-        className="flex h-10 w-10 items-center justify-center rounded-full font-display text-lg font-extrabold"
-        style={{ background: tint, color }}
-      >
-        {step}
-      </span>
-      <p className="mt-4 text-base font-semibold text-ink">{title}</p>
-      <p className="mt-1.5 text-sm text-ink-2">{description}</p>
-    </div>
-  );
-}
-
-/* ─── Metric ─── */
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col items-center gap-0.5 sm:items-center">
-      <span className="font-display text-2xl font-extrabold text-ink sm:text-3xl">{value}</span>
-      <span className="text-xs text-ink-2">{label}</span>
+      <div className="divide-y divide-[#F3EDE7]">
+        {[
+          { name: "Léa Martin", tag: "Payé ✓", amount: "29 €", tagCls: "text-[#16A34A] bg-[#EAF7EE]" },
+          { name: "Tom Durand", tag: "Ouvert", amount: "—", tagCls: "text-[#4F46E5] bg-[#EEF2FF]" },
+          { name: "Emma Petit", tag: "Envoyé", amount: "—", tagCls: "text-[#6E6259] bg-[#ECE4DC]" },
+        ].map((item) => (
+          <div key={item.name} className="flex items-center justify-between px-5 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF] text-[10px] font-semibold text-[#4F46E5]">
+                {item.name[0]}
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-[#1F1B17]">{item.name}</p>
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${item.tagCls}`}>{item.tag}</span>
+              </div>
+            </div>
+            <span className="text-[12px] font-semibold text-[#1F1B17]">{item.amount}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
