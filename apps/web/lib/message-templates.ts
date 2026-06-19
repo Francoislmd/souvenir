@@ -25,6 +25,12 @@ export function renderInstagramCaption(
     .trim();
 }
 
+/** Extrait les hashtags (#tag) d'une caption ou d'un texte libre, max 6. */
+export function extractHashtags(text: string | null | undefined): string[] {
+  if (!text) return [];
+  return (text.match(/#[\wÀ-ſ]+/g) ?? []).slice(0, 6);
+}
+
 /** Titre par défaut de la galerie, prérempli et personnalisable par l'opérateur. */
 export function defaultGalleryTitle(clientName: string): string {
   const firstName = clientName.trim().split(/\s+/)[0];

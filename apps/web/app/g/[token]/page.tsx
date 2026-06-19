@@ -8,17 +8,16 @@ import { fulfillCheckoutSession } from "@/lib/checkout-fulfillment";
 import { type GalleryMedia } from "@/components/gallery/MediaTile";
 import { MediaFeed } from "@/components/gallery/MediaFeed";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
-import { ReviewLink } from "@/components/gallery/ReviewLink";
-import { actionCardClass, ActionCardContent } from "@/components/gallery/ActionCard";
+import { ReviewSection } from "@/components/gallery/ReviewSection";
+import { InstagramShareSection } from "@/components/gallery/InstagramShareSection";
 import { CheckoutButton } from "@/components/gallery/CheckoutButton";
 import { MarketingCtas } from "@/components/gallery/MarketingCtas";
-import { InstagramShareButton } from "@/components/gallery/InstagramShareButton";
 import { ConsentToggle } from "@/components/gallery/ConsentToggle";
 import { PurchaseSuccessRefresher } from "@/components/gallery/PurchaseSuccessRefresher";
 import { UnlockCelebration } from "@/components/gallery/UnlockCelebration";
 import { LogoMark } from "@/components/brand/Logo";
 import { CLIENT_BRAND_COLOR } from "@/lib/brand";
-import { defaultGalleryTitle } from "@/lib/message-templates";
+import { defaultGalleryTitle, extractHashtags } from "@/lib/message-templates";
 
 export default async function GalleryPage({
   params,
@@ -92,6 +91,7 @@ export default async function GalleryPage({
   const photoCount = delivery.media.filter((item) => item.kind === "PHOTO").length;
   const videoCount = delivery.media.filter((item) => item.kind === "VIDEO").length;
   const heroTitle = delivery.title ?? defaultGalleryTitle(delivery.clientName ?? "");
+  const hashtags = extractHashtags(operator.instagramPostCaption);
 
   // Identité Souvenir fixe sur toute la galerie client (couleur non personnalisable
   // par l'opérateur) — voir CLAUDE.md "Couleur de marque galerie fixe".
@@ -111,6 +111,7 @@ export default async function GalleryPage({
     </div>
   );
 
+  // ---- Carte de statut (en-tête de la section CTAs) ----
   const statusCard = isMarketing ? (
     <div className="flex items-center gap-3 rounded-card border border-border bg-gradient-to-br from-accent-tint to-surface px-4 py-4 shadow-card">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
@@ -122,98 +123,56 @@ export default async function GalleryPage({
       </div>
     </div>
   ) : unlocked ? (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 rounded-card border border-border bg-gradient-to-br from-success-tint to-surface px-4 py-4 shadow-card">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
-          🎉
-        </span>
-        <div>
-          <p className="text-base font-semibold text-ink">C&apos;est débloqué !</p>
-          <p className="text-sm text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
+    <div className="flex flex-col gap-4">
+      {/* Bannière succès + téléchargement */}
+      <div className="overflow-hidden rounded-card border border-border shadow-card">
+        <div className="flex items-center gap-3 bg-gradient-to-br from-success-tint to-surface px-4 py-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
+            🎉
+          </span>
+          <div>
+            <p className="text-base font-semibold text-ink">C&apos;est débloqué !</p>
+            <p className="text-sm text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <a href={`/api/gallery/${delivery.token}/zip`} className={actionCardClass}>
-          <ActionCardContent
-            icon={
-              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                <path
-                  d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            }
-            label="Tout télécharger"
-          />
+        <a
+          href={`/api/gallery/${delivery.token}/zip`}
+          className="flex items-center justify-center gap-2 border-t border-border bg-surface py-3 text-sm font-semibold text-ink transition hover:bg-canvas active:bg-canvas"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+            <path
+              d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Tout télécharger (.zip)
         </a>
-        {operator.googleReviewUrl ? (
-          <ReviewLink token={delivery.token} href={operator.googleReviewUrl} platform="google" className={actionCardClass}>
-            <ActionCardContent
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                  <path
-                    d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21Z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-              label="Google"
-            />
-          </ReviewLink>
-        ) : null}
-        {operator.trustpilotUrl ? (
-          <ReviewLink token={delivery.token} href={operator.trustpilotUrl} platform="trustpilot" className={actionCardClass}>
-            <ActionCardContent
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                  <path
-                    d="M12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61Z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-              label="Trustpilot"
-            />
-          </ReviewLink>
-        ) : null}
-        {operator.tripadvisorUrl ? (
-          <ReviewLink token={delivery.token} href={operator.tripadvisorUrl} platform="tripadvisor" className={actionCardClass}>
-            <ActionCardContent
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                  <circle cx="7" cy="13" r="3" stroke="currentColor" strokeWidth="1.6" />
-                  <circle cx="17" cy="13" r="3" stroke="currentColor" strokeWidth="1.6" />
-                  <path
-                    d="M2 9s2-1 5-1 7 2 7 2 3-2 5-2M9.5 6.5 12 4l2.5 2.5"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-              label="TripAdvisor"
-            />
-          </ReviewLink>
-        ) : null}
-        {operator.instagramHandle ? (
-          <InstagramShareButton
-            token={delivery.token}
-            operator={{
-              name: operator.name,
-              instagramHandle: operator.instagramHandle,
-              instagramPostCaption: operator.instagramPostCaption,
-            }}
-          />
-        ) : null}
       </div>
+
+      {/* Section avis */}
+      <ReviewSection
+        token={delivery.token}
+        operatorName={operator.name}
+        googleReviewUrl={operator.googleReviewUrl}
+        trustpilotUrl={operator.trustpilotUrl}
+        tripadvisorUrl={operator.tripadvisorUrl}
+      />
+
+      {/* Section Instagram */}
+      {operator.instagramHandle ? (
+        <InstagramShareSection
+          token={delivery.token}
+          operator={{
+            name: operator.name,
+            instagramHandle: operator.instagramHandle,
+            instagramPostCaption: operator.instagramPostCaption,
+          }}
+          hashtags={hashtags}
+        />
+      ) : null}
     </div>
   ) : (
     <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
@@ -252,15 +211,15 @@ export default async function GalleryPage({
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
           className="absolute -top-32 right-0 h-[500px] w-[420px] rounded-full blur-[150px]"
-          style={{ background: "#7DD3FC", opacity: 0.28 }}
+          style={{ background: "#f09433", opacity: 0.12 }}
         />
         <div
           className="absolute top-[38%] -left-24 h-[460px] w-[380px] rounded-full blur-[130px]"
-          style={{ background: "#3B82F6", opacity: 0.15 }}
+          style={{ background: CLIENT_BRAND_COLOR, opacity: 0.1 }}
         />
         <div
           className="absolute bottom-32 right-0 h-[420px] w-[360px] rounded-full blur-[120px]"
-          style={{ background: "#4F46E5", opacity: 0.12 }}
+          style={{ background: "#bc1888", opacity: 0.08 }}
         />
       </div>
 
@@ -275,6 +234,8 @@ export default async function GalleryPage({
           heroTitle={heroTitle}
           photoCount={photoCount}
           videoCount={videoCount}
+          instagramHandle={operator.instagramHandle}
+          hashtags={hashtags}
         />
 
         {/* Refresher achat en attente */}
@@ -309,6 +270,7 @@ export default async function GalleryPage({
                   instagramHandle: operator.instagramHandle,
                   instagramPostCaption: operator.instagramPostCaption,
                 }}
+                hashtags={hashtags}
                 initialEmail={delivery.clientEmail}
               />
             </div>

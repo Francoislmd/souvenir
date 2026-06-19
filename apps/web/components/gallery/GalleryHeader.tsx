@@ -1,3 +1,6 @@
+// Gradient signature Instagram Stories — reconnaissable immédiatement.
+const IG_GRADIENT = "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)";
+
 export function GalleryHeader({
   operator,
   location,
@@ -5,6 +8,8 @@ export function GalleryHeader({
   heroTitle,
   photoCount,
   videoCount,
+  instagramHandle,
+  hashtags,
 }: {
   operator: { name: string; logoUrl: string | null };
   location: string | null;
@@ -12,6 +17,8 @@ export function GalleryHeader({
   heroTitle: string;
   photoCount: number;
   videoCount: number;
+  instagramHandle?: string | null;
+  hashtags?: string[];
 }) {
   const initials = operator.name
     .split(/\s+/)
@@ -20,54 +27,89 @@ export function GalleryHeader({
     .join("")
     .toUpperCase();
 
+  const ringStyle = instagramHandle
+    ? { background: IG_GRADIENT }
+    : { background: "var(--accent)" };
+
   return (
     <div className="px-4 pt-6">
+      {/* Avatar + infos opérateur */}
       <div className="flex items-center gap-3">
-        <span className="rounded-full p-[2px]" style={{ background: "var(--accent)" }}>
-          <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-surface bg-canvas">
+        <span className="shrink-0 rounded-full p-[2.5px]" style={ringStyle}>
+          <span className="flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full border-[3px] border-surface bg-canvas">
             {operator.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={operator.logoUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <span className="text-base font-bold text-accent">{initials}</span>
+              <span className="text-base font-bold" style={{ color: "var(--accent)" }}>{initials}</span>
             )}
           </span>
         </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">{operator.name}</p>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-ink">{operator.name}</p>
           <p className="truncate text-xs text-ink-2">
-            {location ? `${location} · ` : ""}Vol biplace · {sessionDate}
+            {location ? `${location} · ` : ""}
+            {sessionDate}
           </p>
+          {/* Badge @handle Instagram */}
+          {instagramHandle ? (
+            <a
+              href={`https://instagram.com/${instagramHandle}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+              style={{ background: IG_GRADIENT }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3 shrink-0">
+                <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
+                <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+                <circle cx="17" cy="7" r="1.2" fill="currentColor" />
+              </svg>
+              @{instagramHandle}
+            </a>
+          ) : null}
+        </div>
+
+        {/* Compteurs photos / vidéos */}
+        <div className="shrink-0 text-right">
+          {photoCount > 0 ? (
+            <p className="text-lg font-bold leading-none text-ink">{photoCount}</p>
+          ) : null}
+          {videoCount > 0 ? (
+            <p className={`text-lg font-bold leading-none text-ink ${photoCount > 0 ? "mt-1.5" : ""}`}>{videoCount}</p>
+          ) : null}
+          <div className="flex flex-col items-end gap-1.5">
+            {photoCount > 0 ? (
+              <p className="text-[10px] text-muted leading-none">{photoCount === 1 ? "photo" : "photos"}</p>
+            ) : null}
+            {videoCount > 0 ? (
+              <p className="text-[10px] text-muted leading-none">{videoCount === 1 ? "vidéo" : "vidéos"}</p>
+            ) : null}
+          </div>
         </div>
       </div>
 
+      {/* Séparateur style IG */}
+      <div className="mt-4 h-px bg-border" />
+
+      {/* Titre de la galerie */}
       <h1 className="mt-4 font-display text-2xl font-extrabold leading-tight text-ink">{heroTitle}</h1>
 
-      <div className="mt-2 flex items-center gap-3 text-sm text-ink-2">
-        {photoCount > 0 ? (
-          <span className="inline-flex items-center gap-1.5">
-            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-              <path
-                d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l.6-1.2A1.5 1.5 0 0 1 9.45 5h5.1a1.5 1.5 0 0 1 1.35.8L16.5 7h2A1.5 1.5 0 0 1 20 8.5v8A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-8Z"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="12.5" r="3" stroke="currentColor" strokeWidth="1.6" />
-            </svg>
-            {photoCount} photo{photoCount > 1 ? "s" : ""}
-          </span>
-        ) : null}
-        {videoCount > 0 ? (
-          <span className="inline-flex items-center gap-1.5">
-            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-              <rect x="3" y="6" width="13" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M16 10.5 21 7.5v9l-5-3v-3Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            </svg>
-            {videoCount} vidéo{videoCount > 1 ? "s" : ""}
-          </span>
-        ) : null}
-      </div>
+      {/* Hashtags pills */}
+      {hashtags && hashtags.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {hashtags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-accent-tint px-2.5 py-0.5 text-[11px] font-semibold"
+              style={{ color: "var(--accent)" }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
