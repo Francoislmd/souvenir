@@ -510,22 +510,6 @@ function EuroIcon() {
   );
 }
 
-function MegaphoneIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4">
-      <path d="M2 6.5v3h2l4 3V3.5L4 6.5H2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M12 5c.83.7 1.4 1.7 1.4 3s-.57 2.3-1.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function BoltIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4">
-      <path d="M9 2L4 9h5l-2 5 7-7H9l2-5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function StarIcon() {
   return (
