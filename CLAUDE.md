@@ -7,13 +7,13 @@
 
 ## 1. Le produit en 30 secondes
 
-**Souvenir** livre automatiquement les photos/vidéos des clients d'opérateurs d'activités outdoor (écoles de parapente d'abord, puis canyoning, rafting, nautique) **par WhatsApp, dans une galerie à la marque de l'opérateur**, 2 minutes après l'atterrissage.
+**Souvenir** est un outil marketing pour opérateurs d'activités outdoor (parapente, canyoning, rafting, nautique) qui transforme chaque session en trois résultats concrets :
 
-Deux modes, réglables **par produit** :
-- **Mode Boutique** : aperçu basse définition offert + watermark → le client achète le **pack HD** (prix opérateur, défaut 29 €). Split automatique : **80 % opérateur / 20 % Souvenir**.
-- **Mode Marketing** : tout est offert, en échange Souvenir capte **l'avis Google, l'email (avec consentement) et le partage Instagram tagué**.
+1. **Revenus supplémentaires** : les photos/vidéos sont livrées automatiquement dans une galerie brandée. En mode Boutique, le client achète le pack HD (prix opérateur, défaut 29 €) — split automatique **80 % opérateur / 20 % Souvenir**.
+2. **Visibilité organique** : en mode Marketing, les médias sont offerts en échange d'un avis Google, d'un partage Instagram tagué et d'un email (avec consentement). Chaque client devient ambassadeur.
+3. **Zéro gestion** : envoi automatique (email + SMS), paiement intégré, consentements RGPD horodatés. Le moniteur fait 3 taps, Souvenir s'occupe du reste.
 
-**Ce que le pilote (été 2026, 3 écoles à Annecy) doit prouver : un taux d'achat (attach) ≥ 20 % en mode Boutique.** Tout le produit est au service de la mesure de ce chiffre. Si une feature ne sert ni la livraison, ni la vente, ni la mesure → elle est hors scope.
+La photo/vidéo est le **moyen**, pas la fin. Si une feature ne sert ni les revenus, ni la visibilité, ni l'automatisation → elle est hors scope.
 
 Utilisateurs :
 - **Opérateur** (gérant d'école) : configure, encaisse, lit le dashboard.
@@ -154,7 +154,7 @@ model ProcessingJob {
   createdAt DateTime @default(now())
 }
 
-model Event {           // ⚠️ le cœur du pilote — voir §10
+model Event {           // source de vérité analytics — voir §10
   id         String   @id @default(cuid())
   deliveryId String?
   operatorId String
@@ -206,10 +206,10 @@ model Event {           // ⚠️ le cœur du pilote — voir §10
 
 ---
 
-## 7. WhatsApp (Twilio) — opt-in optionnel, le hack qui évite 3 semaines de validation Meta
+## 7. WhatsApp (Twilio) — opt-in optionnel
 
 - WhatsApp n'est plus le point d'entrée (voir §2.4) : c'est un **opt-in optionnel** depuis la galerie, via `wa.me` pré-rempli. Le client **initie** la conversation → on est en session 24 h : réponses libres, pas de template à faire approuver.
-- Dev local : Twilio Sandbox WhatsApp. Prod : numéro WhatsApp Business via Twilio (un numéro partagé Souvenir pour le pilote, le nom de l'école dans le corps des messages).
+- Dev local : Twilio Sandbox WhatsApp. Prod : numéro WhatsApp Business via Twilio (numéro partagé Souvenir, le nom de l'école dans le corps des messages).
 - Webhook entrant : vérifie la signature Twilio (`X-Twilio-Signature`) — refuse sinon.
 - Parse tolérant : extrais `SOUV-?([A-Z0-9]{6})` n'importe où dans le message. Code inconnu → "Hmm, ce code ne correspond à rien. Vérifie avec ton moniteur 🙂". Code valide → enregistre `clientPhone` + `whatsappOptInAt`, répond avec le lien `/g/[token]`.
 - Le message avis (Flux C.3) part **dans la session 24 h** ouverte par `whatsappOptInAt` — si la fenêtre est fermée, on ne l'envoie pas (MVP : tant pis, log l'event `review_window_missed`).
@@ -240,14 +240,14 @@ Tutoiement, chaleureux, direct, zéro jargon. Le client vient de vivre un grand 
 
 ---
 
-## 10. Analytics — c'est LE livrable du pilote ⚠️
+## 10. Analytics
 
 Helper unique `track(name, {operatorId, deliveryId?, meta})` → table `Event`. Taxonomie (exhaustive, n'en invente pas d'autres sans les documenter ici) :
 
 `delivery_created` · `media_uploaded` · `media_ready` · `qr_displayed` · `wa_message_received` (= claim) · `gallery_opened` · `preview_played` · `checkout_started` · `purchase_succeeded` · `zip_downloaded` · `review_link_clicked` · `email_captured` · `ig_share_clicked` · `review_window_missed`
 
 Dashboard opérateur (et vue admin Souvenir agrégée) :
-- **Attach rate** = purchases / claims (l'indicateur du go/no-go, affiché en premier)
+- **Attach rate** = purchases / claims (affiché en premier — indicateur clé de la valeur Boutique)
 - Funnel : créées → claimées → ouvertes → checkout → payées
 - GMV, panier moyen, part opérateur / part Souvenir, délai médian upload→claim
 
@@ -276,20 +276,20 @@ Dashboard opérateur (et vue admin Souvenir agrégée) :
 
 ## 13. Phasage
 
-**v0.1 — PILOTE (objectif : utilisable par une école en réel)**
+**v0.1 — Lancement (objectif : utilisable par une école en réel)**
 Onboarding opérateur + Stripe Connect · flux moniteur complet (upload résumable + QR) · webhook WhatsApp + galerie deux modes · checkout + déverrouillage + zip · worker preview/watermark · dashboard attach/funnel · RGPD de base.
 
 **v0.2 — après les 2 premières semaines de terrain**
-Message avis différé intelligent · multi-moniteurs avec rôles · upload depuis desktop (cartes SD) · purge 90 j · petites demandes des écoles pilotes.
+Message avis différé intelligent · multi-moniteurs avec rôles · upload depuis desktop (cartes SD) · purge 90 j · retours terrain des premières écoles.
 
-**v1 — si attach ≥ 20 %**
+**v1 — après validation des résultats**
 Reel vertical auto (templates ffmpeg) · mode Marketing complet (tag IG auto, exports email) · intégrations résa (Yoplanning, Guidap) → pré-remplissage clients · pricing dynamique des packs (moteur yield) · multi-activités en UI.
 
 **Hors scope définitif (ne propose pas)** : app native, marketplace B2C, abonnements client final, IA de sélection des meilleures photos, multi-langue, multi-devises.
 
 ---
 
-## 14. Definition of done du pilote
+## 14. Critères de qualité
 
 - [ ] Un moniteur crée une livraison, uploade 10 photos + 1 vidéo de 2 min en 4G moyenne, montre le QR : **< 90 s de manipulation**.
 - [ ] Le client scanne le QR et voit sa galerie **< 2 min** après la fin d'upload (previews prêtes).

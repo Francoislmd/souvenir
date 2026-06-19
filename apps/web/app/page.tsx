@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Nav } from "@/components/marketing/Nav";
 import { ButtonLink } from "@/components/ui/Button";
-import { LogoMark } from "@/components/brand/Logo";
 
 export default function Home() {
   return (
@@ -62,43 +61,47 @@ export default function Home() {
         </div>
 
         {/* Visual desktop */}
-        <div className="relative mx-auto hidden h-[30rem] w-full max-w-sm md:block">
+        <div className="relative mx-auto hidden h-[34rem] w-full md:block">
           {/* Back card */}
           <SocialCard
-            className="absolute -left-2 top-6 -rotate-[9deg] scale-90 opacity-85"
+            className="absolute left-0 top-10 -rotate-[8deg] scale-[0.87] opacity-80"
             photo="/hero-jetski.jpg"
             school="Nautique Côte d'Azur"
             location="Antibes · Jet ski"
+            initials="NA"
+            avatarColor="#0EA5E9"
             likes={34}
             isSmall
           />
 
           {/* Front card */}
           <SocialCard
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] rotate-[2deg] z-10"
+            className="absolute left-[28%] top-1/2 -translate-y-[52%] rotate-[2deg] z-10"
             photo="/hero-paragliding.jpg"
             school="Vol Passion Annecy"
             location="Annecy · Vol biplace"
+            initials="VP"
+            avatarColor="#4F46E5"
             likes={61}
           />
 
           {/* Floating badges */}
           <FloatingBadge
-            className="absolute -right-4 top-8 rotate-[3deg]"
+            className="absolute right-0 top-6 rotate-[2deg]"
             icon={<StarIcon />}
             iconBg="#FEF9C3"
             iconColor="#CA8A04"
             label="+12 avis Google ce mois"
           />
           <FloatingBadge
-            className="absolute -left-6 bottom-28 -rotate-[2deg]"
+            className="absolute bottom-32 left-0 -rotate-[1deg]"
             icon={<EuroIcon />}
             iconBg="#DCFCE7"
             iconColor="#16A34A"
             label="1 240 € encaissés"
           />
           <FloatingBadge
-            className="absolute -right-2 bottom-14 rotate-[2deg]"
+            className="absolute bottom-14 right-0 rotate-[1deg]"
             icon={<ShareIcon />}
             iconBg="#EEF2FF"
             iconColor="#4F46E5"
@@ -113,6 +116,8 @@ export default function Home() {
             photo="/hero-paragliding.jpg"
             school="Vol Passion Annecy"
             location="Annecy · Vol biplace"
+            initials="VP"
+            avatarColor="#4F46E5"
             likes={61}
           />
         </div>
@@ -271,6 +276,8 @@ function SocialCard({
   photo,
   school,
   location,
+  initials,
+  avatarColor,
   likes,
   isSmall = false,
 }: {
@@ -278,15 +285,22 @@ function SocialCard({
   photo: string;
   school: string;
   location: string;
+  initials: string;
+  avatarColor: string;
   likes: number;
   isSmall?: boolean;
 }) {
-  const w = isSmall ? "w-[200px]" : "w-[240px]";
+  const w = isSmall ? "w-[195px]" : "w-[235px]";
   return (
-    <div className={`${w} overflow-hidden rounded-[20px] bg-white shadow-2xl ${className}`}>
+    <div className={`${w} overflow-hidden rounded-[22px] bg-white shadow-2xl ${className}`}>
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <LogoMark className="h-7 w-7 shrink-0" />
+      <div className="flex items-center gap-2.5 px-3 py-2.5">
+        <span
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+          style={{ background: avatarColor }}
+        >
+          {initials}
+        </span>
         <div className="flex min-w-0 flex-col leading-tight">
           <span className="truncate text-[11px] font-semibold text-[#0F172A]">{school}</span>
           <span className="truncate text-[10px] text-[#94A3B8]">{location}</span>
@@ -303,20 +317,12 @@ function SocialCard({
           alt={school}
           fill
           className="object-cover"
-          sizes={isSmall ? "200px" : "240px"}
+          sizes={isSmall ? "195px" : "235px"}
         />
-        {/* Watermark overlay */}
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-4 opacity-[0.08]">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-center text-[8px] font-bold text-white">
-              SOUVENIR
-            </div>
-          ))}
-        </div>
-        {/* Gradient bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
+        {/* Subtle gradient bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
         {/* Lock badge */}
-        <div className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm">
+        <div className="absolute bottom-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 backdrop-blur-sm">
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-white">
             <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
             <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
@@ -325,7 +331,7 @@ function SocialCard({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 px-3 py-2">
+      <div className="flex items-center gap-3 px-3 py-2.5">
         <span className="text-[11px] text-[#475569]">❤️ {likes}</span>
         <span className="text-[11px] text-[#475569]">📤 Partager</span>
         <span className="ml-auto text-[10px] text-[#94A3B8]">il y a 3 min</span>
