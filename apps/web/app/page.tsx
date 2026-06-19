@@ -589,62 +589,6 @@ function FloatingBadge({
   );
 }
 
-/* ─── Checkout Phone ─── */
-function CheckoutPhone({ className = "" }: { className?: string }) {
-  return (
-    <div className={`relative ${className}`} style={{ width: 210, height: 428 }}>
-      <div
-        className="absolute inset-0 rounded-[38px] bg-[#1C1C1E]"
-        style={{ boxShadow: "0 36px 90px -14px rgba(0,0,0,0.5), 0 10px 28px -6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}
-      />
-      <div className="absolute -right-[3px] top-[86px] h-[48px] w-[3px] rounded-r-full bg-[#2C2C2E]" />
-      <div className="absolute -left-[3px] top-[76px] h-[30px] w-[3px] rounded-l-full bg-[#2C2C2E]" />
-      <div className="absolute -left-[3px] top-[114px] h-[54px] w-[3px] rounded-l-full bg-[#2C2C2E]" />
-      <div className="absolute -left-[3px] top-[176px] h-[54px] w-[3px] rounded-l-full bg-[#2C2C2E]" />
-      <div className="absolute inset-[3px] overflow-hidden rounded-[35px] bg-[#FAF7F4]">
-        <div className="relative flex h-9 items-center justify-between bg-[#FAF7F4] px-4 pt-1">
-          <span className="text-[9px] font-semibold text-[#1F1B17]">17:34</span>
-          <div className="absolute left-1/2 top-2 h-[18px] w-[68px] -translate-x-1/2 rounded-full bg-[#1C1C1E]" />
-        </div>
-        <div className="relative mx-2.5 overflow-hidden rounded-[14px]" style={{ height: 160 }}>
-          <Image src="/hero-paragliding.jpg" fill className="object-cover" alt="" sizes="200px" style={{ filter: "blur(6px)", transform: "scale(1.05)" }} />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4 text-white">
-                <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <p className="text-[10px] font-semibold text-white">14 photos · 2 vidéos</p>
-          </div>
-        </div>
-        <div className="mx-2.5 mt-3 overflow-hidden rounded-[14px] border border-[#ECE4DC] bg-white">
-          <div className="flex items-start justify-between p-3 pb-2">
-            <div>
-              <p className="text-[11px] font-bold text-[#1F1B17]">Pack HD · Vol Passion Annecy</p>
-              <p className="text-[9px] text-[#A89C90]">14 photos + 2 vidéos originaux</p>
-            </div>
-            <span className="font-display text-[15px] font-extrabold text-[#1F1B17]">29 €</span>
-          </div>
-          <div className="mx-3 mb-2 flex items-center gap-2 rounded-[8px] border border-[#ECE4DC] bg-[#FAF7F4] px-2.5 py-2">
-            <svg viewBox="0 0 16 12" fill="none" className="h-3 w-3.5 shrink-0 text-[#A89C90]">
-              <rect x="0.5" y="0.5" width="15" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M0 4h16" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-            <span className="text-[9px] text-[#A89C90]">•••• •••• •••• 4242</span>
-          </div>
-          <div
-            className="mx-3 mb-3 rounded-full py-2.5 text-center text-[10px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #818CF8 0%, #4F46E5 100%)" }}
-          >
-            Payer 29 €
-          </div>
-        </div>
-        <p className="mt-1.5 text-center text-[8px] text-[#A89C90]">Paiement sécurisé · Stripe</p>
-      </div>
-    </div>
-  );
-}
 
 /* ─── Dashboard Preview ─── */
 function DashboardPreview() {
@@ -708,13 +652,6 @@ function EuroIcon() {
   );
 }
 
-function StarIcon() {
-  return (
-    <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5">
-      <path d="M7 1l1.55 3.14L12 4.64l-2.5 2.43.59 3.43L7 8.77 4.91 10.5l.59-3.43L3 4.64l3.45-.5L7 1Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function InstagramIcon() {
   return (
@@ -726,16 +663,3 @@ function InstagramIcon() {
   );
 }
 
-function ShieldIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
-      <path
-        d="M12 3L4 6v6c0 4.4 3.4 8.5 8 9.5 4.6-1 8-5.1 8-9.5V6L12 3Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
