@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Nav } from "@/components/marketing/Nav";
 import { ButtonLink } from "@/components/ui/Button";
 import { LogoMark } from "@/components/brand/Logo";
@@ -64,10 +65,10 @@ export default function Home() {
         <div className="relative mx-auto hidden h-[30rem] w-full max-w-sm md:block">
           {/* Back card */}
           <SocialCard
-            className="absolute -left-2 top-6 -rotate-[9deg] scale-90 opacity-80"
-            gradient="linear-gradient(155deg, #C4B5FD 0%, #4F46E5 100%)"
-            school="Canyon Aventure"
-            location="Gorges du Verdon"
+            className="absolute -left-2 top-6 -rotate-[9deg] scale-90 opacity-85"
+            photo="/hero-jetski.jpg"
+            school="Nautique Côte d'Azur"
+            location="Antibes · Jet ski"
             likes={34}
             isSmall
           />
@@ -75,7 +76,7 @@ export default function Home() {
           {/* Front card */}
           <SocialCard
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] rotate-[2deg] z-10"
-            gradient="linear-gradient(155deg, #7DD3FC 0%, #3B82F6 60%, #4F46E5 100%)"
+            photo="/hero-paragliding.jpg"
             school="Vol Passion Annecy"
             location="Annecy · Vol biplace"
             likes={61}
@@ -109,7 +110,7 @@ export default function Home() {
         <div className="mx-auto flex justify-center md:hidden">
           <SocialCard
             className=""
-            gradient="linear-gradient(155deg, #7DD3FC 0%, #3B82F6 60%, #4F46E5 100%)"
+            photo="/hero-paragliding.jpg"
             school="Vol Passion Annecy"
             location="Annecy · Vol biplace"
             likes={61}
@@ -267,14 +268,14 @@ export default function Home() {
 /* ─── Social Card ─── */
 function SocialCard({
   className = "",
-  gradient,
+  photo,
   school,
   location,
   likes,
   isSmall = false,
 }: {
   className?: string;
-  gradient: string;
+  photo: string;
   school: string;
   location: string;
   likes: number;
@@ -296,21 +297,24 @@ function SocialCard({
       </div>
 
       {/* Photo */}
-      <div
-        className="relative"
-        style={{
-          aspectRatio: "4/5",
-          background: gradient,
-        }}
-      >
-        {/* Overlay watermark grid simulation */}
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-4 opacity-10">
+      <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <Image
+          src={photo}
+          alt={school}
+          fill
+          className="object-cover"
+          sizes={isSmall ? "200px" : "240px"}
+        />
+        {/* Watermark overlay */}
+        <div className="absolute inset-0 grid grid-cols-3 grid-rows-4 opacity-[0.08]">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center justify-center text-[8px] font-bold text-white">
               SOUVENIR
             </div>
           ))}
         </div>
+        {/* Gradient bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
         {/* Lock badge */}
         <div className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm">
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-white">
