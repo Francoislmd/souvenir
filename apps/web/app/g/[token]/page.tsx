@@ -207,19 +207,15 @@ export default async function GalleryPage({
       className={`relative min-h-screen bg-surface md:flex md:items-start ${!isMarketing && !unlocked ? "pb-24 md:pb-0" : "pb-10 md:pb-0"}`}
       style={themeStyle}
     >
-      {/* Blobs décoratifs — fixed pour ne pas affecter la mise en page desktop */}
+      {/* Blobs décoratifs — couleurs palette Souvenir framboise */}
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
-          className="absolute -top-32 right-0 h-[500px] w-[420px] rounded-full blur-[150px]"
-          style={{ background: "#f09433", opacity: 0.12 }}
+          className="absolute -top-32 right-0 h-[500px] w-[420px] rounded-full blur-[160px]"
+          style={{ background: CLIENT_BRAND_COLOR, opacity: 0.15 }}
         />
         <div
-          className="absolute top-[38%] -left-24 h-[460px] w-[380px] rounded-full blur-[130px]"
-          style={{ background: CLIENT_BRAND_COLOR, opacity: 0.1 }}
-        />
-        <div
-          className="absolute bottom-32 right-0 h-[420px] w-[360px] rounded-full blur-[120px]"
-          style={{ background: "#bc1888", opacity: 0.08 }}
+          className="absolute bottom-0 -left-24 h-[460px] w-[380px] rounded-full blur-[140px]"
+          style={{ background: CLIENT_BRAND_COLOR, opacity: 0.08 }}
         />
       </div>
 
