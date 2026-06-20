@@ -80,6 +80,92 @@ body {
   cursor: pointer;
 }
 
+/* Variant fond clair */
+.simulator-range-light {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.simulator-range-light::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+}
+.simulator-range-light::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.18), 0 0 0 2px var(--brand);
+  cursor: pointer;
+}
+.simulator-range-light::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border);
+}
+.simulator-range-light::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--brand);
+  border-radius: 9999px;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* ─── Animations ─── */
+
+/* Entrance hero (page load, CSS-only) */
+@keyframes hero-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-enter {
+  animation: hero-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-d1 { transition-delay: 80ms; }
+.reveal-d2 { transition-delay: 160ms; }
+.reveal-d3 { transition-delay: 240ms; }
+.reveal-d4 { transition-delay: 320ms; }
+
+/* Unlock flash (PhoneMockup) */
+@keyframes unlock-flash {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+.animate-unlock-flash { animation: unlock-flash 0.55s ease forwards; }
+
+/* Badges flottants */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes float-alt {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+.animate-float     { animation: float     3.2s ease-in-out infinite; }
+.animate-float-alt { animation: float-alt 4s   ease-in-out infinite 0.9s; }
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

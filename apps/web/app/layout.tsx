@@ -14,6 +14,7 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
+
 export const metadata: Metadata = {
   title: "Souvenir",
   description: "Tes photos et vidéos d'activité, livrées par WhatsApp.",

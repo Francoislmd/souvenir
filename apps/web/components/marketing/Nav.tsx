@@ -4,7 +4,7 @@ import { ButtonLink } from "@/components/ui/Button";
 
 const LINKS = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
-  { href: "/signup", label: "Démarrer" },
+  { href: "#tarifs", label: "Tarifs" },
 ];
 
 export function Nav() {

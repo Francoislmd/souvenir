@@ -9,7 +9,7 @@
 
 **Souvenir** est un outil marketing pour opérateurs d'activités outdoor (parapente, canyoning, rafting, nautique) qui transforme chaque session en trois résultats concrets :
 
-1. **Revenus supplémentaires** : les photos/vidéos sont livrées automatiquement dans une galerie brandée. En mode Boutique, le client achète le pack HD (prix opérateur, défaut 29 €) — split automatique **80 % opérateur / 20 % Souvenir**.
+1. **Revenus supplémentaires** : les photos/vidéos sont livrées automatiquement dans une galerie brandée. En mode Boutique, le client achète les photos.
 2. **Visibilité organique** : en mode Marketing, les médias sont offerts en échange d'un avis Google, d'un partage Instagram tagué et d'un email (avec consentement). Chaque client devient ambassadeur.
 3. **Zéro gestion** : envoi automatique (email + SMS), paiement intégré, consentements RGPD horodatés. Le moniteur fait 3 taps, Souvenir s'occupe du reste.
 
@@ -204,15 +204,6 @@ model Event {           // source de vérité analytics — voir §10
 - Échec → retry ×3 avec backoff, puis `FAILED` + visible dans l'UI moniteur ("réessayer").
 - Garde-fous : refuse > 4 Go ou > 15 min par fichier. Rétention originaux : 90 jours (cron de purge — Phase 2, mais prévois la colonne).
 
----
-
-## 7. WhatsApp (Twilio) — opt-in optionnel
-
-- WhatsApp n'est plus le point d'entrée (voir §2.4) : c'est un **opt-in optionnel** depuis la galerie, via `wa.me` pré-rempli. Le client **initie** la conversation → on est en session 24 h : réponses libres, pas de template à faire approuver.
-- Dev local : Twilio Sandbox WhatsApp. Prod : numéro WhatsApp Business via Twilio (numéro partagé Souvenir, le nom de l'école dans le corps des messages).
-- Webhook entrant : vérifie la signature Twilio (`X-Twilio-Signature`) — refuse sinon.
-- Parse tolérant : extrais `SOUV-?([A-Z0-9]{6})` n'importe où dans le message. Code inconnu → "Hmm, ce code ne correspond à rien. Vérifie avec ton moniteur 🙂". Code valide → enregistre `clientPhone` + `whatsappOptInAt`, répond avec le lien `/g/[token]`.
-- Le message avis (Flux C.3) part **dans la session 24 h** ouverte par `whatsappOptInAt` — si la fenêtre est fermée, on ne l'envoie pas (MVP : tant pis, log l'event `review_window_missed`).
 
 ---
 
@@ -272,20 +263,6 @@ Dashboard opérateur (et vue admin Souvenir agrégée) :
 - Tests : uniquement sur la logique critique — matching code WhatsApp, calcul des fees, transitions de statut Delivery. Pas de tests UI au MVP.
 - Commits : `feat:`, `fix:`, `chore:` courts, en anglais.
 
----
-
-## 13. Phasage
-
-**v0.1 — Lancement (objectif : utilisable par une école en réel)**
-Onboarding opérateur + Stripe Connect · flux moniteur complet (upload résumable + QR) · webhook WhatsApp + galerie deux modes · checkout + déverrouillage + zip · worker preview/watermark · dashboard attach/funnel · RGPD de base.
-
-**v0.2 — après les 2 premières semaines de terrain**
-Message avis différé intelligent · multi-moniteurs avec rôles · upload depuis desktop (cartes SD) · purge 90 j · retours terrain des premières écoles.
-
-**v1 — après validation des résultats**
-Reel vertical auto (templates ffmpeg) · mode Marketing complet (tag IG auto, exports email) · intégrations résa (Yoplanning, Guidap) → pré-remplissage clients · pricing dynamique des packs (moteur yield) · multi-activités en UI.
-
-**Hors scope définitif (ne propose pas)** : app native, marketplace B2C, abonnements client final, IA de sélection des meilleures photos, multi-langue, multi-devises.
 
 ---
 
