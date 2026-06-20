@@ -8,6 +8,7 @@ import { Logo } from "@/components/brand/Logo";
 import { FaqList } from "@/components/marketing/FaqList";
 import { DistributionAnimation } from "@/components/marketing/DistributionAnimation";
 import { UploadAnimation } from "@/components/marketing/UploadAnimation";
+import { GalleryPhoneAnimated } from "@/components/marketing/GalleryPhoneAnimated";
 
 export default function Home() {
   return (
@@ -79,7 +80,7 @@ export default function Home() {
             className="absolute z-10"
             style={{ transform: "perspective(1200px) rotateY(-4deg) rotateX(2deg)" }}
           >
-            <GalleryPhone />
+            <GalleryPhoneAnimated />
           </div>
 
           {/* Badge revenus */}
