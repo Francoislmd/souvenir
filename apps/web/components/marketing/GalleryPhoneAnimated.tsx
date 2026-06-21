@@ -154,30 +154,30 @@ export function GalleryPhoneAnimated({ className = "" }: { className?: string })
         <div className="mx-2.5 mt-2">
           {unlocked ? (
             <div
-              className="flex items-center gap-1.5 rounded-full px-3 py-2"
+              className="flex items-center gap-2 rounded-full px-2.5 py-1.5"
               style={{
-                background: "#16A34A",
+                background: "#fff",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
                 transform: unlocked ? "scale(1)" : "scale(0.85)",
                 transition: "transform 0.4s cubic-bezier(0.34,1.56,0.64,1)",
               }}
             >
               <div
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
                 style={{
-                  transform: unlocked ? "scale(1) rotate(0deg)" : "scale(0) rotate(-90deg)",
+                  background: "#EAF7EE",
+                  transform: unlocked ? "scale(1)" : "scale(0)",
                   transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.05s",
                 }}
               >
-                <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3 shrink-0">
-                  <path d="M2 6l2.5 2.5L10 4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5">
+                  <path d="M2 5l2 2 4-4" stroke="#16A34A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <span className="flex-1 text-[10px] font-bold text-white">Photos débloquées !</span>
-              <div className="flex items-center gap-0.5">
-                <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5">
-                  <path d="M6 1v7M3 6l3 3 3-3M2 11h8" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="text-[9px] font-semibold text-white/80">Zip</span>
-              </div>
+              <span className="flex-1 text-[10px] font-bold text-[#1F1B17]">Photos débloquées !</span>
+              <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3 shrink-0 text-[#A89C90]">
+                <path d="M6 1v7M3 6l3 3 3-3M2 11h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
           ) : (
             <div
