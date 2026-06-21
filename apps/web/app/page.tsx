@@ -130,9 +130,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">01</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Importez vos médias</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous uploadez vos photos</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Déposez vos photos et vidéos en quelques secondes depuis votre pellicule. Les transferts reprennent automatiquement en cas de coupure réseau.
+                  Sélectionnez vos photos et vidéos depuis votre pellicule, en 3 taps. Les transferts reprennent automatiquement en cas de coupure réseau.
                 </p>
               </div>
               {/* Illustration animée */}
@@ -146,9 +146,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">02</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Nous livrons automatiquement</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous répartissez par client</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Attribuez chaque photo à la bonne personne en quelques secondes. Vos clients reçoivent un lien personnalisé par email et SMS — sans rien faire de plus.
+                  Après l&apos;import groupé, attribuez chaque photo à la bonne personne en quelques secondes. Un clic suffit pour envoyer toutes les galeries d&apos;un coup.
                 </p>
               </div>
             </div>
@@ -158,9 +158,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">03</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous êtes payé</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Le client débloque</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Ils débloquent leurs souvenirs directement depuis leur téléphone. Les paiements sont automatisés — Stripe encaisse et transfère votre part sans action de votre part.
+                  Il ouvre sa galerie, voit ses photos floutées, et achète le pack HD en un clic. Stripe encaisse et transfère votre part automatiquement.
                 </p>
               </div>
               {/* Illustration */}
@@ -224,9 +224,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">04</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Pendant ce temps, vous êtes sur votre prochaine activité</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous suivez tout</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Taux d&apos;achat, CA encaissé, avis collectés : votre dashboard se met à jour en temps réel. Rien à configurer, rien à suivre.
+                  Taux d&apos;achat, CA encaissé, avis collectés : votre dashboard se met à jour en temps réel. Rien à configurer.
                 </p>
               </div>
             </div>
