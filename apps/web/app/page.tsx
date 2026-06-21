@@ -30,11 +30,11 @@ export default function Home() {
       <section className="relative z-10 mx-auto grid max-w-5xl gap-10 px-6 pb-16 pt-12 sm:pt-24 md:grid-cols-2 md:items-center md:gap-16 md:pb-32">
         <div className="text-center md:text-left">
           <span className="hero-enter inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink-2 shadow-card" style={{ animationDelay: "0ms" }}>
-            🪂 Parapente · Canyoning · Rafting · Nautique
+            🪂 Parapente · Canyoning · Rafting · Surf · Nautique
           </span>
 
           <h1 className="hero-enter mt-8 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[56px]" style={{ animationDelay: "80ms" }}>
-            Augmentez vos revenus.
+            Transformez vos photos
             <br />
             <span
               style={{
@@ -44,14 +44,14 @@ export default function Home() {
                 color: "transparent",
               }}
             >
-              Boostez votre visibilité.
+              en revenus automatiques.
             </span>
           </h1>
 
           <p className="hero-enter mx-auto mt-7 max-w-md text-base leading-relaxed text-ink-2 sm:text-lg md:mx-0" style={{ animationDelay: "160ms" }}>
-            Souvenir envoie automatiquement les photos et vidéos de vos clients
-            après chaque session. Ils partagent, laissent un avis, vous encaissez.{" "}
-            <strong className="font-semibold text-ink">Zéro gestion, 100&nbsp;% automatique.</strong>
+            Les souvenirs que vous capturez déjà peuvent devenir une nouvelle source de revenus.
+            Souvenir les envoie automatiquement à vos clients après chaque activité.{" "}
+            <strong className="font-semibold text-ink">Ils débloquent, partagent, laissent un avis. Vous encaissez, sans gestion.</strong>
           </p>
 
           <HeroForm />
@@ -117,7 +117,7 @@ export default function Home() {
           <div className="reveal mb-12 text-center md:mb-20">
             <span className="text-sm font-semibold uppercase tracking-wide text-brand">Comment ça marche</span>
             <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-              De la session à l&apos;encaissement,<br />en quelques minutes.
+              Vous prenez les photos.<br />Nous faisons le reste.
             </h2>
           </div>
 
@@ -128,9 +128,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">01</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous uploadez vos photos</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Importez vos médias</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Sélectionnez vos photos et vidéos depuis votre pellicule, en 3 taps. Les transferts reprennent automatiquement en cas de coupure réseau.
+                  Déposez vos photos et vidéos en quelques secondes depuis votre pellicule. Les transferts reprennent automatiquement en cas de coupure réseau.
                 </p>
               </div>
               {/* Illustration animée */}
@@ -144,9 +144,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">02</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous répartissez par client</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Nous livrons automatiquement</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Après l&apos;import groupé, attribuez chaque photo à la bonne personne en quelques secondes. Un clic suffit pour envoyer toutes les galeries d&apos;un coup.
+                  Attribuez chaque photo à la bonne personne en quelques secondes. Vos clients reçoivent un lien personnalisé par email et SMS — sans rien faire de plus.
                 </p>
               </div>
             </div>
@@ -156,9 +156,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">03</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Le client débloque</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous êtes payé</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Il ouvre sa galerie, voit ses photos floutées, et achète le pack HD en un clic. Stripe encaisse et transfère votre part automatiquement.
+                  Ils débloquent leurs souvenirs directement depuis leur téléphone. Les paiements sont automatisés — Stripe encaisse et transfère votre part sans action de votre part.
                 </p>
               </div>
               {/* Illustration */}
@@ -222,9 +222,9 @@ export default function Home() {
               {/* Texte */}
               <div>
                 <span className="font-display text-5xl font-extrabold text-border md:text-6xl">04</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous suivez tout</h3>
+                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Pendant ce temps, vous êtes sur votre prochaine activité</h3>
                 <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Taux d&apos;achat, CA encaissé, avis collectés : votre dashboard se met à jour en temps réel. Rien à configurer.
+                  Taux d&apos;achat, CA encaissé, avis collectés : votre dashboard se met à jour en temps réel. Rien à configurer, rien à suivre.
                 </p>
               </div>
             </div>
@@ -403,9 +403,9 @@ export default function Home() {
 
             {/* Liste des avantages */}
             <div className="reveal reveal-d1">
-              <span className="text-sm font-semibold uppercase tracking-wide text-brand">Les bénéfices</span>
+              <span className="text-sm font-semibold uppercase tracking-wide text-brand">Plus qu&apos;un album photo</span>
               <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-                Tout ce que vous gagnez, dès la première session
+                Une nouvelle source de revenus, sans travail supplémentaire
               </h2>
 
               <div className="mt-6 divide-y divide-border md:mt-10">
@@ -419,8 +419,8 @@ export default function Home() {
                         <path d="M14 7h4v4" />
                       </svg>
                     ),
-                    title: "Nouveaux revenus, zéro effort",
-                    desc: "Le client achète son pack HD en un tap. Stripe encaisse et verse votre part automatiquement, sans action de votre part.",
+                    title: "Augmentez vos revenus",
+                    desc: "Générez des ventes après chaque activité. Stripe encaisse et verse votre part automatiquement — chaque sortie devient une opportunité.",
                   },
                   {
                     iconBg: "#EEF2FF",
@@ -430,8 +430,8 @@ export default function Home() {
                         <path d="M11 2L4 11h5.5l-1 7L17 9h-5.5L11 2z" />
                       </svg>
                     ),
-                    title: "Photos livrées en 3 taps",
-                    desc: "Import groupé, tri par client, envoi email + SMS automatique. Quelques secondes sur le terrain, même avec un réseau faible.",
+                    title: "Gagnez du temps",
+                    desc: "Fini les échanges WhatsApp, WeTransfer et les relances manuelles. Import groupé, tri par client, envoi automatique — en quelques secondes sur le terrain.",
                   },
                   {
                     iconBg: "#FEF6EC",
@@ -444,8 +444,8 @@ export default function Home() {
                         <path d="M5.75 9.1L14.25 5M5.75 10.9l8.5 4.1" />
                       </svg>
                     ),
-                    title: "Vos clients, vos meilleurs ambassadeurs",
-                    desc: "Avis Google, partages Instagram tagués, emails collectés. Chaque session alimente votre visibilité sans budget pub.",
+                    title: "Développez votre visibilité",
+                    desc: "Chaque souvenir partagé fait découvrir votre activité à de nouveaux clients. Avis Google, partages Instagram — sans budget pub.",
                   },
                   {
                     iconBg: "#F1F5F9",
@@ -456,8 +456,8 @@ export default function Home() {
                         <path d="M7 10l2 2 4-4" />
                       </svg>
                     ),
-                    title: "Conforme RGPD, sans paperasse",
-                    desc: "Consentements horodatés, droit à l'image, suppression sur demande. Tout est géré automatiquement.",
+                    title: "Collectez plus d'avis",
+                    desc: "Transformez l'enthousiasme de vos clients en avis positifs. Les relances partent automatiquement au bon moment, vous n'y pensez plus.",
                   },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-4 py-6">
@@ -501,14 +501,14 @@ export default function Home() {
         />
         <div className="relative z-10">
           <h2 className="mx-auto max-w-2xl font-display text-2xl font-extrabold tracking-tight text-canvas sm:text-3xl md:text-4xl">
-            Prêt à transformer chaque session en levier de croissance ?
+            Commencez gratuitement.
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm text-canvas/70 sm:text-base">
-            Onboarding en quelques minutes. Lancez votre première galerie aujourd&apos;hui.
+            Créez votre espace en quelques minutes et découvrez combien vos souvenirs peuvent vous rapporter.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <ButtonLink href="/signup" size="lg">
-              Démarrer gratuitement
+              Créer mon espace gratuitement
             </ButtonLink>
             <ButtonLink href="/login" variant="outline-light" size="lg">
               J&apos;ai déjà un compte

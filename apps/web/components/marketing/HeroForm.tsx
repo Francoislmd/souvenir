@@ -44,7 +44,7 @@ export function HeroForm() {
         Démarrer gratuitement
       </button>
       <p className="mt-2.5 text-xs text-muted">
-        Onboarding en quelques minutes · Pas de frais fixes
+        Mise en place en moins de 5 minutes · Aucun frais fixe · Sans engagement
       </p>
     </form>
   );
