@@ -49,8 +49,8 @@ export default function Home() {
           </h1>
 
           <p className="hero-enter mx-auto mt-6 max-w-md text-base leading-relaxed text-ink-2 sm:text-lg md:mx-0" style={{ animationDelay: "160ms" }}>
-            Que vous soyez guide de parapente, moniteur de canyoning ou gérant d&apos;une école nautique — les photos que vous capturez déjà peuvent devenir une nouvelle source de revenus.{" "}
-            <strong className="font-semibold text-ink">Souvenir les envoie à vos clients, ils débloquent, vous encaissez. Zéro gestion.</strong>
+            Guide, moniteur ou école outdoor : les photos que vous capturez après chaque session peuvent devenir une source de revenus automatique.{" "}
+            <strong className="font-semibold text-ink">Souvenir les envoie à vos clients. Ils débloquent, vous encaissez. Zéro gestion.</strong>
           </p>
 
           <HeroForm />
