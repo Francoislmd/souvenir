@@ -30,10 +30,10 @@ export default function Home() {
       <section className="relative z-10 mx-auto grid max-w-5xl gap-10 px-6 pb-16 pt-12 sm:pt-24 md:grid-cols-2 md:items-center md:gap-16 md:pb-32">
         <div className="text-center md:text-left">
           <span className="hero-enter inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink-2 shadow-card" style={{ animationDelay: "0ms" }}>
-            🪂 Parapente · Canyoning · Rafting · Surf · Nautique
+            Pour les guides, moniteurs et écoles outdoor
           </span>
 
-          <h1 className="hero-enter mt-8 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[56px]" style={{ animationDelay: "80ms" }}>
+          <h1 className="hero-enter mt-6 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[56px]" style={{ animationDelay: "80ms" }}>
             Transformez vos photos
             <br />
             <span
@@ -48,13 +48,15 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="hero-enter mx-auto mt-7 max-w-md text-base leading-relaxed text-ink-2 sm:text-lg md:mx-0" style={{ animationDelay: "160ms" }}>
-            Les souvenirs que vous capturez déjà peuvent devenir une nouvelle source de revenus.
-            Souvenir les envoie automatiquement à vos clients après chaque activité.{" "}
-            <strong className="font-semibold text-ink">Ils débloquent, partagent, laissent un avis. Vous encaissez, sans gestion.</strong>
+          <p className="hero-enter mx-auto mt-6 max-w-md text-base leading-relaxed text-ink-2 sm:text-lg md:mx-0" style={{ animationDelay: "160ms" }}>
+            Que vous soyez guide de parapente, moniteur de canyoning ou gérant d&apos;une école nautique — les photos que vous capturez déjà peuvent devenir une nouvelle source de revenus.{" "}
+            <strong className="font-semibold text-ink">Souvenir les envoie à vos clients, ils débloquent, vous encaissez. Zéro gestion.</strong>
           </p>
 
           <HeroForm />
+          <p className="mt-5 text-xs text-muted">
+            Parapente · Canyoning · Rafting · Surf · Kayak · Escalade · Ski · Nautique
+          </p>
         </div>
 
         {/* Visual — desktop : fan layout */}
@@ -403,7 +405,7 @@ export default function Home() {
 
             {/* Liste des avantages */}
             <div className="reveal reveal-d1">
-              <span className="text-sm font-semibold uppercase tracking-wide text-brand">Plus qu&apos;un album photo</span>
+              <span className="text-sm font-semibold uppercase tracking-wide text-brand">Conçu pour les pros de l&apos;outdoor</span>
               <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
                 Une nouvelle source de revenus, sans travail supplémentaire
               </h2>
