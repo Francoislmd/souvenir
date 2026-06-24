@@ -136,45 +136,33 @@ export default async function GalleryPage({
   );
 
   const statusCard = isMarketing ? (
-    /* Mode Marketing : tout offert */
-    <div
-      className="overflow-hidden rounded-card shadow-card"
-      style={{ background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 75%, #000) 100%)" }}
-    >
-      <div className="flex items-center gap-3.5 px-5 py-5">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-2xl">
-          🎁
-        </span>
-        <div>
-          <p className="font-semibold text-white">Cadeau de {operator.name}</p>
-          <p className="text-sm text-white/75">Photos et vidéos HD, gratuitement.</p>
-        </div>
+    <div className="flex items-center gap-3 rounded-card border border-border bg-gradient-to-br from-accent-tint to-surface px-4 py-4 shadow-card">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
+        🎁
+      </span>
+      <div>
+        <p className="text-base font-semibold text-ink">Cadeau de {operator.name}</p>
+        <p className="text-sm text-ink-2">Tout est à toi, gratuitement, en HD et sans filigrane.</p>
       </div>
     </div>
   ) : unlocked ? (
-    /* Post-achat */
-    <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-card shadow-card">
-        <div
-          className="flex items-center gap-3.5 px-5 py-5"
-          style={{ background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 75%, #000) 100%)" }}
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20">
-            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-white">
-              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+    <div className="flex flex-col gap-4">
+      <div className="overflow-hidden rounded-card border border-border shadow-card">
+        <div className="flex items-center gap-3 bg-gradient-to-br from-success-tint to-surface px-4 py-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
+            🎉
           </span>
           <div>
-            <p className="font-semibold text-white">C&apos;est à toi !</p>
-            <p className="text-sm text-white/75">Photos et vidéos en HD, sans filigrane.</p>
+            <p className="text-base font-semibold text-ink">C&apos;est débloqué !</p>
+            <p className="text-sm text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
           </div>
         </div>
         <a
           href={`/api/gallery/${delivery.token}/zip`}
-          className="flex items-center justify-center gap-2 border-t border-border bg-surface py-3.5 text-sm font-semibold text-ink transition hover:bg-canvas active:opacity-80"
+          className="flex items-center justify-center gap-2 border-t border-border bg-surface py-3 text-sm font-semibold text-ink transition hover:bg-canvas active:bg-canvas"
         >
           <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-            <path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Tout télécharger (.zip)
         </a>
