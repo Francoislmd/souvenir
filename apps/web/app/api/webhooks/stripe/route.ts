@@ -42,7 +42,7 @@ export async function POST(request: Request): Promise<Response> {
       const account = event.data.object as Stripe.Account;
       await prisma.operator.updateMany({
         where: { stripeAccountId: account.id },
-        data: { stripeOnboarded: account.charges_enabled && account.payouts_enabled },
+        data: { stripeOnboarded: !!account.charges_enabled },
       });
       break;
     }

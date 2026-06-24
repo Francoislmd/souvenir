@@ -13,6 +13,8 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@souvenir/db": "workspace:*",
+    "@stripe/connect-js": "^3.4.6",
+    "@stripe/react-connect-js": "^3.4.4",
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^4.10.0",
     "@supabase/ssr": "^0.5.1",

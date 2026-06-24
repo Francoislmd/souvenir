@@ -7,13 +7,17 @@ const schema = z.object({
   name: z.string().min(2),
   packPriceCents: z.number().int().min(0),
   defaultMode: z.nativeEnum(Mode),
+  instagramHandle: z.string().optional(),
+  googleReviewUrl: z.string().optional(),
+  trustpilotUrl: z.string().optional(),
+  tripadvisorUrl: z.string().optional(),
 });
 
 function slugify(input: string): string {
   return input
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-+|-+$)/g, "");
 }
@@ -39,9 +43,10 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const { name, packPriceCents, defaultMode } = parsed.data;
+  const { name, packPriceCents, defaultMode, instagramHandle, googleReviewUrl, trustpilotUrl, tripadvisorUrl } =
+    parsed.data;
 
-  const base = slugify(name) || "ecole";
+  const base = slugify(name) || "activite";
   let slug = base;
   let suffix = 1;
   while (await prisma.operator.findUnique({ where: { slug } })) {
@@ -55,6 +60,10 @@ export async function POST(request: Request): Promise<Response> {
       slug,
       packPriceCents,
       defaultMode,
+      ...(instagramHandle && { instagramHandle: instagramHandle.replace(/^@/, "") }),
+      ...(googleReviewUrl && { googleReviewUrl }),
+      ...(trustpilotUrl && { trustpilotUrl }),
+      ...(tripadvisorUrl && { tripadvisorUrl }),
       users: { create: { email: user.email, role: Role.ADMIN } },
     },
   });

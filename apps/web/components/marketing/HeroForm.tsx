@@ -17,7 +17,10 @@ export function HeroForm() {
 
   return (
     <form action="/signup" method="get" className="mt-8 w-full max-w-md mx-auto md:mx-0">
-      {/* Input row */}
+      {/* Pass the raw human name alongside the slug so the wizard can display it nicely */}
+      <input type="hidden" name="name" value={name} />
+
+      {/* Slug preview input */}
       <div
         className="flex items-center gap-1.5 rounded-[14px] border border-border bg-surface p-1.5"
         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
@@ -27,7 +30,6 @@ export function HeroForm() {
         </span>
         <input
           type="text"
-          name="name"
           value={slug}
           onChange={(e) => setName(e.target.value)}
           placeholder="votre-ecole"
@@ -35,7 +37,6 @@ export function HeroForm() {
           autoComplete="off"
         />
       </div>
-      {/* CTA — full width on mobile, inline on sm+ */}
       <button
         type="submit"
         className="mt-2.5 w-full rounded-[12px] py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:mt-2 sm:rounded-[10px] sm:py-2.5"

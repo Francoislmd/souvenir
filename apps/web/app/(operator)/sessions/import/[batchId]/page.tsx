@@ -13,9 +13,9 @@ export default async function ImportBatchPage({ params }: { params: { batchId: s
   if (!batch) notFound();
 
   return (
-    <div className="relative min-h-[calc(100vh-80px)] overflow-hidden">
-      {/* Decorative background — Souvenir brand palette */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+    <div className="relative">
+      {/* Decorative background — fixed pour couvrir tout le viewport */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
           className="absolute -top-24 -right-16 h-[480px] w-[420px] rounded-full blur-[150px]"
           style={{ background: "#7DD3FC", opacity: 0.28 }}

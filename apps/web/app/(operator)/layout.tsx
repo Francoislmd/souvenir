@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { requireOperatorUser } from "@/lib/current-user";
 import { BottomNav } from "@/components/BottomNav";
 import { Sidebar } from "@/components/operator/Sidebar";
 import { LogoMark } from "@/components/brand/Logo";
+import { StripeSyncBanner } from "@/components/operator/StripeSyncBanner";
 
 export default async function OperatorLayout({ children }: { children: React.ReactNode }) {
   const dbUser = await requireOperatorUser();
@@ -14,15 +14,7 @@ export default async function OperatorLayout({ children }: { children: React.Rea
       <Sidebar isAdmin={isAdmin} operatorName={operator.name} stripeOnboarded={operator.stripeOnboarded} />
 
       <div className="flex min-h-screen flex-1 flex-col">
-        {!operator.stripeOnboarded ? (
-          <div className="bg-warning-tint px-4 py-2 text-center text-sm text-warning">
-            Tu peux livrer, mais pas encore encaisser —{" "}
-            <Link href="/settings" className="font-semibold underline">
-              active les paiements
-            </Link>
-            .
-          </div>
-        ) : null}
+        {!operator.stripeOnboarded && <StripeSyncBanner />}
 
         <div className="mx-auto w-full max-w-xl px-4 md:max-w-none md:px-8">
           <header className="flex items-center justify-between border-b border-border py-4 md:hidden">

@@ -1,20 +1,14 @@
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { env } from "@/lib/env";
 import { getOperatorUser } from "@/lib/current-user";
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(): Promise<Response> {
   const dbUser = await getOperatorUser();
   if (!dbUser || dbUser.role !== "ADMIN") {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { operator } = dbUser;
-
-  // returnPath permet à l'appelant de choisir la destination post-onboarding
-  const body = await request.json().catch(() => ({})) as { returnPath?: string };
-  const returnPath = body.returnPath ?? "/settings";
-
   let stripeAccountId = operator.stripeAccountId;
 
   if (!stripeAccountId) {
@@ -37,13 +31,12 @@ export async function POST(request: Request): Promise<Response> {
     stripeAccountId = account.id;
   }
 
-  const base = env.NEXT_PUBLIC_APP_URL;
-  const accountLink = await stripe.accountLinks.create({
+  const accountSession = await stripe.accountSessions.create({
     account: stripeAccountId,
-    refresh_url: `${base}/api/stripe/connect/refresh`,
-    return_url: `${base}${returnPath}`,
-    type: "account_onboarding",
+    components: {
+      account_onboarding: { enabled: true },
+    },
   });
 
-  return Response.json({ url: accountLink.url }, { status: 200 });
+  return Response.json({ clientSecret: accountSession.client_secret });
 }

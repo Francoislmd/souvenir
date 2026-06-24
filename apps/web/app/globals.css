@@ -154,6 +154,23 @@ body {
 }
 .animate-unlock-flash { animation: unlock-flash 0.55s ease forwards; }
 
+/* Onboarding wizard — slide between steps */
+@keyframes step-slide-forward {
+  from { opacity: 0; transform: translateX(36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes step-slide-backward {
+  from { opacity: 0; transform: translateX(-36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-slide-up {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-step-forward  { animation: step-slide-forward  0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-step-backward { animation: step-slide-backward 0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-slide-up { animation: fade-slide-up       0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 /* Badges flottants */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
