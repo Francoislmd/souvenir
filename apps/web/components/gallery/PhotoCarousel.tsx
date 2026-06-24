@@ -146,9 +146,10 @@ function Slide({
       onContextMenu={(e) => e.preventDefault()}
       className="relative shrink-0 overflow-hidden rounded-2xl bg-canvas"
       style={{
-        width: "calc(100vw - 28px)",
+        width: "calc(100% - 20px)",
         aspectRatio: "3 / 4",
         scrollSnapAlign: "start",
+        flexShrink: 0,
       }}
     >
       {item.status !== "READY" ? (
