@@ -12,7 +12,6 @@ import { ReviewSection } from "@/components/gallery/ReviewSection";
 import { InstagramShareSection } from "@/components/gallery/InstagramShareSection";
 import { CheckoutButton } from "@/components/gallery/CheckoutButton";
 import { MarketingCtas } from "@/components/gallery/MarketingCtas";
-import { ConsentToggle } from "@/components/gallery/ConsentToggle";
 import { PurchaseSuccessRefresher } from "@/components/gallery/PurchaseSuccessRefresher";
 import { UnlockCelebration } from "@/components/gallery/UnlockCelebration";
 import { LogoMark } from "@/components/brand/Logo";
@@ -76,9 +75,6 @@ export default async function GalleryPage({
   const operator = delivery.session.operator;
   const isMarketing = delivery.session.mode === "MARKETING";
   const unlocked = isMarketing || delivery.status === "PURCHASED";
-
-  // État local du consentement pour le rendu (persiste en DB juste après)
-  const consentImage = priorOpenCount === 0 ? true : delivery.consentImage;
 
   // Claim (1ère ouverture) : await pour la cohérence du funnel analytics
   if (priorOpenCount === 0) {
@@ -196,33 +192,7 @@ export default async function GalleryPage({
         />
       ) : null}
     </div>
-  ) : (
-    <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-      <div className="border-b border-border bg-accent-tint px-4 py-3">
-        <p className="text-sm font-semibold text-ink">🎁 Avec le pack HD</p>
-      </div>
-      <ul className="flex flex-col gap-2.5 px-4 py-4 text-sm text-ink-2">
-        <li className="flex items-center gap-2.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-tint text-xs font-bold text-accent">
-            ✓
-          </span>
-          Toutes les photos et vidéos en haute définition
-        </li>
-        <li className="flex items-center gap-2.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-tint text-xs font-bold text-accent">
-            ✓
-          </span>
-          Sans filigrane
-        </li>
-        <li className="flex items-center gap-2.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-tint text-xs font-bold text-accent">
-            ✓
-          </span>
-          Téléchargement en un clic (zip)
-        </li>
-      </ul>
-    </div>
-  );
+  ) : null;
 
   const marketingCtasProps = {
     token: delivery.token,
@@ -273,9 +243,6 @@ export default async function GalleryPage({
                 <CheckoutButton deliveryId={delivery.id} priceCents={operator.packPriceCents} inline />
               </div>
             ) : null}
-            <div className="mt-5 rounded-card border border-border bg-canvas p-4">
-              <ConsentToggle token={delivery.token} initialConsent={consentImage} />
-            </div>
             {footerContent}
           </div>
         </div>
@@ -309,9 +276,6 @@ export default async function GalleryPage({
                 <MarketingCtas {...marketingCtasProps} />
               </div>
             ) : null}
-            <div className="mt-5 rounded-card border border-border bg-canvas p-4">
-              <ConsentToggle token={delivery.token} initialConsent={consentImage} />
-            </div>
             {footerContent}
           </div>
         </div>
