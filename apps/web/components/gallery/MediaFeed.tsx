@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { MediaTile, type GalleryMedia } from "./MediaTile";
 import { MediaLightbox } from "./MediaLightbox";
+import { PhotoCarousel } from "./PhotoCarousel";
 
 export type { GalleryMedia };
 
-const PRIORITY_COUNT = 6; // premières tuiles eager (2 lignes × 3 colonnes)
+const PRIORITY_COUNT = 6;
 
 export function MediaFeed({
   media,
@@ -25,7 +26,13 @@ export function MediaFeed({
 
   return (
     <>
-      <div className={gridClassName ?? "grid grid-cols-3 gap-0.5"}>
+      {/* ── Mobile : carousel plein format avec swipe-hint ── */}
+      <div className="md:hidden">
+        <PhotoCarousel media={media} locked={locked} onOpen={setActiveIndex} />
+      </div>
+
+      {/* ── Desktop : grille classique ── */}
+      <div className={`hidden md:grid ${gridClassName ?? "grid-cols-3 gap-0.5"}`}>
         {media.map((item, index) => (
           <MediaTile
             key={item.id}
@@ -37,7 +44,7 @@ export function MediaFeed({
         ))}
       </div>
 
-      {activeIndex !== null ? (
+      {activeIndex !== null && (
         <MediaLightbox
           media={media}
           token={token}
@@ -45,7 +52,7 @@ export function MediaFeed({
           initialIndex={activeIndex}
           onClose={() => setActiveIndex(null)}
         />
-      ) : null}
+      )}
     </>
   );
 }

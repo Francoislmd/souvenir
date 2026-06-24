@@ -171,6 +171,13 @@ body {
 .animate-step-backward { animation: step-slide-backward 0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-fade-slide-up { animation: fade-slide-up       0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+/* Flèche de swipe animée dans le carousel galerie */
+@keyframes swipe-arrow {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  40%       { transform: translateX(6px); opacity: 0.7; }
+  70%       { transform: translateX(-3px); opacity: 1; }
+}
+
 /* Badges flottants */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
