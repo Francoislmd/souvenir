@@ -248,8 +248,8 @@ export default async function GalleryPage({
             <GalleryHeader {...headerProps} />
           </div>
 
-          {/* Médias — plein bord sur mobile (le carousel gère son propre padding) */}
-          <div className="mt-3 md:min-h-screen md:bg-canvas md:p-4 lg:p-6">
+          {/* Médias */}
+          <div className="mt-3 px-4 pb-2 md:min-h-screen md:bg-canvas md:p-4 lg:p-6">
             {media.length > 0 ? (
               <MediaFeed
                 media={media}
@@ -258,7 +258,7 @@ export default async function GalleryPage({
                 gridClassName="grid grid-cols-3 gap-0.5 md:gap-1 lg:grid-cols-4"
               />
             ) : (
-              <div className="px-4">{emptyState}</div>
+              emptyState
             )}
           </div>
 
