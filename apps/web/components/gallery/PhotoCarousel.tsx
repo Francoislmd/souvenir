@@ -135,7 +135,9 @@ function Slide({
           Traitement en cours…
         </div>
       ) : item.kind === "VIDEO" && item.previewUrl ? (
-        <GridVideo previewUrl={item.previewUrl} thumbUrl={item.thumbUrl} />
+        <div className={`h-full w-full ${isLocked ? "wm-blurred" : ""}`}>
+          <GridVideo previewUrl={item.previewUrl} thumbUrl={item.thumbUrl} />
+        </div>
       ) : item.previewUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
