@@ -14,6 +14,7 @@ import { CheckoutButton } from "@/components/gallery/CheckoutButton";
 import { LockedCoverCard } from "@/components/gallery/LockedCoverCard";
 import { MarketingCtas } from "@/components/gallery/MarketingCtas";
 import { PurchaseSuccessRefresher } from "@/components/gallery/PurchaseSuccessRefresher";
+import { MediaStatusPoller } from "@/components/gallery/MediaStatusPoller";
 import { UnlockCelebration } from "@/components/gallery/UnlockCelebration";
 import { LogoMark } from "@/components/brand/Logo";
 import { CLIENT_BRAND_COLOR } from "@/lib/brand";
@@ -106,6 +107,8 @@ export default async function GalleryPage({
   const videoCount = delivery.media.filter((m) => m.kind === "VIDEO").length;
   const heroTitle = delivery.title ?? defaultGalleryTitle(delivery.clientName ?? "");
   const hashtags = extractHashtags(operator.instagramPostCaption);
+
+  const pendingMediaCount = delivery.media.filter((m) => m.status !== "READY" && m.status !== "FAILED").length;
 
   // Pour la carte de paiement : première vidéo READY en aperçu, puis première photo
   const firstReadyVideo = media.find((m) => m.kind === "VIDEO" && m.status === "READY");
@@ -237,6 +240,7 @@ export default async function GalleryPage({
       {/* Effets globaux — pas de rendu visuel, une seule instance */}
       {justUnlocked ? <UnlockCelebration id={delivery.id} /> : null}
       {showPurchaseRefresher ? <PurchaseSuccessRefresher /> : null}
+      <MediaStatusPoller pendingCount={pendingMediaCount} />
 
       <div className={`md:flex md:items-start ${!isMarketing && !unlocked ? "pb-24 md:pb-0" : "pb-10 md:pb-0"}`}>
 
