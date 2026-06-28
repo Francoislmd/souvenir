@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { sendSms } from "./twilio";
 import { sendDeliveryEmail } from "./email";
+import { getPreviewUrl } from "./storage";
 import { env } from "./env";
 import { renderDeliveryMessage } from "./message-templates";
 
@@ -27,12 +28,45 @@ export async function sendDeliveryNotifications(
 
   if (delivery.clientEmail) {
     try {
+      // Fetch session + media for the rich email template
+      const [session, mediaCounts, thumbMedia] = await Promise.all([
+        prisma.session.findUnique({
+          where: { id: delivery.sessionId },
+          select: { date: true, mode: true },
+        }),
+        prisma.media.groupBy({
+          by: ["kind"],
+          where: { deliveryId: delivery.id, status: "READY" },
+          _count: { kind: true },
+        }),
+        prisma.media.findMany({
+          where: { deliveryId: delivery.id, status: "READY", thumbKey: { not: null } },
+          select: { thumbKey: true, kind: true },
+          orderBy: { kind: "desc" }, // VIDEO before PHOTO alphabetically
+          take: 4,
+        }),
+      ]);
+
+      const photoCount = mediaCounts.find((g) => g.kind === "PHOTO")?._count?.kind ?? 0;
+      const videoCount = mediaCounts.find((g) => g.kind === "VIDEO")?._count?.kind ?? 0;
+      const thumbUrls = thumbMedia
+        .map((m) => (m.thumbKey ? getPreviewUrl(m.thumbKey) : null))
+        .filter((u): u is string => u !== null);
+
       await sendDeliveryEmail({
         to: delivery.clientEmail,
         operatorName: operator.name,
         logoUrl: operator.logoUrl,
         galleryUrl,
         message: smsMessage,
+        clientName: delivery.clientName ?? undefined,
+        sessionDate: session?.date ?? undefined,
+        location: operator.location ?? undefined,
+        photoCount,
+        videoCount,
+        packPriceCents: operator.packPriceCents,
+        mode: (session?.mode ?? operator.defaultMode) as "BOUTIQUE" | "MARKETING",
+        thumbUrls,
       });
       result.emailSent = true;
       await track("delivery_sent", {
