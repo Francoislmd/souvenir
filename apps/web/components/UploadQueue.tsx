@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type ChangeEvent } from "react";
 import { addUploadItem, getUploadItemsForOwner, updateUploadItem, type UploadItem, type UploadOwnerType } from "@/lib/idb";
 import type { MediaStatus } from "@souvenir/db";
 
@@ -30,19 +30,25 @@ function putToSignedUrl(url: string, file: Blob, onProgress: (pct: number) => vo
   });
 }
 
-export function UploadQueue({
-  ownerType,
-  ownerId,
-  onStatusChange,
-  onFilesQueued,
-}: {
+export interface UploadQueueHandle {
+  trigger: () => void;
+}
+
+export const UploadQueue = forwardRef<UploadQueueHandle, {
   ownerType: UploadOwnerType;
   ownerId: string;
   onStatusChange?: (status: UploadStatus) => void;
   onFilesQueued?: (items: Array<{ id: string; file: Blob; kind: "PHOTO" | "VIDEO" }>) => void;
-}) {
+}>(function UploadQueue({
+  ownerType,
+  ownerId,
+  onStatusChange,
+  onFilesQueued,
+}, ref) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({ trigger: () => inputRef.current?.click() }), []);
   const processingRef = useRef(false);
 
   const mediaEndpoint =
@@ -202,4 +208,4 @@ export function UploadQueue({
       </button>
     </div>
   );
-}
+});

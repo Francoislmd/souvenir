@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadQueue, type UploadStatus } from "@/components/UploadQueue";
+import { UploadQueue, type UploadQueueHandle, type UploadStatus } from "@/components/UploadQueue";
 import { FolderCard } from "./FolderCard";
 import { defaultGalleryTitle, renderDeliveryMessage } from "@/lib/message-templates";
 import { getUploadItemsForOwner } from "@/lib/idb";
@@ -50,6 +50,7 @@ export function ImportWizard({
   messageTemplate: string | null;
 }) {
   const router = useRouter();
+  const uploadQueueRef = useRef<UploadQueueHandle>(null);
   const [step, setStep] = useState<Step>(1);
   const [localMediaMap, setLocalMediaMap] = useState<Record<string, ImportMedia>>({});
   const [groups, setGroups] = useState<ImportGroup[]>([]);
@@ -315,7 +316,7 @@ export function ImportWizard({
             <h2 className="text-base font-semibold text-ink">Ajoute toutes les photos et vidéos de la rotation</h2>
             <p className="mt-1 text-sm text-ink-2">Mélange tous les passagers, tu les répartiras par personne juste après.</p>
           </div>
-          <UploadQueue ownerType="batch" ownerId={batchId} onStatusChange={setUploadStatus} onFilesQueued={handleFilesQueued} />
+          <UploadQueue ref={uploadQueueRef} ownerType="batch" ownerId={batchId} onStatusChange={setUploadStatus} onFilesQueued={handleFilesQueued} />
         </section>
       </div>
 
@@ -342,13 +343,27 @@ export function ImportWizard({
             />
           ))}
 
-          <button
-            type="button"
-            onClick={addEmptyGroup}
-            className="rounded-control border border-dashed border-border-strong px-4 py-3 text-sm font-medium text-ink-2 transition hover:border-accent hover:text-accent active:scale-[0.99]"
-          >
-            + Nouveau dossier
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => uploadQueueRef.current?.trigger()}
+              className="flex flex-1 items-center justify-center gap-2 rounded-control border border-dashed border-border-strong bg-canvas px-4 py-3 text-sm font-medium text-ink-2 transition hover:border-accent hover:text-accent active:scale-[0.99]"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              + Ajouter des fichiers
+            </button>
+            <button
+              type="button"
+              onClick={addEmptyGroup}
+              className="flex-1 rounded-control border border-dashed border-border-strong px-4 py-3 text-sm font-medium text-ink-2 transition hover:border-accent hover:text-accent active:scale-[0.99]"
+            >
+              + Nouveau dossier
+            </button>
+          </div>
 
           {sendableGroups.length > 0 ? (
             <div className="rounded-control border border-border bg-canvas p-3">
