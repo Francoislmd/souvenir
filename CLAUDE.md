@@ -395,3 +395,9 @@ NEXT_PUBLIC_APP_URL=        # https://app.souvenir... (ou http://localhost:3000)
   - Galerie Boutique débloquée : bannière succès + lien "Tout télécharger (.zip)" intégré dans la carte, puis `ReviewSection`, puis `InstagramShareSection`.
   - Galerie Marketing : `InstagramShareSection` en premier, puis `ReviewSection`, puis formulaire email.
   - **Design gallery inspiré profil social** mais branding Souvenir strict — ne pas mettre de dégradé Instagram (orange/rose/violet) dans l'UI.
+
+- **Retour au thème "coucher de soleil" (§8, v6)** (amende v5 : le bleu indigo est remplacé par l'orange coucher de soleil, sur demande explicite) :
+  - **`--brand`/`--brand-hover`/`--brand-tint`** = `#E8572A`/`#CC4A22`/`#FFF0E9` (orange sunset). **`--brand-gradient`** = `linear-gradient(135deg, #FFC857 0%, #FF6F3C 55%, #E8572A 100%)` (doré → tangerine → orange profond).
+  - `--accent` / `--accent-hover` / `--accent-tint` alignés sur brand (sunset orange) pour le dashboard + landing.
+  - `CLIENT_BRAND_COLOR` (`lib/brand.ts`) = `#E8572A` — galerie client en sunset comme le reste.
+  - `LogoMark`, `app/icon.svg`, confettis `UnlockCelebration.tsx`, email `lib/email.ts` et couleurs hardcodées dans `app/page.tsx` / `GalleryPhoneAnimated.tsx` / `import/[batchId]/page.tsx` tous mis à jour.

@@ -77,7 +77,10 @@ export function CheckoutButton({
           {error ? <p className="text-center text-xs text-danger">{error}</p> : null}
         </div>
       ) : (
-        <div className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 p-4">
+        <div
+          className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-4 pb-5 pt-8"
+          style={{ background: "linear-gradient(to bottom, transparent, var(--canvas) 40%)" }}
+        >
           <button
             type="button"
             onClick={handleClick}

@@ -18,7 +18,7 @@ export async function sendDeliveryNotifications(
 ): Promise<SendResult> {
   const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${delivery.token}`;
   const clientFirstName = (delivery.clientName ?? "").split(/\s+/)[0] ?? "";
-  const message = renderDeliveryMessage(operator.deliveryMessageTemplate, {
+  const smsMessage = renderDeliveryMessage(operator.deliveryMessageTemplate, {
     clientName: clientFirstName,
     operatorName: operator.name,
   });
@@ -31,11 +31,15 @@ export async function sendDeliveryNotifications(
         to: delivery.clientEmail,
         operatorName: operator.name,
         logoUrl: operator.logoUrl,
-        message,
         galleryUrl,
+        message: smsMessage,
       });
       result.emailSent = true;
-      await track("delivery_sent", { operatorId: operator.id, deliveryId: delivery.id, meta: { channel: "email" } });
+      await track("delivery_sent", {
+        operatorId: operator.id,
+        deliveryId: delivery.id,
+        meta: { channel: "email" },
+      });
     } catch (error) {
       const msg = error instanceof Error ? error.message : "unknown error";
       console.error("[send-delivery] email error:", msg);
@@ -45,9 +49,13 @@ export async function sendDeliveryNotifications(
 
   if (delivery.clientPhone) {
     try {
-      await sendSms(delivery.clientPhone, `${message}\n${galleryUrl}`);
+      await sendSms(delivery.clientPhone, `${smsMessage}\n${galleryUrl}`);
       result.smsSent = true;
-      await track("delivery_sent", { operatorId: operator.id, deliveryId: delivery.id, meta: { channel: "sms" } });
+      await track("delivery_sent", {
+        operatorId: operator.id,
+        deliveryId: delivery.id,
+        meta: { channel: "sms" },
+      });
     } catch (error) {
       const msg = error instanceof Error ? error.message : "unknown error";
       console.error("[send-delivery] sms error:", msg);

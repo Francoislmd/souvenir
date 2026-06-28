@@ -136,32 +136,38 @@ export default async function GalleryPage({
   );
 
   const statusCard = isMarketing ? (
-    <div className="flex items-center gap-3 rounded-card border border-border bg-gradient-to-br from-accent-tint to-surface px-4 py-4 shadow-card">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
-        🎁
-      </span>
-      <div>
-        <p className="text-base font-semibold text-ink">Cadeau de {operator.name}</p>
-        <p className="text-sm text-ink-2">Tout est à toi, gratuitement, en HD et sans filigrane.</p>
+    <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-tint">
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-accent">
+            <path d="M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3ZM8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-ink">Cadeau de {operator.name}</p>
+          <p className="text-xs text-ink-2">Tout est à toi, gratuitement, en HD et sans filigrane.</p>
+        </div>
       </div>
     </div>
   ) : unlocked ? (
-    <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-card border border-border shadow-card">
-        <div className="flex items-center gap-3 bg-gradient-to-br from-success-tint to-surface px-4 py-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-2xl shadow-card">
-            🎉
+    <div className="flex flex-col gap-3">
+      <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-tint">
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-success">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </span>
           <div>
-            <p className="text-base font-semibold text-ink">C&apos;est débloqué !</p>
-            <p className="text-sm text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
+            <p className="text-sm font-semibold text-ink">C&apos;est débloqué !</p>
+            <p className="text-xs text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
           </div>
         </div>
         <a
           href={`/api/gallery/${delivery.token}/zip`}
-          className="flex items-center justify-center gap-2 border-t border-border bg-surface py-3 text-sm font-semibold text-ink transition hover:bg-canvas active:bg-canvas"
+          className="flex items-center justify-center gap-2 border-t border-border bg-canvas py-3 text-sm font-semibold text-ink transition hover:bg-border/40 active:bg-border/60"
         >
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-ink-2">
             <path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Tout télécharger (.zip)
@@ -215,7 +221,7 @@ export default async function GalleryPage({
   );
 
   return (
-    <main className="relative min-h-screen bg-surface" style={themeStyle}>
+    <main className="relative min-h-screen bg-canvas" style={themeStyle}>
       {/* Effets globaux — pas de rendu visuel, une seule instance */}
       {justUnlocked ? <UnlockCelebration id={delivery.id} /> : null}
       {showPurchaseRefresher ? <PurchaseSuccessRefresher /> : null}

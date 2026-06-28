@@ -15,23 +15,17 @@ export function PhotoCarousel({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [hintVisible, setHintVisible] = useState(media.length > 1);
 
-  // Bounce right → gauche pour signaler qu'on peut swiper
+  // Bounce droit → gauche au chargement pour signaler le swipe
   useEffect(() => {
     if (media.length <= 1) return;
     const t1 = setTimeout(() => {
-      scrollRef.current?.scrollBy({ left: 64, behavior: "smooth" });
+      scrollRef.current?.scrollBy({ left: 60, behavior: "smooth" });
     }, 900);
     const t2 = setTimeout(() => {
-      scrollRef.current?.scrollBy({ left: -64, behavior: "smooth" });
+      scrollRef.current?.scrollBy({ left: -60, behavior: "smooth" });
     }, 1600);
-    const t3 = setTimeout(() => setHintVisible(false), 3000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [media.length]);
 
   function handleScroll() {
@@ -39,12 +33,11 @@ export function PhotoCarousel({
     if (!el) return;
     const first = el.querySelector<HTMLElement>("[data-slide]");
     if (!first) return;
-    const step = first.offsetWidth + 8; // largeur slide + gap-2
+    const step = first.offsetWidth + 8;
     setCurrentIndex(Math.min(Math.round(el.scrollLeft / step), media.length - 1));
   }
 
-  const MAX_DOTS = 9;
-  const dots = media.slice(0, MAX_DOTS);
+  const MAX_DOTS = 10;
 
   return (
     <div className="select-none">
@@ -74,27 +67,10 @@ export function PhotoCarousel({
         </div>
       </div>
 
-      {/* Swipe hint — visible seulement au chargement */}
-      <div
-        className={`mt-3 flex justify-center transition-opacity duration-500 ${
-          hintVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        aria-hidden
-      >
-        <span className="inline-flex items-center gap-2 rounded-full bg-ink/75 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
-          <SwipeArrow />
-          Glisse pour voir la suite
-        </span>
-      </div>
-
-      {/* Dots de navigation */}
+      {/* Indicateurs */}
       {media.length > 1 && (
-        <div
-          className={`flex justify-center gap-1.5 transition-opacity duration-500 ${
-            hintVisible ? "mt-1.5 opacity-0" : "mt-3 opacity-100"
-          }`}
-        >
-          {dots.map((_, i) => (
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          {media.slice(0, MAX_DOTS).map((_, i) => (
             <button
               key={i}
               type="button"
@@ -105,15 +81,16 @@ export function PhotoCarousel({
                 if (!el || !first) return;
                 el.scrollTo({ left: i * (first.offsetWidth + 8), behavior: "smooth" });
               }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentIndex
-                  ? "w-6 bg-ink"
-                  : "w-1.5 bg-border-strong"
-              }`}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === currentIndex ? 20 : 6,
+                height: 6,
+                background: i === currentIndex ? "var(--accent)" : "var(--border-strong)",
+              }}
             />
           ))}
           {media.length > MAX_DOTS && (
-            <span className="ml-1 text-xs tabular-nums text-muted">
+            <span className="ml-1 text-[11px] tabular-nums text-muted">
               {currentIndex + 1}/{media.length}
             </span>
           )}
@@ -144,12 +121,13 @@ function Slide({
       onClick={onClick}
       disabled={item.status !== "READY"}
       onContextMenu={(e) => e.preventDefault()}
-      className="relative shrink-0 overflow-hidden rounded-2xl bg-canvas"
+      className="relative shrink-0 overflow-hidden rounded-3xl bg-canvas"
       style={{
         width: "calc(100% - 28px)",
         aspectRatio: "3 / 4",
         scrollSnapAlign: "start",
         flexShrink: 0,
+        boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
       }}
     >
       {item.status !== "READY" ? (
@@ -172,8 +150,8 @@ function Slide({
 
       {/* Badge vidéo */}
       {item.kind === "VIDEO" && item.status === "READY" && (
-        <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+        <span className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 translate-x-px">
             <path d="M8 5v14l11-7-11-7Z" />
           </svg>
         </span>
@@ -191,22 +169,5 @@ function Slide({
         </div>
       )}
     </button>
-  );
-}
-
-/* ── Icône swipe animée ── */
-function SwipeArrow() {
-  return (
-    <svg
-      viewBox="0 0 28 14"
-      fill="none"
-      className="h-3.5 w-7 animate-[swipe-arrow_1.2s_ease-in-out_infinite]"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M1 7h26M20 1l6 6-6 6" />
-    </svg>
   );
 }

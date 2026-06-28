@@ -1,189 +1,195 @@
+import Link from "next/link";
 import { requireAdminUser } from "@/lib/current-user";
-import {
-  getAttachRate,
-  getFunnel,
-  getGmv,
-  getMedianClaimDelaySec,
-  getMedianPurchaseDelaySec,
-  getRecentDeliveries,
-  type FunnelStep,
-} from "@/lib/metrics";
-import { formatEuros, formatDuration } from "@/lib/format";
-import { StatusBadge } from "@/components/StatusBadge";
+import { getAttachRate, getGmv, getRevenueByDay, getPurchases, type DayRevenue } from "@/lib/metrics";
+import { formatEuros } from "@/lib/format";
+import { PurchaseTable } from "@/components/dashboard/PurchaseTable";
 
-export default async function DashboardPage() {
+const PERIOD_OPTIONS = [
+  { label: "7 jours", value: 7 },
+  { label: "30 jours", value: 30 },
+  { label: "90 jours", value: 90 },
+];
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { period?: string };
+}) {
   const { operator } = await requireAdminUser();
 
-  const [attach, funnel, gmv, claimDelaySec, purchaseDelaySec, recent] = await Promise.all([
-    getAttachRate(operator.id),
-    getFunnel(operator.id),
-    getGmv(operator.id),
-    getMedianClaimDelaySec(operator.id),
-    getMedianPurchaseDelaySec(operator.id),
-    getRecentDeliveries(operator.id),
+  const period = Math.max(7, Math.min(90, Number(searchParams.period ?? 30) || 30));
+  const since = new Date(Date.now() - period * 24 * 60 * 60 * 1000);
+
+  const [attach, gmv, revenueByDay, purchases] = await Promise.all([
+    getAttachRate(operator.id, since),
+    getGmv(operator.id, since),
+    getRevenueByDay(operator.id, period),
+    getPurchases(operator.id, since),
   ]);
 
   const attachPercent = Math.round(attach.rate * 100);
-  const goalReached = attachPercent >= 20;
-  const operatorShare = 100 - operator.feePercent;
 
   return (
-    <main className="flex flex-col gap-6">
-      <div>
-        <p className="text-sm text-ink-2">Pilote été 2026</p>
-        <h1 className="font-display text-2xl font-extrabold text-ink">Bonjour {operator.name} 👋</h1>
-      </div>
+    <main className="flex flex-col gap-6 p-4 md:p-6">
+      {/* En-tête + filtre de période */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-extrabold text-ink">Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Attach rate — l'indicateur go/no-go du pilote */}
-        <section className="rounded-card border border-border bg-surface p-5 shadow-card md:col-span-1">
-          <p className="text-sm font-medium text-ink-2">Attach rate · achats / ouvertes</p>
-          <div className="mt-2 flex flex-wrap items-baseline gap-3">
-            <p className="text-5xl font-semibold tracking-tight text-ink">{attachPercent}%</p>
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                goalReached ? "bg-success-tint text-success" : "bg-canvas text-ink-2"
+        <div className="flex items-center gap-1 rounded-full border border-border bg-surface p-1 shadow-card">
+          {PERIOD_OPTIONS.map(({ label, value }) => (
+            <Link
+              key={value}
+              href={`?period=${value}`}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+                period === value
+                  ? "bg-accent text-white"
+                  : "text-ink-2 hover:text-ink"
               }`}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              {goalReached ? "objectif 20 % atteint" : "objectif 20 %"}
-            </span>
-          </div>
-          <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-canvas">
-            <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, attachPercent)}%` }} />
-            <div className="absolute inset-y-[-3px] w-px bg-ink/30" style={{ left: "20%" }} />
-          </div>
-          <p className="mt-2 text-xs text-ink-2">
-            seuil go/no-go à 20 % · {attach.purchases} achat{attach.purchases === 1 ? "" : "s"} / {attach.claims}{" "}
-            ouverte{attach.claims === 1 ? "" : "s"}
-          </p>
-        </section>
-
-        {/* GMV & split */}
-        <section className="grid grid-cols-2 gap-3 md:col-span-2 md:grid-cols-4">
-          <MetricCard label="GMV" value={formatEuros(gmv.totalCents)} />
-          <MetricCard label="Panier moyen" value={formatEuros(gmv.averageCents)} />
-          <MetricCard label={`Part ${operator.name} · ${operatorShare}%`} value={formatEuros(gmv.operatorCents)} />
-          <MetricCard label={`Part Souvenir · ${operator.feePercent}%`} value={formatEuros(gmv.souvenirCents)} />
-        </section>
+              {label}
+            </Link>
+          ))}
+        </div>
       </div>
 
+      {/* ── KPIs ── */}
       <div className="grid gap-4 md:grid-cols-3">
-        <section className="rounded-card border border-border bg-surface p-5 shadow-card md:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-ink">Funnel</h2>
-            <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-medium text-ink-2">
-              {funnel[0]?.count ?? 0} livraison{(funnel[0]?.count ?? 0) === 1 ? "" : "s"}
-            </span>
+
+        {/* CA + courbe — 2 colonnes */}
+        <section className="overflow-hidden rounded-card border border-border bg-surface shadow-card md:col-span-2">
+          <div className="px-5 pt-5 pb-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Chiffre d&apos;affaires</p>
+            <p className="mt-1 font-display text-4xl font-extrabold tracking-tight text-ink">
+              {formatEuros(gmv.totalCents)}
+            </p>
+            <p className="mt-0.5 text-xs text-ink-2">
+              {gmv.orderCount} achat{gmv.orderCount !== 1 ? "s" : ""} · {period} derniers jours
+            </p>
           </div>
-          <FunnelBars steps={funnel} />
+          <div className="px-4 pb-4 pt-1">
+            <RevenueLineChart data={revenueByDay} days={period} />
+          </div>
         </section>
 
-        <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
-          <h2 className="text-base font-semibold text-ink">Vitesse</h2>
-          <div className="rounded-control bg-canvas p-3.5">
-            <p className="text-2xl font-semibold text-ink">{claimDelaySec !== null ? formatDuration(claimDelaySec) : "—"}</p>
-            <p className="mt-1 text-xs text-ink-2">délai médian upload → ouverture</p>
-          </div>
-          <div className="rounded-control bg-canvas p-3.5">
-            <p className="text-2xl font-semibold text-ink">
-              {purchaseDelaySec !== null ? formatDuration(purchaseDelaySec) : "—"}
+        {/* Colonne droite */}
+        <div className="flex flex-col gap-4">
+          <section className="flex flex-1 flex-col justify-center rounded-card border border-border bg-surface px-5 py-5 shadow-card">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Taux d&apos;achat</p>
+            <p className="mt-1 font-display text-4xl font-extrabold tracking-tight text-ink">{attachPercent}%</p>
+            <p className="mt-0.5 text-xs text-ink-2">des clients achètent</p>
+          </section>
+
+          <section className="flex flex-1 flex-col justify-center rounded-card border border-border bg-surface px-5 py-5 shadow-card">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Achats</p>
+            <p className="mt-1 font-display text-4xl font-extrabold tracking-tight text-ink">{gmv.orderCount}</p>
+            <p className="mt-0.5 text-xs text-ink-2">
+              {gmv.orderCount > 0
+                ? `panier moyen ${formatEuros(gmv.averageCents)}`
+                : "aucun achat pour l'instant"}
             </p>
-            <p className="mt-1 text-xs text-ink-2">ouverture → achat (médian)</p>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-        <h2 className="mb-3 text-base font-semibold text-ink">Livraisons récentes</h2>
-        {recent.length === 0 ? (
-          <p className="text-sm text-ink-2">Aucune livraison pour l&apos;instant.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-border text-xs font-medium uppercase tracking-wide text-ink-2">
-                  <th className="px-2 py-2">Code</th>
-                  <th className="px-2 py-2">Client</th>
-                  <th className="px-2 py-2">Date</th>
-                  <th className="px-2 py-2">Statut</th>
-                  <th className="px-2 py-2 text-right">Montant</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((delivery) => (
-                  <tr key={delivery.id} className="border-b border-border last:border-0">
-                    <td className="px-2 py-3 font-mono text-xs font-semibold text-ink">{delivery.code}</td>
-                    <td className="px-2 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        {delivery.clientName ? (
-                          <span className="text-xs font-medium text-ink">{delivery.clientName}</span>
-                        ) : null}
-                        <span className="text-xs text-ink-2">
-                          {delivery.clientEmail ? maskEmail(delivery.clientEmail) : "—"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-2 py-3 text-xs text-ink-2">
-                      {delivery.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}{" "}
-                      {delivery.createdAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                    </td>
-                    <td className="px-2 py-3">
-                      <StatusBadge status={delivery.status} />
-                    </td>
-                    <td className="px-2 py-3 text-right font-semibold text-ink">
-                      {delivery.amountCents !== null ? formatEuros(delivery.amountCents) : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <p className="mt-3 text-xs text-ink-2">Emails masqués · RGPD §11</p>
+      {/* ── Tableau des achats ── */}
+      <section className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="text-sm font-semibold text-ink">Achats</h2>
+          {purchases.length > 0 && (
+            <span className="rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-ink-2">
+              {purchases.length}
+            </span>
+          )}
+        </div>
+        <PurchaseTable purchases={purchases} operatorFeePercent={operator.feePercent} />
       </section>
     </main>
   );
 }
 
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  if (!domain) return email;
-  return `${local.slice(0, 2)}…@${domain}`;
-}
+/* ── Bar chart SVG style Stripe — rendu serveur, zéro JS ── */
+function RevenueLineChart({ data, days }: { data: DayRevenue[]; days: number }) {
+  const W = 400;
+  const H = 80;   // hauteur des barres
+  const H_LABEL = 22;
+  const MIN_H = 5; // hauteur mini pour les jours avec ventes
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+  // Remplir tous les jours de la période
+  const today = new Date();
+  const daily: { date: Date; value: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const found = data.find((x) => x.date === key);
+    daily.push({ date: d, value: found?.amountCents ?? 0 });
+  }
+
+  const maxVal = Math.max(...daily.map((d) => d.value), 1);
+  const n = days;
+  const GAP = days <= 7 ? 5 : days <= 14 ? 4 : days <= 30 ? 3 : 2;
+  const barW = (W - (n - 1) * GAP) / n;
+
+  // Labels : toujours premier + dernier + quelques intermédiaires
+  const LABEL_COUNT = days <= 7 ? n : 5;
+  const rawIdx: number[] = [];
+  for (let k = 0; k < LABEL_COUNT; k++) {
+    rawIdx.push(Math.round((k / (LABEL_COUNT - 1)) * (n - 1)));
+  }
+  const labelIndices = rawIdx.filter((v, i, arr) => arr.indexOf(v) === i);
+
+  function fmtDate(d: Date) {
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  }
+
   return (
-    <div className="rounded-card border border-border bg-surface p-4 shadow-card">
-      <p className="text-2xl font-semibold text-ink md:text-3xl">{value}</p>
-      <p className="mt-1 text-xs text-ink-2">{label}</p>
-    </div>
-  );
-}
+    <svg viewBox={`0 0 ${W} ${H + H_LABEL}`} className="w-full" aria-hidden>
+      {/* Ligne de base */}
+      <line x1={0} y1={H} x2={W} y2={H} stroke="var(--border)" strokeWidth="1" />
 
-function FunnelBars({ steps }: { steps: FunnelStep[] }) {
-  const first = steps[0]?.count ?? 0;
-  const max = Math.max(1, ...steps.map((step) => step.count));
-
-  return (
-    <div className="flex flex-col gap-3">
-      {steps.map((step) => {
-        const pct = first > 0 ? Math.round((step.count / first) * 100) : 0;
+      {/* Barres */}
+      {daily.map(({ value }, i) => {
+        const x = i * (barW + GAP);
+        if (value === 0) {
+          // Jour sans vente : stub discret
+          return (
+            <rect
+              key={i}
+              x={x}
+              y={H - 3}
+              width={barW}
+              height={3}
+              rx={1.5}
+              fill="var(--border)"
+            />
+          );
+        }
+        const barH = Math.max(MIN_H, (value / maxVal) * (H - 8));
         return (
-          <div key={step.name} className="flex items-center gap-3">
-            <span className="w-24 shrink-0 text-sm text-ink-2">{step.name}</span>
-            <div className="h-7 flex-1 overflow-hidden rounded-control bg-canvas">
-              <div
-                className="flex h-full items-center rounded-control bg-accent pl-3 text-xs font-semibold text-white"
-                style={{ width: `${(step.count / max) * 100}%` }}
-              >
-                {step.count}
-              </div>
-            </div>
-            <span className="w-12 shrink-0 text-right text-sm font-semibold text-ink">{pct}%</span>
-          </div>
+          <rect
+            key={i}
+            x={x}
+            y={H - barH}
+            width={barW}
+            height={barH}
+            rx={Math.min(4, barW / 2)}
+            fill="var(--accent)"
+          />
         );
       })}
-    </div>
+
+      {/* Labels X */}
+      {labelIndices.map((idx) => {
+        const d = daily[idx]!;
+        const x = idx * (barW + GAP) + barW / 2;
+        const isLast = idx === n - 1;
+        const anchor = idx === 0 ? "start" : isLast ? "end" : "middle";
+        return (
+          <text key={idx} x={x} y={H + H_LABEL - 4} textAnchor={anchor} fontSize={10} fill="var(--muted)">
+            {isLast ? "Auj." : fmtDate(d.date)}
+          </text>
+        );
+      })}
+    </svg>
   );
 }

@@ -17,14 +17,16 @@ async function main() {
   const html = renderDeliveryEmailHtml({
     operatorName: "Vol Passion Annecy",
     logoUrl: null,
-    message: "Salut Léa 👋 Voici tes photos et vidéos avec Vol Passion Annecy 📸 Clique sur le lien pour les découvrir :",
-    galleryUrl: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/g/demo` : "https://example.com/g/demo",
+    galleryUrl: process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/g/demo`
+      : "https://example.com/g/demo",
+    message: "Léa, tes souvenirs de vol sont prêts ! Retrouve tes photos et vidéos dans ta galerie personnelle.",
   });
 
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
     to: "francoislemarchand4@gmail.com",
-    subject: "Tes souvenirs avec Vol Passion Annecy sont prêts 📸",
+    subject: "Tes souvenirs de vol t'attendent, Léa 📸",
     html,
   });
 

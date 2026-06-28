@@ -7,10 +7,14 @@ export interface AttachRate {
   claims: number;
 }
 
-export async function getAttachRate(operatorId: string): Promise<AttachRate> {
+export async function getAttachRate(operatorId: string, since?: Date): Promise<AttachRate> {
+  const base = {
+    session: { operatorId },
+    ...(since ? { createdAt: { gte: since } } : {}),
+  };
   const [claims, purchases] = await Promise.all([
-    prisma.delivery.count({ where: { session: { operatorId }, claimedAt: { not: null } } }),
-    prisma.delivery.count({ where: { session: { operatorId }, status: "PURCHASED" } }),
+    prisma.delivery.count({ where: { ...base, claimedAt: { not: null } } }),
+    prisma.delivery.count({ where: { ...base, status: "PURCHASED" } }),
   ]);
 
   return { rate: claims > 0 ? purchases / claims : 0, purchases, claims };
@@ -57,9 +61,13 @@ export interface GmvSummary {
   orderCount: number;
 }
 
-export async function getGmv(operatorId: string): Promise<GmvSummary> {
+export async function getGmv(operatorId: string, since?: Date): Promise<GmvSummary> {
   const agg = await prisma.order.aggregate({
-    where: { delivery: { session: { operatorId } }, status: "succeeded" },
+    where: {
+      delivery: { session: { operatorId } },
+      status: "succeeded",
+      ...(since ? { createdAt: { gte: since } } : {}),
+    },
     _sum: { amountCents: true, feeCents: true },
     _count: true,
   });
@@ -104,6 +112,77 @@ export async function getMedianPurchaseDelaySec(operatorId: string): Promise<num
     .filter((delay) => delay >= 0);
 
   return median(delays);
+}
+
+export interface DayRevenue {
+  date: string; // "YYYY-MM-DD"
+  amountCents: number;
+}
+
+export async function getRevenueByDay(operatorId: string, days = 30): Promise<DayRevenue[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const orders = await prisma.order.findMany({
+    where: { delivery: { session: { operatorId } }, status: "succeeded", createdAt: { gte: since } },
+    select: { amountCents: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const byDay = new Map<string, number>();
+  for (const o of orders) {
+    const key = o.createdAt.toISOString().slice(0, 10);
+    byDay.set(key, (byDay.get(key) ?? 0) + o.amountCents);
+  }
+
+  return Array.from(byDay.entries()).map(([date, amountCents]) => ({ date, amountCents }));
+}
+
+export interface Purchase {
+  id: string;
+  deliveryId: string;
+  code: string;
+  token: string;
+  clientName: string | null;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  amountCents: number;
+  feeCents: number;
+  createdAt: Date;
+  sessionDate: Date;
+  mediaCount: number;
+}
+
+export async function getPurchases(operatorId: string, since?: Date): Promise<Purchase[]> {
+  const orders = await prisma.order.findMany({
+    where: {
+      delivery: { session: { operatorId } },
+      status: "succeeded",
+      ...(since ? { createdAt: { gte: since } } : {}),
+    },
+    include: {
+      delivery: {
+        include: {
+          session: { select: { date: true } },
+          _count: { select: { media: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return orders.map((o) => ({
+    id: o.id,
+    deliveryId: o.deliveryId,
+    code: o.delivery.code,
+    token: o.delivery.token,
+    clientName: o.delivery.clientName,
+    clientEmail: o.delivery.clientEmail,
+    clientPhone: o.delivery.clientPhone,
+    amountCents: o.amountCents,
+    feeCents: o.feeCents,
+    createdAt: o.createdAt,
+    sessionDate: o.delivery.session.date,
+    mediaCount: o.delivery._count.media,
+  }));
 }
 
 export interface RecentDelivery {

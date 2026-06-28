@@ -18,15 +18,15 @@ export default async function ImportBatchPage({ params }: { params: { batchId: s
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
           className="absolute -top-24 -right-16 h-[480px] w-[420px] rounded-full blur-[150px]"
-          style={{ background: "#7DD3FC", opacity: 0.28 }}
+          style={{ background: "#FFB152", opacity: 0.28 }}
         />
         <div
           className="absolute top-[35%] -left-20 h-[460px] w-[400px] rounded-full blur-[130px]"
-          style={{ background: "#4F46E5", opacity: 0.15 }}
+          style={{ background: "#F1502E", opacity: 0.15 }}
         />
         <div
           className="absolute bottom-0 right-0 h-[440px] w-[380px] rounded-full blur-[120px]"
-          style={{ background: "#818CF8", opacity: 0.14 }}
+          style={{ background: "#FF8A3D", opacity: 0.14 }}
         />
       </div>
 

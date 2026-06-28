@@ -34,10 +34,10 @@ export function GalleryHeader({
 
   return (
     <div className="px-4 pb-4 pt-5">
-      {/* Opérateur — petit, discret */}
-      <div className="mb-3 flex items-center gap-2">
+      {/* Opérateur */}
+      <div className="mb-4 flex items-center gap-2.5">
         <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-[10px] font-bold ring-[1.5px] ring-accent"
+          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold ring-2 ring-accent"
           style={{ background: "var(--accent-tint)", color: "var(--accent)" }}
         >
           {operator.logoUrl ? (
@@ -47,10 +47,9 @@ export function GalleryHeader({
             initials
           )}
         </span>
-        <span className="text-xs font-medium text-ink-2">{operator.name}</span>
-        {instagramHandle && (
-          <>
-            <span className="text-ink-2/40">·</span>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-ink">{operator.name}</span>
+          {instagramHandle && (
             <a
               href={`https://instagram.com/${instagramHandle}`}
               target="_blank"
@@ -59,17 +58,17 @@ export function GalleryHeader({
             >
               @{instagramHandle}
             </a>
-          </>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Titre */}
-      <h1 className="font-display text-[1.65rem] font-extrabold leading-tight text-ink">
+      <h1 className="font-display text-[1.5rem] font-extrabold leading-tight tracking-tight text-ink">
         {heroTitle}
       </h1>
 
       {/* Méta */}
-      {meta && <p className="mt-1 text-xs text-muted">{meta}</p>}
+      {meta && <p className="mt-1 text-sm text-muted">{meta}</p>}
     </div>
   );
 }
