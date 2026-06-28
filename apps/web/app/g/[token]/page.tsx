@@ -89,13 +89,15 @@ export default async function GalleryPage({
   // Analytics : fire-and-forget — ne bloque pas la réponse
   void track("gallery_opened", { operatorId: operator.id, deliveryId: delivery.id });
 
-  const media: GalleryMedia[] = delivery.media.map((item) => ({
-    id: item.id,
-    kind: item.kind,
-    status: item.status,
-    previewUrl: item.previewKey ? getPreviewUrl(item.previewKey) : null,
-    thumbUrl: item.thumbKey ? getPreviewUrl(item.thumbKey) : null,
-  }));
+  const media: GalleryMedia[] = delivery.media
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "VIDEO" ? -1 : 1))
+    .map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      status: item.status,
+      previewUrl: item.previewKey ? getPreviewUrl(item.previewKey) : null,
+      thumbUrl: item.thumbKey ? getPreviewUrl(item.thumbKey) : null,
+    }));
 
   const showPurchaseRefresher = searchParams.purchase === "success" && !unlocked;
   const justUnlocked = searchParams.purchase === "success" && unlocked;
