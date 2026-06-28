@@ -60,8 +60,18 @@ export function FolderCard({
               <div key={mediaId} className="relative aspect-square rounded-control bg-canvas">
                 <div className="absolute inset-0 overflow-hidden rounded-control">
                   {item?.localUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.localUrl} alt="" className="h-full w-full object-cover" />
+                    item.kind === "VIDEO" ? (
+                      <video
+                        src={item.localUrl}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.localUrl} alt="" className="h-full w-full object-cover" />
+                    )
                   ) : null}
                   {item?.kind === "VIDEO" ? (
                     <span className="absolute bottom-1 left-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[10px] text-white">▶</span>

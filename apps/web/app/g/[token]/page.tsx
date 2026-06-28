@@ -11,6 +11,7 @@ import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { ReviewSection } from "@/components/gallery/ReviewSection";
 import { InstagramShareSection } from "@/components/gallery/InstagramShareSection";
 import { CheckoutButton } from "@/components/gallery/CheckoutButton";
+import { LockedCoverCard } from "@/components/gallery/LockedCoverCard";
 import { MarketingCtas } from "@/components/gallery/MarketingCtas";
 import { PurchaseSuccessRefresher } from "@/components/gallery/PurchaseSuccessRefresher";
 import { UnlockCelebration } from "@/components/gallery/UnlockCelebration";
@@ -105,6 +106,17 @@ export default async function GalleryPage({
   const videoCount = delivery.media.filter((m) => m.kind === "VIDEO").length;
   const heroTitle = delivery.title ?? defaultGalleryTitle(delivery.clientName ?? "");
   const hashtags = extractHashtags(operator.instagramPostCaption);
+
+  // Pour la carte de paiement : première vidéo READY en aperçu, puis première photo
+  const firstReadyVideo = media.find((m) => m.kind === "VIDEO" && m.status === "READY");
+  const firstReadyPhoto = media.find((m) => m.kind === "PHOTO" && m.status === "READY");
+  const lockedCardProps = {
+    deliveryId: delivery.id,
+    priceCents: operator.packPriceCents,
+    firstVideoUrl: firstReadyVideo?.previewUrl ?? null,
+    firstPhotoUrl: firstReadyPhoto?.previewUrl ?? null,
+    videoCount,
+  };
 
   const themeStyle = {
     "--accent": CLIENT_BRAND_COLOR,
@@ -240,7 +252,7 @@ export default async function GalleryPage({
             ) : null}
             {!isMarketing && !unlocked ? (
               <div className="mt-5">
-                <CheckoutButton deliveryId={delivery.id} priceCents={operator.packPriceCents} inline />
+                <LockedCoverCard {...lockedCardProps} />
               </div>
             ) : null}
             {footerContent}
@@ -287,6 +299,7 @@ export default async function GalleryPage({
           <CheckoutButton deliveryId={delivery.id} priceCents={operator.packPriceCents} />
         </div>
       ) : null}
+
     </main>
   );
 }
