@@ -136,8 +136,8 @@ async function processVideo({
   const thumbPath = join(dir, "thumb.jpg");
   const previewPath = join(dir, "preview.mp4");
 
-  await extractThumbnail(inputPath, thumbPath);
-  await transcodePreview(inputPath, previewPath, operator.logoUrl);
+  await extractThumbnail(inputPath, thumbPath, duration);
+  await transcodePreview(inputPath, previewPath);
 
   const [thumbBuffer, previewBuffer] = await Promise.all([readFile(thumbPath), readFile(previewPath)]);
 
@@ -161,39 +161,27 @@ function getDurationSec(inputPath: string): Promise<number> {
   });
 }
 
-function extractThumbnail(inputPath: string, outputPath: string): Promise<void> {
+function extractThumbnail(inputPath: string, outputPath: string, durationSec: number): Promise<void> {
+  // Capture à 1 s, ou au milieu si la vidéo est très courte
+  const ts = durationSec > 2 ? "00:00:01" : "00:00:00";
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
-      .screenshots({ timestamps: ["2"], filename: "thumb.jpg", folder: join(outputPath, ".."), size: "480x?" })
+      .screenshots({ timestamps: [ts], filename: "thumb.jpg", folder: join(outputPath, ".."), size: "480x?" })
       .on("end", () => resolve())
       .on("error", reject);
   });
 }
 
-function transcodePreview(inputPath: string, outputPath: string, logoUrl: string | null): Promise<void> {
+function transcodePreview(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const command = ffmpeg(inputPath)
+    ffmpeg(inputPath)
       .videoCodec("libx264")
-      .size("?x720")
-      .outputOptions(["-crf 28", "-preset veryfast"])
+      // vf scale assure des dimensions paires (libx264 l'exige)
+      .outputOptions(["-vf", "scale=-2:720", "-crf 28", "-preset veryfast", "-pix_fmt yuv420p", "-movflags +faststart"])
       .audioCodec("aac")
-      .audioBitrate("96k");
-
-    if (logoUrl) {
-      command.complexFilter([
-        {
-          filter: "drawtext",
-          options: {
-            text: "souvenir",
-            fontcolor: "white@0.6",
-            fontsize: 24,
-            x: "w-tw-20",
-            y: "h-th-20",
-          },
-        },
-      ]);
-    }
-
-    command.on("end", () => resolve()).on("error", reject).save(outputPath);
+      .audioBitrate("96k")
+      .on("end", () => resolve())
+      .on("error", reject)
+      .save(outputPath);
   });
 }
