@@ -1,803 +1,411 @@
 import Image from "next/image";
 import { Nav } from "@/components/marketing/Nav";
-import { ButtonLink } from "@/components/ui/Button";
-import { HeroForm } from "@/components/marketing/HeroForm";
-import { RevenueSimulator } from "@/components/marketing/RevenueSimulator";
-import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { Logo } from "@/components/brand/Logo";
-import { FaqList } from "@/components/marketing/FaqList";
-import { DistributionAnimation } from "@/components/marketing/DistributionAnimation";
-import { UploadAnimation } from "@/components/marketing/UploadAnimation";
-import { GalleryPhoneAnimated } from "@/components/marketing/GalleryPhoneAnimated";
+import { HeroPostcard } from "@/components/marketing/HeroPostcard";
+
+const D: React.CSSProperties = {
+  fontFamily: "var(--font-bricolage), 'Bricolage Grotesque', sans-serif",
+};
+const BLUE = "#2f5fd0";
+const DARK = "#1b2733";
+const CREAM = "#f3ede1";
+
+/* Conteneur interne centré 1240px */
+const W: React.CSSProperties = { maxWidth: 1240, margin: "0 auto" };
+
+/* ─────────────────────────────────────────────────────────────── */
 
 export default function Home() {
   return (
-    <main className="relative overflow-hidden bg-canvas pt-[72px]">
-      <div
-        className="pointer-events-none absolute -top-48 right-[-15%] h-[34rem] w-[34rem] rounded-full opacity-[0.18] blur-3xl"
-        style={{ background: "var(--brand-gradient)" }}
-      />
-      <div
-        className="pointer-events-none absolute left-[-10%] top-[60vh] h-[28rem] w-[28rem] rounded-full opacity-[0.10] blur-3xl"
-        style={{ background: "var(--brand-gradient)" }}
-      />
+    <div className="lp-body">
 
-      <div className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6">
-        <Nav />
-      </div>
+      {/* ── NAV ── */}
+      <Nav />
 
-      {/* ─── Hero ─── */}
-      <section className="relative z-10 mx-auto grid max-w-5xl gap-10 px-6 pb-16 pt-12 sm:pt-24 md:grid-cols-2 md:items-center md:gap-16 md:pb-32">
-        <div className="text-center md:text-left">
-          <span className="hero-enter inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink-2 shadow-card" style={{ animationDelay: "0ms" }}>
-            Pour les guides, moniteurs et écoles outdoor
-          </span>
-
-          <h1 className="hero-enter mt-6 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[56px]" style={{ animationDelay: "80ms" }}>
-            Transformez vos photos
-            <br />
-            <span
-              style={{
-                backgroundImage: "var(--brand-gradient)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              en revenus automatiques.
-            </span>
-          </h1>
-
-          <p className="hero-enter mx-auto mt-6 max-w-md text-base leading-relaxed text-ink-2 sm:text-lg md:mx-0" style={{ animationDelay: "160ms" }}>
-            Souvenir envoie automatiquement vos photos à vos clients après chaque activité.{" "}
-            <strong className="font-semibold text-ink">Ils débloquent leurs souvenirs, vous encaissez. Zéro gestion.</strong>
-          </p>
-
-          <HeroForm />
-          <p className="mt-5 text-xs text-muted">
-            Parapente · Canyoning · Rafting · Surf · Kayak · Escalade · Ski · Nautique
-          </p>
-        </div>
-
-        {/* Visual — desktop : fan layout */}
-        <div className="relative mx-auto hidden md:flex items-center justify-center" style={{ width: 540, height: 480 }}>
-          {/* Photo gauche — éventail */}
-          <div
-            className="absolute z-0"
-            style={{ transform: "translateX(-105px) rotate(-16deg)", transformOrigin: "center bottom" }}
-          >
-            <UnlockedCard src="/hero-surf.jpg" width={200} height={410} />
-          </div>
-
-          {/* Photo droite — éventail */}
-          <div
-            className="absolute z-0"
-            style={{ transform: "translateX(105px) rotate(16deg)", transformOrigin: "center bottom" }}
-          >
-            <UnlockedCard src="/hero-rafting.jpg" width={200} height={410} />
-          </div>
-
-          {/* Téléphone — devant, léger tilt 3D */}
-          <div
-            className="absolute z-10"
-            style={{ transform: "perspective(1200px) rotateY(-4deg) rotateX(2deg)" }}
-          >
-            <GalleryPhoneAnimated />
-          </div>
-
-          {/* Badge revenus */}
-          <div className="animate-float absolute bottom-[2%] left-[4%] z-20">
-            <FloatingBadge
-              className="-rotate-[1deg]"
-              icon={<EuroIcon />}
-              iconBg="#DCFCE7"
-              iconColor="#16A34A"
-              label="1 240 € encaissés"
-            />
-          </div>
-          {/* Badge Instagram */}
-          <div className="animate-float-alt absolute top-[3%] right-[4%] z-20">
-            <FloatingBadge
-              className="rotate-[2deg]"
-              icon={<InstagramIcon />}
-              iconBg="linear-gradient(135deg,#F9CE34,#EE2A7B,#6228D7)"
-              iconColor="#fff"
-              label="@volpassionannecy"
-            />
-          </div>
-        </div>
-
-        {/* Visual — mobile */}
-        <div className="flex justify-center md:hidden">
-          <GalleryPhone />
-        </div>
-      </section>
-
-      {/* ─── Comment ça marche — 4 étapes ─── */}
-      <section id="comment-ca-marche" className="relative z-10 bg-surface py-14 md:py-36">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="reveal mb-12 text-center md:mb-20">
-            <span className="text-sm font-semibold uppercase tracking-wide text-brand">Comment ça marche</span>
-            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-              Vous prenez les photos.<br />Nous faisons le reste.
-            </h2>
-          </div>
-
-          <div className="space-y-14 md:space-y-28">
-
-            {/* Étape 1 — Upload · texte gauche, illustration droite */}
-            <div className="reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-20">
-              {/* Texte */}
-              <div>
-                <span className="font-display text-5xl font-extrabold text-border md:text-6xl">01</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous uploadez vos photos</h3>
-                <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Sélectionnez vos photos et vidéos depuis votre pellicule, en 3 taps. Les transferts reprennent automatiquement en cas de coupure réseau.
-                </p>
-              </div>
-              {/* Illustration animée */}
-              <UploadAnimation />
-            </div>
-
-            {/* Étape 2 — Répartition · illustration gauche, texte droite */}
-            <div className="reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-20">
-              {/* Illustration animée */}
-              <DistributionAnimation />
-              {/* Texte */}
-              <div>
-                <span className="font-display text-5xl font-extrabold text-border md:text-6xl">02</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous répartissez par client</h3>
-                <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Après l&apos;import groupé, attribuez chaque photo à la bonne personne en quelques secondes. Un clic suffit pour envoyer toutes les galeries d&apos;un coup.
-                </p>
-              </div>
-            </div>
-
-            {/* Étape 3 — Galerie & achat · texte gauche, illustration droite */}
-            <div className="reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-20">
-              {/* Texte */}
-              <div>
-                <span className="font-display text-5xl font-extrabold text-border md:text-6xl">03</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Le client débloque</h3>
-                <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Il ouvre sa galerie, voit ses photos floutées, et achète le pack HD en un clic. Stripe encaisse et transfère votre part automatiquement.
-                </p>
-              </div>
-              {/* Illustration */}
-              <div className="overflow-hidden rounded-card border border-border bg-canvas">
-                <div className="relative" style={{ height: 220 }}>
-                  <Image src="/hero-paragliding.jpg" fill className="object-cover" alt="" sizes="480px"
-                    style={{ filter: "blur(8px)", transform: "scale(1.08)" }} />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
-                      <svg viewBox="0 0 16 16" fill="none" className="h-7 w-7 text-white">
-                        <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-                    <p className="text-sm font-semibold text-white">14 photos · 2 vidéos</p>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between rounded-[14px] bg-[#4F46E5] px-5 py-3.5">
-                    <span className="text-sm font-bold text-white">Débloquer mes souvenirs</span>
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-extrabold text-white">29 €</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Étape 4 — Dashboard · illustration gauche, texte droite */}
-            <div className="reveal grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-20">
-              {/* Illustration */}
-              <div className="overflow-hidden rounded-card border border-border bg-surface">
-                {/* CA hero */}
-                <div className="border-b border-border px-6 py-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">CA encaissé aujourd&apos;hui</p>
-                  <div className="mt-1.5 flex items-end gap-2">
-                    <span className="font-display text-4xl font-extrabold text-ink">290 €</span>
-                    <span className="mb-1 text-sm font-medium text-[#16A34A]">↑ +87 € vs hier</span>
-                  </div>
-                </div>
-                {/* Deliveries list */}
-                <div className="divide-y divide-border">
-                  {[
-                    { name: "Léa Martin",  tag: "Achat ✓",  amount: "29 €", tagCls: "text-[#16A34A] bg-[#EAF7EE]" },
-                    { name: "Tom Durand",  tag: "Achat ✓",  amount: "29 €", tagCls: "text-[#16A34A] bg-[#EAF7EE]" },
-                    { name: "Camille Roy", tag: "Achat ✓",  amount: "29 €", tagCls: "text-[#16A34A] bg-[#EAF7EE]" },
-                    { name: "Emma Petit",  tag: "Ouvert",   amount: "—",    tagCls: "text-brand bg-accent-tint" },
-                    { name: "Marc Faure",  tag: "Envoyé",   amount: "—",    tagCls: "text-ink-2 bg-border" },
-                  ].map((r) => (
-                    <div key={r.name} className="flex items-center justify-between px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-canvas text-xs font-semibold text-ink-2">{r.name[0]}</div>
-                        <p className="text-sm font-medium text-ink">{r.name}</p>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${r.tagCls}`}>{r.tag}</span>
-                        <span className="w-8 text-right text-sm font-semibold text-ink">{r.amount}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Texte */}
-              <div>
-                <span className="font-display text-5xl font-extrabold text-border md:text-6xl">04</span>
-                <h3 className="mt-3 font-display text-2xl font-extrabold text-ink sm:text-3xl">Vous suivez tout</h3>
-                <p className="mt-4 text-base leading-relaxed text-ink-2">
-                  Taux d&apos;achat, CA encaissé, avis collectés : votre dashboard se met à jour en temps réel. Rien à configurer.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Tarifs ─── */}
-      <section id="tarifs" className="relative z-10 overflow-hidden bg-ink py-14 md:py-28">
-        <div
-          className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-[0.10] blur-3xl"
-          style={{ background: "var(--brand-gradient)" }}
-        />
-        <div className="relative mx-auto max-w-5xl px-6">
-
-          <div className="reveal text-center">
-            <span className="text-sm font-semibold uppercase tracking-widest text-brand">Tarifs</span>
-            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Souvenir ne gagne<br />que quand vous gagnez
-            </h2>
-            <p className="mt-4 text-base" style={{ color: "rgba(255,255,255,0.45)" }}>
-              0&nbsp;€ fixe · Aucun abonnement · Commission uniquement sur les ventes
-            </p>
-          </div>
-
-          {/* Features partagées */}
-          {(() => {
-            const features = [
-              "Upload et répartition des photos & vidéos par client",
-              "Envoi automatique des galeries par email et SMS",
-              "Relances automatiques par mail et SMS",
-              "Paiement intégré et versement automatique",
-              "Suivi en temps réel sur le dashboard",
-            ];
-            const check = (color: string) => (
-              <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5 shrink-0" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 7l3.5 3.5 6.5-6.5" />
-              </svg>
-            );
-            return (
-              <div className="mt-10 grid gap-5 md:mt-14 md:grid-cols-2">
-
-                {/* Mode Marketing */}
-                <div
-                  className="reveal rounded-card p-6 md:p-8"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Mode</p>
-                      <h3 className="mt-1 font-display text-2xl font-extrabold text-white">Marketing</h3>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-[#14532D]/60 px-3 py-1 text-xs font-bold text-[#4ADE80]">Gratuit</span>
-                  </div>
-                  <div className="mt-6 border-t pt-6" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                    <div className="flex items-end gap-2">
-                      <span className="font-display text-5xl font-extrabold text-white">0</span>
-                      <span className="mb-1.5 font-display text-2xl font-bold text-white">%</span>
-                      <span className="mb-1.5 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>de commission</span>
-                    </div>
-                    <p className="mt-1.5 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      Photos offertes au client — la valeur est dans la visibilité et les avis
-                    </p>
-                  </div>
-                  <div className="mt-6 space-y-3">
-                    {features.map((f) => (
-                      <div key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-                        {check("#4ADE80")}
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Mode Boutique */}
-                <div
-                  className="reveal reveal-d1 relative rounded-card p-6 md:p-8"
-                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(79,70,229,0.6)" }}
-                >
-                  <div
-                    className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-1.5 text-[11px] font-bold text-white"
-                    style={{ background: "var(--brand)" }}
-                  >
-                    Recommandé
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Mode</p>
-                      <h3 className="mt-1 font-display text-2xl font-extrabold text-white">Boutique</h3>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-brand/20 px-3 py-1 text-xs font-bold text-brand">+&nbsp;revenus</span>
-                  </div>
-                  <div className="mt-6 border-t pt-6" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                    <div className="flex items-end gap-2">
-                      <span className="font-display text-5xl font-extrabold text-white">20</span>
-                      <span className="mb-1.5 font-display text-2xl font-bold text-white">%</span>
-                      <span className="mb-1.5 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>par vente</span>
-                    </div>
-                    <p className="mt-1.5 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      Frais Stripe inclus · rien à débourser à l&apos;avance
-                    </p>
-                  </div>
-                  <div className="mt-6 space-y-3">
-                    {features.map((f) => (
-                      <div key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-                        {check("var(--brand)")}
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-8">
-                    <ButtonLink href="/signup" size="lg" className="w-full justify-center">
-                      Démarrer gratuitement
-                    </ButtonLink>
-                  </div>
-                </div>
-
-              </div>
-            );
-          })()}
-
-          <p className="mt-8 text-center text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-            Les deux modes sont disponibles sur le même compte — vous choisissez session par session.
-          </p>
-
-        </div>
-      </section>
-
-      {/* ─── Simulateur de revenus ─── */}
-      <section className="relative z-10 bg-canvas py-14 md:py-28">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="reveal grid grid-cols-1 items-center gap-10 md:grid-cols-[5fr_7fr] md:gap-16">
-
-            {/* Vidéo portrait — masquée sur mobile */}
-            <div
-              className="relative hidden aspect-[9/16] overflow-hidden rounded-card md:block"
-              style={{ boxShadow: "0 32px 64px -16px rgba(0,0,0,0.22), 0 8px 24px -6px rgba(0,0,0,0.12)" }}
-            >
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 h-full w-full object-cover"
+      {/* ── HERO ── */}
+      <div style={{ backgroundColor: "#ffffff" }}>
+        <div style={W}>
+          <div className="lp-hero">
+            {/* Text */}
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-kalam), 'Kalam', cursive",
+                  color: BLUE,
+                  fontSize: 14,
+                  fontWeight: 400,
+                  textTransform: "uppercase",
+                  letterSpacing: ".02em",
+                  lineHeight: 1,
+                  marginBottom: 26,
+                }}
               >
-                <source src="/hero-paragliding.mp4" type="video/mp4" />
-              </video>
-            </div>
-
-            {/* Simulateur */}
-            <RevenueSimulator />
-
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Bénéfices ─── */}
-      <section className="relative z-10 bg-canvas py-14 md:py-28">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-16">
-
-            {/* Mosaïque 2×2 */}
-            <div className="reveal grid grid-cols-2 gap-2.5">
-              {[
-                "/hero-paragliding.jpg",
-                "/hero-surf.jpg",
-                "/hero-canyoning.jpg",
-                "/hero-rafting.jpg",
-              ].map((src) => (
-                <div key={src} className="relative aspect-square overflow-hidden rounded-[16px]">
-                  <Image src={src} fill className="object-cover" alt="" sizes="(max-width: 768px) 45vw, 22vw" />
-                </div>
-              ))}
-            </div>
-
-            {/* Liste des avantages */}
-            <div className="reveal reveal-d1">
-              <span className="text-sm font-semibold uppercase tracking-wide text-brand">Conçu pour les pros de l&apos;outdoor</span>
-              <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-                Une nouvelle source de revenus, sans travail supplémentaire
-              </h2>
-
-              <div className="mt-6 divide-y divide-border md:mt-10">
-                {[
-                  {
-                    iconBg: "#EAF7EE",
-                    iconColor: "#16A34A",
-                    icon: (
-                      <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M2 14l3.5-3.5 3 3L14 7l4 4" />
-                        <path d="M14 7h4v4" />
-                      </svg>
-                    ),
-                    title: "Augmentez vos revenus",
-                    desc: "Générez des ventes après chaque activité. Stripe encaisse et verse votre part automatiquement — chaque sortie devient une opportunité.",
-                  },
-                  {
-                    iconBg: "#EEF2FF",
-                    iconColor: "#4F46E5",
-                    icon: (
-                      <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 2L4 11h5.5l-1 7L17 9h-5.5L11 2z" />
-                      </svg>
-                    ),
-                    title: "Gagnez du temps",
-                    desc: "Fini les échanges WhatsApp, WeTransfer et les relances manuelles. Import groupé, tri par client, envoi automatique — en quelques secondes sur le terrain.",
-                  },
-                  {
-                    iconBg: "#FEF6EC",
-                    iconColor: "#D97706",
-                    icon: (
-                      <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="4" cy="10" r="1.75" />
-                        <circle cx="16" cy="4" r="1.75" />
-                        <circle cx="16" cy="16" r="1.75" />
-                        <path d="M5.75 9.1L14.25 5M5.75 10.9l8.5 4.1" />
-                      </svg>
-                    ),
-                    title: "Développez votre visibilité",
-                    desc: "Chaque souvenir partagé fait découvrir votre activité à de nouveaux clients. Avis Google, partages Instagram — sans budget pub.",
-                  },
-                  {
-                    iconBg: "#F1F5F9",
-                    iconColor: "#475569",
-                    icon: (
-                      <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M10 2L3 5.5v5C3 14.1 6 17.5 10 18.5c4-1 7-4.4 7-8V5.5L10 2z" />
-                        <path d="M7 10l2 2 4-4" />
-                      </svg>
-                    ),
-                    title: "Collectez plus d'avis",
-                    desc: "Transformez l'enthousiasme de vos clients en avis positifs. Les relances partent automatiquement au bon moment, vous n'y pensez plus.",
-                  },
-                ].map((item) => (
-                  <div key={item.title} className="flex gap-4 py-6">
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px]"
-                      style={{ background: item.iconBg, color: item.iconColor }}
-                    >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink">{item.title}</p>
-                      <p className="mt-1 text-sm leading-relaxed text-ink-2">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                Plateforme souvenirs · Tourisme &amp; outdoor
               </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FAQ ─── */}
-      <section id="faq" className="relative z-10 bg-surface py-14 md:py-28">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="reveal mb-10 text-center md:mb-14">
-            <span className="text-sm font-semibold uppercase tracking-wide text-brand">FAQ</span>
-            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-              Questions fréquentes
-            </h2>
-          </div>
-          <FaqList />
-        </div>
-      </section>
-
-      {/* ─── CTA band ─── */}
-      <section className="reveal relative z-10 mx-4 mb-4 overflow-hidden rounded-card bg-ink px-6 py-12 text-center sm:mx-6 sm:mb-6 sm:px-12 md:py-16">
-        <div
-          className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full opacity-25 blur-3xl"
-          style={{ background: "var(--brand-gradient)" }}
-        />
-        <div className="relative z-10">
-          <h2 className="mx-auto max-w-2xl font-display text-2xl font-extrabold tracking-tight text-canvas sm:text-3xl md:text-4xl">
-            Commencez gratuitement.
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-canvas/70 sm:text-base">
-            Créez votre espace en quelques minutes et découvrez combien vos souvenirs peuvent vous rapporter.
-          </p>
-          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <ButtonLink href="/signup" size="lg">
-              Créer mon espace gratuitement
-            </ButtonLink>
-            <ButtonLink href="/login" variant="outline-light" size="lg">
-              J&apos;ai déjà un compte
-            </ButtonLink>
-          </div>
-        </div>
-      </section>
-
-      <ScrollReveal />
-
-      <footer className="relative z-10 border-t border-border bg-canvas">
-        <div className="mx-auto max-w-5xl px-6 py-10 md:py-14">
-
-          {/* Top row */}
-          <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
-
-            {/* Brand column */}
-            <div className="max-w-xs">
-              <Logo markClassName="h-7 w-7" textClassName="text-base" />
-              <p className="mt-3 text-sm leading-relaxed text-ink-2">
-                Outil marketing pour opérateurs d&apos;activités outdoor — photos et vidéos livrées automatiquement après chaque session.
+              <h1
+                style={{
+                  ...D,
+                  fontWeight: 800,
+                  fontSize: "clamp(40px, 5vw, 62px)",
+                  lineHeight: 1.0,
+                  letterSpacing: "-.02em",
+                  margin: "0 0 24px",
+                }}
+              >
+                Transformez leurs souvenirs en{" "}
+                <span style={{ color: BLUE }}>revenus.</span>
+              </h1>
+              <p
+                style={{
+                  fontSize: 18,
+                  lineHeight: 1.55,
+                  color: "#5d6b78",
+                  maxWidth: 460,
+                  margin: "0 0 34px",
+                }}
+              >
+                La plateforme clé en main pour vendre les photos et vidéos de
+                vos activités. Une galerie privée par client, paiement et
+                livraison automatiques. Vous ne gérez rien.
               </p>
-              {/* Social */}
-              <div className="mt-5 flex items-center gap-3">
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <a
-                  href="https://instagram.com/souvenir.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-ink-2 transition-colors hover:border-brand hover:text-brand"
-                  aria-label="Instagram"
+                  href="/signup"
+                  className="lp-btn-primary"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    background: DARK,
+                    color: CREAM,
+                    padding: "15px 28px",
+                    borderRadius: 100,
+                    fontWeight: 600,
+                    fontSize: 15.5,
+                    textDecoration: "none",
+                    transition: "opacity .15s",
+                  }}
                 >
-                  <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
-                    <rect x="2" y="2" width="12" height="12" rx="3.5" stroke="currentColor" strokeWidth="1.4" />
-                    <circle cx="8" cy="8" r="2.8" stroke="currentColor" strokeWidth="1.4" />
-                    <circle cx="11.5" cy="4.5" r="0.8" fill="currentColor" />
-                  </svg>
+                  Démarrer gratuitement <span>→</span>
+                </a>
+                <a
+                  href="#comment-ca-marche"
+                  className="lp-btn-outline"
+                  style={{
+                    padding: "15px 26px",
+                    border: "1.5px solid rgba(27,39,51,.2)",
+                    borderRadius: 100,
+                    fontWeight: 600,
+                    fontSize: 15.5,
+                    textDecoration: "none",
+                    color: DARK,
+                    transition: "background .15s",
+                  }}
+                >
+                  Voir une démo
                 </a>
               </div>
             </div>
 
-            {/* Links */}
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            {/* Postcard visual */}
+            <div className="lp-hero-visual" style={{ position: "relative" }}>
+              <HeroPostcard />
+            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* ── COMMENT ÇA MARCHE ── */}
+      <div id="comment-ca-marche" style={{ backgroundColor: "#ffffff", padding: "66px 0" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div style={{ textAlign: "center", marginBottom: 46 }}>
+              <div
+                style={{
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  letterSpacing: ".14em",
+                  textTransform: "uppercase",
+                  color: BLUE,
+                  marginBottom: 14,
+                }}
+              >
+                Comment ça marche
+              </div>
+              <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(28px, 3vw, 40px)", letterSpacing: "-.02em", margin: 0 }}>
+                Trois gestes, aucune gestion
+              </h2>
+            </div>
+            <div className="lp-hiw">
+              {[
+                { n: "1", title: "Photographiez", desc: "Capturez l'instant pendant l'activité, avec votre matériel habituel." },
+                { n: "2", title: "Uploadez", desc: "Déposez vos photos. Une galerie privée est générée pour chaque client." },
+                { n: "3", title: "Encaissez", desc: "Le client paie, reçoit ses fichiers, vous êtes crédité. Automatiquement." },
+              ].map((s) => (
+                <div
+                  key={s.n}
+                  style={{ background: "#ffffff", borderRadius: 16, padding: "32px 28px", boxShadow: "0 6px 20px rgba(27,39,51,.06)" }}
+                >
+                  <div
+                    style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: BLUE, color: "#fff",
+                      ...D, fontWeight: 700, fontSize: 20,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: 20,
+                    }}
+                  >
+                    {s.n}
+                  </div>
+                  <h3 style={{ ...D, fontWeight: 700, fontSize: 20, margin: "0 0 10px" }}>{s.title}</h3>
+                  <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "#5d6b78", margin: 0 }}>{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── AVANTAGES (dark, pleine largeur) ── */}
+      <div style={{ position: "relative", overflow: "hidden", background: "#141c26", color: CREAM }}>
+        <Image src="/hero-paragliding.jpg" fill alt="" style={{ objectFit: "cover", pointerEvents: "none" }} sizes="100vw" />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg,rgba(20,28,38,.97) 34%,rgba(20,28,38,.72) 62%,rgba(20,28,38,.5))" }} />
+        <div style={{ ...W, position: "relative" }}>
+          <div className="lp-section-px" style={{ paddingTop: 64, paddingBottom: 58 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 40, marginBottom: 46, flexWrap: "wrap" }}>
+              <div style={{ maxWidth: 560 }}>
+                <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(28px, 3.5vw, 44px)", lineHeight: 1.02, letterSpacing: "-.02em", margin: "0 0 20px", color: CREAM }}>
+                  Bien plus qu&apos;une simple vente de photos.
+                </h2>
+                <p style={{ fontSize: 16, lineHeight: 1.55, color: "#b9c2cc", margin: 0, maxWidth: 500 }}>
+                  Chaque galerie travaille pour vous : de nouveaux revenus, une présence en ligne renforcée, des avis clients et une conformité totale — sans effort de votre part.
+                </p>
+              </div>
+              <a href="/signup" style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0, marginTop: 6, textDecoration: "none" }}>
+                <span style={{ background: "#fff", color: DARK, padding: "14px 26px", borderRadius: 100, fontWeight: 600, fontSize: 15 }}>
+                  Démarrer gratuitement
+                </span>
+                <span style={{ width: 44, height: 44, borderRadius: "50%", background: "#fff", color: DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+                  →
+                </span>
+              </a>
+            </div>
+            <div className="lp-adv-cards">
+              {[
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>,
+                  title: "Augmentation du revenu",
+                  desc: "Une nouvelle source de chiffre d'affaires sur chaque activité, sans coût fixe.",
+                },
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg>,
+                  title: "Présence & notoriété",
+                  desc: "Vos souvenirs partagés en ligne font connaître votre marque bien au-delà.",
+                },
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.9 6.6 20l1-6.1L3.2 9.5l6.1-.9z"/></svg>,
+                  title: "Collecte des avis",
+                  desc: "Sollicitez un avis au moment le plus fort de l'expérience, automatiquement.",
+                },
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>,
+                  title: "Conformité RGPD",
+                  desc: "Consentement, hébergement européen et gestion des données intégrés.",
+                },
+              ].map((c) => (
+                <div
+                  key={c.title}
+                  style={{ border: "1px solid rgba(243,237,225,.16)", background: "rgba(243,237,225,.04)", borderRadius: 14, padding: "26px 24px 28px", minHeight: 172, display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+                >
+                  <span style={{ width: 44, height: 44, borderRadius: 12, background: BLUE, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {c.icon}
+                  </span>
+                  <div>
+                    <div style={{ ...D, fontWeight: 800, fontSize: 18, color: CREAM, marginBottom: 7 }}>{c.title}</div>
+                    <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#8f9aa6" }}>{c.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── CAS D'USAGE ── */}
+      <div id="cas-usage" style={{ padding: "70px 0 96px" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 38, gap: 20, flexWrap: "wrap" }}>
+              <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(26px, 3vw, 40px)", letterSpacing: "-.02em", lineHeight: 1.05, margin: 0 }}>
+                Une carte postale<br />pour chaque aventure
+              </h2>
+              <p style={{ fontSize: 15, color: "#5d6b78", maxWidth: 300, margin: "0 0 6px", textAlign: "right" }}>
+                Chaque métier de l&apos;outdoor a des souvenirs à vendre. Souvenir s&apos;adapte au vôtre.
+              </p>
+            </div>
+            <div className="lp-uc-cards">
+              {[
+                { src: "/hero-surf.jpg",      label: "Écoles de surf" },
+                { src: "/hero-rafting.jpg",   label: "Moniteurs de ski" },
+                { src: "/hero-jetski.jpg",    label: "Centres de plongée" },
+                { src: "/hero-jetski.jpg",    label: "Bases nautiques" },
+                { src: "/hero-canyoning.jpg", label: "Canyoning" },
+                { src: "/hero-rafting.jpg",   label: "Parcs aventure" },
+              ].map((uc, i) => (
+                <div key={i} style={{ background: "#ffffff", padding: "10px 10px 16px", borderRadius: 10, boxShadow: "0 6px 18px rgba(27,39,51,.07)" }}>
+                  <div style={{ position: "relative", width: "100%", height: 190, borderRadius: 5, overflow: "hidden" }}>
+                    <Image src={uc.src} fill alt={uc.label} style={{ objectFit: "cover" }} sizes="(max-width:900px) 50vw, 380px" />
+                  </div>
+                  <div style={{ ...D, fontWeight: 700, fontSize: 16, margin: "12px 4px 0" }}>{uc.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 44, flexWrap: "wrap" }}>
+              <span style={{ height: 1, flex: 1, maxWidth: 120, background: "rgba(27,39,51,.14)" }} />
+              <span style={{ fontSize: 14, color: "#5d6b78" }}>…et plein d&apos;autres activités outdoor</span>
+              <a href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", border: "1.5px solid rgba(27,39,51,.14)", borderRadius: 100, padding: "9px 20px", fontWeight: 600, fontSize: 14, color: DARK, textDecoration: "none" }}>
+                Voir tous les métiers <span style={{ color: BLUE }}>→</span>
+              </a>
+              <span style={{ height: 1, flex: 1, maxWidth: 120, background: "rgba(27,39,51,.14)" }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── TARIFS (dark, pleine largeur) ── */}
+      <div id="tarifs" style={{ backgroundColor: DARK, color: CREAM, padding: "74px 0" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div className="lp-pricing">
+              {/* Left */}
               <div>
-                <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted">Produit</p>
-                <ul className="space-y-3 text-sm text-ink-2">
-                  <li><a href="#comment-ca-marche" className="transition-colors hover:text-ink">Comment ça marche</a></li>
-                  <li><a href="#tarifs" className="transition-colors hover:text-ink">Tarifs</a></li>
-                  <li><a href="/signup" className="transition-colors hover:text-ink">Démarrer gratuitement</a></li>
-                  <li><a href="/login" className="transition-colors hover:text-ink">Se connecter</a></li>
-                </ul>
+                <div style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "#8fb0ea", marginBottom: 18 }}>
+                  Un modèle limpide
+                </div>
+                <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(28px, 3.5vw, 44px)", letterSpacing: "-.02em", lineHeight: 1.02, margin: "0 0 20px" }}>
+                  Vous ne payez que quand vous gagnez
+                </h2>
+                <p style={{ fontSize: 16.5, lineHeight: 1.55, color: "#b3c0cd", margin: "0 0 26px", maxWidth: 420 }}>
+                  Pas d&apos;abonnement, pas de frais fixes, pas d&apos;installation. Souvenir prend 20% sur chaque vente, vous gardez 80%. Le reste est reversé sur votre compte.
+                </p>
+                <a href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: 10, background: BLUE, color: "#fff", padding: "15px 28px", borderRadius: 100, fontWeight: 600, fontSize: 15.5, textDecoration: "none" }}>
+                  Créer mon espace gratuitement <span>→</span>
+                </a>
               </div>
 
-              <div>
-                <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted">Légal</p>
-                <ul className="space-y-3 text-sm text-ink-2">
-                  <li><a href="/confidentialite" className="transition-colors hover:text-ink">Confidentialité</a></li>
-                  <li><a href="/mentions-legales" className="transition-colors hover:text-ink">Mentions légales</a></li>
-                  <li><a href="/cgu" className="transition-colors hover:text-ink">CGU</a></li>
-                </ul>
+              {/* Receipt card */}
+              <div style={{ background: "#ffffff", color: DARK, borderRadius: 14, padding: "34px 38px" }}>
+                <div style={{ ...D, fontWeight: 700, fontSize: 15, paddingBottom: 16, borderBottom: "2px dashed rgba(27,39,51,.2)", marginBottom: 16 }}>
+                  Reçu · Vente de photos
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, marginBottom: 10 }}>
+                  <span style={{ color: "#5d6b78" }}>Vente client</span>
+                  <span style={{ fontWeight: 600 }}>20,00 €</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, marginBottom: 16 }}>
+                  <span style={{ color: "#5d6b78" }}>Commission Souvenir (20%)</span>
+                  <span style={{ fontWeight: 600 }}>– 4,00 €</span>
+                </div>
+                <div style={{ height: 12, borderRadius: 100, overflow: "hidden", display: "flex", marginBottom: 18 }}>
+                  <span style={{ width: "80%", background: BLUE }} />
+                  <span style={{ width: "20%", background: "#dfe6ee" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: 16, borderTop: "2px dashed rgba(27,39,51,.2)" }}>
+                  <span style={{ ...D, fontWeight: 700, fontSize: 17 }}>Vous recevez</span>
+                  <span style={{ ...D, fontWeight: 800, fontSize: 38, color: BLUE }}>16,00 €</span>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* ── CTA FINAL ── */}
+      <div style={{ padding: "84px 0 40px", textAlign: "center" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: BLUE, marginBottom: 20 }}>
+              Commencez aujourd&apos;hui
+            </div>
+            <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(34px, 4.5vw, 54px)", letterSpacing: "-.02em", lineHeight: 1.02, margin: "0 auto 30px", maxWidth: 680 }}>
+              Chaque souvenir mérite d&apos;être <span style={{ color: BLUE }}>envoyé.</span>
+            </h2>
+            <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
+              <a href="/signup" style={{ display: "flex", alignItems: "center", gap: 10, background: DARK, color: CREAM, padding: "16px 30px", borderRadius: 100, fontWeight: 600, fontSize: 16, textDecoration: "none" }}>
+                Démarrer gratuitement <span>→</span>
+              </a>
+              <a href="mailto:hello@souvenir.app" style={{ padding: "16px 28px", border: "1.5px solid rgba(27,39,51,.2)", borderRadius: 100, fontWeight: 600, fontSize: 16, textDecoration: "none", color: DARK }}>
+                Parler à l&apos;équipe
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FOOTER (dark, pleine largeur) ── */}
+      <footer style={{ backgroundColor: DARK, color: CREAM, overflow: "hidden" }}>
+        <div style={W}>
+          <div className="lp-section-px" style={{ paddingTop: 56, paddingBottom: 40, borderBottom: "1px solid rgba(243,237,225,.14)" }}>
+            <div className="lp-footer-cols">
+              {/* Brand */}
+              <div style={{ maxWidth: 320 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <span style={{ width: 26, height: 26, borderRadius: "50%", border: `2px solid ${CREAM}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, ...D, flexShrink: 0 }}>S</span>
+                  <span style={{ ...D, fontWeight: 700, fontSize: 22, letterSpacing: "-.01em" }}>Souvenir</span>
+                </div>
+                <p style={{ fontSize: 15, fontWeight: 500, margin: "0 0 22px", lineHeight: 1.5, color: "#b3c0cd" }}>
+                  La plateforme européenne de la monétisation des souvenirs touristiques.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(243,237,225,.06)", border: "1px solid rgba(243,237,225,.16)", borderRadius: 100, padding: "5px 5px 5px 18px", maxWidth: 300 }}>
+                  <span style={{ flex: 1, fontSize: 13.5, color: "#8f9aa6" }}>Votre e-mail professionnel</span>
+                  <a href="/signup" style={{ background: BLUE, color: "#fff", padding: "9px 18px", borderRadius: 100, fontWeight: 600, fontSize: 13.5, textDecoration: "none" }}>
+                    S&apos;inscrire
+                  </a>
+                </div>
+              </div>
+              <FooterCol title="Produit" links={[{ href: "#comment-ca-marche", label: "Fonctionnalités" }, { href: "#tarifs", label: "Tarifs" }, { href: "/signup", label: "Galeries" }, { href: "/signup", label: "Nouveautés" }]} />
+              <FooterCol title="Métiers" links={[{ href: "#cas-usage", label: "Surf" }, { href: "#cas-usage", label: "Ski" }, { href: "#cas-usage", label: "Plongée" }, { href: "#cas-usage", label: "Parcs aventure" }]} />
+              <FooterCol title="Société" links={[{ href: "/", label: "À propos" }, { href: "mailto:hello@souvenir.app", label: "Contact" }, { href: "/", label: "Blog" }, { href: "/mentions-legales", label: "Mentions légales" }]} />
             </div>
           </div>
 
-          {/* Bottom bar */}
-          <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-8 sm:flex-row">
-            <p className="text-xs text-muted">
-              © {new Date().getFullYear()} Souvenir. Tous droits réservés.
-            </p>
-            <p className="text-xs text-muted">
-              Fait avec ❤️ depuis Annecy, France.
-            </p>
+          <div className="lp-section-px" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, padding: "22px 50px" }}>
+            <div style={{ fontSize: 12.5, color: "#7e8c99" }}>© 2026 Souvenir · Transformez les souvenirs en revenus.</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 22, fontSize: 12.5, color: "#8f9aa6" }}>
+              <span>Français</span>
+              <a href="/confidentialite" style={{ textDecoration: "none", color: "#8f9aa6" }}>Confidentialité</a>
+              <a href="/cgu" style={{ textDecoration: "none", color: "#8f9aa6" }}>CGU</a>
+              <span style={{ display: "flex", gap: 10 }}>
+                {[{ href: "https://linkedin.com", label: "in" }, { href: "https://instagram.com/souvenir.app", label: "ig" }].map((s) => (
+                  <a key={s.label} href={s.href} style={{ width: 30, height: 30, borderRadius: "50%", border: "1px solid rgba(243,237,225,.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: CREAM, textDecoration: "none" }}>
+                    {s.label}
+                  </a>
+                ))}
+              </span>
+            </div>
           </div>
 
+          {/* Giant wordmark */}
+          <div style={{ overflow: "hidden" }}>
+            <p style={{ ...D, fontWeight: 800, fontSize: "clamp(4rem, 18vw, 250px)", lineHeight: 0.8, letterSpacing: "-.03em", color: "rgba(47,95,208,.28)", margin: "6px 0 -48px", whiteSpace: "nowrap", textAlign: "center" }}>
+              Souvenir
+            </p>
+          </div>
         </div>
       </footer>
-    </main>
-  );
-}
 
-/* ─── Unlocked photo card ─── */
-function UnlockedCard({ src, width, height: h, className = "" }: { src: string; width: number; height?: number; className?: string }) {
-  const height = h ?? Math.round(width * 1.35);
-  return (
-    <div
-      className={`overflow-hidden rounded-[18px] ${className}`}
-      style={{
-        width,
-        height,
-        boxShadow: "0 20px 50px -10px rgba(0,0,0,0.28), 0 6px 16px -4px rgba(0,0,0,0.14)",
-      }}
-    >
-      <div className="relative h-full w-full">
-        <Image src={src} fill className="object-cover" alt="" sizes={`${width}px`} />
-      </div>
     </div>
   );
 }
 
-/* ─── Lock icon ─── */
-function LockIcon() {
+function FooterCol({ title, links }: { title: string; links: { href: string; label: string }[] }) {
   return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-white">
-      <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/* ─── Blurred tile ─── */
-function BlurredTile({ src }: { src: string }) {
-  return (
-    <div className="relative aspect-square overflow-hidden rounded-[5px]">
-      <Image
-        src={src}
-        fill
-        className="object-cover"
-        alt=""
-        sizes="60px"
-        style={{ filter: "blur(5px)", transform: "scale(1.08)" }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center bg-black/35">
-        <LockIcon />
-      </div>
-    </div>
-  );
-}
-
-/* ─── Gallery Phone Mockup ─── */
-function GalleryPhone({ className = "" }: { className?: string }) {
-  return (
-    <div className={`relative ${className}`} style={{ width: 218, height: 447 }}>
-      {/* Body — gradient titanium */}
-      <div
-        className="absolute inset-0 rounded-[38px]"
-        style={{
-          background: "linear-gradient(155deg, #2E2E30 0%, #1C1C1E 55%)",
-          boxShadow:
-            "0 48px 96px -16px rgba(0,0,0,0.55), 14px 24px 48px -12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.4)",
-        }}
-      />
-      {/* Chamfer highlight */}
-      <div
-        className="absolute inset-x-3 top-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)" }}
-      />
-      {/* Side buttons */}
-      {([
-        { side: "right", top: 90,  h: 50 },
-        { side: "left",  top: 78,  h: 28 },
-        { side: "left",  top: 116, h: 54 },
-        { side: "left",  top: 180, h: 54 },
-      ] as const).map(({ side, top, h }, i) => (
-        <div
-          key={i}
-          className={`absolute ${side === "right" ? "-right-[3px] rounded-r-full" : "-left-[3px] rounded-l-full"}`}
-          style={{ top, height: h, width: 3, background: "linear-gradient(180deg, #3A3A3C, #2A2A2C)" }}
-        />
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 14, color: "#b3c0cd" }}>
+      <b style={{ fontFamily: "var(--font-bricolage), 'Bricolage Grotesque', sans-serif", color: "#f3ede1", fontWeight: 700, fontSize: 13, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 2, display: "block" }}>
+        {title}
+      </b>
+      {links.map((l) => (
+        <a key={l.label} href={l.href} style={{ textDecoration: "none", color: "#b3c0cd" }}>{l.label}</a>
       ))}
-      {/* Screen */}
-      <div className="absolute inset-[3px] overflow-hidden rounded-[35px] bg-[#FAF7F4]">
-        {/* Screen glare */}
-        <div
-          className="pointer-events-none absolute inset-0 z-30 rounded-[35px]"
-          style={{ background: "linear-gradient(145deg, rgba(255,255,255,0.08) 0%, transparent 50%)" }}
-        />
-        {/* Status bar */}
-        <div className="relative flex h-9 items-center justify-between bg-[#FAF7F4] px-4 pt-1">
-          <span className="text-[9px] font-semibold text-[#1F1B17]">17:34</span>
-          <div className="absolute left-1/2 top-2 h-[18px] w-[64px] -translate-x-1/2 rounded-full bg-[#1C1C1E]" />
-          <svg viewBox="0 0 28 9" className="h-2 w-5 fill-[#1F1B17]">
-            <rect x="0" y="5" width="3" height="4" rx="0.5" />
-            <rect x="4.5" y="3" width="3" height="6" rx="0.5" />
-            <rect x="9" y="1" width="3" height="8" rx="0.5" />
-            <rect x="13.5" y="0" width="3" height="9" rx="0.5" opacity="0.25" />
-            <rect x="21" y="0" width="7" height="7" rx="1.5" fill="none" stroke="#1F1B17" strokeWidth="1" />
-            <rect x="22" y="1.5" width="4" height="4" rx="0.8" />
-          </svg>
-        </div>
-        {/* Operator header */}
-        <div className="flex items-center gap-2 px-3 pb-1.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4F46E5]">
-            <span className="text-[8px] font-bold text-white">VP</span>
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-[9px] font-semibold text-[#1F1B17]">Vol Passion Annecy</p>
-            <p className="text-[7.5px] text-[#A89C90]">Annecy · 14 juin · 14 photos</p>
-          </div>
-        </div>
-        {/* Hero photo — blurred */}
-        <div className="relative mx-2.5 overflow-hidden rounded-[12px]" style={{ height: 198 }}>
-          <Image
-            src="/hero-paragliding.jpg"
-            fill
-            className="object-cover"
-            alt=""
-            sizes="194px"
-            style={{ filter: "blur(8px)", transform: "scale(1.1)" }}
-          />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/38">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm ring-1 ring-white/25">
-              <svg viewBox="0 0 16 16" fill="none" style={{ width: 18, height: 18 }} className="text-white">
-                <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <p className="text-[9.5px] font-semibold text-white">14 photos · 2 vidéos</p>
-          </div>
-        </div>
-        {/* Grid — all blurred */}
-        <div className="mx-2.5 mt-[3px] grid grid-cols-3 gap-[2px]">
-          <BlurredTile src="/hero-rafting.jpg" />
-          <BlurredTile src="/hero-surf.jpg" />
-          <BlurredTile src="/hero-canyoning.jpg" />
-        </div>
-        {/* CTA */}
-        <div
-          className="mx-2.5 mt-2 flex items-center justify-center gap-2 rounded-full py-2.5"
-          style={{ background: "linear-gradient(135deg, #818CF8 0%, #4F46E5 100%)" }}
-        >
-          <span className="text-[11px] font-bold text-white">Débloquer</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-extrabold text-white">29 €</span>
-        </div>
-        {/* Souvenir branding */}
-        <div className="mt-2 mb-1 flex items-center justify-center gap-1 opacity-40">
-          <svg viewBox="0 0 10 12" fill="none" style={{ width: 8, height: 10 }}>
-            <rect x="1" y="1" width="8" height="10" rx="1.5" stroke="#1F1B17" strokeWidth="1.2" />
-            <rect x="2.5" y="3.5" width="5" height="3.5" rx="0.8" fill="#4F46E5" />
-          </svg>
-          <span className="text-[7.5px] font-semibold tracking-wide text-[#1F1B17]">via Souvenir</span>
-        </div>
-      </div>
     </div>
   );
 }
-
-/* ─── Floating Badge ─── */
-function FloatingBadge({
-  className = "",
-  icon,
-  iconBg,
-  iconColor,
-  label,
-}: {
-  className?: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  iconColor: string;
-  label: string;
-}) {
-  return (
-    <div
-      className={`flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-2 shadow-card ${className}`}
-    >
-      <span
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-        style={{ background: iconBg, color: iconColor }}
-      >
-        {icon}
-      </span>
-      <span className="whitespace-nowrap text-xs font-semibold text-ink">{label}</span>
-    </div>
-  );
-}
-
-
-/* ─── Dashboard Preview ─── */
-
-/* ─── Icons ─── */
-function EuroIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4">
-      <path d="M11 4.5a4 4 0 1 0 0 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M3 7h6M3 9h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-
-function InstagramIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
-      <rect x="2" y="2" width="12" height="12" rx="3.5" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="8" cy="8" r="2.8" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="11.5" cy="4.5" r="0.8" fill="currentColor" />
-    </svg>
-  );
-}
-
