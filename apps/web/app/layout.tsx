@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Space_Grotesk, Kalam } from "next/font/google";
 import "./globals.css";
 
@@ -19,6 +19,11 @@ const kalam = Kalam({
   weight: ["400"],
   variable: "--font-kalam",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "Souvenir — Transformez les souvenirs en revenus",

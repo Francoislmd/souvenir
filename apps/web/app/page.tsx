@@ -67,7 +67,7 @@ export default function Home() {
                 vos activités. Une galerie privée par client, paiement et
                 livraison automatiques. Vous ne gérez rien.
               </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+              <div className="lp-hero-cta" style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <a
                   href="/signup"
                   className="lp-btn-primary"
@@ -234,22 +234,22 @@ export default function Home() {
       <div id="cas-usage" style={{ padding: "70px 0 96px" }}>
         <div style={W}>
           <div className="lp-section-px">
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 38, gap: 20, flexWrap: "wrap" }}>
+            <div className="lp-uc-head" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 38, gap: 20 }}>
               <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(26px, 3vw, 40px)", letterSpacing: "-.02em", lineHeight: 1.05, margin: 0 }}>
                 Une carte postale<br />pour chaque aventure
               </h2>
-              <p style={{ fontSize: 15, color: "#5d6b78", maxWidth: 300, margin: "0 0 6px", textAlign: "right" }}>
+              <p className="lp-uc-subtitle" style={{ fontSize: 15, color: "#5d6b78", maxWidth: 300, margin: "0 0 6px" }}>
                 Chaque métier de l&apos;outdoor a des souvenirs à vendre. Souvenir s&apos;adapte au vôtre.
               </p>
             </div>
             <div className="lp-uc-cards">
               {[
-                { src: "/hero-surf.jpg",      label: "Écoles de surf" },
-                { src: "/hero-rafting.jpg",   label: "Moniteurs de ski" },
-                { src: "/hero-jetski.jpg",    label: "Centres de plongée" },
-                { src: "/hero-jetski.jpg",    label: "Bases nautiques" },
-                { src: "/hero-canyoning.jpg", label: "Canyoning" },
-                { src: "/hero-rafting.jpg",   label: "Parcs aventure" },
+                { src: "/uc-surf.jpg",      label: "Écoles de surf" },
+                { src: "/uc-ski.jpg",       label: "Moniteurs de ski" },
+                { src: "/uc-plongee.jpg",   label: "Centres de plongée" },
+                { src: "/uc-nautique.jpg",  label: "Bases nautiques" },
+                { src: "/uc-canyoning.jpg", label: "Canyoning" },
+                { src: "/uc-aventure.jpg",  label: "Parcs aventure" },
               ].map((uc, i) => (
                 <div key={i} style={{ background: "#ffffff", padding: "10px 10px 16px", borderRadius: 10, boxShadow: "0 6px 18px rgba(27,39,51,.07)" }}>
                   <div style={{ position: "relative", width: "100%", height: 190, borderRadius: 5, overflow: "hidden" }}>
@@ -259,13 +259,13 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 44, flexWrap: "wrap" }}>
-              <span style={{ height: 1, flex: 1, maxWidth: 120, background: "rgba(27,39,51,.14)" }} />
+            <div className="lp-uc-more" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 44 }}>
+              <span className="lp-uc-more-line" style={{ height: 1, flex: 1, maxWidth: 120, background: "rgba(27,39,51,.14)" }} />
               <span style={{ fontSize: 14, color: "#5d6b78" }}>…et plein d&apos;autres activités outdoor</span>
               <a href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", border: "1.5px solid rgba(27,39,51,.14)", borderRadius: 100, padding: "9px 20px", fontWeight: 600, fontSize: 14, color: DARK, textDecoration: "none" }}>
                 Voir tous les métiers <span style={{ color: BLUE }}>→</span>
               </a>
-              <span style={{ height: 1, flex: 1, maxWidth: 120, background: "rgba(27,39,51,.14)" }} />
+              <span className="lp-uc-more-line" style={{ height: 1, flex: 1, maxWidth: 120, background: "rgba(27,39,51,.14)" }} />
             </div>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function Home() {
               </div>
 
               {/* Receipt card */}
-              <div style={{ background: "#ffffff", color: DARK, borderRadius: 14, padding: "34px 38px" }}>
+              <div className="lp-receipt" style={{ color: DARK }}>
                 <div style={{ ...D, fontWeight: 700, fontSize: 15, paddingBottom: 16, borderBottom: "2px dashed rgba(27,39,51,.2)", marginBottom: 16 }}>
                   Reçu · Vente de photos
                 </div>
@@ -368,7 +368,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="lp-section-px" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, padding: "22px 50px" }}>
+          <div className="lp-section-px lp-footer-bottom">
             <div style={{ fontSize: 12.5, color: "#7e8c99" }}>© 2026 Souvenir · Transformez les souvenirs en revenus.</div>
             <div style={{ display: "flex", alignItems: "center", gap: 22, fontSize: 12.5, color: "#8f9aa6" }}>
               <span>Français</span>
