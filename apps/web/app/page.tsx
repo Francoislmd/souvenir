@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Nav } from "@/components/marketing/Nav";
 import { HeroPostcard } from "@/components/marketing/HeroPostcard";
+import { SouvenirMark } from "@/components/SouvenirMark";
 
 const D: React.CSSProperties = {
   fontFamily: "var(--font-bricolage), 'Bricolage Grotesque', sans-serif",
@@ -18,13 +19,11 @@ export default function Home() {
   return (
     <div className="lp-body">
 
-      {/* ── NAV ── */}
-      <Nav />
-
-      {/* ── HERO ── */}
-      <div style={{ backgroundColor: "#ffffff" }}>
+      {/* ── HERO ── (inclut le nav pour fond blanc commun) */}
+      <div style={{ backgroundColor: "#ffffff", paddingTop: 16 }}>
+        <Nav />
         <div style={W}>
-          <div className="lp-hero">
+          <div className="lp-hero" style={{ paddingTop: 80 }}>
             {/* Text */}
             <div>
               <div
@@ -348,8 +347,8 @@ export default function Home() {
             <div className="lp-footer-cols">
               {/* Brand */}
               <div style={{ maxWidth: 320 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                  <span style={{ width: 26, height: 26, borderRadius: "50%", border: `2px solid ${CREAM}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, ...D, flexShrink: 0 }}>S</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <SouvenirMark size="sm" dark />
                   <span style={{ ...D, fontWeight: 700, fontSize: 22, letterSpacing: "-.01em" }}>Souvenir</span>
                 </div>
                 <p style={{ fontSize: 15, fontWeight: 500, margin: "0 0 22px", lineHeight: 1.5, color: "#b3c0cd" }}>
