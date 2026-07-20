@@ -40,10 +40,6 @@ export default function Home() {
         <div className={cx(styles.blob, styles.b3)} />
         <div className={cx(styles.container, styles.heroGrid)}>
           <div>
-            <span className={cx(styles.badge, "rv")}>
-              <span className={styles.tag}>Nouveau</span>
-              Pour les prestataires d&apos;activités outdoor
-            </span>
             <h1 className={cx(styles.h1, "rv", "d1")}>
               Transformez chaque sortie en{" "}
               <span className={styles.gradText}>revenu et en souvenir.</span>

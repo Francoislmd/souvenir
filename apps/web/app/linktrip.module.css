@@ -133,11 +133,6 @@
 .b2 { width: 460px; height: 460px; top: -80px; right: 120px; background: radial-gradient(circle, #FFB443, transparent 65%); }
 .b3 { width: 400px; height: 400px; top: 60px; left: -160px; background: radial-gradient(circle, #0FBEB6, transparent 65%); opacity: .16; }
 .heroGrid { position: relative; z-index: 2; display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
-.badge {
-  display: inline-flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 600; color: var(--ink-2);
-  background: var(--surface); border: 1px solid var(--line); padding: 6px 8px; border-radius: 999px; box-shadow: var(--sh-1);
-}
-.badge .tag { background: var(--g-sunset); color: #fff; font-weight: 700; font-size: .72rem; padding: 3px 10px; border-radius: 999px; }
 .h1 { font-size: clamp(2.7rem, 5.6vw, 4.3rem); font-weight: 700; margin-top: 22px; }
 .heroLead { margin-top: 22px; font-size: clamp(1.06rem, 1.5vw, 1.22rem); color: var(--ink-3); max-width: 52ch; line-height: 1.5; }
 .heroCta { margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; }
