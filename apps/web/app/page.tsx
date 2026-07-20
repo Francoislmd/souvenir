@@ -422,42 +422,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PARTENAIRES FONDATEURS ── */}
-      <section className={styles.section} id="fondateurs" style={{ paddingTop: 20 }}>
-        <div className={styles.container}>
-          <div className={cx(styles.sectionHead, "rv")}>
-            <span className={styles.eyebrow}>Programme de lancement</span>
-            <h2 style={{ marginTop: 12 }}>Devenez l&apos;une des premières structures.</h2>
-            <p>
-              Linktrip se lance cet été avec un petit groupe de prestataires outdoor. Voilà ce que vous y gagnez en
-              étant parmi les premiers.
-            </p>
-          </div>
-          <div className={styles.quotes}>
-            <div className={cx(styles.quote, "rv")}>
-              <div className={styles.ppIc}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg></div>
-              <h4 className={styles.ppT}>Accompagnement direct</h4>
-              <p>Je vous installe et je reste joignable. On ajuste ensemble ce qui manque, sortie après sortie.</p>
-            </div>
-            <div className={cx(styles.quote, "rv", "d1")}>
-              <div className={styles.ppIc}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 13.4 12.4 21.6a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1 0-2.8L11.6 3.6A2 2 0 0 1 13 3h6a2 2 0 0 1 2 2v6a2 2 0 0 1-.4 1.4Z" /><circle cx="8" cy="8" r="1.3" /></svg></div>
-              <h4 className={styles.ppT}>Conditions fondateur</h4>
-              <p>Tarif de lancement gelé et accès prioritaire aux nouvelles fonctionnalités, avant tout le monde.</p>
-            </div>
-            <div className={cx(styles.quote, "rv", "d2")}>
-              <div className={styles.ppIc}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg></div>
-              <h4 className={styles.ppT}>Zéro risque</h4>
-              <p>0&#8239;€ pour démarrer. Vous ne payez qu&apos;une commission sur les ventes réellement réalisées.</p>
-            </div>
-          </div>
-          <div className={cx(styles.ppCta, "rv")}>
-            <a href="#rdv" className={styles.ppLink}>
-              Envie d&apos;en être&#8202;? Réservez un échange <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-            </a>
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ── */}
       <section className={cx(styles.section, styles.bgRose)} id="faq">
         <div className={styles.container}>
