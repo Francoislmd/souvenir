@@ -44,7 +44,10 @@
   overflow-x: hidden;
 }
 .page * { box-sizing: border-box; }
-.page a { color: inherit; text-decoration: none; }
+/* :where() garde une spécificité nulle, comme le sélecteur brut `a` d'origine,
+   pour que .btnPrimary/.ctaWhite/etc (une seule classe) gagnent toujours
+   sur cette règle — sinon "color: inherit" les emporte à tort. */
+:where(.page) a { color: inherit; text-decoration: none; }
 .page img { display: block; max-width: 100%; }
 .page h1, .page h2, .page h3, .page h4 {
   font-family: var(--font-bricolage), 'Inter Tight', sans-serif;
