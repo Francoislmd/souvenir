@@ -44,8 +44,8 @@ export default function Home() {
             </div>
             <div className={cx(styles.proof, "rv", "d3")}>
               <div className={styles.avatars}>
-                {["/hero-jetski.jpg", "/hero-surf.jpg", "/hero-canyoning.jpg"].map((src) => (
-                  <span key={src} className={styles.av}>
+                {["/hero-parasail.webp", "/solution-canyoning.webp", "/hero-parasail.webp"].map((src, i) => (
+                  <span key={i} className={styles.av}>
                     <Image src={src} width={34} height={34} alt="" style={{ objectFit: "cover", width: 34, height: 34 }} />
                   </span>
                 ))}
@@ -58,7 +58,7 @@ export default function Home() {
             <div className={styles.lockcard}>
               <div className={styles.lcPhoto}>
                 <div className={styles.lcBlur}>
-                  <Image src="/hero-canyoning.jpg" width={540} height={675} alt="Votre photo de sortie" priority />
+                  <Image src="/hero-parasail.webp" width={600} height={750} alt="Votre photo de sortie" priority />
                 </div>
                 <span className={styles.lcWm}>Aperçu · votre photo</span>
                 <div className={styles.lcLock}>
@@ -164,7 +164,7 @@ export default function Home() {
           </div>
           <div className={cx("rv", "d1")}>
             <div className={styles.solVisual}>
-              <Image src="/hero-canyoning.jpg" width={400} height={533} alt="Cliente après sa sortie canyoning" className={styles.solPhoto} />
+              <Image src="/solution-canyoning.webp" width={540} height={720} alt="Cliente après sa sortie canyoning" className={styles.solPhoto} />
               <div className={styles.solMail}>
                 <div className={styles.solMailTop}>
                   <span className={styles.solMailAv}>N</span>
@@ -283,8 +283,8 @@ export default function Home() {
                   </span>
                 </div>
                 <div className={styles.mdGal}>
-                  {["/uc-surf.jpg", "/uc-ski.jpg", "/uc-canyoning.jpg", "/uc-plongee.jpg"].map((src, i) => (
-                    <div key={src} className={styles.cell}>
+                  {["/hero-parasail.webp", "/solution-canyoning.webp", "/solution-canyoning.webp", "/hero-parasail.webp"].map((src, i) => (
+                    <div key={i} className={styles.cell}>
                       <Image src={src} width={140} height={140} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       {i === 0 && (
                         <span className={styles.cellSel}>
@@ -329,14 +329,10 @@ export default function Home() {
                   <span className={styles.soonBadge}>À venir</span>
                 </div>
                 <div className={styles.xsell}>
-                  {[
-                    { name: "Jet-ski", src: "/hero-jetski.jpg" },
-                    { name: "Rafting", src: "/hero-rafting.jpg" },
-                    { name: "Surf", src: "/hero-surf.jpg" },
-                  ].map((x) => (
-                    <div key={x.name} className={styles.xsItem}>
-                      <span className={styles.pic}><Image src={x.src} width={40} height={40} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></span>
-                      <span className={styles.nm}>{x.name}</span>
+                  {["Jet-ski", "Rafting", "Surf"].map((name) => (
+                    <div key={name} className={styles.xsItem}>
+                      <span className={styles.pic} style={{ background: "var(--line)" }} />
+                      <span className={styles.nm}>{name}</span>
                       <span className={styles.pr}>-10% pour vos clients</span>
                       <span className={styles.go}>Réserver</span>
                     </div>
