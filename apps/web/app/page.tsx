@@ -3,7 +3,6 @@ import styles from "./linktrip.module.css";
 import { LinktripNav } from "@/components/marketing/LinktripNav";
 import { LinktripLeviers } from "@/components/marketing/LinktripLeviers";
 import { LinktripReveal } from "@/components/marketing/LinktripReveal";
-import { LinktripMobileBar } from "@/components/marketing/LinktripMobileBar";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -536,8 +535,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      <LinktripMobileBar />
     </div>
   );
 }

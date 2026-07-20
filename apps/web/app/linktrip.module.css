@@ -385,19 +385,6 @@
 .footBottom .soc { display: flex; gap: 16px; }
 .footBottom .soc a { color: var(--ink-3); }
 
-/* ── Sticky mobile bar ── */
-.mbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 95; display: none; align-items: center; gap: 12px;
-  padding: 11px 16px calc(11px + env(safe-area-inset-bottom, 0px)); background: rgba(255, 255, 255, .9);
-  backdrop-filter: blur(18px); border-top: 1px solid var(--line); box-shadow: 0 -8px 24px rgba(22, 19, 32, .08);
-  transform: translateY(130%); transition: transform .3s ease;
-}
-.mbarShow { transform: none; }
-.mbTxt { flex: 1; min-width: 0; }
-.mbTxt .t1 { font-family: var(--font-bricolage), 'Inter Tight', sans-serif; font-weight: 700; font-size: .92rem; line-height: 1.15; }
-.mbTxt .t2 { font-size: .72rem; color: var(--ink-3); }
-.mbar .btn { padding: 13px 20px; flex: 0 0 auto; }
-
 /* ── Reveal on scroll ──
    :global() volontairement, nesté sous .page pour rester une sélection "pure" :
    le script de reveal cible ces classes littérales (.rv / .rv.on) via
@@ -421,8 +408,6 @@
   .footGrid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
-  .mbar { display: flex; }
-  .page { padding-bottom: 74px; }
   .hero { padding: 104px 0 64px; }
   .h1 { font-size: clamp(2.15rem, 8.4vw, 2.9rem); line-height: 1.06; }
   .section { padding: 72px 0; }
