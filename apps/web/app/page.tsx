@@ -285,7 +285,7 @@ export default function Home() {
                 <div className={styles.mdGal}>
                   {["/hero-parasail.webp", "/solution-canyoning.webp", "/solution-canyoning.webp", "/hero-parasail.webp"].map((src, i) => (
                     <div key={i} className={styles.cell}>
-                      <Image src={src} width={140} height={140} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <Image src={src} fill alt="" style={{ objectFit: "cover" }} sizes="150px" />
                       {i === 0 && (
                         <span className={styles.cellSel}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>

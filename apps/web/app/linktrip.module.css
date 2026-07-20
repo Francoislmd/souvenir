@@ -286,8 +286,8 @@
 .mdTitle { font-family: var(--font-bricolage), 'Inter Tight', sans-serif; font-weight: 700; font-size: .9rem; }
 .mdCart { position: relative; width: 30px; height: 30px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: var(--sh-1); color: var(--ink-2); }
 .mdCart b { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; border-radius: 999px; background: var(--brand); color: #fff; font-size: .6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
-.mdGal { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.mdGal .cell { border-radius: 10px; overflow: hidden; position: relative; background: #E9E6EF; }
+.mdGal { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 6px; height: 180px; }
+.mdGal .cell { border-radius: 10px; overflow: hidden; position: relative; background: #E9E6EF; height: 100%; }
 .mdGal .cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cellSel {
   position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; border-radius: 50%; background: var(--g-sunset);
