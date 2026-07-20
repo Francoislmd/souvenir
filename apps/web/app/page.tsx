@@ -12,6 +12,26 @@ export default function Home() {
     <div className={styles.page}>
       <LinktripReveal />
 
+      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
+        <defs>
+          <linearGradient id="skA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFE0B0" /><stop offset=".55" stopColor="#FFB06A" /><stop offset="1" stopColor="#FF8A5B" /></linearGradient>
+          <linearGradient id="seaA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2E7FA6" /><stop offset="1" stopColor="#1A5877" /></linearGradient>
+          <symbol id="sc-para" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+            <rect width="100" height="100" fill="url(#skA)" /><circle cx="74" cy="26" r="15" fill="#FFF4DD" opacity=".85" /><rect y="64" width="100" height="36" fill="url(#seaA)" /><path d="M0 66 Q25 62 50 66 T100 66 V72 H0 Z" fill="#3E93B8" opacity=".6" /><path d="M30 30 Q50 14 70 30 Q66 33 50 33 Q34 33 30 30 Z" fill="#FF5A1F" /><path d="M31 30 L47 52 M69 30 L53 52 M50 33 L50 52" stroke="#23384a" strokeWidth="1" fill="none" /><circle cx="50" cy="55" r="2.6" fill="#23384a" />
+          </symbol>
+          <linearGradient id="skB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#DCEFFB" /><stop offset="1" stopColor="#A6D4F0" /></linearGradient>
+          <linearGradient id="seaB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2288C4" /><stop offset="1" stopColor="#12578A" /></linearGradient>
+          <symbol id="sc-jet" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+            <rect width="100" height="100" fill="url(#skB)" /><rect y="54" width="100" height="46" fill="url(#seaB)" /><ellipse cx="46" cy="66" rx="20" ry="5" fill="#0F4E7C" opacity=".5" /><path d="M34 64 Q40 60 54 61 L60 64 Q58 68 48 68 Q38 68 34 64 Z" fill="#FF5A1F" /><path d="M60 63 Q72 58 82 63 M62 67 Q74 64 84 68" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" opacity=".9" />
+          </symbol>
+          <linearGradient id="skC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EAF7F4" /><stop offset="1" stopColor="#C4EAE3" /></linearGradient>
+          <linearGradient id="seaC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#37B3A6" /><stop offset="1" stopColor="#1C8378" /></linearGradient>
+          <symbol id="sc-sup" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+            <rect width="100" height="100" fill="url(#skC)" /><path d="M0 60 L100 44 V100 H0 Z" fill="url(#seaC)" /><ellipse cx="52" cy="72" rx="22" ry="4" fill="#0F5F57" opacity=".4" /><rect x="40" y="70" width="26" height="3.4" rx="1.7" fill="#F3E7CE" /><path d="M51 52 L51 70" stroke="#23384a" strokeWidth="2" strokeLinecap="round" /><circle cx="51" cy="49" r="3" fill="#23384a" />
+          </symbol>
+        </defs>
+      </svg>
+
       <LinktripNav />
 
       {/* ── HERO ── */}
@@ -44,9 +64,9 @@ export default function Home() {
             </div>
             <div className={cx(styles.proof, "rv", "d3")}>
               <div className={styles.avatars}>
-                {["/hero-parasail.webp", "/solution-canyoning.webp", "/hero-parasail.webp"].map((src, i) => (
-                  <span key={i} className={styles.av}>
-                    <Image src={src} width={34} height={34} alt="" style={{ objectFit: "cover", width: 34, height: 34 }} />
+                {["sc-para", "sc-jet", "sc-sup"].map((id) => (
+                  <span key={id} className={styles.av}>
+                    <svg width="100%" height="100%" viewBox="0 0 100 100"><use href={`#${id}`} /></svg>
                   </span>
                 ))}
               </div>
