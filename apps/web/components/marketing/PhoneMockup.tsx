@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { LogoMark } from "@/components/brand/Logo";
 
 const PHOTOS = [
   "/hero-paragliding.jpg",
@@ -39,10 +38,15 @@ export function PhoneMockup({ className = "" }: { className?: string }) {
 
       {/* Header */}
       <div className="flex items-center gap-2.5 px-1 pb-3">
-        <LogoMark className="h-8 w-8 shrink-0" />
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] text-xs font-bold text-white"
+          style={{ background: "linear-gradient(135deg,#FF3D6E,#FF5A1F)" }}
+        >
+          N
+        </span>
         <div className="flex flex-col leading-tight">
-          <span className="text-xs font-semibold text-ink">Vol Passion Annecy</span>
-          <span className="text-[11px] text-ink-2">Le vol de Léa 🤩 · Annecy</span>
+          <span className="text-xs font-semibold text-ink">Nautic Center</span>
+          <span className="text-[11px] text-ink-2">Message reçu · à l&apos;instant</span>
         </div>
       </div>
 
@@ -132,16 +136,16 @@ export function PhoneMockup({ className = "" }: { className?: string }) {
           <div
             className="flex items-center justify-between rounded-full px-4 py-2.5 text-xs font-semibold text-white transition-all duration-200"
             style={{
-              background: "var(--brand)",
+              background: "linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%)",
               transform:  tapping ? "scale(0.96)" : "scale(1)",
               boxShadow:  tapping
                 ? "none"
-                : "0 4px 18px rgba(79,70,229,0.35)",
+                : "0 4px 18px rgba(255,90,31,0.35)",
             }}
           >
-            <span>{tapping ? "Paiement…" : "Débloquer mes souvenirs"}</span>
+            <span>{tapping ? "Paiement…" : "Voir et acheter mes photos"}</span>
             {!tapping && (
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">29 €</span>
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">20 €</span>
             )}
           </div>
         )}

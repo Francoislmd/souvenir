@@ -6,8 +6,18 @@ import { SoonPill } from "@/components/ui/SoonPill";
 const D: React.CSSProperties = {
   fontFamily: "var(--font-bricolage), 'Bricolage Grotesque', sans-serif",
 };
-const BLUE = "#2f5fd0";
 const GAP = 16;
+
+const GRADIENTS = [
+  "linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%)",
+  "linear-gradient(135deg,#FF8A1F,#FFB443)",
+  "linear-gradient(135deg,#FF3D6E,#8B5CF6)",
+  "linear-gradient(135deg,#FF5A1F,#FF3D6E)",
+  "linear-gradient(135deg,#FFC24B,#FF9A1F)",
+  "linear-gradient(135deg,#12C7BE,#0FA9C9)",
+  "linear-gradient(135deg,#8B5CF6,#FF3D6E)",
+  "linear-gradient(135deg,#12C7BE,#0FA9C9)",
+];
 
 type Card = {
   title: string;
@@ -242,12 +252,12 @@ export function LeviersCarousel() {
             else if (delta < -threshold) go(index + 1);
           }}
         >
-          {CARDS.map((c) => (
+          {CARDS.map((c, i) => (
             <div
               key={c.title}
               style={{ flex: `0 0 calc((100% - ${(perView - 1) * GAP}px) / ${perView})` }}
             >
-              <LevierCard card={c} />
+              <LevierCard card={c} index={i} />
             </div>
           ))}
         </div>
@@ -268,7 +278,7 @@ export function LeviersCarousel() {
               border: "none",
               padding: 0,
               cursor: "pointer",
-              background: i === index ? BLUE : "rgba(27,39,51,.16)",
+              background: i === index ? "#FF5A1F" : "rgba(22,19,32,.16)",
               transition: "width .25s, background .25s",
             }}
           />
@@ -282,29 +292,29 @@ const navBtnStyle: React.CSSProperties = {
   width: 42,
   height: 42,
   borderRadius: "50%",
-  border: "1px solid rgba(27,39,51,.12)",
+  border: "1px solid rgba(22,19,32,.12)",
   background: "#ffffff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#1b2733",
+  color: "#161320",
   cursor: "pointer",
-  boxShadow: "0 4px 12px rgba(27,39,51,.06)",
+  boxShadow: "0 4px 12px rgba(22,19,32,.06)",
 };
 
-function LevierCard({ card }: { card: Card }) {
+function LevierCard({ card, index }: { card: Card; index: number }) {
   return (
     <div
       style={{
         background: "#ffffff",
-        border: "1px solid rgba(27,39,51,.06)",
+        border: "1px solid #EEEBF0",
         borderRadius: 18,
         padding: 26,
         height: "100%",
         display: "flex",
         flexDirection: "column",
         gap: 12,
-        boxShadow: "0 6px 20px rgba(27,39,51,.05)",
+        boxShadow: "0 6px 20px rgba(22,19,32,.05)",
         opacity: card.soon ? 0.82 : 1,
       }}
     >
@@ -313,7 +323,7 @@ function LevierCard({ card }: { card: Card }) {
           width: 48,
           height: 48,
           borderRadius: 14,
-          background: card.soon ? "rgba(27,39,51,.14)" : BLUE,
+          background: card.soon ? "rgba(22,19,32,.14)" : GRADIENTS[index],
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -322,10 +332,10 @@ function LevierCard({ card }: { card: Card }) {
       >
         {card.icon}
       </span>
-      <h4 style={{ ...D, fontWeight: 700, fontSize: 17, letterSpacing: "-.01em", margin: 0 }}>
+      <h4 style={{ ...D, fontWeight: 700, fontSize: 17, letterSpacing: "-.01em", margin: 0, color: "#161320" }}>
         {card.title}
       </h4>
-      <p style={{ fontSize: 13.5, lineHeight: 1.45, color: "#5d6b78", margin: 0, flex: 1 }}>
+      <p style={{ fontSize: 13.5, lineHeight: 1.45, color: "#726C80", margin: 0, flex: 1 }}>
         {card.desc}
       </p>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
@@ -335,8 +345,8 @@ function LevierCard({ card }: { card: Card }) {
             fontWeight: 700,
             padding: "5px 12px",
             borderRadius: 100,
-            background: "rgba(27,39,51,.06)",
-            color: "#5d6b78",
+            background: "#FFF1EB",
+            color: "#E8460C",
             whiteSpace: "nowrap",
           }}
         >
@@ -346,7 +356,7 @@ function LevierCard({ card }: { card: Card }) {
           <SoonPill />
         ) : (
           card.price && (
-            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#a3adb6" }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#A6A0B2" }}>
               {card.tag}
             </span>
           )

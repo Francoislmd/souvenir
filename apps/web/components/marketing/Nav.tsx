@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SouvenirMark } from "@/components/SouvenirMark";
 
 const LINKS = [
-  { href: "#comment-ca-marche", label: "Fonctionnalités" },
+  { href: "#solution", label: "Produit" },
+  { href: "#steps", label: "Fonctionnement" },
   { href: "#revenus", label: "Revenus" },
-  { href: "#cas-usage", label: "Cas d'usage" },
-  { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -18,8 +16,7 @@ export function Nav() {
   return (
     <header className="lp-nav">
       <Link href="/" className="lp-nav__brand" onClick={() => setOpen(false)}>
-        <SouvenirMark size="sm" />
-        <span className="lp-nav__word">Souvenir</span>
+        <span className="lp-nav__word">Linktrip</span>
       </Link>
 
       <div className="lp-nav__right">
@@ -27,11 +24,10 @@ export function Nav() {
           {LINKS.map((l) => (
             <a key={l.href} href={l.href}>{l.label}</a>
           ))}
-          <a href="/login" className="is-muted">Se connecter</a>
         </nav>
         <div className="lp-nav__actions">
-          <a href="/signup" className="lp-nav__btn-ghost">Voir une démo</a>
-          <a href="/signup" className="lp-nav__btn-dark">Démarrer gratuitement</a>
+          <a href="/login" className="lp-nav__btn-ghost">Se connecter</a>
+          <a href="/signup" className="lp-nav__btn-dark">Créer ma boutique</a>
           <button
             type="button"
             className={`lp-nav__burger${open ? " open" : ""}`}
@@ -52,8 +48,7 @@ export function Nav() {
         ))}
         <a href="/login" className="lp-mobile-menu__link" onClick={() => setOpen(false)}>Se connecter</a>
         <div className="lp-mobile-menu__cta">
-          <a href="/signup" className="lp-nav__btn-ghost" onClick={() => setOpen(false)}>Voir une démo</a>
-          <a href="/signup" className="lp-nav__btn-dark" onClick={() => setOpen(false)}>Démarrer gratuitement</a>
+          <a href="/signup" className="lp-nav__btn-dark" onClick={() => setOpen(false)}>Créer ma boutique</a>
         </div>
       </div>
     </header>

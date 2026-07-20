@@ -4,7 +4,7 @@ const D: React.CSSProperties = {
 
 export function Rdv() {
   const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL;
-  const href = calendlyUrl || "mailto:hello@souvenir.app";
+  const href = calendlyUrl || "mailto:hello@linktrip.co";
 
   return (
     <div
@@ -16,8 +16,8 @@ export function Rdv() {
         padding: "64px 40px",
         textAlign: "center",
         color: "#fff",
-        background: "linear-gradient(135deg, #7dd3fc 0%, #3b82f6 55%, #4f46e5 100%)",
-        boxShadow: "0 20px 50px rgba(79,70,229,.28)",
+        background: "linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%)",
+        boxShadow: "0 20px 50px rgba(255,90,31,.32)",
       }}
     >
       <div
@@ -47,7 +47,7 @@ export function Rdv() {
         Envie d&apos;en parler&nbsp;? Prenons 20 minutes.
       </h2>
       <p style={{ fontSize: 16, lineHeight: 1.55, color: "rgba(255,255,255,.9)", margin: "0 auto 32px", maxWidth: 460 }}>
-        Je vous montre comment Souvenir s&apos;installe sur vos sorties, et on regarde ensemble si c&apos;est fait pour
+        Je vous montre comment Linktrip s&apos;installe sur vos sorties, et on regarde ensemble si c&apos;est fait pour
         vous. Sans engagement.
       </p>
       <a
@@ -59,7 +59,7 @@ export function Rdv() {
           alignItems: "center",
           gap: 10,
           background: "#fff",
-          color: "#3b3ab0",
+          color: "#E8460C",
           padding: "15px 28px",
           borderRadius: 100,
           fontWeight: 700,

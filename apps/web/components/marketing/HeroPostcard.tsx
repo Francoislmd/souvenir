@@ -41,10 +41,10 @@ export function HeroPostcard() {
       <div
         style={{
           background:
-            "repeating-linear-gradient(45deg,#2f5fd0 0 11px,#ffffff 11px 22px,#d64b3f 22px 33px,#ffffff 33px 44px)",
+            "repeating-linear-gradient(45deg,#FF3D6E 0 11px,#ffffff 11px 22px,#FFB443 22px 33px,#ffffff 33px 44px)",
           padding: 10,
           borderRadius: 8,
-          boxShadow: "0 20px 44px rgba(27,39,51,.18)",
+          boxShadow: "0 20px 44px rgba(22,19,32,.18)",
           transform: "rotate(-1.4deg)",
         }}
       >
@@ -137,7 +137,7 @@ export function HeroPostcard() {
                 justifyContent: "center",
                 gap: 11,
                 whiteSpace: "nowrap",
-                background: "#2f5fd0",
+                background: "linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%)",
                 color: "#fff",
                 padding: paying ? "11px 22px" : "6px 7px 6px 20px",
                 borderRadius: 100,
@@ -145,7 +145,7 @@ export function HeroPostcard() {
                 fontWeight: 700,
                 fontSize: 14.5,
                 lineHeight: 1,
-                boxShadow: "0 8px 20px rgba(47,95,208,.42)",
+                boxShadow: "0 8px 20px rgba(255,90,31,.4)",
                 opacity: unlocked ? 0 : 1,
                 transition: "opacity 0.8s ease",
                 pointerEvents: "none",
@@ -166,7 +166,7 @@ export function HeroPostcard() {
                     fontSize: 13.5,
                   }}
                 >
-                  25 €
+                  20 €
                 </span>
               )}
             </div>
@@ -207,10 +207,10 @@ export function HeroPostcard() {
             textAlign: "center",
             marginTop: 5,
             letterSpacing: ".04em",
-            color: "#1b2733",
+            color: "#161320",
           }}
         >
-          SOUVENIR · 2026
+          LINKTRIP · 2026
         </div>
       </div>
 
@@ -223,14 +223,14 @@ export function HeroPostcard() {
           width: 82,
           height: 82,
           borderRadius: "50%",
-          border: "2px solid #d64b3f",
-          color: "#d64b3f",
+          border: "2px solid #FF3D6E",
+          color: "#E8460C",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           transform: "rotate(-9deg)",
-          background: "rgba(214,75,63,.1)",
+          background: "rgba(255,61,110,.08)",
           zIndex: 5,
           opacity: unlocked ? 1 : 0,
           transition: "opacity 0.8s ease",

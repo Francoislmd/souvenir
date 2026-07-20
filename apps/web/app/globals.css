@@ -192,7 +192,49 @@ body {
 .animate-float-alt { animation: float-alt 4s   ease-in-out infinite 0.9s; }
 
 /* ─── Landing page layout (lp-*) ─── */
-.lp-body { font-family: var(--font-space-grotesk), 'Space Grotesk', system-ui, sans-serif; }
+/* Palette Linktrip — dégradé coucher de soleil + aqua. Scopée à .lp-body pour
+   ne pas affecter le thème (--brand/--ink/--canvas…) du reste de l'app. */
+.lp-body {
+  font-family: var(--font-space-grotesk), 'Inter', system-ui, sans-serif;
+  letter-spacing: -.011em;
+  --lp-rose: #FF3D6E;
+  --lp-orange: #FF5A1F;
+  --lp-orange-ink: #E8460C;
+  --lp-amber: #FFB443;
+  --lp-aqua: #0FBEB6;
+  --lp-aqua-ink: #0A8C86;
+  --lp-sunset: linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%);
+  --lp-sunset-h: linear-gradient(115deg,#F42C5D 0%,#F04E12 50%,#FBA82E 100%);
+  --lp-aqua-grad: linear-gradient(135deg,#12C7BE,#0FA9C9);
+  --lp-soft: #FFF1EB;
+  --lp-ink: #161320;
+  --lp-ink-2: #413C4E;
+  --lp-ink-3: #726C80;
+  --lp-ink-4: #A6A0B2;
+  --lp-line: #EEEBF0;
+  --lp-peach: #FFF5EF;
+  --lp-mint: #EDFBF7;
+  --lp-rose-bg: #FFF0F5;
+  --lp-sh-brand: 0 10px 30px rgba(255,90,31,.32);
+  background: #FAFAFA;
+}
+.lp-grad-text {
+  background: var(--lp-sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.lp-eyebrow {
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background: var(--lp-sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
 
 /* ── Nav pill (toujours flottant, style Lodgify) ── */
 .lp-nav {
@@ -213,7 +255,7 @@ body {
 }
 .lp-nav__brand {
   display: flex; align-items: center; gap: 10px;
-  text-decoration: none; color: #1b2733;
+  text-decoration: none; color: #161320;
 }
 .lp-nav__word {
   font-family: var(--font-bricolage), sans-serif;
@@ -221,20 +263,23 @@ body {
 }
 .lp-nav__right { display: flex; align-items: center; gap: 26px; font-size: 15px; font-weight: 500; }
 .lp-nav__links { display: flex; align-items: center; gap: 26px; }
-.lp-nav__links a { color: #1b2733; text-decoration: none; }
+.lp-nav__links a { color: #161320; text-decoration: none; }
 .lp-nav__links a.is-muted { opacity: .6; }
 .lp-nav__links a:hover { opacity: .65; }
 .lp-nav__actions { display: flex; align-items: center; gap: 8px; }
 .lp-nav__btn-ghost {
-  background: rgba(47, 95, 208, .10); color: #1b2733;
+  background: #ffffff; color: #161320;
+  border: 1px solid rgba(22,19,32,.12);
   padding: 11px 20px; border-radius: 100px;
   font-weight: 600; font-size: 15px; text-decoration: none;
 }
 .lp-nav__btn-dark {
-  background: #1b2733; color: #f3ede1;
+  background: var(--lp-sunset, linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%));
+  color: #fff;
   padding: 11px 22px; border-radius: 100px;
   font-weight: 600; font-size: 15px; text-decoration: none;
   white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(255,90,31,.32);
 }
 .lp-nav__btn-ghost:hover { opacity: .85; }
 .lp-nav__btn-dark:hover  { opacity: .88; }
@@ -244,7 +289,7 @@ body {
   background: #f1f2f5; border: none; cursor: pointer;
   flex-direction: column; align-items: center; justify-content: center; gap: 4.5px;
 }
-.lp-nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: #1b2733; display: block; }
+.lp-nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: #161320; display: block; }
 .lp-hero { display:grid; grid-template-columns:1.02fr .98fr; gap:52px; padding:52px 50px 68px; align-items:center; }
 .lp-hiw  { display:grid; grid-template-columns:repeat(3,1fr); gap:26px; }
 .lp-adv-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
@@ -310,10 +355,17 @@ body {
 @media (max-width: 900px) {
   .lp-prob-grid { grid-template-columns: 1fr 1fr; }
   .lp-fondateurs-grid { grid-template-columns: 1fr 1fr; }
+  .lp-demo-grid { grid-template-columns: 1fr 1fr; }
+  .lp-features-grid { grid-template-columns: 1fr 1fr; }
+  .lp-solution-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
 }
 @media (max-width: 640px) {
   .lp-prob-grid { grid-template-columns: 1fr; }
   .lp-fondateurs-grid { grid-template-columns: 1fr; }
+  .lp-demo-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+  .lp-features-grid { grid-template-columns: 1fr; }
+  .lp-steps-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .lp-steps-panel { padding: 44px 26px !important; }
 }
 
 /* Burger nav : bascule 3 traits -> croix */
@@ -329,7 +381,7 @@ body {
   width: 18px;
   height: 2px;
   border-radius: 2px;
-  background: #1b2733;
+  background: #161320;
   transition: transform .2s, top .2s;
 }
 .lp-nav__burger span::before { top: -6px; }
@@ -367,7 +419,7 @@ body {
   padding: 13px 12px;
   font-weight: 600;
   font-size: 15px;
-  color: #1b2733;
+  color: #161320;
   text-decoration: none;
   border-bottom: 1px solid rgba(27,39,51,.06);
 }
@@ -409,12 +461,12 @@ body {
 }
 .mobile-sticky-bar.show { transform: none; }
 .mobile-sticky-bar__text { flex: 1; min-width: 0; }
-.mobile-sticky-bar__t1 { font-family: var(--font-bricolage), sans-serif; font-weight: 700; font-size: 14.5px; color: #1b2733; line-height: 1.2; }
-.mobile-sticky-bar__t2 { font-size: 12px; color: #5d6b78; }
+.mobile-sticky-bar__t1 { font-family: var(--font-bricolage), sans-serif; font-weight: 700; font-size: 14.5px; color: #161320; line-height: 1.2; }
+.mobile-sticky-bar__t2 { font-size: 12px; color: #726C80; }
 .mobile-sticky-bar__cta {
   flex-shrink: 0;
-  background: #1b2733;
-  color: #f3ede1;
+  background: linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%);
+  color: #fff;
   padding: 11px 18px;
   border-radius: 100px;
   font-weight: 600;

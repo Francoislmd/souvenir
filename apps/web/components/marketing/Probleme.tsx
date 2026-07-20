@@ -1,7 +1,12 @@
 const D: React.CSSProperties = {
   fontFamily: "var(--font-bricolage), 'Bricolage Grotesque', sans-serif",
 };
-const BLUE = "#2f5fd0";
+
+const GRADIENTS = [
+  "linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%)",
+  "linear-gradient(135deg,#12C7BE,#0FA9C9)",
+  "linear-gradient(135deg,#8B5CF6,#FF3D6E)",
+];
 
 const ITEMS = [
   {
@@ -38,16 +43,7 @@ const ITEMS = [
 export function Probleme() {
   return (
     <div style={{ textAlign: "center" }} className="reveal">
-      <div
-        style={{
-          fontSize: 12.5,
-          fontWeight: 600,
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: BLUE,
-          marginBottom: 14,
-        }}
-      >
+      <div className="lp-eyebrow" style={{ marginBottom: 14 }}>
         L&apos;instant clé
       </div>
       <h2
@@ -59,11 +55,12 @@ export function Probleme() {
           lineHeight: 1.08,
           margin: "0 auto 20px",
           maxWidth: 640,
+          color: "#161320",
         }}
       >
         L&apos;émotion est à son maximum. C&apos;est là que tout se joue.
       </h2>
-      <p style={{ fontSize: 16, lineHeight: 1.55, color: "#5d6b78", margin: "0 auto 46px", maxWidth: 560 }}>
+      <p style={{ fontSize: 16, lineHeight: 1.55, color: "#726C80", margin: "0 auto 46px", maxWidth: 560 }}>
         La fin d&apos;une sortie, c&apos;est le pic. Vos clients ont envie de partager, de revenir, de garder une trace.
         Il ne manque qu&apos;une façon simple de leur proposer.
       </p>
@@ -76,14 +73,15 @@ export function Probleme() {
         }}
         className="lp-prob-grid"
       >
-        {ITEMS.map((item) => (
+        {ITEMS.map((item, i) => (
           <div
             key={item.title}
             style={{
               background: "#ffffff",
+              border: "1px solid #EEEBF0",
               borderRadius: 16,
               padding: "28px 26px",
-              boxShadow: "0 6px 20px rgba(27,39,51,.06)",
+              boxShadow: "0 6px 20px rgba(22,19,32,.05)",
             }}
           >
             <span
@@ -91,7 +89,7 @@ export function Probleme() {
                 width: 44,
                 height: 44,
                 borderRadius: 13,
-                background: BLUE,
+                background: GRADIENTS[i],
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -100,8 +98,8 @@ export function Probleme() {
             >
               {item.icon}
             </span>
-            <h3 style={{ ...D, fontWeight: 700, fontSize: 18, margin: "0 0 8px" }}>{item.title}</h3>
-            <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "#5d6b78", margin: 0 }}>{item.desc}</p>
+            <h3 style={{ ...D, fontWeight: 700, fontSize: 18, margin: "0 0 8px", color: "#161320" }}>{item.title}</h3>
+            <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "#726C80", margin: 0 }}>{item.desc}</p>
           </div>
         ))}
       </div>

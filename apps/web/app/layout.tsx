@@ -1,23 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Space_Grotesk, Kalam } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
+// Les variables --font-bricolage / --font-space-grotesk sont conservées pour
+// ne pas casser tous les composants qui les référencent déjà : on y fait
+// simplement pointer les polices Linktrip (Inter Tight pour les titres, Inter
+// pour le corps de texte).
+const interTight = Inter_Tight({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["500", "600", "700", "800"],
   variable: "--font-bricolage",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-space-grotesk",
-});
-
-const kalam = Kalam({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-kalam",
 });
 
 export const viewport: Viewport = {
@@ -26,9 +24,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Souvenir — Transformez les souvenirs en revenus",
+  title: "Linktrip — Vos photos de sortie deviennent un revenu",
   description:
-    "La plateforme clé en main pour vendre les photos et vidéos de vos activités outdoor. Une galerie privée par client, paiement et livraison automatiques.",
+    "SaaS pour prestataires d'activités outdoor : vos guides prennent des photos, vos clients les achètent, vous touchez une commission automatiquement.",
 };
 
 export default function RootLayout({
@@ -38,9 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body
-        className={`${bricolage.variable} ${spaceGrotesk.variable} ${kalam.variable} antialiased`}
-      >
+      <body className={`${interTight.variable} ${inter.variable} antialiased`}>
         {children}
       </body>
     </html>

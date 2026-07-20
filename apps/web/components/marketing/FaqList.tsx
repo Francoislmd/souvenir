@@ -3,52 +3,50 @@ import { useState } from "react";
 
 const FAQ_ITEMS = [
   {
-    q: "Combien ça coûte ?",
-    a: "Rien à payer d'avance. En mode Boutique, Souvenir prend 20 % sur chaque vente (frais Stripe inclus). En mode Marketing, c'est 100 % gratuit — vous offrez les photos, vous encaissez la visibilité.",
+    q: "Faut-il du matériel ou une application ?",
+    a: "Non. Vos guides photographient comme d'habitude. Linktrip s'occupe du reste.",
   },
   {
-    q: "Mes clients doivent-ils créer un compte ou installer une appli ?",
-    a: "Non. Le client reçoit un lien par email ou SMS et ouvre sa galerie directement dans son navigateur. Zéro inscription, zéro téléchargement.",
+    q: "Comment êtes-vous rémunérés ?",
+    a: "Une commission sur les ventes, rien d'autre. Pas d'abonnement, pas d'engagement. Une galerie qui ne vend pas ne coûte rien.",
   },
   {
-    q: "Est-ce que ça fonctionne avec un mauvais réseau ?",
-    a: "Oui. L'upload utilise une file locale persistée dans le navigateur (IndexedDB). Si la connexion coupe en plein upload, les transferts reprennent automatiquement dès que le réseau revient — sans rien faire.",
+    q: "Comment le client retrouve-t-il ses photos ?",
+    a: "Il reçoit un lien par email ou SMS et ouvre sa galerie directement dans son navigateur. Les photos sont triées automatiquement : chacun retrouve les siennes. Zéro inscription, zéro téléchargement.",
   },
   {
-    q: "Comment fonctionne le paiement ?",
-    a: "Via Stripe Connect : quand un client achète son pack HD, Stripe encaisse et transfère votre part (80 %) directement sur votre compte. Pas de délai artificiel, pas d'intermédiaire. La commission Souvenir (20 %) couvre les frais Stripe.",
+    q: "Combien de temps pour être opérationnel ?",
+    a: "Une après-midi. Vous réglez votre marque et vos tarifs, puis vous publiez votre première galerie le jour même.",
   },
   {
-    q: "Puis-je choisir le prix du pack photo ?",
-    a: "Oui. Le prix par défaut est 29 € mais vous pouvez le modifier dans vos réglages. Le mode (Boutique ou Marketing) est aussi paramétrable session par session.",
-  },
-  {
-    q: "Combien de temps mes photos sont-elles stockées ?",
-    a: "Les originaux sont conservés 90 jours, les aperçus tant que la galerie est active. Après achat, le client peut télécharger un zip HD. Vous pouvez supprimer une livraison à tout moment.",
-  },
-  {
-    q: "Est-ce conforme au RGPD ?",
-    a: "Oui. Les consentements (droit à l'image, email) sont horodatés. Le client peut retirer son consentement depuis sa galerie. Chaque galerie a une page Confidentialité dédiée, et la suppression des données est possible sur demande.",
+    q: "À qui appartiennent les données clients ?",
+    a: "À vous. Hébergement européen, conformité RGPD. Linktrip travaille pour votre structure, pas l'inverse.",
   },
 ];
 
 export function FaqList() {
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <dl className="divide-y divide-border">
+    <dl className="divide-y" style={{ borderColor: "#EEEBF0" }}>
       {FAQ_ITEMS.map((item, i) => (
-        <div key={i} className="reveal py-5">
+        <div key={i} className="reveal py-5" style={{ borderBottom: i < FAQ_ITEMS.length - 1 ? "1px solid #EEEBF0" : "none" }}>
           <dt>
             <button
               className="flex w-full items-center justify-between gap-4 text-left"
               onClick={() => setOpen(open === i ? null : i)}
               aria-expanded={open === i}
             >
-              <span className="font-semibold text-ink">{item.q}</span>
+              <span className="font-semibold" style={{ color: "#161320" }}>{item.q}</span>
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-canvas text-ink-2 transition-transform duration-200"
-                style={{ transform: open === i ? "rotate(45deg)" : "rotate(0deg)" }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-200"
+                style={{
+                  border: "1px solid #EEEBF0",
+                  background: open === i ? "linear-gradient(115deg,#FF3D6E 0%,#FF5A1F 50%,#FFB443 100%)" : "#FAFAFA",
+                  color: open === i ? "#fff" : "#726C80",
+                  borderColor: open === i ? "transparent" : "#EEEBF0",
+                  transform: open === i ? "rotate(45deg)" : "rotate(0deg)",
+                }}
               >
                 <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
                   <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -57,7 +55,7 @@ export function FaqList() {
             </button>
           </dt>
           {open === i && (
-            <dd className="mt-3 pr-11 text-sm leading-relaxed text-ink-2">
+            <dd className="mt-3 pr-11 text-sm leading-relaxed" style={{ color: "#726C80" }}>
               {item.a}
             </dd>
           )}
