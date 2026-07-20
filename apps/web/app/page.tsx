@@ -1,6 +1,15 @@
 import Image from "next/image";
 import { Nav } from "@/components/marketing/Nav";
 import { HeroPostcard } from "@/components/marketing/HeroPostcard";
+import { Probleme } from "@/components/marketing/Probleme";
+import { LeviersCarousel } from "@/components/marketing/LeviersCarousel";
+import { FeatureTabs } from "@/components/marketing/FeatureTabs";
+import { RevenueSimulator } from "@/components/marketing/RevenueSimulator";
+import { Rdv } from "@/components/marketing/Rdv";
+import { PartenairesFondateurs } from "@/components/marketing/PartenairesFondateurs";
+import { FaqList } from "@/components/marketing/FaqList";
+import { StickyMobileBar } from "@/components/marketing/StickyMobileBar";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { SouvenirMark } from "@/components/SouvenirMark";
 
 const D: React.CSSProperties = {
@@ -18,6 +27,7 @@ const W: React.CSSProperties = { maxWidth: 1240, margin: "0 auto" };
 export default function Home() {
   return (
     <div className="lp-body">
+      <ScrollReveal />
 
       {/* ── HERO ── (inclut le nav pour fond blanc commun) */}
       <div style={{ backgroundColor: "#ffffff", paddingTop: 16 }}>
@@ -109,6 +119,15 @@ export default function Home() {
             <div className="lp-hero-visual" style={{ position: "relative" }}>
               <HeroPostcard />
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── PROBLÈME ── */}
+      <div style={{ background: "var(--brand-tint)", padding: "70px 0" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <Probleme />
           </div>
         </div>
       </div>
@@ -229,6 +248,43 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── LEVIERS (carrousel de revenus) ── */}
+      <div id="revenus" style={{ backgroundColor: "#ffffff", padding: "76px 0" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div style={{ textAlign: "center", marginBottom: 50 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: BLUE, marginBottom: 14 }}>
+                Revenus &amp; fidélisation
+              </div>
+              <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(28px, 3.4vw, 42px)", letterSpacing: "-.02em", lineHeight: 1.05, margin: "0 auto 18px", maxWidth: 640 }}>
+                Une sortie. Plusieurs façons d&apos;en tirer de la valeur.
+              </h2>
+              <p style={{ fontSize: 16, lineHeight: 1.55, color: "#5d6b78", margin: "0 auto", maxWidth: 560 }}>
+                Photos, avis, réseaux sociaux — et bientôt tirages, merch et cross-sell. Une seule galerie active tout.
+              </p>
+            </div>
+            <LeviersCarousel />
+          </div>
+        </div>
+      </div>
+
+      {/* ── DÉMO (dark, pleine largeur) ── */}
+      <div id="demo" style={{ backgroundColor: DARK, padding: "74px 0" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div style={{ textAlign: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "#8fb0ea", marginBottom: 14 }}>
+                En pratique
+              </div>
+              <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(28px, 3.4vw, 42px)", letterSpacing: "-.02em", margin: "0 0 44px", color: CREAM }}>
+                Concrètement, ça donne quoi&nbsp;?
+              </h2>
+            </div>
+            <FeatureTabs />
+          </div>
+        </div>
+      </div>
+
       {/* ── CAS D'USAGE ── */}
       <div id="cas-usage" style={{ padding: "70px 0 96px" }}>
         <div style={W}>
@@ -318,6 +374,52 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── SIMULATEUR DE REVENUS ── */}
+      <div style={{ backgroundColor: "#ffffff", padding: "76px 0" }}>
+        <div style={{ maxWidth: 620, margin: "0 auto" }}>
+          <div className="lp-section-px reveal" style={{ textAlign: "center" }}>
+            <RevenueSimulator />
+          </div>
+        </div>
+      </div>
+
+      {/* ── RDV ── */}
+      <div id="rdv" style={{ padding: "20px 0 76px" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <Rdv />
+          </div>
+        </div>
+      </div>
+
+      {/* ── PARTENAIRES FONDATEURS ── */}
+      <div id="fondateurs" style={{ backgroundColor: "#ffffff", padding: "20px 0 90px" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <PartenairesFondateurs />
+          </div>
+        </div>
+      </div>
+
+      {/* ── FAQ ── */}
+      <div id="faq" style={{ background: "var(--brand-tint)", padding: "80px 0" }}>
+        <div style={W}>
+          <div className="lp-section-px">
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: BLUE, marginBottom: 14 }}>
+                Questions fréquentes
+              </div>
+              <h2 style={{ ...D, fontWeight: 800, fontSize: "clamp(28px, 3.2vw, 40px)", letterSpacing: "-.02em", margin: 0 }}>
+                Ce qu&apos;il faut savoir avant de commencer.
+              </h2>
+            </div>
+            <div style={{ maxWidth: 720, margin: "0 auto" }}>
+              <FaqList />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── CTA FINAL ── */}
       <div style={{ padding: "84px 0 40px", textAlign: "center" }}>
         <div style={W}>
@@ -361,9 +463,9 @@ export default function Home() {
                   </a>
                 </div>
               </div>
-              <FooterCol title="Produit" links={[{ href: "#comment-ca-marche", label: "Fonctionnalités" }, { href: "#tarifs", label: "Tarifs" }, { href: "/signup", label: "Galeries" }, { href: "/signup", label: "Nouveautés" }]} />
+              <FooterCol title="Produit" links={[{ href: "#comment-ca-marche", label: "Fonctionnalités" }, { href: "#revenus", label: "Revenus" }, { href: "#tarifs", label: "Tarifs" }, { href: "/signup", label: "Galeries" }]} />
               <FooterCol title="Métiers" links={[{ href: "#cas-usage", label: "Surf" }, { href: "#cas-usage", label: "Ski" }, { href: "#cas-usage", label: "Plongée" }, { href: "#cas-usage", label: "Parcs aventure" }]} />
-              <FooterCol title="Société" links={[{ href: "/", label: "À propos" }, { href: "mailto:hello@souvenir.app", label: "Contact" }, { href: "/", label: "Blog" }, { href: "/mentions-legales", label: "Mentions légales" }]} />
+              <FooterCol title="Société" links={[{ href: "#fondateurs", label: "Programme de lancement" }, { href: "#faq", label: "FAQ" }, { href: "mailto:hello@souvenir.app", label: "Contact" }, { href: "/mentions-legales", label: "Mentions légales" }]} />
             </div>
           </div>
 
@@ -392,6 +494,7 @@ export default function Home() {
         </div>
       </footer>
 
+      <StickyMobileBar />
     </div>
   );
 }
