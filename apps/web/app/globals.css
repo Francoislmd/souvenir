@@ -172,6 +172,18 @@ body {
 .animate-step-backward { animation: step-slide-backward 0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-fade-slide-up { animation: fade-slide-up       0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-step-forward,
+  .animate-step-backward,
+  .animate-fade-slide-up,
+  .animate-float,
+  .animate-float-alt,
+  .animate-unlock-flash,
+  .hero-enter {
+    animation: none !important;
+  }
+}
+
 /* Flèche de swipe animée dans le carousel galerie */
 @keyframes swipe-arrow {
   0%, 100% { transform: translateX(0); opacity: 1; }
@@ -217,6 +229,33 @@ body {
   --lp-rose-bg: #FFF0F5;
   --lp-sh-brand: 0 10px 30px rgba(255,90,31,.32);
   background: #FAFAFA;
+}
+
+/* ─── Onboarding (ob-*) ─── */
+/* Même palette Linktrip que .lp-body, mais réécrite sur les tokens réels
+   (--brand/--accent/--ink/--canvas…) pour que les composants existants
+   (Button, inputClass, Stepper, etc.) l'adoptent sans modification —
+   scopée à .ob-theme pour ne pas déteindre sur le reste de l'app. */
+.ob-theme {
+  font-family: var(--font-space-grotesk), 'Inter', system-ui, sans-serif;
+  letter-spacing: -.011em;
+
+  --canvas: #FBFAF9;
+  --surface: #ffffff;
+  --border: #ECE9EF;
+  --border-strong: #A6A0B2;
+  --ink: #161320;
+  --ink-2: #726C80;
+  --muted: #A6A0B2;
+
+  --brand: #FF5A1F;
+  --brand-hover: #E8460C;
+  --brand-tint: #FFF1EB;
+  --brand-gradient: linear-gradient(115deg, #FF3D6E 0%, #FF5A1F 50%, #FFB443 100%);
+
+  --accent: #FF5A1F;
+  --accent-hover: #E8460C;
+  --accent-tint: #FFF1EB;
 }
 .lp-grad-text {
   background: var(--lp-sunset);

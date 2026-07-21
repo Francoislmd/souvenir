@@ -7,6 +7,7 @@ const schema = z.object({
   name: z.string().min(2).optional(),
   logoUrl: z.string().optional(),
   location: z.string().optional(),
+  brandColor: z.string().optional(),
   packPriceCents: z.number().int().min(0).optional(),
   defaultMode: z.nativeEnum(Mode).optional(),
   googleReviewUrl: z.string().optional(),

@@ -9,9 +9,10 @@ import {
 
 interface Props {
   onExit: () => void;
+  accentColor?: string;
 }
 
-export function StripeConnectOnboarding({ onExit }: Props) {
+export function StripeConnectOnboarding({ onExit, accentColor = "#4f46e5" }: Props) {
   const instanceRef = useRef<StripeConnectInstance | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +43,20 @@ export function StripeConnectOnboarding({ onExit }: Props) {
             return data.clientSecret;
           },
           appearance: {
-            // "drawer" garde tout en-page — pas de popups ni de nouvelles fenêtres
+            // "dialog" reste bloqué indéfiniment sur le chargement dans cet
+            // environnement (testé et confirmé) — "drawer" fonctionne réellement.
             overlays: "drawer",
             variables: {
-              colorPrimary: "#4f46e5",
+              colorPrimary: accentColor,
+              colorBackground: "#ffffff",
+              colorText: "#161320",
+              colorSecondaryText: "#726C80",
+              colorBorder: "#ECE9EF",
               fontFamily: "Inter, sans-serif",
               borderRadius: "12px",
+              spacingUnit: "9px",
+              // au-dessus de notre barre de progression fixe (z-50) et du header (z-40)
+              overlayZIndex: 100,
             },
           },
         });
@@ -56,6 +65,8 @@ export function StripeConnectOnboarding({ onExit }: Props) {
       .catch(() => {
         setError("Impossible de charger Stripe. Vérifie ta connexion et réessaie.");
       });
+    // accentColor n'est utilisé qu'à l'initialisation — pas de re-init si le prop change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (error) {
@@ -68,7 +79,7 @@ export function StripeConnectOnboarding({ onExit }: Props) {
 
   if (!ready || !instanceRef.current) {
     return (
-      <div className="flex items-center gap-3 py-8 text-sm text-muted">
+      <div className="flex min-h-[272px] items-center justify-center gap-3 text-sm text-muted">
         <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
         Chargement de Stripe…
       </div>

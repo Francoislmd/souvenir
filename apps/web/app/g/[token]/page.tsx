@@ -123,9 +123,10 @@ export default async function GalleryPage({
     videoCount,
   };
 
+  const brandColor = operator.brandColor || CLIENT_BRAND_COLOR;
   const themeStyle = {
-    "--accent": CLIENT_BRAND_COLOR,
-    "--accent-tint": `color-mix(in srgb, ${CLIENT_BRAND_COLOR} 12%, white)`,
+    "--accent": brandColor,
+    "--accent-tint": `color-mix(in srgb, ${brandColor} 12%, white)`,
   } as React.CSSProperties;
 
   const headerProps = {
@@ -143,7 +144,7 @@ export default async function GalleryPage({
     <div
       className="flex aspect-square w-full items-center justify-center rounded-card"
       style={{
-        background: `linear-gradient(160deg, ${CLIENT_BRAND_COLOR}, ${CLIENT_BRAND_COLOR}99)`,
+        background: `linear-gradient(160deg, ${brandColor}, ${brandColor}99)`,
       }}
     >
       <p className="px-8 text-center text-sm font-medium text-white/90">

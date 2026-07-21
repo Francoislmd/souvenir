@@ -15,7 +15,8 @@ export type EventName =
   | "email_captured"
   | "ig_share_clicked"
   | "review_window_missed"
-  | "delivery_sent";
+  | "delivery_sent"
+  | "onboarding_qualified";
 
 interface TrackParams {
   operatorId: string;

@@ -14,9 +14,10 @@ export default async function PrivacyPage({ params }: { params: { token: string 
 
   const operator = delivery.session.operator;
 
+  const brandColor = operator.brandColor || CLIENT_BRAND_COLOR;
   const themeStyle = {
-    "--accent": CLIENT_BRAND_COLOR,
-    "--accent-tint": `color-mix(in srgb, ${CLIENT_BRAND_COLOR} 12%, white)`,
+    "--accent": brandColor,
+    "--accent-tint": `color-mix(in srgb, ${brandColor} 12%, white)`,
   } as React.CSSProperties;
 
   return (

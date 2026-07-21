@@ -15,6 +15,7 @@ model Operator {
   slug            String    @unique
   logoUrl         String?
   location        String?
+  brandColor      String    @default("#4f46e5")
   stripeAccountId String?
   stripeOnboarded Boolean   @default(false)
   packPriceCents  Int       @default(2900)
