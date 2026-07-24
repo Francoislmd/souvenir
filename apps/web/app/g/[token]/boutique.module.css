@@ -187,6 +187,11 @@
      CSS ici serait redondant et, pire, contournable (devtools). */
   filter: saturate(0.92);
 }
+/* Repli tant que blurKey n'existe pas encore (worker pas à jour, ou photo
+   traitée avant l'ajout de cette étape) — mieux qu'une photo intacte. */
+.slide.lock.lock-fallback .slide-img {
+  filter: blur(5px) saturate(0.92);
+}
 .grad {
   position: absolute;
   left: 0;
@@ -337,6 +342,9 @@
   object-fit: cover;
 }
 /* Image déjà floutée côté serveur pour les voies verrouillées — pas de filter CSS ici. */
+.fr.lock.lock-fallback .fr-img {
+  filter: blur(3px);
+}
 .fr.cur {
   opacity: 1;
   box-shadow: 0 0 0 2px var(--ink);

@@ -47,6 +47,10 @@ export default async function GalleryPage({ params }: { params: { token: string 
       const unlocked = p.isFreeSample || purchasedSet.has(p.id);
       // Verrouillée : on sert le JPEG flouté généré côté serveur (pixels réellement
       // flous), jamais l'aperçu net avec un filter CSS — récupérable en un clic.
+      // Repli : si le worker n'a pas encore généré ce blurKey (déploiement en
+      // retard, ou photo traitée avant l'ajout de cette étape), on sert l'aperçu
+      // net mais le composant applique alors un flou CSS temporaire — imparfait,
+      // mais mieux que de montrer la photo intacte.
       const lockedKey = p.blurKey ?? p.previewKey ?? p.thumbKey;
       const previewUrl = unlocked
         ? p.previewKey
@@ -60,6 +64,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
       return {
         id: p.id,
         previewUrl,
+        previewIsBlurred: unlocked || !!p.blurKey,
         // Jamais d'original pour une photo non achetée et non offerte (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
         isFreeSample: p.isFreeSample,

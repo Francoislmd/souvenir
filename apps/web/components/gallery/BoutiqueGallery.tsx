@@ -14,6 +14,9 @@ export interface BoutiquePhoto {
   originalUrl: string | null;
   isFreeSample: boolean;
   isVideo: boolean;
+  /** false = previewUrl est l'aperçu net (blurKey pas encore généré côté serveur) —
+   * le composant applique alors un flou CSS temporaire en repli. */
+  previewIsBlurred: boolean;
 }
 
 export function BoutiqueGallery({
@@ -191,7 +194,7 @@ export function BoutiqueGallery({
           return (
             <div
               key={photo.id}
-              className={`${styles.slide} ${locked ? styles.lock : ""} ${on ? styles.on : ""}`}
+              className={`${styles.slide} ${locked ? styles.lock : ""} ${locked && !photo.previewIsBlurred ? styles["lock-fallback"] : ""} ${on ? styles.on : ""}`}
               onClick={() => {
                 setCur(i);
                 toggle(photo.id);
@@ -245,7 +248,7 @@ export function BoutiqueGallery({
             <button
               key={photo.id}
               type="button"
-              className={`${styles.fr} ${locked ? styles.lock : ""} ${on ? styles.on : ""} ${i === cur ? styles.cur : ""}`}
+              className={`${styles.fr} ${locked ? styles.lock : ""} ${locked && !photo.previewIsBlurred ? styles["lock-fallback"] : ""} ${on ? styles.on : ""} ${i === cur ? styles.cur : ""}`}
               onClick={() => goTo(i)}
             >
               {photo.previewUrl ? (
@@ -349,7 +352,12 @@ export function BoutiqueGallery({
           <div className={styles["box-ph"]}>
             {photos[lightbox]?.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={photos[lightbox]!.previewUrl!} alt="" className={styles["box-img"]} />
+              <img
+                src={photos[lightbox]!.previewUrl!}
+                alt=""
+                className={styles["box-img"]}
+                style={isLocked(photos[lightbox]!) && !photos[lightbox]!.previewIsBlurred ? { filter: "blur(6px)" } : undefined}
+              />
             ) : null}
           </div>
           <button className={styles.cl} aria-label="Fermer">
