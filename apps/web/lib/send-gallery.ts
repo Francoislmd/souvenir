@@ -42,10 +42,16 @@ export async function sendParticipantGallery(
       const freeSamples = photos.filter((p) => p.isFreeSample);
       const paidPhotos = photos.filter((p) => !p.isFreeSample);
 
-      // Peut être null si aucune photo n'a encore de miniature — l'email part
-      // quand même (le lien est ce qui compte), juste sans image d'accroche.
-      const hero = [...freeSamples, ...photos].find((p) => p.previewKey ?? p.blurKey ?? p.thumbKey);
-      const heroUrl = hero ? getPreviewUrl(hero.previewKey ?? hero.blurKey ?? hero.thumbKey ?? "") : null;
+      // L'accroche ne montre en clair QUE des photos offertes — jamais une
+      // photo payante via previewKey/thumbKey (elle serait alors visible sans
+      // achat). S'il n'y a pas encore d'échantillon offert, on retombe sur une
+      // photo payante mais uniquement via son blurKey (flouté), jamais nette.
+      // Peut rester null si rien n'est encore traité — l'email part quand
+      // même (le lien est ce qui compte), juste sans image d'accroche.
+      const freeHero = freeSamples.find((p) => p.previewKey ?? p.thumbKey);
+      const freeHeroUrl = freeHero ? getPreviewUrl(freeHero.previewKey ?? freeHero.thumbKey ?? "") : null;
+      const blurredHero = !freeHeroUrl ? photos.find((p) => p.blurKey) : undefined;
+      const heroUrl = freeHeroUrl ?? (blurredHero ? getPreviewUrl(blurredHero.blurKey ?? "") : null);
       const thumbUrls = paidPhotos
         .slice(0, 3)
         .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : null))

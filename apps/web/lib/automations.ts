@@ -51,10 +51,14 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
   });
   if (photos.length === 0) return { sent: false };
   const freeSamples = photos.filter((p) => p.isFreeSample);
-  // Peut être null si aucune photo n'a encore de miniature — l'email part
-  // quand même, juste sans image d'accroche.
-  const hero = [...freeSamples, ...photos].find((p) => p.previewKey ?? p.blurKey ?? p.thumbKey);
-  const heroUrl = hero ? getPreviewUrl(hero.previewKey ?? hero.blurKey ?? hero.thumbKey ?? "") : null;
+  // L'accroche ne montre en clair QUE des photos offertes — jamais une photo
+  // payante via previewKey/thumbKey. Repli sur blurKey si pas d'échantillon
+  // offert ; peut rester null si rien n'est encore traité (l'email part quand
+  // même, juste sans image d'accroche).
+  const freeHero = freeSamples.find((p) => p.previewKey ?? p.thumbKey);
+  const freeHeroUrl = freeHero ? getPreviewUrl(freeHero.previewKey ?? freeHero.thumbKey ?? "") : null;
+  const blurredHero = !freeHeroUrl ? photos.find((p) => p.blurKey) : undefined;
+  const heroUrl = freeHeroUrl ?? (blurredHero ? getPreviewUrl(blurredHero.blurKey ?? "") : null);
 
   try {
     await sendPhotosReminderEmail({
@@ -87,12 +91,14 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
   }
 
   const photos = await prisma.photo.findMany({
-    where: { sortieId: sortie.id, status: "READY", isFreeSample: false, OR: [{ ownerId: participant.id }, { ownerId: null }] },
-    select: { thumbKey: true, blurKey: true },
+    where: { sortieId: sortie.id, status: { not: "FAILED" }, isFreeSample: false, OR: [{ ownerId: participant.id }, { ownerId: null }] },
+    select: { blurKey: true },
   });
+  // Jamais thumbKey en repli : ce sont des photos payantes, non achetées —
+  // seul le flou pré-généré (blurKey) peut apparaître, sinon on l'omet.
   const thumbUrls = photos
     .slice(0, 2)
-    .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : p.thumbKey ? getPreviewUrl(p.thumbKey) : null))
+    .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : null))
     .filter((u): u is string => u !== null);
 
   const priceFullCents = operator.pricePackCents;

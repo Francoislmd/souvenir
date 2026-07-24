@@ -44,8 +44,8 @@ export default function PhotosReminder({
           {heroUrl && (
             <Section style={{ padding: "14px 22px 0" }}>
               <Link href={galleryUrl}>
-                <Img src={heroUrl} width={516} alt={`Votre sortie du ${sortieDate}`}
-                     style={{ display: "block", width: "100%", maxWidth: 516, height: "auto", borderRadius: 14 }} />
+                <Img src={heroUrl} width={516} height={280} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: 516, height: 280, objectFit: "cover", borderRadius: 14 }} />
               </Link>
             </Section>
           )}

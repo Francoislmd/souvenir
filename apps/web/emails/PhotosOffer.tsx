@@ -52,7 +52,8 @@ export default function PhotosOffer({
                 {thumbUrls.slice(0, 2).map((url, i) => (
                   <Column key={url} style={{ width: "50%", padding: i === 0 ? "0 5px 0 0" : "0 0 0 5px" }}>
                     <Link href={galleryUrl}>
-                      <Img src={url} width={253} alt="" style={{ display: "block", width: "100%", borderRadius: 12 }} />
+                      {/* Hauteur fixe + object-fit : photos sources de proportions variées, grille régulière. */}
+                      <Img src={url} width={253} height={233} alt="" style={{ display: "block", width: "100%", height: 233, objectFit: "cover", borderRadius: 12 }} />
                     </Link>
                   </Column>
                 ))}

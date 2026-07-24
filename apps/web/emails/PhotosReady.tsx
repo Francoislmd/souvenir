@@ -86,11 +86,13 @@ export default function PhotosReady({
           </Section>
 
           {/* — la photo passe avant le texte, quand elle est déjà prête — */}
+          {/* Hauteur fixe + object-fit : une photo portrait ne doit pas rendre
+              l'email démesurément long, ni une photo panoramique trop basse. */}
           {heroUrl && (
             <Section>
               <Link href={galleryUrl}>
-                <Img src={heroUrl} width={560} alt={`Votre sortie du ${sortieDate}`}
-                     style={{ display: "block", width: "100%", maxWidth: brand.width, height: "auto" }} />
+                <Img src={heroUrl} width={560} height={380} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: brand.width, height: 380, objectFit: "cover" }} />
               </Link>
             </Section>
           )}
@@ -133,7 +135,9 @@ export default function PhotosReady({
                 {thumbUrls.slice(0, 3).map((url, i) => (
                   <Column key={url} style={{ width: "33%", padding: i === 1 ? "0 3px" : 0 }}>
                     <Link href={galleryUrl}>
-                      <Img src={url} width={165} alt="" style={{ display: "block", width: "100%", borderRadius: 10 }} />
+                      {/* Photos sources de toutes proportions (portrait, paysage…) — hauteur
+                          fixe + object-fit pour une grille régulière, jamais étirée. */}
+                      <Img src={url} width={165} height={165} alt="" style={{ display: "block", width: "100%", height: 165, objectFit: "cover", borderRadius: 10 }} />
                     </Link>
                   </Column>
                 ))}
