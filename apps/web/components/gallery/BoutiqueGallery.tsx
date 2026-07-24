@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/g/[token]/boutique.module.css";
 import { quote, applyReducedOffer, type PricingConfig } from "@/lib/pricing";
@@ -23,7 +23,7 @@ export function BoutiqueGallery({
   token,
   participantId,
   clientFirstName,
-  photos,
+  photos: initialPhotos,
   pricing,
   bought,
   purchasedIds,
@@ -41,7 +41,45 @@ export function BoutiqueGallery({
   reducedOfferActive: boolean;
 }) {
   const router = useRouter();
+  const [photos, setPhotos] = useState(initialPhotos);
   const purchasable = useMemo(() => photos.filter((p) => !p.isFreeSample), [photos]);
+
+  // Le pro peut envoyer avant que le worker ait fini de traiter toutes les
+  // photos — celles encore en cours n'ont pas d'aperçu à l'ouverture du lien.
+  // On les complète discrètement en arrière-plan, sans recharger la page.
+  useEffect(() => {
+    if (bought) return;
+    if (photos.every((p) => p.previewUrl)) return;
+    let cancelled = false;
+
+    async function fillMissing(): Promise<void> {
+      const res = await fetch(`/api/g/${token}/photos`);
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as { photos: BoutiquePhoto[] };
+      const freshById = new Map(data.photos.map((p) => [p.id, p]));
+      setPhotos((prev) => {
+        let changed = false;
+        const next = prev.map((p) => {
+          if (p.previewUrl) return p;
+          const match = freshById.get(p.id);
+          if (!match?.previewUrl) return p;
+          changed = true;
+          return match;
+        });
+        // De nouvelles photos peuvent aussi être arrivées après l'ouverture.
+        const knownIds = new Set(prev.map((p) => p.id));
+        const added = data.photos.filter((p) => !knownIds.has(p.id));
+        if (added.length > 0) changed = true;
+        return changed ? [...next, ...added] : prev;
+      });
+    }
+
+    const interval = setInterval(() => void fillMissing(), 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [token, bought, photos]);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cur, setCur] = useState(0);
