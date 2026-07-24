@@ -26,7 +26,10 @@ export interface PhotosReadyProps {
   sortiePlace?: string; // « Forclaz »
   freeCount: number; // 2
   paidCount: number; // 7
-  heroUrl: string; // JPEG hébergé, 1120 px de large (2×)
+  // JPEG hébergé, 1120 px de large (2×) — null si le worker n'a pas encore
+  // fini de traiter la première photo au moment de l'envoi (l'email part
+  // quand même, jamais bloqué sur le traitement serveur).
+  heroUrl: string | null;
   thumbUrls: string[]; // 3 aperçus floutés, générés côté serveur
   galleryUrl: string; // https://linktrip.co/g/{token}
   deleteUrl: string;
@@ -82,13 +85,15 @@ export default function PhotosReady({
             </Row>
           </Section>
 
-          {/* — la photo passe avant le texte — */}
-          <Section>
-            <Link href={galleryUrl}>
-              <Img src={heroUrl} width={560} alt={`Votre sortie du ${sortieDate}`}
-                   style={{ display: "block", width: "100%", maxWidth: brand.width, height: "auto" }} />
-            </Link>
-          </Section>
+          {/* — la photo passe avant le texte, quand elle est déjà prête — */}
+          {heroUrl && (
+            <Section>
+              <Link href={galleryUrl}>
+                <Img src={heroUrl} width={560} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: brand.width, height: "auto" }} />
+              </Link>
+            </Section>
+          )}
 
           {/* — accroche — */}
           <Section style={{ padding: "24px 22px 0" }}>

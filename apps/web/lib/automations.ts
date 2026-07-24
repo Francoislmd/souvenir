@@ -46,13 +46,15 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
   }
 
   const photos = await prisma.photo.findMany({
-    where: { sortieId: sortie.id, status: "READY", OR: [{ ownerId: participant.id }, { ownerId: null }] },
+    where: { sortieId: sortie.id, status: { not: "FAILED" }, OR: [{ ownerId: participant.id }, { ownerId: null }] },
     select: { thumbKey: true, previewKey: true, blurKey: true, isFreeSample: true },
   });
+  if (photos.length === 0) return { sent: false };
   const freeSamples = photos.filter((p) => p.isFreeSample);
-  const hero = freeSamples[0] ?? photos[0];
+  // Peut être null si aucune photo n'a encore de miniature — l'email part
+  // quand même, juste sans image d'accroche.
+  const hero = [...freeSamples, ...photos].find((p) => p.previewKey ?? p.blurKey ?? p.thumbKey);
   const heroUrl = hero ? getPreviewUrl(hero.previewKey ?? hero.blurKey ?? hero.thumbKey ?? "") : null;
-  if (!heroUrl) return { sent: false };
 
   try {
     await sendPhotosReminderEmail({

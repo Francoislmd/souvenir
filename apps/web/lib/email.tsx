@@ -73,7 +73,7 @@ export async function sendPhotosReadyEmail(params: {
   sortiePlace?: string | null;
   freeCount: number;
   paidCount: number;
-  heroUrl: string;
+  heroUrl: string | null;
   thumbUrls: string[];
   galleryUrl: string;
   deleteUrl: string;
@@ -111,7 +111,7 @@ export async function sendPhotosReminderEmail(params: {
   firstName: string;
   operatorName: string;
   sortieDate: string;
-  heroUrl: string;
+  heroUrl: string | null;
   photoCount: number;
   freeCount: number;
   galleryUrl: string;

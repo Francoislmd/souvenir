@@ -12,7 +12,7 @@ import { brand, s } from "./brand";
 export interface PhotosReminderProps {
   operatorName: string;
   sortieDate: string;
-  heroUrl: string;
+  heroUrl: string | null;
   photoCount: number;
   freeCount: number;
   galleryUrl: string;
@@ -41,12 +41,14 @@ export default function PhotosReminder({
             </Text>
           </Section>
 
-          <Section style={{ padding: "14px 22px 0" }}>
-            <Link href={galleryUrl}>
-              <Img src={heroUrl} width={516} alt={`Votre sortie du ${sortieDate}`}
-                   style={{ display: "block", width: "100%", maxWidth: 516, height: "auto", borderRadius: 14 }} />
-            </Link>
-          </Section>
+          {heroUrl && (
+            <Section style={{ padding: "14px 22px 0" }}>
+              <Link href={galleryUrl}>
+                <Img src={heroUrl} width={516} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: 516, height: "auto", borderRadius: 14 }} />
+              </Link>
+            </Section>
+          )}
 
           <Section style={{ padding: "20px 22px 0" }}>
             <Text style={{ ...s.h1, fontSize: "19px", letterSpacing: "-0.4px" }}>
