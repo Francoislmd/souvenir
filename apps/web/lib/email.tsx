@@ -69,6 +69,7 @@ export async function sendPhotosReadyEmail(params: {
   firstName: string;
   operatorName: string;
   operatorColor: string;
+  operatorLogoUrl?: string | null;
   activity: string;
   sortieDate: string;
   sortieTime: string;
@@ -86,6 +87,7 @@ export async function sendPhotosReadyEmail(params: {
     operatorName: params.operatorName,
     operatorInitials: params.operatorName.slice(0, 2).toUpperCase(),
     operatorColor: params.operatorColor,
+    operatorLogoUrl: params.operatorLogoUrl ?? undefined,
     activity: params.activity,
     sortieDate: params.sortieDate,
     sortieTime: params.sortieTime,

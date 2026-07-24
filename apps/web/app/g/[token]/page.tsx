@@ -40,7 +40,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
 
   return (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
-      <GalleryHeader operatorName={operator.name} dateLabel={dateLabel} />
+      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} dateLabel={dateLabel} />
       <BoutiqueGallery
         token={participant.token}
         participantId={participant.id}

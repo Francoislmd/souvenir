@@ -59,6 +59,7 @@ export async function sendParticipantGallery(
         firstName: participant.name.split(/\s+/)[0] ?? participant.name,
         operatorName: operator.name,
         operatorColor: operator.brandColor,
+        operatorLogoUrl: operator.logoUrl,
         activity: sortie.activity,
         sortieDate: formatDateFr(sortie.startsAt),
         sortieTime: formatTimeFr(sortie.startsAt),

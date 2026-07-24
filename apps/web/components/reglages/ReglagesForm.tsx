@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { useToast } from "@/components/operator/ToastProvider";
@@ -11,6 +11,7 @@ const SWATCHES = ["#FF5A1F", "#0FBEB6", "#FF3D6E", "#7C3AED", "#2563EB", "#16A34
 
 interface OperatorSettings {
   name: string;
+  logoUrl: string | null;
   brandColor: string;
   pricePhotoCents: number;
   pricePackCents: number;
@@ -31,6 +32,9 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
   const toast = useToast();
 
   const [name, setName] = useState(operator.name);
+  const [logoUrl, setLogoUrl] = useState(operator.logoUrl);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [brandColor, setBrandColor] = useState(operator.brandColor);
   const [pricePhoto, setPricePhoto] = useState(toEuros(operator.pricePhotoCents));
   const [pricePack, setPricePack] = useState(toEuros(operator.pricePackCents));
@@ -79,6 +83,35 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
     setAutomations((a) => ({ ...a, [key]: !a[key] }));
   }
 
+  async function handleLogoFile(file: File): Promise<void> {
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/operator/logo", { method: "POST", body: formData });
+      if (!uploadRes.ok) {
+        const body = await uploadRes.json().catch(() => ({}));
+        toast((body as { error?: string }).error ?? "L'envoi a échoué, réessaie.");
+        return;
+      }
+      const { logoUrl: uploadedUrl } = (await uploadRes.json()) as { logoUrl: string };
+      const saveRes = await fetch("/api/operator/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoUrl: uploadedUrl }),
+      });
+      if (!saveRes.ok) {
+        toast("L'envoi a échoué, réessaie.");
+        return;
+      }
+      setLogoUrl(uploadedUrl);
+      toast("Logo mis à jour");
+      router.refresh();
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
   return (
     <>
       <div className={styles.lbl} style={{ marginTop: 0 }}>
@@ -87,6 +120,37 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
       <div className={styles.field}>
         <label htmlFor="bName">Le nom de votre structure</label>
         <input className={styles.inp} id="bName" value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className={styles.field}>
+        <label>Logo</label>
+        <button type="button" className={styles.logoUpload} onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
+          <span className={styles.logoPreview}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 16V4M8 8l4-4 4 4" />
+                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+              </svg>
+            )}
+          </span>
+          <span>
+            <span className={styles.logoUploadTitle}>{uploadingLogo ? "Envoi…" : logoUrl ? "Changer le logo" : "Ajouter un logo"}</span>
+            <span className={styles.logoUploadHint}>PNG, JPG, WEBP ou SVG — visible sur la galerie et les emails</span>
+          </span>
+        </button>
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          className={styles.hiddenInput}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleLogoFile(file);
+            e.target.value = "";
+          }}
+        />
       </div>
       <div className={styles.field}>
         <label>Couleur</label>

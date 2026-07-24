@@ -24,6 +24,7 @@ export interface PhotosReadyProps {
   operatorName: string; // « Annecy Vol Libre »
   operatorInitials: string; // « AV »
   operatorColor: string; // couleur choisie par l'opérateur, ex. « #FF5A1F »
+  operatorLogoUrl?: string; // remplace le badge à initiales quand il est défini
   activity: string; // « Canyoning »
   sortieDate: string; // « 22 juillet »
   sortieTime: string; // « 14 h 30 »
@@ -44,6 +45,7 @@ export default function PhotosReady({
   operatorName,
   operatorInitials,
   operatorColor,
+  operatorLogoUrl,
   activity,
   sortieDate,
   sortieTime,
@@ -66,17 +68,22 @@ export default function PhotosReady({
           <Section style={{ padding: "18px 22px", borderBottom: `1px solid ${brand.line}` }}>
             <Row>
               <Column style={{ width: 34, paddingRight: 11 }}>
-                <table cellPadding={0} cellSpacing={0} border={0} width={34}
-                       style={{ backgroundColor: operatorColor, borderRadius: 10 }}>
-                  <tbody>
-                    <tr>
-                      <td height={34} align="center"
-                          style={{ color: brand.white, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 12 }}>
-                        {operatorInitials}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                {operatorLogoUrl ? (
+                  <Img src={operatorLogoUrl} width={34} height={34} alt=""
+                       style={{ display: "block", width: 34, height: 34, objectFit: "cover", borderRadius: 10 }} />
+                ) : (
+                  <table cellPadding={0} cellSpacing={0} border={0} width={34}
+                         style={{ backgroundColor: operatorColor, borderRadius: 10 }}>
+                    <tbody>
+                      <tr>
+                        <td height={34} align="center"
+                            style={{ color: brand.white, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 12 }}>
+                          {operatorInitials}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
               </Column>
               <Column>
                 <Text style={{ ...s.h1, fontSize: "15px", letterSpacing: "-0.2px", margin: 0 }}>

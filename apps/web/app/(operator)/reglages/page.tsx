@@ -14,6 +14,7 @@ export default async function ReglagesPage() {
       <ReglagesForm
         operator={{
           name: operator.name,
+          logoUrl: operator.logoUrl,
           brandColor: operator.brandColor,
           pricePhotoCents: operator.pricePhotoCents,
           pricePackCents: operator.pricePackCents,
