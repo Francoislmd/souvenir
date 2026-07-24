@@ -15,6 +15,8 @@ import { brand, s } from "./brand";
  *  · les photos sont des <Img> hébergées, jamais des dégradés CSS
  *  · un seul bouton, qui dit « Voir mes photos » et non « Acheter »
  *  · pied avec conservation 90 jours + lien de suppression
+ *  · toutes les photos sont floutées (JPEG pré-généré côté serveur) — cet
+ *    email ne montre jamais rien en clair, c'est la boutique qui déverrouille
  */
 
 export interface PhotosReadyProps {
@@ -24,13 +26,12 @@ export interface PhotosReadyProps {
   operatorColor: string; // couleur choisie par l'opérateur, ex. « #FF5A1F »
   sortieDate: string; // « 22 juillet »
   sortiePlace?: string; // « Forclaz »
-  freeCount: number; // 2
-  paidCount: number; // 7
-  // JPEG hébergé, 1120 px de large (2×) — null si le worker n'a pas encore
-  // fini de traiter la première photo au moment de l'envoi (l'email part
-  // quand même, jamais bloqué sur le traitement serveur).
+  photoCount: number; // 9
+  // JPEG flouté hébergé — null si le worker n'a pas encore fini de traiter
+  // la première photo au moment de l'envoi (l'email part quand même, jamais
+  // bloqué sur le traitement serveur).
   heroUrl: string | null;
-  thumbUrls: string[]; // 3 aperçus floutés, générés côté serveur
+  thumbUrls: string[]; // jusqu'à 3 aperçus floutés supplémentaires
   galleryUrl: string; // https://linktrip.co/g/{token}
   deleteUrl: string;
   unsubUrl: string;
@@ -43,8 +44,7 @@ export default function PhotosReady({
   operatorColor,
   sortieDate,
   sortiePlace,
-  freeCount,
-  paidCount,
+  photoCount,
   heroUrl,
   thumbUrls,
   galleryUrl,
@@ -54,7 +54,7 @@ export default function PhotosReady({
   return (
     <Html lang="fr">
       <Head />
-      <Preview>{`${freeCount} photos vous sont offertes — elles vous attendent.`}</Preview>
+      <Preview>{`${photoCount} photo${photoCount > 1 ? "s" : ""} vous attend${photoCount > 1 ? "ent" : ""} — venez les découvrir.`}</Preview>
       <Body style={s.body}>
         <Container style={s.card}>
 
@@ -85,26 +85,22 @@ export default function PhotosReady({
             </Row>
           </Section>
 
-          {/* — la photo passe avant le texte, quand elle est déjà prête — */}
-          {/* Hauteur fixe + object-fit : une photo portrait ne doit pas rendre
-              l'email démesurément long, ni une photo panoramique trop basse. */}
+          {/* — un aperçu flouté, modeste — la photo passe avant le texte, sans dominer l'email — */}
           {heroUrl && (
-            <Section>
+            <Section style={{ padding: "18px 22px 0" }}>
               <Link href={galleryUrl}>
-                <Img src={heroUrl} width={560} height={380} alt={`Votre sortie du ${sortieDate}`}
-                     style={{ display: "block", width: "100%", maxWidth: brand.width, height: 380, objectFit: "cover" }} />
+                <Img src={heroUrl} width={516} height={220} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: 516, height: 220, objectFit: "cover", borderRadius: 14 }} />
               </Link>
             </Section>
           )}
 
           {/* — accroche — */}
-          <Section style={{ padding: "24px 22px 0" }}>
+          <Section style={{ padding: "20px 22px 0" }}>
             <Text style={s.h1}>{firstName}, vos photos sont là</Text>
             <Text style={s.lead}>
-              <span style={{ color: brand.ink, fontWeight: 600 }}>
-                {freeCount} sont déjà à vous.
-              </span>{" "}
-              Les {paidCount} autres vous attendent en pleine résolution.
+              <span style={{ color: brand.ink, fontWeight: 600 }}>{photoCount}</span> photo{photoCount > 1 ? "s" : ""} vous
+              attend{photoCount > 1 ? "ent" : ""} en pleine résolution.
             </Text>
           </Section>
 
@@ -124,7 +120,7 @@ export default function PhotosReady({
             </Text>
           </Section>
 
-          {/* — aperçus floutés (JPEG pré-générés côté serveur) — */}
+          {/* — aperçus floutés supplémentaires (JPEG pré-générés côté serveur) — */}
           {thumbUrls.length > 0 && (
             <Section style={{ padding: "0 22px 6px" }}>
               <Text style={{ ...s.small, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 11,
@@ -170,9 +166,8 @@ PhotosReady.PreviewProps = {
   operatorColor: "#FF5A1F",
   sortieDate: "22 juillet",
   sortiePlace: "Forclaz",
-  freeCount: 2,
-  paidCount: 7,
-  heroUrl: "https://placehold.co/1120x460/7FC5EE/FFF.jpg",
+  photoCount: 9,
+  heroUrl: "https://placehold.co/1032x440/7FC5EE/FFF.jpg",
   thumbUrls: [
     "https://placehold.co/330x330/F3C9A0/FFF.jpg",
     "https://placehold.co/330x330/FFC58E/FFF.jpg",

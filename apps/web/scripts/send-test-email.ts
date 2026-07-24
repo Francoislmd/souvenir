@@ -24,9 +24,8 @@ async function main() {
     operatorColor: "#FF5A1F",
     sortieDate: "22 juillet",
     sortiePlace: "Forclaz",
-    freeCount: 2,
-    paidCount: 7,
-    heroUrl: "https://placehold.co/1120x460/7FC5EE/FFF.jpg",
+    photoCount: 9,
+    heroUrl: "https://placehold.co/1032x440/7FC5EE/FFF.jpg",
     thumbUrls: [
       "https://placehold.co/330x330/F3C9A0/FFF.jpg",
       "https://placehold.co/330x330/FFC58E/FFF.jpg",

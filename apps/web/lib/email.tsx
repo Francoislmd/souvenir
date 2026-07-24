@@ -71,8 +71,7 @@ export async function sendPhotosReadyEmail(params: {
   operatorColor: string;
   sortieDate: string;
   sortiePlace?: string | null;
-  freeCount: number;
-  paidCount: number;
+  photoCount: number;
   heroUrl: string | null;
   thumbUrls: string[];
   galleryUrl: string;
@@ -87,8 +86,7 @@ export async function sendPhotosReadyEmail(params: {
     operatorColor: params.operatorColor,
     sortieDate: params.sortieDate,
     sortiePlace: params.sortiePlace ?? undefined,
-    freeCount: params.freeCount,
-    paidCount: params.paidCount,
+    photoCount: params.photoCount,
     heroUrl: params.heroUrl,
     thumbUrls: params.thumbUrls,
     galleryUrl: params.galleryUrl,
@@ -113,7 +111,6 @@ export async function sendPhotosReminderEmail(params: {
   sortieDate: string;
   heroUrl: string | null;
   photoCount: number;
-  freeCount: number;
   galleryUrl: string;
   unsubUrl: string;
 }): Promise<void> {
@@ -123,7 +120,6 @@ export async function sendPhotosReminderEmail(params: {
     sortieDate: params.sortieDate,
     heroUrl: params.heroUrl,
     photoCount: params.photoCount,
-    freeCount: params.freeCount,
     galleryUrl: params.galleryUrl,
     unsubUrl: params.unsubUrl,
   };

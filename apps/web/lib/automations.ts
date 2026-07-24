@@ -47,18 +47,14 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
 
   const photos = await prisma.photo.findMany({
     where: { sortieId: sortie.id, status: { not: "FAILED" }, OR: [{ ownerId: participant.id }, { ownerId: null }] },
-    select: { thumbKey: true, previewKey: true, blurKey: true, isFreeSample: true },
+    select: { blurKey: true },
   });
   if (photos.length === 0) return { sent: false };
-  const freeSamples = photos.filter((p) => p.isFreeSample);
-  // L'accroche ne montre en clair QUE des photos offertes — jamais une photo
-  // payante via previewKey/thumbKey. Repli sur blurKey si pas d'échantillon
-  // offert ; peut rester null si rien n'est encore traité (l'email part quand
-  // même, juste sans image d'accroche).
-  const freeHero = freeSamples.find((p) => p.previewKey ?? p.thumbKey);
-  const freeHeroUrl = freeHero ? getPreviewUrl(freeHero.previewKey ?? freeHero.thumbKey ?? "") : null;
-  const blurredHero = !freeHeroUrl ? photos.find((p) => p.blurKey) : undefined;
-  const heroUrl = freeHeroUrl ?? (blurredHero ? getPreviewUrl(blurredHero.blurKey ?? "") : null);
+  // Jamais rien en clair dans l'email — uniquement le flou pré-généré côté
+  // serveur, offerte ou payante (cette distinction est le rôle de la
+  // boutique, pas de l'email).
+  const hero = photos.find((p) => p.blurKey);
+  const heroUrl = hero ? getPreviewUrl(hero.blurKey ?? "") : null;
 
   try {
     await sendPhotosReminderEmail({
@@ -70,7 +66,6 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
       sortieDate: formatDateFr(sortie.startsAt),
       heroUrl,
       photoCount: photos.length,
-      freeCount: freeSamples.length,
       galleryUrl,
       unsubUrl: `${galleryUrl}/desinscription`,
     });

@@ -34,28 +34,19 @@ export async function sendParticipantGallery(
       status: { not: "FAILED" },
       OR: [{ ownerId: participant.id }, { ownerId: null }],
     },
-    select: { thumbKey: true, previewKey: true, blurKey: true, isFreeSample: true },
+    select: { blurKey: true },
   });
 
   try {
     if (participant.channel === "EMAIL") {
-      const freeSamples = photos.filter((p) => p.isFreeSample);
-      const paidPhotos = photos.filter((p) => !p.isFreeSample);
-
-      // L'accroche ne montre en clair QUE des photos offertes — jamais une
-      // photo payante via previewKey/thumbKey (elle serait alors visible sans
-      // achat). S'il n'y a pas encore d'échantillon offert, on retombe sur une
-      // photo payante mais uniquement via son blurKey (flouté), jamais nette.
-      // Peut rester null si rien n'est encore traité — l'email part quand
-      // même (le lien est ce qui compte), juste sans image d'accroche.
-      const freeHero = freeSamples.find((p) => p.previewKey ?? p.thumbKey);
-      const freeHeroUrl = freeHero ? getPreviewUrl(freeHero.previewKey ?? freeHero.thumbKey ?? "") : null;
-      const blurredHero = !freeHeroUrl ? photos.find((p) => p.blurKey) : undefined;
-      const heroUrl = freeHeroUrl ?? (blurredHero ? getPreviewUrl(blurredHero.blurKey ?? "") : null);
-      const thumbUrls = paidPhotos
-        .slice(0, 3)
-        .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : null))
-        .filter((u): u is string => u !== null);
+      // L'email ne montre jamais rien en clair — uniquement le flou
+      // pré-généré côté serveur (blurKey), qu'il s'agisse d'une photo
+      // offerte ou payante (ce n'est pas à l'email de faire cette
+      // distinction, c'est le rôle de la boutique). Peut rester null si
+      // rien n'est encore traité — l'email part quand même.
+      const withBlur = photos.filter((p) => p.blurKey);
+      const heroUrl = withBlur[0] ? getPreviewUrl(withBlur[0].blurKey ?? "") : null;
+      const thumbUrls = withBlur.slice(1, 4).map((p) => getPreviewUrl(p.blurKey ?? ""));
 
       await sendPhotosReadyEmail({
         to: participant.contact,
@@ -66,8 +57,7 @@ export async function sendParticipantGallery(
         operatorColor: operator.brandColor,
         sortieDate: formatDateFr(sortie.startsAt),
         sortiePlace: sortie.place,
-        freeCount: freeSamples.length,
-        paidCount: paidPhotos.length,
+        photoCount: photos.length,
         heroUrl,
         thumbUrls,
         galleryUrl,

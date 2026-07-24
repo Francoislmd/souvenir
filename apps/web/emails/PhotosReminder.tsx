@@ -14,7 +14,6 @@ export interface PhotosReminderProps {
   sortieDate: string;
   heroUrl: string | null;
   photoCount: number;
-  freeCount: number;
   galleryUrl: string;
   unsubUrl: string;
 }
@@ -24,7 +23,6 @@ export default function PhotosReminder({
   sortieDate,
   heroUrl,
   photoCount,
-  freeCount,
   galleryUrl,
   unsubUrl,
 }: PhotosReminderProps) {
@@ -44,8 +42,8 @@ export default function PhotosReminder({
           {heroUrl && (
             <Section style={{ padding: "14px 22px 0" }}>
               <Link href={galleryUrl}>
-                <Img src={heroUrl} width={516} height={280} alt={`Votre sortie du ${sortieDate}`}
-                     style={{ display: "block", width: "100%", maxWidth: 516, height: 280, objectFit: "cover", borderRadius: 14 }} />
+                <Img src={heroUrl} width={516} height={220} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: 516, height: 220, objectFit: "cover", borderRadius: 14 }} />
               </Link>
             </Section>
           )}
@@ -55,7 +53,7 @@ export default function PhotosReminder({
               Vous ne les avez pas encore regardées
             </Text>
             <Text style={s.lead}>
-              Vos {photoCount} photos sont prêtes, dont {freeCount} offerte{freeCount > 1 ? "s" : ""}.
+              {photoCount} photo{photoCount > 1 ? "s" : ""} {photoCount > 1 ? "sont prêtes" : "est prête"}, en pleine résolution.
             </Text>
           </Section>
 
@@ -90,7 +88,6 @@ PhotosReminder.PreviewProps = {
   sortieDate: "22 juillet",
   heroUrl: "https://placehold.co/1032x310/FFC58E/FFF.jpg",
   photoCount: 9,
-  freeCount: 2,
   galleryUrl: "https://linktrip.co/g/julie-4k2p",
   unsubUrl: "https://linktrip.co/g/julie-4k2p/desinscription",
 } satisfies PhotosReminderProps;
