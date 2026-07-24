@@ -245,7 +245,17 @@
   place-items: center;
   pointer-events: none;
 }
-.wm span {
+.wm-inner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transform: rotate(-24deg);
+}
+.wm-inner svg {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+}
+.wm-inner span {
   font-family: var(--font-bricolage);
   font-weight: 800;
   font-size: 0.62rem;
@@ -253,7 +263,6 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.82);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  transform: rotate(-24deg);
 }
 .tag {
   position: absolute;

@@ -36,8 +36,9 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const previewBase = sharp(inputPath).resize({ width: 1280 });
     const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
     // Flou appliqué aux pixels, pas en CSS : les clients email (et les devtools
-    // navigateur) ignorent filter:blur, ce JPEG doit déjà être flou.
-    const blurBuffer = await sharp(inputPath).resize({ width: 480 }).blur(22).jpeg({ quality: 60 }).toBuffer();
+    // navigateur) ignorent filter:blur, ce JPEG doit déjà être flou. Léger :
+    // on doit reconnaître la photo, pas juste deviner des couleurs.
+    const blurBuffer = await sharp(inputPath).resize({ width: 480 }).blur(9).jpeg({ quality: 65 }).toBuffer();
 
     const thumbKey = `${photoId}/thumb.jpg`;
     const previewKey = `${photoId}/preview.jpg`;
