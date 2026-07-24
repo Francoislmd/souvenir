@@ -10,8 +10,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    after: true,
-    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
+    serverComponentsExternalPackages: ["@prisma/client", "prisma", "sharp"],
     outputFileTracingIncludes: {
       "/**": [
         "../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/*.node",

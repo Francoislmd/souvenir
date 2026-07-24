@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
+import { runPhotoProcessing } from "@/lib/photo-processing";
+
+// Une photo peut prendre quelques secondes à traiter (téléchargement +
+// génération miniature/filigrane/flou) — marge au-delà du défaut Vercel.
+export const maxDuration = 60;
 
 export async function POST(_request: Request, { params }: { params: { photoId: string } }): Promise<Response> {
   try {
@@ -15,7 +20,13 @@ export async function POST(_request: Request, { params }: { params: { photoId: s
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    await prisma.processingJob.create({ data: { photoId: photo.id, kind: "preview" } });
+    const job = await prisma.processingJob.create({ data: { photoId: photo.id, kind: "preview", status: "running" } });
+
+    // Traité ici, dans ce même déploiement — pas de worker séparé à faire
+    // tourner (voir CLAUDE.md §2 : zéro infra en plus). Le dépôt de photos
+    // n'attend pas cet appel pour avancer (voir PhotoDropZone), donc ça ne
+    // bloque pas le pro même si ça prend quelques secondes.
+    await runPhotoProcessing(photo.id, job.id);
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {

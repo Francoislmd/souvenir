@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
+import { runPhotoProcessing } from "@/lib/photo-processing";
+
+export const maxDuration = 60;
 
 export async function POST(_request: Request, { params }: { params: { photoId: string } }): Promise<Response> {
   try {
@@ -20,7 +23,9 @@ export async function POST(_request: Request, { params }: { params: { photoId: s
       data: { status: "failed" },
     });
     await prisma.photo.update({ where: { id: photo.id }, data: { status: "UPLOADED" } });
-    await prisma.processingJob.create({ data: { photoId: photo.id, kind: "preview" } });
+    const job = await prisma.processingJob.create({ data: { photoId: photo.id, kind: "preview", status: "running" } });
+
+    await runPhotoProcessing(photo.id, job.id);
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {
