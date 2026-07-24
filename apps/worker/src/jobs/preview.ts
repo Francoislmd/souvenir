@@ -31,8 +31,11 @@ export async function processPreviewJob({ photoId }: ProcessPreviewParams): Prom
     const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
     // Flou appliqué aux pixels, pas en CSS : les clients email (et les devtools
     // navigateur) ignorent filter:blur, ce JPEG doit déjà être flou. Léger :
-    // on doit reconnaître la photo, pas juste deviner des couleurs.
-    const blurBuffer = await sharp(inputPath).resize({ width: 480 }).blur(9).jpeg({ quality: 65 }).toBuffer();
+    // on doit reconnaître la photo, pas juste deviner des couleurs. Source plus
+    // large (960) qu'avant pour limiter l'agrandissement à l'affichage (le
+    // carrousel l'étire sur ~1000px sur écran retina) — sinon le flou parait
+    // bien plus fort à l'écran que le sigma appliqué ne le laisse penser.
+    const blurBuffer = await sharp(inputPath).resize({ width: 960 }).blur(6).jpeg({ quality: 68 }).toBuffer();
 
     const thumbKey = `${photoId}/thumb.jpg`;
     const previewKey = `${photoId}/preview.jpg`;
