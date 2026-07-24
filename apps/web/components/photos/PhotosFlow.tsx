@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { PhotoDropZone } from "@/components/photos/PhotoDropZone";
-import { AssignmentLanes, type LanePhoto } from "@/components/photos/AssignmentLanes";
+import { AssignmentLanes, AV_VARIANTS, type LanePhoto } from "@/components/photos/AssignmentLanes";
 import { SendCascade, type SendParticipant } from "@/components/photos/SendCascade";
 import { useToast } from "@/components/operator/ToastProvider";
 
@@ -14,7 +14,7 @@ interface Participant {
   contact: string;
 }
 
-type Phase = "drop" | "processing" | "assigning" | "lanes" | "sending" | "sent";
+type Phase = "drop" | "lanes" | "sending" | "sent";
 
 export function PhotosFlow({
   sortieId,
@@ -23,7 +23,7 @@ export function PhotosFlow({
   initialPhotos,
 }: {
   sortieId: string;
-  initialPhase: "drop" | "processing" | "lanes" | "sent";
+  initialPhase: "drop" | "lanes" | "sent";
   participants: Participant[];
   initialPhotos: LanePhoto[];
 }) {
@@ -31,7 +31,9 @@ export function PhotosFlow({
   const toast = useToast();
   const [phase, setPhase] = useState<Phase>(initialPhase);
   const [photos, setPhotos] = useState<LanePhoto[]>(initialPhotos);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [addingMore, setAddingMore] = useState(false);
+  const thumbPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchPhotos = useCallback(async (): Promise<{ id: string; status: string; ownerId: string | null; thumbUrl: string | null }[]> => {
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
@@ -40,71 +42,107 @@ export function PhotosFlow({
     return data.photos;
   }, [sortieId]);
 
-  const runAssign = useCallback(async () => {
-    setPhase("assigning");
-    await fetch(`/api/sorties/${sortieId}/assign`, { method: "POST" });
+  // Pas de répartition automatique — les photos arrivent communes (ownerId
+  // null), le pro les attribue lui-même. Dès que les fiches existent côté
+  // serveur (pas besoin d'attendre l'envoi des fichiers ni les miniatures),
+  // on affiche directement l'écran de tri.
+  const onAllRegistered = useCallback(async () => {
     const fresh = await fetchPhotos();
     setPhotos(fresh.map((p) => ({ id: p.id, ownerId: p.ownerId, thumbUrl: p.thumbUrl })));
     setPhase("lanes");
-  }, [sortieId, fetchPhotos]);
+  }, [fetchPhotos]);
 
-  const onAllUploaded = useCallback(() => {
-    setPhase("processing");
-  }, []);
-
-  // Reprise après rechargement de page / onglet fermé pendant le traitement :
-  // on vérifie tout de suite (pas d'attente de 3s) plutôt que d'afficher un
-  // dépôt vide pendant que des photos sont déjà en cours de traitement.
+  // Les miniatures arrivent en tâche de fond pendant que le pro trie déjà —
+  // on complète discrètement les vignettes manquantes, sans jamais bloquer
+  // ni afficher d'écran de chargement.
   useEffect(() => {
-    if (phase !== "processing") return;
+    if (phase !== "lanes") return;
+    if (photos.every((p) => p.thumbUrl)) return;
     let cancelled = false;
 
-    async function check(): Promise<void> {
+    async function fillThumbs(): Promise<void> {
       const fresh = await fetchPhotos();
-      const allSettled = fresh.length > 0 && fresh.every((p) => p.status === "READY" || p.status === "FAILED");
       if (cancelled) return;
-      if (allSettled) {
-        if (pollRef.current) clearInterval(pollRef.current);
-        void runAssign();
-      }
+      const freshById = new Map(fresh.map((p) => [p.id, p]));
+      setPhotos((prev) => {
+        let changed = false;
+        const next = prev.map((p) => {
+          if (p.thumbUrl) return p;
+          const match = freshById.get(p.id);
+          if (!match?.thumbUrl) return p;
+          changed = true;
+          return { ...p, thumbUrl: match.thumbUrl };
+        });
+        return changed ? next : prev;
+      });
     }
 
-    void check();
-    pollRef.current = setInterval(() => void check(), 3000);
+    thumbPollRef.current = setInterval(() => void fillThumbs(), 3000);
     return () => {
       cancelled = true;
-      if (pollRef.current) clearInterval(pollRef.current);
+      if (thumbPollRef.current) clearInterval(thumbPollRef.current);
     };
-  }, [phase, fetchPhotos, runAssign]);
+  }, [phase, photos, fetchPhotos]);
 
   async function handleSend(): Promise<void> {
     setPhase("sending");
     await fetch(`/api/sorties/${sortieId}/send`, { method: "POST" });
   }
 
-  async function handleReassign(photoId: string, ownerId: string | null): Promise<void> {
-    const previous = photos;
-    // Optimiste : la vignette change de voie tout de suite, on corrige si l'appel échoue.
-    setPhotos((prev) => prev.map((p) => (p.id === photoId ? { ...p, ownerId } : p)));
-    const res = await fetch(`/api/photos/${photoId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ownerId }),
+  function toggleSelect(photoId: string): void {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
     });
-    if (!res.ok) {
+  }
+
+  async function assignSelected(ownerId: string | null): Promise<void> {
+    const ids = new Set(selected);
+    if (ids.size === 0) return;
+    const previous = photos;
+    // Optimiste : les vignettes changent de voie tout de suite, on corrige si l'appel échoue.
+    setPhotos((prev) => prev.map((p) => (ids.has(p.id) ? { ...p, ownerId } : p)));
+    setSelected(new Set());
+    const results = await Promise.all(
+      Array.from(ids).map((id) =>
+        fetch(`/api/photos/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ownerId }),
+        }).then((res) => res.ok),
+      ),
+    );
+    if (results.some((ok) => !ok)) {
       setPhotos(previous);
-      toast("La réassignation a échoué — réessayez.");
+      toast("L'attribution a échoué — réessayez.");
     }
   }
 
-  if (phase === "drop" || phase === "processing" || phase === "assigning") {
+  async function deleteSelected(): Promise<void> {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const confirmed = window.confirm(
+      `Supprimer ${ids.length} photo${ids.length > 1 ? "s" : ""} ? Cette action est définitive.`,
+    );
+    if (!confirmed) return;
+    const previous = photos;
+    setPhotos((prev) => prev.filter((p) => !selected.has(p.id)));
+    setSelected(new Set());
+    const results = await Promise.all(ids.map((id) => fetch(`/api/photos/${id}`, { method: "DELETE" }).then((res) => res.ok)));
+    if (results.some((ok) => !ok)) {
+      setPhotos(previous);
+      toast("La suppression a échoué pour certaines photos — réessayez.");
+    }
+  }
+
+  if (phase === "drop") {
     return (
       <div id="phDrop">
         <h1 className={styles.h1}>Les photos</h1>
         <p className={styles.lead}>Videz votre carte mémoire d&rsquo;un coup. Le tri par client se fait tout seul.</p>
-        {/* Les vignettes restent visibles dès le dépôt — jamais d'écran vide
-            pendant le traitement/la répartition serveur. */}
-        <PhotoDropZone sortieId={sortieId} processing={phase !== "drop"} onAllUploaded={onAllUploaded} />
+        <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} />
       </div>
     );
   }
@@ -114,16 +152,64 @@ export function PhotosFlow({
       <div id="phSort">
         <h1 className={styles.h1}>Chacun les siennes</h1>
         <p className={styles.lead}>
-          Triées dans l&rsquo;ordre de dépôt. Glissez une photo vers une autre voie pour corriger avant l&rsquo;envoi.
+          Triées dans l&rsquo;ordre de dépôt. Sélectionnez des photos puis attribuez-les à un participant ou à tous pour corriger avant l&rsquo;envoi.
         </p>
-        <div style={{ marginTop: 20 }}>
-          <AssignmentLanes photos={photos} participants={participants} editable onReassign={handleReassign} />
-        </div>
-        <div className={styles.act}>
-          <button type="button" className={`${styles.btn} ${styles.full}`} onClick={handleSend} disabled={participants.length === 0}>
-            Envoyer à mes {participants.length} client{participants.length > 1 ? "s" : ""}
+
+        <div style={{ marginTop: 14 }}>
+          <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => setAddingMore((v) => !v)}>
+            {addingMore ? "Fermer" : "+ Ajouter des photos"}
           </button>
         </div>
+        {addingMore ? (
+          <div style={{ marginTop: 14 }}>
+            <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} />
+          </div>
+        ) : null}
+
+        <div style={{ marginTop: 20 }}>
+          <AssignmentLanes photos={photos} participants={participants} selected={selected} onToggleSelect={toggleSelect} />
+        </div>
+
+        {selected.size > 0 ? (
+          <div className={styles.assignbar}>
+            <span className={styles["assignbar-count"]}>
+              {selected.size} photo{selected.size > 1 ? "s" : ""}
+            </span>
+            <button type="button" className={styles["assignbar-chip"]} onClick={() => void assignSelected(null)}>
+              <span className={styles.av} style={{ width: 20, height: 20, fontSize: ".55rem", background: "var(--ink-3)" }}>
+                TS
+              </span>
+              Tous
+            </button>
+            {participants.map((p, i) => {
+              const variant = AV_VARIANTS[i % 3];
+              return (
+                <button key={p.id} type="button" className={styles["assignbar-chip"]} onClick={() => void assignSelected(p.id)}>
+                  <span className={`${styles.av} ${variant ? styles[variant] : ""}`} style={{ width: 20, height: 20, fontSize: ".55rem" }}>
+                    {p.name.slice(0, 2).toUpperCase()}
+                  </span>
+                  {p.name}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              className={`${styles["assignbar-chip"]} ${styles["assignbar-chip-danger"]}`}
+              onClick={() => void deleteSelected()}
+            >
+              Supprimer
+            </button>
+            <button type="button" className={styles["assignbar-chip"]} onClick={() => setSelected(new Set())}>
+              Annuler
+            </button>
+          </div>
+        ) : (
+          <div className={styles.act}>
+            <button type="button" className={`${styles.btn} ${styles.full}`} onClick={handleSend} disabled={participants.length === 0}>
+              Envoyer à mes {participants.length} client{participants.length > 1 ? "s" : ""}
+            </button>
+          </div>
+        )}
       </div>
     );
   }

@@ -22,12 +22,12 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
   if (!sortie) notFound();
 
   const bucket = bucketSortie(sortie.startsAt);
-  const editable = bucket === "today";
+  const isToday = bucket === "today";
 
   let btnLabel = "Les photos, après la sortie";
   let btnHref: string | null = null;
   let btnDisabled = true;
-  if (editable) {
+  if (isToday) {
     btnDisabled = false;
     btnHref = `/sorties/${sortie.id}/photos`;
     btnLabel = sortie.status === "SENT" ? "Voir ce que reçoit un client" : "Ajouter les photos";
@@ -50,12 +50,11 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       </p>
 
       <div className={styles.lbl}>
-        Vos clients · {editable ? `${sortie.participants.length} sur ${sortie.seats}` : `${sortie.participants.length} inscrit${sortie.participants.length > 1 ? "s" : ""}`}
+        Vos clients · {sortie.participants.length} sur {sortie.seats}
       </div>
 
       <SortieParticipantsSection
         sortieId={sortie.id}
-        editable={editable}
         participants={sortie.participants.map((p) => ({
           id: p.id,
           name: p.name,

@@ -19,14 +19,12 @@ export default async function SortiePhotosPage({ params }: { params: { sortieId:
   if (!sortie) notFound();
 
   // La phase de départ ne peut pas se fier uniquement à sortie.status : si
-  // l'opérateur a déposé des photos puis fermé l'onglet avant que le worker
-  // les traite (ou avant que le navigateur déclenche /assign), la sortie
-  // reste "UPCOMING" alors que des photos existent déjà — il faut reprendre
-  // le suivi au lieu de réafficher un dépôt vide.
-  let initialPhase: "drop" | "processing" | "lanes" | "sent" = "drop";
+  // l'opérateur a déposé des photos puis fermé l'onglet avant que la fiche
+  // serveur soit créée, la sortie peut rester "UPCOMING" alors que des photos
+  // existent déjà — on regarde directement s'il y a des photos.
+  let initialPhase: "drop" | "lanes" | "sent" = "drop";
   if (sortie.status === "SENT") initialPhase = "sent";
-  else if (sortie.status === "SORTED") initialPhase = "lanes";
-  else if (sortie.photos.length > 0) initialPhase = "processing";
+  else if (sortie.photos.length > 0) initialPhase = "lanes";
 
   return (
     <section className={styles.view}>

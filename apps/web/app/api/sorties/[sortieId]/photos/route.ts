@@ -70,6 +70,14 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       data: { sortieId: sortie.id, originalKey, status: "UPLOADED" },
     });
 
+    // Aucune répartition automatique — les photos arrivent communes (ownerId
+    // null), le pro les attribue lui-même depuis l'écran de tri. On marque
+    // juste la sortie comme "triée" dès la première photo, pour l'afficher
+    // correctement dans la liste des sorties.
+    if (sortie.status === "UPCOMING") {
+      await prisma.sortie.update({ where: { id: sortie.id }, data: { status: "SORTED" } });
+    }
+
     await track("photos_uploaded", { operatorId: dbUser.operatorId, meta: { photoId: photo.id } });
 
     return Response.json({ photoId: photo.id, signedUrl: data.signedUrl }, { status: 201 });

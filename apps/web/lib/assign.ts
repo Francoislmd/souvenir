@@ -1,38 +1,7 @@
-// Répartition automatique des photos par participant, calculée au dépôt —
-// jamais avant (le nombre de participants réels n'est connu qu'à ce moment).
-// v1 : index de dépôt. Prod : grappes EXIF (takenAt), repli sur l'index si
-// inconclusif. Pas de reconnaissance faciale (RGPD art. 9) — voir brief §5.
-
-const COMMON_PHOTO_COUNT = 3;
-
-export interface AssignablePhoto {
-  id: string;
-}
-
-export interface RegisteredParticipant {
-  id: string;
-}
-
-/** photoId -> participantId | null (null = photo commune, envoyée à tous). */
-export function computeOwnerAssignment(
-  photos: AssignablePhoto[],
-  participants: RegisteredParticipant[],
-): Map<string, string | null> {
-  const assignment = new Map<string, string | null>();
-  const perso = photos.length - COMMON_PHOTO_COUNT;
-  const each = Math.max(1, Math.floor(perso / Math.max(1, participants.length)));
-
-  photos.forEach((photo, i) => {
-    if (i >= perso || participants.length === 0) {
-      assignment.set(photo.id, null);
-      return;
-    }
-    const k = Math.min(participants.length - 1, Math.floor(i / each));
-    assignment.set(photo.id, participants[k].id);
-  });
-
-  return assignment;
-}
+// La répartition par participant est manuelle (le pro sélectionne des photos
+// et les attribue depuis l'écran de tri) — aucune répartition automatique au
+// dépôt. Reste ici le calcul des échantillons offerts, appliqué à l'envoi
+// sur la répartition finale telle que le pro l'a laissée.
 
 /**
  * Les `freeCount` premières photos personnelles de chaque participant (dans

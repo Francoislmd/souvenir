@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "reac
 import styles from "@/app/(operator)/operator.module.css";
 import { addUploadItem, getUploadItemsForSortie, updateUploadItem, type UploadItem } from "@/lib/idb";
 
+const UPLOAD_CONCURRENCY = 3;
+
 function putToSignedUrl(url: string, file: Blob, onProgress: (pct: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -20,13 +22,12 @@ function putToSignedUrl(url: string, file: Blob, onProgress: (pct: number) => vo
 
 export function PhotoDropZone({
   sortieId,
-  processing = false,
-  onAllUploaded,
+  onAllRegistered,
 }: {
   sortieId: string;
-  /** true une fois tous les fichiers envoyés, en attente du traitement serveur */
-  processing?: boolean;
-  onAllUploaded: (count: number) => void;
+  /** Appelé dès que toutes les photos déposées ont leur fiche créée côté serveur —
+   * pas besoin d'attendre la fin de l'envoi des fichiers ni leur traitement (miniatures). */
+  onAllRegistered: () => void;
 }) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,25 +59,39 @@ export function PhotoDropZone({
     return all;
   }, [sortieId]);
 
+  // Étape rapide, séparée de l'envoi du fichier : crée la fiche photo côté
+  // serveur (pour connaître le total exact tout de suite) sans attendre que
+  // les octets du fichier soient envoyés.
+  const registerOne = useCallback(
+    async (item: UploadItem): Promise<void> => {
+      if (item.photoId && item.signedUrl) return;
+      try {
+        const res = await fetch(`/api/sorties/${sortieId}/photos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: item.filename }),
+        });
+        if (!res.ok) throw new Error("init failed");
+        const data = (await res.json()) as { photoId: string; signedUrl: string };
+        await updateUploadItem(item.id, { photoId: data.photoId, signedUrl: data.signedUrl });
+      } catch {
+        // L'envoi (uploadOne) réessaiera l'enregistrement s'il manque encore.
+      }
+    },
+    [sortieId],
+  );
+
   const uploadOne = useCallback(
     async (item: UploadItem): Promise<boolean> => {
       await updateUploadItem(item.id, { status: "uploading", progress: 0, error: undefined });
       await refresh();
       try {
-        let photoId = item.photoId;
-        let signedUrl = item.signedUrl;
-        if (!photoId || !signedUrl) {
-          const res = await fetch(`/api/sorties/${sortieId}/photos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ filename: item.filename }),
-          });
-          if (!res.ok) throw new Error("init failed");
-          const data = (await res.json()) as { photoId: string; signedUrl: string };
-          photoId = data.photoId;
-          signedUrl = data.signedUrl;
-          await updateUploadItem(item.id, { photoId, signedUrl });
-        }
+        await registerOne(item);
+        const fresh = await getUploadItemsForSortie(sortieId);
+        const registered = fresh.find((i) => i.id === item.id);
+        const photoId = registered?.photoId;
+        const signedUrl = registered?.signedUrl;
+        if (!photoId || !signedUrl) throw new Error("not registered");
 
         await putToSignedUrl(signedUrl, item.file, (progress) => {
           void updateUploadItem(item.id, { progress });
@@ -93,54 +108,76 @@ export function PhotoDropZone({
         return false;
       }
     },
-    [sortieId, refresh],
+    [sortieId, refresh, registerOne],
   );
 
+  // Envoie les fichiers avec quelques envois en parallèle plutôt qu'un par un —
+  // les fiches sont déjà créées (registerOne), ceci ne fait qu'accélérer l'envoi
+  // des octets et la génération des miniatures, en arrière-plan.
   const processQueue = useCallback(async () => {
     if (processingRef.current) return;
     processingRef.current = true;
-    try {
+    const claimed = new Set<string>();
+    const worker = async (): Promise<void> => {
       for (;;) {
         const all = await getUploadItemsForSortie(sortieId);
-        const next = all.find((item) => item.status === "queued" || item.status === "error");
-        if (!next) {
-          const done = all.filter((i) => i.status === "done");
-          if (all.length > 0 && done.length === all.length) onAllUploaded(done.length);
-          break;
-        }
+        const next = all.find((item) => (item.status === "queued" || item.status === "error") && !claimed.has(item.id));
+        if (!next) return;
+        claimed.add(next.id);
         const ok = await uploadOne(next);
         await refresh();
-        if (!ok) await new Promise((resolve) => setTimeout(resolve, 3000));
+        if (!ok) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          claimed.delete(next.id);
+        }
       }
+    };
+    try {
+      await Promise.all(Array.from({ length: UPLOAD_CONCURRENCY }, () => worker()));
     } finally {
       processingRef.current = false;
     }
-  }, [sortieId, refresh, uploadOne, onAllUploaded]);
+  }, [sortieId, refresh, uploadOne]);
 
   useEffect(() => {
-    void refresh().then((all) => {
+    void (async () => {
+      const all = await refresh();
+      if (all.length === 0) return;
+      const unregistered = all.filter((i) => !i.photoId || !i.signedUrl);
+      if (unregistered.length > 0) {
+        await Promise.all(unregistered.map((item) => registerOne(item)));
+        await refresh();
+      }
+      onAllRegistered();
       // Reprise : des fichiers déposés avant un rechargement de page reprennent leur envoi.
-      if (all.some((i) => i.status === "queued" || i.status === "error")) void processQueue();
-    });
+      if (all.some((i) => i.status === "queued" || i.status === "error" || i.status === "uploading")) void processQueue();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
 
   async function handleFilesSelected(event: ChangeEvent<HTMLInputElement>): Promise<void> {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-    for (const file of Array.from(files)) {
-      await addUploadItem({
-        id: crypto.randomUUID(),
-        sortieId,
-        file,
-        filename: file.name,
-        status: "queued",
-        progress: 0,
-        createdAt: Date.now(),
-      });
+    const newItems: UploadItem[] = Array.from(files).map((file) => ({
+      id: crypto.randomUUID(),
+      sortieId,
+      file,
+      filename: file.name,
+      status: "queued",
+      progress: 0,
+      createdAt: Date.now(),
+    }));
+    for (const item of newItems) {
+      await addUploadItem(item);
     }
     event.target.value = "";
     await refresh();
+
+    // Les fiches sont créées tout de suite (léger, rapide) pour connaître le
+    // total exact — la répartition peut démarrer sans attendre l'envoi des
+    // fichiers, qui continue ensuite en tâche de fond.
+    await Promise.all(newItems.map((item) => registerOne(item)));
+    onAllRegistered();
     void processQueue();
   }
 
@@ -148,8 +185,7 @@ export function PhotoDropZone({
   const done = items.filter((i) => i.status === "done").length;
 
   let caption = "Vous n'avez rien à trier";
-  if (processing) caption = "Traitement en cours…";
-  else if (total > 0) caption = `${done} / ${total} envoyées`;
+  if (total > 0) caption = `${done} / ${total} envoyées`;
 
   return (
     <div>
