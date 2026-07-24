@@ -244,13 +244,10 @@ export function BoutiqueGallery({
               ) : null}
               {locked ? (
                 <span className={styles.wm}>
-                  <span className={styles["wm-inner"]}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="4" y="10" width="16" height="10" rx="2" />
-                      <path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3" />
-                    </svg>
-                    <span>Aperçu</span>
-                  </span>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="10" width="16" height="10" rx="2" />
+                    <path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3" />
+                  </svg>
                 </span>
               ) : null}
               {photo.isFreeSample ? <span className={styles.tag}>Offerte</span> : null}
