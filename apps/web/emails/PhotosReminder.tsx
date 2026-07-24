@@ -1,6 +1,5 @@
-import { Body, Container, Head, Hr, Html, Link, Preview, Section, Text } from "@react-email/components";
+import { Body, Container, Head, Hr, Html, Img, Link, Preview, Section, Text } from "@react-email/components";
 import { brand, s } from "./brand";
-import { PhotoLock } from "./PhotoLock";
 
 /**
  * Souvenir — email 2 · RELANCE À 2H (catégorie marketing).
@@ -48,7 +47,10 @@ export default function PhotosReminder({
 
           {heroUrl && (
             <Section style={{ padding: "14px 22px 0" }}>
-              <PhotoLock src={heroUrl} href={galleryUrl} width={516} height={220} radius={14} alt={`Votre sortie du ${sortieDate}`} />
+              <Link href={galleryUrl}>
+                <Img src={heroUrl} width={516} height={220} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: 516, height: 220, objectFit: "cover", borderRadius: 14 }} />
+              </Link>
             </Section>
           )}
 

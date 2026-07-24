@@ -3,7 +3,6 @@ import {
   Preview, Row, Section, Text,
 } from "@react-email/components";
 import { brand, s } from "./brand";
-import { PhotoLock } from "./PhotoLock";
 
 /**
  * Souvenir — email 1 · LIVRAISON (catégorie transactionnelle).
@@ -100,7 +99,10 @@ export default function PhotosReady({
           {/* — un aperçu flouté, modeste — la photo passe avant le texte, sans dominer l'email — */}
           {heroUrl && (
             <Section style={{ padding: "18px 22px 0" }}>
-              <PhotoLock src={heroUrl} href={galleryUrl} width={516} height={220} radius={14} alt={`Votre sortie du ${sortieDate}`} />
+              <Link href={galleryUrl}>
+                <Img src={heroUrl} width={516} height={220} alt={`Votre sortie du ${sortieDate}`}
+                     style={{ display: "block", width: "100%", maxWidth: 516, height: 220, objectFit: "cover", borderRadius: 14 }} />
+              </Link>
             </Section>
           )}
 
@@ -142,9 +144,11 @@ export default function PhotosReady({
               <Row>
                 {thumbUrls.slice(0, 3).map((url, i) => (
                   <Column key={url} style={{ width: "33%", padding: i === 1 ? "0 3px" : 0 }}>
-                    {/* Photos sources de toutes proportions (portrait, paysage…) — hauteur
-                        fixe + object-fit pour une grille régulière, jamais étirée. */}
-                    <PhotoLock src={url} href={galleryUrl} width={165} height={116} radius={10} />
+                    <Link href={galleryUrl}>
+                      {/* Photos sources de toutes proportions (portrait, paysage…) — hauteur
+                          fixe + object-fit pour une grille régulière, jamais étirée. */}
+                      <Img src={url} width={165} height={116} alt="" style={{ display: "block", width: "100%", height: 116, objectFit: "cover", borderRadius: 10 }} />
+                    </Link>
                   </Column>
                 ))}
               </Row>
