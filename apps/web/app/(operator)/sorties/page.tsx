@@ -41,8 +41,6 @@ export default async function SortiesPage() {
     .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
     .slice(0, 8);
 
-  const todaySortie = today[0];
-
   return (
     <section className={styles.view}>
       <div className={styles.hd}>
@@ -55,8 +53,8 @@ export default async function SortiesPage() {
         </Link>
       </div>
 
-      {todaySortie ? (
-        <TodayCard sortie={todaySortie} />
+      {today.length > 0 ? (
+        today.map((sortie) => <TodayCard key={sortie.id} sortie={sortie} />)
       ) : (
         <div className={styles.today}>
           <div className={styles["today-in"]} style={{ textAlign: "center", color: "var(--ink-3)", fontSize: ".88rem" }}>

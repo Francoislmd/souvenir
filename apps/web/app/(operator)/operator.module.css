@@ -322,6 +322,9 @@
   background: var(--sunset);
   box-shadow: var(--sh-3);
 }
+.today + .today {
+  margin-top: 14px;
+}
 .today-in {
   background: #fff;
   border-radius: 22px;
