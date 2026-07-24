@@ -1,5 +1,6 @@
-import { Body, Column, Container, Head, Hr, Html, Img, Link, Preview, Row, Section, Text } from "@react-email/components";
+import { Body, Column, Container, Head, Hr, Html, Link, Preview, Row, Section, Text } from "@react-email/components";
 import { brand, s } from "./brand";
+import { PhotoLock } from "./PhotoLock";
 
 /**
  * Souvenir — email 3 · OFFRE À 24H (catégorie marketing, la plus rentable).
@@ -16,7 +17,7 @@ export interface PhotosOfferProps {
   sortieDate: string;
   sortieTime: string;
   sortiePlace?: string;
-  thumbUrls: string[]; // 2 aperçus, non floutés (ce sont ceux déjà vus par le client)
+  thumbUrls: string[]; // 2 aperçus, floutés (photos payantes non achetées, voir automations.ts)
   discountPercent: number; // 20
   pricePromo: string; // « 16 € » — déjà formaté
   priceFull: string; // « 22 € » — déjà formaté
@@ -57,10 +58,8 @@ export default function PhotosOffer({
               <Row>
                 {thumbUrls.slice(0, 2).map((url, i) => (
                   <Column key={url} style={{ width: "50%", padding: i === 0 ? "0 5px 0 0" : "0 0 0 5px" }}>
-                    <Link href={galleryUrl}>
-                      {/* Hauteur fixe + object-fit : photos sources de proportions variées, grille régulière. */}
-                      <Img src={url} width={253} height={233} alt="" style={{ display: "block", width: "100%", height: 233, objectFit: "cover", borderRadius: 12 }} />
-                    </Link>
+                    {/* Hauteur fixe + object-fit : photos sources de proportions variées, grille régulière. */}
+                    <PhotoLock src={url} href={galleryUrl} width={253} height={233} radius={12} />
                   </Column>
                 ))}
               </Row>

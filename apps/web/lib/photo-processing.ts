@@ -42,18 +42,25 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // carrousel l'étire sur ~1000px sur écran retina) — sinon le flou parait
     // bien plus fort à l'écran que le sigma appliqué ne le laisse penser.
     const blurBuffer = await sharp(inputPath).resize({ width: 960 }).blur(6).jpeg({ quality: 68 }).toBuffer();
+    // Variante email : un cran plus flouté. La galerie a le cadenas et le
+    // contexte ("aperçu verrouillé") pour justifier un flou léger ; l'email
+    // montre l'image nue dans la boîte de réception, elle doit être un peu
+    // moins lisible pour la même sensation de "verrouillé".
+    const blurEmailBuffer = await sharp(inputPath).resize({ width: 960 }).blur(10).jpeg({ quality: 66 }).toBuffer();
 
     const thumbKey = `${photoId}/thumb.jpg`;
     const previewKey = `${photoId}/preview.jpg`;
     const blurKey = `${photoId}/blur.jpg`;
+    const blurEmailKey = `${photoId}/blur-email.jpg`;
 
     await Promise.all([
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurKey, blurBuffer, { contentType: "image/jpeg", upsert: true }),
+      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
     ]);
 
-    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, blurKey, status: "READY" } });
+    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, blurKey, blurEmailKey, status: "READY" } });
 
     await track("photo_ready", { operatorId: operator.id, meta: { photoId } });
   } finally {

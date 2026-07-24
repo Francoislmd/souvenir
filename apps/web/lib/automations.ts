@@ -51,14 +51,14 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
 
   const photos = await prisma.photo.findMany({
     where: { sortieId: sortie.id, status: { not: "FAILED" }, OR: [{ ownerId: participant.id }, { ownerId: null }] },
-    select: { blurKey: true },
+    select: { blurKey: true, blurEmailKey: true },
   });
   if (photos.length === 0) return { sent: false };
   // Jamais rien en clair dans l'email — uniquement le flou pré-généré côté
   // serveur, offerte ou payante (cette distinction est le rôle de la
-  // boutique, pas de l'email).
-  const hero = photos.find((p) => p.blurKey);
-  const heroUrl = hero ? getPreviewUrl(hero.blurKey ?? "") : null;
+  // boutique, pas de l'email). blurEmailKey est plus flouté que blurKey.
+  const hero = photos.find((p) => p.blurEmailKey ?? p.blurKey);
+  const heroUrl = hero ? getPreviewUrl((hero.blurEmailKey ?? hero.blurKey) ?? "") : null;
 
   try {
     await sendPhotosReminderEmail({
@@ -94,13 +94,14 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
 
   const photos = await prisma.photo.findMany({
     where: { sortieId: sortie.id, status: { not: "FAILED" }, isFreeSample: false, OR: [{ ownerId: participant.id }, { ownerId: null }] },
-    select: { blurKey: true },
+    select: { blurKey: true, blurEmailKey: true },
   });
   // Jamais thumbKey en repli : ce sont des photos payantes, non achetées —
-  // seul le flou pré-généré (blurKey) peut apparaître, sinon on l'omet.
+  // seul le flou pré-généré peut apparaître, sinon on l'omet.
+  // blurEmailKey est plus flouté que blurKey.
   const thumbUrls = photos
     .slice(0, 2)
-    .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : null))
+    .map((p) => (p.blurEmailKey ?? p.blurKey ? getPreviewUrl((p.blurEmailKey ?? p.blurKey) ?? "") : null))
     .filter((u): u is string => u !== null);
 
   const priceFullCents = operator.pricePackCents;
