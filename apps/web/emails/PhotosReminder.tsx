@@ -11,7 +11,10 @@ import { brand, s } from "./brand";
 
 export interface PhotosReminderProps {
   operatorName: string;
+  activity: string;
   sortieDate: string;
+  sortieTime: string;
+  sortiePlace?: string;
   heroUrl: string | null;
   photoCount: number;
   galleryUrl: string;
@@ -20,7 +23,10 @@ export interface PhotosReminderProps {
 
 export default function PhotosReminder({
   operatorName,
+  activity,
   sortieDate,
+  sortieTime,
+  sortiePlace,
   heroUrl,
   photoCount,
   galleryUrl,
@@ -53,6 +59,9 @@ export default function PhotosReminder({
               Vous ne les avez pas encore regardées
             </Text>
             <Text style={s.lead}>
+              {activity}{sortiePlace ? ` à ${sortiePlace}` : ""}, le {sortieDate} à {sortieTime}.
+            </Text>
+            <Text style={{ ...s.lead, marginTop: 4 }}>
               {photoCount} photo{photoCount > 1 ? "s" : ""} {photoCount > 1 ? "sont prêtes" : "est prête"}, en pleine résolution.
             </Text>
           </Section>
@@ -85,7 +94,10 @@ export default function PhotosReminder({
 
 PhotosReminder.PreviewProps = {
   operatorName: "Annecy Vol Libre",
+  activity: "Canyoning",
   sortieDate: "22 juillet",
+  sortieTime: "14 h 30",
+  sortiePlace: "Forclaz",
   heroUrl: "https://placehold.co/1032x310/FFC58E/FFF.jpg",
   photoCount: 9,
   galleryUrl: "https://linktrip.co/g/julie-4k2p",

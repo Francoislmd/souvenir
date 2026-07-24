@@ -24,7 +24,9 @@ export interface PhotosReadyProps {
   operatorName: string; // « Annecy Vol Libre »
   operatorInitials: string; // « AV »
   operatorColor: string; // couleur choisie par l'opérateur, ex. « #FF5A1F »
+  activity: string; // « Canyoning »
   sortieDate: string; // « 22 juillet »
+  sortieTime: string; // « 14 h 30 »
   sortiePlace?: string; // « Forclaz »
   photoCount: number; // 9
   // JPEG flouté hébergé — null si le worker n'a pas encore fini de traiter
@@ -42,7 +44,9 @@ export default function PhotosReady({
   operatorName,
   operatorInitials,
   operatorColor,
+  activity,
   sortieDate,
+  sortieTime,
   sortiePlace,
   photoCount,
   heroUrl,
@@ -99,6 +103,9 @@ export default function PhotosReady({
           <Section style={{ padding: "20px 22px 0" }}>
             <Text style={s.h1}>{firstName}, vos photos sont là</Text>
             <Text style={s.lead}>
+              {activity}{sortiePlace ? ` à ${sortiePlace}` : ""}, le {sortieDate} à {sortieTime}.
+            </Text>
+            <Text style={{ ...s.lead, marginTop: 4 }}>
               <span style={{ color: brand.ink, fontWeight: 600 }}>{photoCount}</span> photo{photoCount > 1 ? "s" : ""} vous
               attend{photoCount > 1 ? "ent" : ""} en pleine résolution.
             </Text>
@@ -164,7 +171,9 @@ PhotosReady.PreviewProps = {
   operatorName: "Annecy Vol Libre",
   operatorInitials: "AV",
   operatorColor: "#FF5A1F",
+  activity: "Canyoning",
   sortieDate: "22 juillet",
+  sortieTime: "14 h 30",
   sortiePlace: "Forclaz",
   photoCount: 9,
   heroUrl: "https://placehold.co/1032x440/7FC5EE/FFF.jpg",

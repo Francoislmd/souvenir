@@ -16,6 +16,10 @@ function formatDateFr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
 
+function formatTimeFr(d: Date): string {
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+}
+
 export async function sendParticipantGallery(
   participant: Participant,
   sortie: Sortie,
@@ -55,7 +59,9 @@ export async function sendParticipantGallery(
         firstName: participant.name.split(/\s+/)[0] ?? participant.name,
         operatorName: operator.name,
         operatorColor: operator.brandColor,
+        activity: sortie.activity,
         sortieDate: formatDateFr(sortie.startsAt),
+        sortieTime: formatTimeFr(sortie.startsAt),
         sortiePlace: sortie.place,
         photoCount: photos.length,
         heroUrl,

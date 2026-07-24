@@ -69,7 +69,9 @@ export async function sendPhotosReadyEmail(params: {
   firstName: string;
   operatorName: string;
   operatorColor: string;
+  activity: string;
   sortieDate: string;
+  sortieTime: string;
   sortiePlace?: string | null;
   photoCount: number;
   heroUrl: string | null;
@@ -84,7 +86,9 @@ export async function sendPhotosReadyEmail(params: {
     operatorName: params.operatorName,
     operatorInitials: params.operatorName.slice(0, 2).toUpperCase(),
     operatorColor: params.operatorColor,
+    activity: params.activity,
     sortieDate: params.sortieDate,
+    sortieTime: params.sortieTime,
     sortiePlace: params.sortiePlace ?? undefined,
     photoCount: params.photoCount,
     heroUrl: params.heroUrl,
@@ -108,7 +112,10 @@ export async function sendPhotosReminderEmail(params: {
   operatorId: string;
   firstName: string;
   operatorName: string;
+  activity: string;
   sortieDate: string;
+  sortieTime: string;
+  sortiePlace?: string | null;
   heroUrl: string | null;
   photoCount: number;
   galleryUrl: string;
@@ -117,7 +124,10 @@ export async function sendPhotosReminderEmail(params: {
   const replyTo = await getReplyTo(params.operatorId);
   const props: PhotosReminderProps = {
     operatorName: params.operatorName,
+    activity: params.activity,
     sortieDate: params.sortieDate,
+    sortieTime: params.sortieTime,
+    sortiePlace: params.sortiePlace ?? undefined,
     heroUrl: params.heroUrl,
     photoCount: params.photoCount,
     galleryUrl: params.galleryUrl,
@@ -138,7 +148,10 @@ export async function sendPhotosOfferEmail(params: {
   token: string;
   operatorId: string;
   operatorName: string;
+  activity: string;
   sortieDate: string;
+  sortieTime: string;
+  sortiePlace?: string | null;
   thumbUrls: string[];
   discountPercent: number;
   pricePromo: string;
@@ -151,7 +164,10 @@ export async function sendPhotosOfferEmail(params: {
   const replyTo = await getReplyTo(params.operatorId);
   const props: PhotosOfferProps = {
     operatorName: params.operatorName,
+    activity: params.activity,
     sortieDate: params.sortieDate,
+    sortieTime: params.sortieTime,
+    sortiePlace: params.sortiePlace ?? undefined,
     thumbUrls: params.thumbUrls,
     discountPercent: params.discountPercent,
     pricePromo: params.pricePromo,

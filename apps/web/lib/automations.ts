@@ -31,6 +31,10 @@ function formatDateFr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
 
+function formatTimeFr(d: Date): string {
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+}
+
 /** Email 2 · relance à 2h — contenu distinct de la livraison (email 1), plus court. */
 async function sendReminder(participant: Participant, sortie: Sortie, operator: Operator): Promise<{ sent: boolean }> {
   const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`;
@@ -63,7 +67,10 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
       operatorId: operator.id,
       firstName: participant.name.split(/\s+/)[0] ?? participant.name,
       operatorName: operator.name,
+      activity: sortie.activity,
       sortieDate: formatDateFr(sortie.startsAt),
+      sortieTime: formatTimeFr(sortie.startsAt),
+      sortiePlace: sortie.place,
       heroUrl,
       photoCount: photos.length,
       galleryUrl,
@@ -104,7 +111,10 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
     token: participant.token,
     operatorId: operator.id,
     operatorName: operator.name,
+    activity: sortie.activity,
     sortieDate: formatDateFr(sortie.startsAt),
+    sortieTime: formatTimeFr(sortie.startsAt),
+    sortiePlace: sortie.place,
     thumbUrls,
     discountPercent: REDUCED_OFFER_DISCOUNT_PERCENT,
     pricePromo: formatEuros(pricePromoCents),

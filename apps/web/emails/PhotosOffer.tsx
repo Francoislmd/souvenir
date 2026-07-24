@@ -12,7 +12,10 @@ import { brand, s } from "./brand";
 
 export interface PhotosOfferProps {
   operatorName: string;
+  activity: string;
   sortieDate: string;
+  sortieTime: string;
+  sortiePlace?: string;
   thumbUrls: string[]; // 2 aperçus, non floutés (ce sont ceux déjà vus par le client)
   discountPercent: number; // 20
   pricePromo: string; // « 16 € » — déjà formaté
@@ -24,7 +27,10 @@ export interface PhotosOfferProps {
 
 export default function PhotosOffer({
   operatorName,
+  activity,
   sortieDate,
+  sortieTime,
+  sortiePlace,
   thumbUrls,
   discountPercent,
   pricePromo,
@@ -42,7 +48,7 @@ export default function PhotosOffer({
 
           <Section style={{ padding: "18px 22px 0" }}>
             <Text style={s.small}>
-              {operatorName} · Sortie du {sortieDate}
+              {operatorName} · {activity}{sortiePlace ? ` à ${sortiePlace}` : ""} · {sortieDate} à {sortieTime}
             </Text>
           </Section>
 
@@ -117,7 +123,10 @@ export default function PhotosOffer({
 
 PhotosOffer.PreviewProps = {
   operatorName: "Annecy Vol Libre",
+  activity: "Canyoning",
   sortieDate: "22 juillet",
+  sortieTime: "14 h 30",
+  sortiePlace: "Forclaz",
   thumbUrls: [
     "https://placehold.co/506x464/7FC5EE/FFF.jpg",
     "https://placehold.co/506x464/C9BCF2/FFF.jpg",
