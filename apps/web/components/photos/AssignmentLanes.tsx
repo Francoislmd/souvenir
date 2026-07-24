@@ -23,7 +23,20 @@ function CheckIcon() {
   );
 }
 
-function Thumb({ photo, selected, onToggle }: { photo: LanePhoto; selected: boolean; onToggle: (photoId: string) => void }) {
+function Thumb({
+  photo,
+  localUrl,
+  selected,
+  onToggle,
+}: {
+  photo: LanePhoto;
+  localUrl?: string;
+  selected: boolean;
+  onToggle: (photoId: string) => void;
+}) {
+  // Miniature serveur si prête, sinon l'aperçu local instantané (le fichier
+  // est déjà sur l'appareil) — jamais de case vide tant qu'une image existe.
+  const src = photo.thumbUrl ?? localUrl ?? null;
   return (
     <span
       className={`${styles.th2} ${selected ? styles["th2-selected"] : ""}`}
@@ -38,9 +51,9 @@ function Thumb({ photo, selected, onToggle }: { photo: LanePhoto; selected: bool
         }
       }}
     >
-      {photo.thumbUrl ? (
+      {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={photo.thumbUrl} alt="" draggable={false} />
+        <img src={src} alt="" draggable={false} />
       ) : null}
       <span className={`${styles["th2-check"]} ${selected ? styles.on : ""}`}>
         <CheckIcon />
@@ -61,11 +74,13 @@ export function AssignmentLanes({
   participants,
   selected,
   onToggleSelect,
+  localPreviewUrls,
 }: {
   photos: LanePhoto[];
   participants: LaneParticipant[];
   selected: Set<string>;
   onToggleSelect: (photoId: string) => void;
+  localPreviewUrls?: Map<string, string>;
 }) {
   const common = photos.filter((p) => p.ownerId === null);
 
@@ -87,7 +102,9 @@ export function AssignmentLanes({
               {mine.length === 0 ? (
                 <span style={{ fontSize: ".8rem", color: "var(--ink-4)" }}>Aucune photo</span>
               ) : (
-                mine.map((p) => <Thumb key={p.id} photo={p} selected={selected.has(p.id)} onToggle={onToggleSelect} />)
+                mine.map((p) => (
+                  <Thumb key={p.id} photo={p} localUrl={localPreviewUrls?.get(p.id)} selected={selected.has(p.id)} onToggle={onToggleSelect} />
+                ))
               )}
             </div>
           </div>
@@ -104,7 +121,7 @@ export function AssignmentLanes({
         </div>
         <div className={styles.thumbs}>
           {common.map((p) => (
-            <Thumb key={p.id} photo={p} selected={selected.has(p.id)} onToggle={onToggleSelect} />
+            <Thumb key={p.id} photo={p} localUrl={localPreviewUrls?.get(p.id)} selected={selected.has(p.id)} onToggle={onToggleSelect} />
           ))}
         </div>
       </div>

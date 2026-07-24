@@ -7,6 +7,7 @@ import { PhotoDropZone } from "@/components/photos/PhotoDropZone";
 import { AssignmentLanes, AV_VARIANTS, type LanePhoto } from "@/components/photos/AssignmentLanes";
 import { SendCascade, type SendParticipant } from "@/components/photos/SendCascade";
 import { useToast } from "@/components/operator/ToastProvider";
+import { getUploadItemsForSortie } from "@/lib/idb";
 
 interface Participant {
   id: string;
@@ -35,6 +36,37 @@ export function PhotosFlow({
   const [addingMore, setAddingMore] = useState(false);
   const thumbPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Aperçu local instantané (fichier déjà sur l'appareil, pas besoin d'attendre
+  // le serveur) — sert de repli tant que la vraie miniature n'est pas prête.
+  const [localPreviews, setLocalPreviews] = useState<Map<string, string>>(new Map());
+  const localPreviewsRef = useRef<Map<string, string>>(new Map());
+
+  const refreshLocalPreviews = useCallback(async () => {
+    const items = await getUploadItemsForSortie(sortieId);
+    const next = new Map<string, string>();
+    for (const item of items) {
+      if (!item.photoId) continue;
+      const existingUrl = localPreviewsRef.current.get(item.photoId);
+      next.set(item.photoId, existingUrl ?? URL.createObjectURL(item.file));
+    }
+    localPreviewsRef.current.forEach((url, photoId) => {
+      if (!next.has(photoId)) URL.revokeObjectURL(url);
+    });
+    localPreviewsRef.current = next;
+    setLocalPreviews(new Map(next));
+  }, [sortieId]);
+
+  useEffect(() => {
+    void refreshLocalPreviews();
+  }, [refreshLocalPreviews]);
+
+  useEffect(() => {
+    const urls = localPreviewsRef.current;
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
   const fetchPhotos = useCallback(async (): Promise<{ id: string; status: string; ownerId: string | null; thumbUrl: string | null }[]> => {
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
     if (!res.ok) return [];
@@ -50,7 +82,8 @@ export function PhotosFlow({
     const fresh = await fetchPhotos();
     setPhotos(fresh.map((p) => ({ id: p.id, ownerId: p.ownerId, thumbUrl: p.thumbUrl })));
     setPhase("lanes");
-  }, [fetchPhotos]);
+    void refreshLocalPreviews();
+  }, [fetchPhotos, refreshLocalPreviews]);
 
   // Les miniatures arrivent en tâche de fond pendant que le pro trie déjà —
   // on complète discrètement les vignettes manquantes, sans jamais bloquer
@@ -167,7 +200,13 @@ export function PhotosFlow({
         ) : null}
 
         <div style={{ marginTop: 20 }}>
-          <AssignmentLanes photos={photos} participants={participants} selected={selected} onToggleSelect={toggleSelect} />
+          <AssignmentLanes
+            photos={photos}
+            participants={participants}
+            selected={selected}
+            onToggleSelect={toggleSelect}
+            localPreviewUrls={localPreviews}
+          />
         </div>
 
         {selected.size > 0 ? (
