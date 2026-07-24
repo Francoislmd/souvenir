@@ -322,13 +322,25 @@
   background: var(--sunset);
   box-shadow: var(--sh-3);
 }
-.today + .today {
-  margin-top: 14px;
-}
 .today-in {
   background: #fff;
   border-radius: 22px;
   padding: 24px;
+}
+/* En-tête cliquable de la sortie du jour dépliée — replie au clic. */
+.today-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  padding: 0 0 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.today-head svg {
+  flex: 0 0 auto;
+  color: var(--ink-4);
 }
 .today h2 {
   font-size: 1.34rem;

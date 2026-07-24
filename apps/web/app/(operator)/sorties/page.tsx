@@ -5,17 +5,12 @@ import { bucketSortie } from "@/lib/sorties";
 import { formatEuros } from "@/lib/format";
 import { phVariant } from "@/components/operator/PhotoPlaceholder";
 import { SortieRows } from "@/components/sorties/SortieRows";
+import { TodaySorties } from "@/components/sorties/TodaySorties";
 import styles from "@/app/(operator)/operator.module.css";
-import type { Sortie } from "@souvenir/db";
 
 function formatTimeFr(d: Date): string {
   return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
 }
-
-type SortieWithParticipants = Sortie & {
-  _count: { participants: number };
-  participants: { openedAt: Date | null; order: { status: string; amountCents: number } | null }[];
-};
 
 export default async function SortiesPage() {
   const dbUser = await requireOperatorUser();
@@ -54,7 +49,7 @@ export default async function SortiesPage() {
       </div>
 
       {today.length > 0 ? (
-        today.map((sortie) => <TodayCard key={sortie.id} sortie={sortie} />)
+        <TodaySorties sorties={today} />
       ) : (
         <div className={styles.today}>
           <div className={styles["today-in"]} style={{ textAlign: "center", color: "var(--ink-3)", fontSize: ".88rem" }}>
@@ -90,63 +85,5 @@ export default async function SortiesPage() {
         emptyLabel="Aucune sortie passée."
       />
     </section>
-  );
-}
-
-function TodayCard({ sortie }: { sortie: SortieWithParticipants }) {
-  const regCount = sortie._count.participants;
-  const showTrio = sortie.status === "SENT";
-
-  return (
-    <div className={styles.today}>
-      <div className={styles["today-in"]}>
-        <span className={styles.when}>Aujourd&rsquo;hui · {formatTimeFr(sortie.startsAt)}</span>
-        <h2>
-          {sortie.activity}
-          {sortie.place ? ` · ${sortie.place}` : ""}
-        </h2>
-        <div className={styles.meta}>
-          {sortie.guide ? `Guide ${sortie.guide} · ` : ""}
-          {sortie.seats} places
-        </div>
-
-        {!showTrio ? (
-          <div>
-            <div className={styles.state}>
-              <b>{regCount}</b>
-              <span>
-                client{regCount > 1 ? "s" : ""} sur {sortie.seats} places
-              </span>
-            </div>
-            <div className={styles.track}>
-              <i style={{ width: `${Math.min(100, (regCount / sortie.seats) * 100)}%` }} />
-            </div>
-          </div>
-        ) : (
-          <div className={styles.trio}>
-            <div className={styles.tri}>
-              <div className={styles.k}>Ont regardé</div>
-              <div className={styles.v}>
-                {sortie.participants.filter((p) => p.openedAt).length}/{regCount}
-              </div>
-            </div>
-            <div className={styles.tri}>
-              <div className={styles.k}>Ont acheté</div>
-              <div className={styles.v}>{sortie.participants.filter((p) => p.order?.status === "succeeded").length}</div>
-            </div>
-            <div className={styles.tri}>
-              <div className={styles.k}>Ventes</div>
-              <div className={`${styles.v} ${styles.grad}`}>
-                {formatEuros(sortie.participants.reduce((sum, p) => sum + (p.order?.status === "succeeded" ? p.order.amountCents : 0), 0))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <Link href={`/sorties/${sortie.id}`} className={`${styles.btn} ${styles.full}`} style={{ marginTop: 18 }}>
-          {showTrio ? "Voir où en sont les ventes" : "Voir mes clients"}
-        </Link>
-      </div>
-    </div>
   );
 }
