@@ -39,7 +39,6 @@ export function BoutiqueGallery({
 }) {
   const router = useRouter();
   const purchasable = useMemo(() => photos.filter((p) => !p.isFreeSample), [photos]);
-  const purchasableIds = useMemo(() => new Set(purchasable.map((p) => p.id)), [purchasable]);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cur, setCur] = useState(0);
@@ -57,8 +56,10 @@ export function BoutiqueGallery({
   const q = quote(selected.size, purchasable.length, pricing);
   const totalCents = reducedOfferActive ? applyReducedOffer(q.totalCents) : q.totalCents;
 
+  // Le flou/filigrane reste tant que l'achat n'est pas payé — la sélection
+  // (avant paiement) ne doit jamais dévoiler la photo en clair.
   function isLocked(photo: BoutiquePhoto): boolean {
-    return !photo.isFreeSample && !selected.has(photo.id) && purchasableIds.has(photo.id);
+    return !photo.isFreeSample;
   }
 
   function toggle(photoId: string): void {
@@ -348,7 +349,7 @@ export function BoutiqueGallery({
           <div className={styles["box-ph"]}>
             {photos[lightbox]?.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={photos[lightbox]!.previewUrl!} alt="" className={styles["box-img"]} style={isLocked(photos[lightbox]!) ? { filter: "blur(6px)" } : undefined} />
+              <img src={photos[lightbox]!.previewUrl!} alt="" className={styles["box-img"]} />
             ) : null}
           </div>
           <button className={styles.cl} aria-label="Fermer">

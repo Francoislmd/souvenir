@@ -29,16 +29,21 @@ export async function processPreviewJob({ photoId }: ProcessPreviewParams): Prom
     const thumbBuffer = await sharp(inputPath).resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
     const previewBase = sharp(inputPath).resize({ width: 1280 });
     const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
+    // Flou appliqué aux pixels, pas en CSS : les clients email (et les devtools
+    // navigateur) ignorent filter:blur, ce JPEG doit déjà être flou.
+    const blurBuffer = await sharp(inputPath).resize({ width: 480 }).blur(22).jpeg({ quality: 60 }).toBuffer();
 
     const thumbKey = `${photoId}/thumb.jpg`;
     const previewKey = `${photoId}/preview.jpg`;
+    const blurKey = `${photoId}/blur.jpg`;
 
     await Promise.all([
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
+      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurKey, blurBuffer, { contentType: "image/jpeg", upsert: true }),
     ]);
 
-    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, status: "READY" } });
+    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, blurKey, status: "READY" } });
 
     await track("photo_ready", { operatorId: operator.id, meta: { photoId } });
   } finally {

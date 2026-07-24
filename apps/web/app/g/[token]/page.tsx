@@ -45,9 +45,21 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const photos: BoutiquePhoto[] = await Promise.all(
     rawPhotos.map(async (p) => {
       const unlocked = p.isFreeSample || purchasedSet.has(p.id);
+      // Verrouillée : on sert le JPEG flouté généré côté serveur (pixels réellement
+      // flous), jamais l'aperçu net avec un filter CSS — récupérable en un clic.
+      const lockedKey = p.blurKey ?? p.previewKey ?? p.thumbKey;
+      const previewUrl = unlocked
+        ? p.previewKey
+          ? getPreviewUrl(p.previewKey)
+          : p.thumbKey
+            ? getPreviewUrl(p.thumbKey)
+            : null
+        : lockedKey
+          ? getPreviewUrl(lockedKey)
+          : null;
       return {
         id: p.id,
-        previewUrl: p.previewKey ? getPreviewUrl(p.previewKey) : p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
+        previewUrl,
         // Jamais d'original pour une photo non achetée et non offerte (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
         isFreeSample: p.isFreeSample,

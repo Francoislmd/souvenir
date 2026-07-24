@@ -10,6 +10,7 @@ export type EventName =
   | "gallery_opened"
   | "checkout_started"
   | "purchase_succeeded"
+  | "order_confirmed_sent"
   | "review_link_clicked"
   | "automation_resend_sent"
   | "automation_offer_sent"

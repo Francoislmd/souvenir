@@ -183,7 +183,9 @@
   object-fit: cover;
 }
 .slide.lock .slide-img {
-  filter: blur(5px) saturate(0.92);
+  /* L'image est déjà floutée côté serveur (voir Photo.blurKey) — un filter
+     CSS ici serait redondant et, pire, contournable (devtools). */
+  filter: saturate(0.92);
 }
 .grad {
   position: absolute;
@@ -334,9 +336,7 @@
   height: 100%;
   object-fit: cover;
 }
-.fr.lock .fr-img {
-  filter: blur(3px);
-}
+/* Image déjà floutée côté serveur pour les voies verrouillées — pas de filter CSS ici. */
 .fr.cur {
   opacity: 1;
   box-shadow: 0 0 0 2px var(--ink);
@@ -673,6 +673,13 @@
   border-radius: 26px 26px 0 0;
   padding: 20px 20px calc(22px + env(safe-area-inset-bottom));
   animation: up 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* Le formulaire Stripe (accordéon, plusieurs moyens de paiement) peut
+     dépasser la hauteur de l'écran — sans ça, les champs poussés hors-écran
+     deviennent inatteignables, impossible de compléter le paiement. */
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 @keyframes up {
   from {

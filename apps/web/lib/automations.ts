@@ -1,9 +1,11 @@
-import type { Operator, Participant } from "@souvenir/db";
+import type { Operator, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { sendWhatsAppMessage } from "./twilio";
-import { sendReviewRequestEmail } from "./email";
-import { sendParticipantGallery } from "./send-gallery";
+import { sendPhotosReminderEmail, sendPhotosOfferEmail } from "./email";
+import { getPreviewUrl } from "./storage";
+import { formatEuros } from "./format";
+import { applyReducedOffer, REDUCED_OFFER_DISCOUNT_PERCENT } from "./pricing";
 import { env } from "./env";
 
 const HOUR = 60 * 60 * 1000;
@@ -25,40 +27,90 @@ export function readAutomations(automations: unknown): AutomationFlags {
   };
 }
 
-export async function sendReviewRequest(participant: Participant, operator: Operator): Promise<void> {
-  if (participant.reviewRequestSentAt) return;
-  const flags = readAutomations(operator.automations);
-  if (!flags.reviewRequest || !operator.googleReviewUrl) return;
+function formatDateFr(d: Date): string {
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+}
 
-  const message = `Merci d'avoir choisi ${operator.name} ! Un avis Google prend 30 secondes et aide énormément : ${operator.googleReviewUrl}`;
+/** Email 2 · relance à 2h — contenu distinct de la livraison (email 1), plus court. */
+async function sendReminder(participant: Participant, sortie: Sortie, operator: Operator): Promise<{ sent: boolean }> {
+  const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`;
+
+  if (participant.channel === "WHATSAPP") {
+    try {
+      await sendWhatsAppMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, vos photos vous attendent : ${galleryUrl}`);
+      return { sent: true };
+    } catch (error) {
+      console.error("[automations] reminder WhatsApp failed:", error);
+      return { sent: false };
+    }
+  }
+
+  const photos = await prisma.photo.findMany({
+    where: { sortieId: sortie.id, status: "READY", OR: [{ ownerId: participant.id }, { ownerId: null }] },
+    select: { thumbKey: true, previewKey: true, blurKey: true, isFreeSample: true },
+  });
+  const freeSamples = photos.filter((p) => p.isFreeSample);
+  const hero = freeSamples[0] ?? photos[0];
+  const heroUrl = hero ? getPreviewUrl(hero.previewKey ?? hero.blurKey ?? hero.thumbKey ?? "") : null;
+  if (!heroUrl) return { sent: false };
 
   try {
-    if (participant.channel === "WHATSAPP") {
-      await sendWhatsAppMessage(participant.contact, message);
-    } else {
-      await sendReviewRequestEmail({ to: participant.contact, operatorName: operator.name, reviewUrl: operator.googleReviewUrl, clientName: participant.name });
-    }
-    await track("automation_review_sent", { operatorId: operator.id, participantId: participant.id });
+    await sendPhotosReminderEmail({
+      to: participant.contact,
+      token: participant.token,
+      operatorId: operator.id,
+      firstName: participant.name.split(/\s+/)[0] ?? participant.name,
+      operatorName: operator.name,
+      sortieDate: formatDateFr(sortie.startsAt),
+      heroUrl,
+      photoCount: photos.length,
+      freeCount: freeSamples.length,
+      galleryUrl,
+      unsubUrl: `${galleryUrl}/desinscription`,
+    });
+    return { sent: true };
   } catch (error) {
-    console.error("[automations] review request failed:", error);
-  } finally {
-    await prisma.participant.update({ where: { id: participant.id }, data: { reviewRequestSentAt: new Date() } });
+    console.error("[automations] reminder email failed:", error);
+    return { sent: false };
   }
 }
 
-async function sendReducedOffer(participant: Participant, operator: Operator): Promise<void> {
+/** Email 3 · offre à 24h — une seule fois, échéance réelle (voir reducedOfferExpiresAt). */
+async function sendReducedOffer(participant: Participant, sortie: Sortie, operator: Operator, expiresAt: Date): Promise<void> {
   const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`;
-  const message = `${participant.name.split(/\s+/)[0]}, votre pack est à prix réduit pendant 48h : ${galleryUrl}`;
+
   if (participant.channel === "WHATSAPP") {
-    await sendWhatsAppMessage(participant.contact, message);
-  } else {
-    await sendReviewRequestEmail({
-      to: participant.contact,
-      operatorName: operator.name,
-      reviewUrl: galleryUrl,
-      clientName: participant.name,
-    });
+    await sendWhatsAppMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, votre pack est à prix réduit pendant 48h : ${galleryUrl}`);
+    return;
   }
+
+  const photos = await prisma.photo.findMany({
+    where: { sortieId: sortie.id, status: "READY", isFreeSample: false, OR: [{ ownerId: participant.id }, { ownerId: null }] },
+    select: { thumbKey: true, blurKey: true },
+  });
+  const thumbUrls = photos
+    .slice(0, 2)
+    .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : p.thumbKey ? getPreviewUrl(p.thumbKey) : null))
+    .filter((u): u is string => u !== null);
+
+  const priceFullCents = operator.pricePackCents;
+  const pricePromoCents = applyReducedOffer(priceFullCents);
+
+  await sendPhotosOfferEmail({
+    to: participant.contact,
+    token: participant.token,
+    operatorId: operator.id,
+    operatorName: operator.name,
+    sortieDate: formatDateFr(sortie.startsAt),
+    thumbUrls,
+    discountPercent: REDUCED_OFFER_DISCOUNT_PERCENT,
+    pricePromo: formatEuros(pricePromoCents),
+    priceFull: formatEuros(priceFullCents),
+    offerDeadlineDay: expiresAt.toLocaleDateString("fr-FR", { weekday: "long" }),
+    offerDeadlineLabel: `${expiresAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}, ${expiresAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`,
+    galleryUrl,
+    unsubUrl: `${galleryUrl}/desinscription`,
+  });
 }
 
 export interface AutomationScanResult {
@@ -70,13 +122,19 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
   const result: AutomationScanResult = { resent: 0, offersSent: 0 };
 
   const unopened = await prisma.participant.findMany({
-    where: { sentAt: { lte: new Date(now.getTime() - 2 * HOUR) }, openedAt: null, remindedAt: null, deletedAt: null },
+    where: {
+      sentAt: { lte: new Date(now.getTime() - 2 * HOUR) },
+      openedAt: null,
+      remindedAt: null,
+      deletedAt: null,
+      unsubscribedAt: null,
+    },
     include: { sortie: { include: { operator: true } } },
   });
   for (const participant of unopened) {
     const operator = participant.sortie.operator;
     if (!readAutomations(operator.automations).resendUnopened) continue;
-    const sendResult = await sendParticipantGallery(participant, participant.sortie, operator);
+    const sendResult = await sendReminder(participant, participant.sortie, operator);
     if (sendResult.sent) {
       await prisma.participant.update({ where: { id: participant.id }, data: { remindedAt: now } });
       await track("automation_resend_sent", { operatorId: operator.id, participantId: participant.id });
@@ -89,6 +147,7 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
       openedAt: { lte: new Date(now.getTime() - 24 * HOUR) },
       reducedOfferSentAt: null,
       deletedAt: null,
+      unsubscribedAt: null,
       OR: [{ order: null }, { order: { status: { not: "succeeded" } } }],
     },
     include: { sortie: { include: { operator: true } } },
@@ -96,11 +155,12 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
   for (const participant of openedNoPurchase) {
     const operator = participant.sortie.operator;
     if (!readAutomations(operator.automations).reducedPriceOffer) continue;
+    const expiresAt = new Date(now.getTime() + 48 * HOUR);
     try {
-      await sendReducedOffer(participant, operator);
+      await sendReducedOffer(participant, participant.sortie, operator, expiresAt);
       await prisma.participant.update({
         where: { id: participant.id },
-        data: { reducedOfferSentAt: now, reducedOfferExpiresAt: new Date(now.getTime() + 48 * HOUR) },
+        data: { reducedOfferSentAt: now, reducedOfferExpiresAt: expiresAt },
       });
       await track("automation_offer_sent", { operatorId: operator.id, participantId: participant.id });
       result.offersSent += 1;

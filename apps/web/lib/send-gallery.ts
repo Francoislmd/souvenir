@@ -2,7 +2,7 @@ import type { Operator, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { sendWhatsAppMessage } from "./twilio";
-import { sendGalleryEmail } from "./email";
+import { sendPhotosReadyEmail } from "./email";
 import { getPreviewUrl } from "./storage";
 import { env } from "./env";
 import { renderGalleryMessage } from "./message-templates";
@@ -10,6 +10,10 @@ import { renderGalleryMessage } from "./message-templates";
 interface SendResult {
   sent: boolean;
   error?: string;
+}
+
+function formatDateFr(d: Date): string {
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
 
 export async function sendParticipantGallery(
@@ -26,27 +30,40 @@ export async function sendParticipantGallery(
       status: "READY",
       OR: [{ ownerId: participant.id }, { ownerId: null }],
     },
-    select: { thumbKey: true },
+    select: { thumbKey: true, previewKey: true, blurKey: true, isFreeSample: true },
   });
 
   try {
     if (participant.channel === "EMAIL") {
-      const thumbUrls = photos
-        .slice(0, 4)
-        .map((p) => (p.thumbKey ? getPreviewUrl(p.thumbKey) : null))
+      const freeSamples = photos.filter((p) => p.isFreeSample);
+      const paidPhotos = photos.filter((p) => !p.isFreeSample);
+
+      const hero = freeSamples[0] ?? photos[0];
+      const heroUrl = hero ? getPreviewUrl(hero.previewKey ?? hero.blurKey ?? hero.thumbKey ?? "") : null;
+      const thumbUrls = paidPhotos
+        .slice(0, 3)
+        .map((p) => (p.blurKey ? getPreviewUrl(p.blurKey) : null))
         .filter((u): u is string => u !== null);
 
-      await sendGalleryEmail({
-        to: participant.contact,
-        operatorName: operator.name,
-        logoUrl: operator.logoUrl,
-        activity: sortie.activity,
-        place: sortie.place,
-        clientName: participant.name,
-        photoCount: photos.length,
-        thumbUrls,
-        galleryUrl,
-      });
+      if (heroUrl) {
+        await sendPhotosReadyEmail({
+          to: participant.contact,
+          token: participant.token,
+          operatorId: operator.id,
+          firstName: participant.name.split(/\s+/)[0] ?? participant.name,
+          operatorName: operator.name,
+          operatorColor: operator.brandColor,
+          sortieDate: formatDateFr(sortie.startsAt),
+          sortiePlace: sortie.place,
+          freeCount: freeSamples.length,
+          paidCount: paidPhotos.length,
+          heroUrl,
+          thumbUrls,
+          galleryUrl,
+          deleteUrl: `${galleryUrl}/supprimer`,
+          unsubUrl: `${galleryUrl}/desinscription`,
+        });
+      }
     } else {
       await sendWhatsAppMessage(participant.contact, `${message}\n${galleryUrl}`);
     }

@@ -101,6 +101,7 @@ model Participant {
   reducedOfferSentAt     DateTime? // +24h offer idempotency
   reducedOfferExpiresAt  DateTime? // offer valid 48h, read by quote()
   reviewRequestSentAt    DateTime? // post-purchase idempotency
+  unsubscribedAt         DateTime? // coupe les emails 2/3/5 (marketing) — jamais 1/4 (transactionnels)
 
   createdAt DateTime @default(now())
 
@@ -124,6 +125,7 @@ model Photo {
   originalKey  String
   previewKey   String?
   thumbKey     String?
+  blurKey      String?     // aperçu flouté généré côté serveur (JPEG) — jamais de CSS filter:blur, ça ne s'affiche pas dans les emails
   takenAt      DateTime?   // unpopulated in v1, reserved for future EXIF clustering
   isVideo      Boolean     @default(false)
   isFreeSample Boolean     @default(false) // computed at assign time, see lib/assign.ts
