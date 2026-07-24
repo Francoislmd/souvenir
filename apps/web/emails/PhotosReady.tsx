@@ -133,7 +133,7 @@ export default function PhotosReady({
                     <Link href={galleryUrl}>
                       {/* Photos sources de toutes proportions (portrait, paysage…) — hauteur
                           fixe + object-fit pour une grille régulière, jamais étirée. */}
-                      <Img src={url} width={165} height={165} alt="" style={{ display: "block", width: "100%", height: 165, objectFit: "cover", borderRadius: 10 }} />
+                      <Img src={url} width={165} height={116} alt="" style={{ display: "block", width: "100%", height: 116, objectFit: "cover", borderRadius: 10 }} />
                     </Link>
                   </Column>
                 ))}
@@ -169,9 +169,9 @@ PhotosReady.PreviewProps = {
   photoCount: 9,
   heroUrl: "https://placehold.co/1032x440/7FC5EE/FFF.jpg",
   thumbUrls: [
-    "https://placehold.co/330x330/F3C9A0/FFF.jpg",
-    "https://placehold.co/330x330/FFC58E/FFF.jpg",
-    "https://placehold.co/330x330/AEDCF3/FFF.jpg",
+    "https://placehold.co/330x232/F3C9A0/FFF.jpg",
+    "https://placehold.co/330x232/FFC58E/FFF.jpg",
+    "https://placehold.co/330x232/AEDCF3/FFF.jpg",
   ],
   galleryUrl: "https://linktrip.co/g/julie-4k2p",
   deleteUrl: "https://linktrip.co/g/julie-4k2p/supprimer",
