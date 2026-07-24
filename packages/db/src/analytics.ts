@@ -1,35 +1,34 @@
 import { prisma } from "./client";
 
 export type EventName =
-  | "delivery_created"
-  | "media_uploaded"
-  | "media_ready"
-  | "qr_displayed"
-  | "wa_message_received"
+  | "sortie_created"
+  | "participant_created"
+  | "photos_uploaded"
+  | "photo_ready"
+  | "photos_assigned"
+  | "gallery_sent"
   | "gallery_opened"
-  | "preview_played"
   | "checkout_started"
   | "purchase_succeeded"
-  | "zip_downloaded"
   | "review_link_clicked"
-  | "email_captured"
-  | "ig_share_clicked"
-  | "review_window_missed"
-  | "delivery_sent"
+  | "automation_resend_sent"
+  | "automation_offer_sent"
+  | "automation_review_sent"
+  | "gdpr_deletion"
   | "onboarding_qualified";
 
 interface TrackParams {
   operatorId: string;
-  deliveryId?: string;
+  participantId?: string;
   meta?: Record<string, unknown>;
 }
 
-export async function track(name: EventName, { operatorId, deliveryId, meta }: TrackParams): Promise<void> {
+export async function track(name: EventName, { operatorId, participantId, meta }: TrackParams): Promise<void> {
   await prisma.event.create({
     data: {
       name,
       operatorId,
-      deliveryId,
+      participantId,
       meta: meta as never,
     },
   });

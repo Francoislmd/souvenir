@@ -1,29 +1,36 @@
-import { prisma, Mode, Role, DeliveryStatus, MediaKind, MediaStatus } from "../src/index.js";
+import { prisma, Role, SortieStatus, Channel, PhotoStatus } from "../src/index.js";
 
 const DEMO_EMAIL = "francoislemarchand4@gmail.com";
-const DEMO_SESSION_LABEL = "Rotation démo (seed)";
 
 const HOUR = 60 * 60 * 1000;
 const MIN = 60 * 1000;
+const DAY = 24 * HOUR;
 const now = Date.now();
 
-interface SeedMedia {
-  kind: MediaKind;
-  sizeBytes: number;
-  durationSec?: number;
+function deriveChannel(contact: string): Channel {
+  return contact.includes("@") ? Channel.EMAIL : Channel.WHATSAPP;
 }
 
-interface SeedDelivery {
-  code: string;
-  clientName: string;
-  status: DeliveryStatus;
+interface SeedParticipant {
+  name: string;
+  contact: string;
   createdAt: Date;
-  claimedAt?: Date;
-  clientPhone?: string;
-  consentImage?: boolean;
-  media: SeedMedia[];
-  events: { name: string; createdAt: Date }[];
-  order?: { stripePaymentId: string };
+  sentAt?: Date;
+  openedAt?: Date;
+  photoCount: number;
+  freeCount: number;
+  order?: { amountCents: number; feeCents: number; stripePi: string; paidAt: Date };
+}
+
+interface SeedSortie {
+  activity: string;
+  place: string;
+  startsAt: Date;
+  seats: number;
+  guide: string;
+  status: SortieStatus;
+  participants: SeedParticipant[];
+  commonPhotoCount: number;
 }
 
 async function main(): Promise<void> {
@@ -33,11 +40,13 @@ async function main(): Promise<void> {
     create: {
       name: "Vol Passion Annecy",
       slug: "vol-passion-annecy",
-      packPriceCents: 2900,
+      pricePhotoCents: 800,
+      pricePackCents: 2200,
+      priceAllCents: 3900,
+      packSize: 3,
+      freeCount: 2,
       feePercent: 20,
-      defaultMode: Mode.BOUTIQUE,
       googleReviewUrl: "https://g.page/r/CXXXXXXXXXXXXXX/review",
-      instagramHandle: "volpassionannecy",
     },
   });
 
@@ -47,203 +56,170 @@ async function main(): Promise<void> {
     create: { email: DEMO_EMAIL, role: Role.ADMIN, operatorId: operator.id },
   });
 
-  let session = await prisma.session.findFirst({
-    where: { operatorId: operator.id, label: DEMO_SESSION_LABEL },
-  });
-  if (!session) {
-    session = await prisma.session.create({
-      data: { operatorId: operator.id, label: DEMO_SESSION_LABEL, mode: Mode.BOUTIQUE },
-    });
-  }
-
-  const deliveries: SeedDelivery[] = [
+  const sorties: SeedSortie[] = [
     {
-      code: "AB11MN",
-      clientName: "Sacha",
-      status: DeliveryStatus.CREATED,
-      createdAt: new Date(now - 10 * MIN),
-      media: [],
-      events: [{ name: "delivery_created", createdAt: new Date(now - 10 * MIN) }],
+      activity: "Parapente biplace",
+      place: "Forclaz",
+      startsAt: new Date(now + 1 * DAY + 9.5 * HOUR),
+      seats: 6,
+      guide: "Marc",
+      status: SortieStatus.UPCOMING,
+      participants: [],
+      commonPhotoCount: 0,
     },
     {
-      code: "AB12CD",
-      clientName: "Léa",
-      status: DeliveryStatus.CREATED,
-      createdAt: new Date(now - 30 * MIN),
-      media: [],
-      events: [{ name: "delivery_created", createdAt: new Date(now - 30 * MIN) }],
+      activity: "Canyoning",
+      place: "Angon",
+      startsAt: new Date(now - 2 * HOUR),
+      seats: 8,
+      guide: "Sofia",
+      status: SortieStatus.SORTED,
+      participants: [
+        { name: "Léa", contact: "lea.p@email.com", createdAt: new Date(now - 3 * HOUR), photoCount: 4, freeCount: 2 },
+        { name: "Yanis", contact: "+33600000012", createdAt: new Date(now - 3 * HOUR), photoCount: 3, freeCount: 2 },
+        { name: "Chloé", contact: "chloe.b@email.com", createdAt: new Date(now - 3 * HOUR), photoCount: 4, freeCount: 2 },
+      ],
+      commonPhotoCount: 3,
     },
     {
-      code: "AB34EF",
-      clientName: "Marc",
-      status: DeliveryStatus.CLAIMED,
-      createdAt: new Date(now - 3 * HOUR),
-      claimedAt: new Date(now - 3 * HOUR + 5 * MIN),
-      clientPhone: "+33600000002",
-      consentImage: true,
-      media: [
-        { kind: MediaKind.PHOTO, sizeBytes: 3_200_000 },
-        { kind: MediaKind.PHOTO, sizeBytes: 2_900_000 },
+      activity: "Via ferrata",
+      place: "Cornillon",
+      startsAt: new Date(now - 1 * DAY),
+      seats: 5,
+      guide: "Julien",
+      status: SortieStatus.SENT,
+      participants: [
+        {
+          name: "Tom",
+          contact: "tom.d@email.com",
+          createdAt: new Date(now - 1 * DAY - 1 * HOUR),
+          sentAt: new Date(now - 1 * DAY),
+          openedAt: new Date(now - 1 * DAY + 10 * MIN),
+          photoCount: 5,
+          freeCount: 2,
+          order: {
+            amountCents: 2200,
+            feeCents: 440,
+            stripePi: "pi_seed_tom",
+            paidAt: new Date(now - 1 * DAY + 20 * MIN),
+          },
+        },
+        {
+          name: "Camille",
+          contact: "+33600000013",
+          createdAt: new Date(now - 1 * DAY - 1 * HOUR),
+          sentAt: new Date(now - 1 * DAY),
+          openedAt: new Date(now - 1 * DAY + 30 * MIN),
+          photoCount: 4,
+          freeCount: 2,
+        },
+        {
+          name: "Rémi",
+          contact: "remi.f@email.com",
+          createdAt: new Date(now - 1 * DAY - 1 * HOUR),
+          sentAt: new Date(now - 1 * DAY),
+          photoCount: 3,
+          freeCount: 2,
+        },
       ],
-      events: [
-        { name: "delivery_created", createdAt: new Date(now - 3 * HOUR) },
-        { name: "media_uploaded", createdAt: new Date(now - 3 * HOUR + 1 * MIN) },
-        { name: "media_uploaded", createdAt: new Date(now - 3 * HOUR + 1 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 3 * HOUR + 2 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 3 * HOUR + 2 * MIN) },
-        { name: "wa_message_received", createdAt: new Date(now - 3 * HOUR + 5 * MIN) },
-        { name: "gallery_opened", createdAt: new Date(now - 3 * HOUR + 6 * MIN) },
-      ],
-    },
-    {
-      code: "AB56GH",
-      clientName: "Inès",
-      status: DeliveryStatus.CLAIMED,
-      createdAt: new Date(now - 2 * HOUR),
-      claimedAt: new Date(now - 2 * HOUR + 10 * MIN),
-      clientPhone: "+33600000003",
-      consentImage: true,
-      media: [
-        { kind: MediaKind.PHOTO, sizeBytes: 3_100_000 },
-        { kind: MediaKind.VIDEO, sizeBytes: 84_000_000, durationSec: 95 },
-      ],
-      events: [
-        { name: "delivery_created", createdAt: new Date(now - 2 * HOUR) },
-        { name: "media_uploaded", createdAt: new Date(now - 2 * HOUR + 1 * MIN) },
-        { name: "media_uploaded", createdAt: new Date(now - 2 * HOUR + 1 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 2 * HOUR + 4 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 2 * HOUR + 4 * MIN) },
-        { name: "wa_message_received", createdAt: new Date(now - 2 * HOUR + 10 * MIN) },
-        { name: "gallery_opened", createdAt: new Date(now - 2 * HOUR + 11 * MIN) },
-        { name: "checkout_started", createdAt: new Date(now - 2 * HOUR + 13 * MIN) },
-      ],
-    },
-    {
-      code: "AB78IJ",
-      clientName: "Tom",
-      status: DeliveryStatus.PURCHASED,
-      createdAt: new Date(now - 5 * HOUR),
-      claimedAt: new Date(now - 5 * HOUR + 10 * MIN),
-      clientPhone: "+33600000004",
-      consentImage: true,
-      media: [
-        { kind: MediaKind.PHOTO, sizeBytes: 3_400_000 },
-        { kind: MediaKind.PHOTO, sizeBytes: 3_000_000 },
-        { kind: MediaKind.VIDEO, sizeBytes: 120_000_000, durationSec: 130 },
-      ],
-      events: [
-        { name: "delivery_created", createdAt: new Date(now - 5 * HOUR) },
-        { name: "media_uploaded", createdAt: new Date(now - 5 * HOUR + 1 * MIN) },
-        { name: "media_uploaded", createdAt: new Date(now - 5 * HOUR + 1 * MIN) },
-        { name: "media_uploaded", createdAt: new Date(now - 5 * HOUR + 1 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 5 * HOUR + 5 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 5 * HOUR + 5 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 5 * HOUR + 5 * MIN) },
-        { name: "wa_message_received", createdAt: new Date(now - 5 * HOUR + 10 * MIN) },
-        { name: "gallery_opened", createdAt: new Date(now - 5 * HOUR + 11 * MIN) },
-        { name: "checkout_started", createdAt: new Date(now - 5 * HOUR + 15 * MIN) },
-        { name: "purchase_succeeded", createdAt: new Date(now - 5 * HOUR + 17 * MIN) },
-        { name: "zip_downloaded", createdAt: new Date(now - 5 * HOUR + 20 * MIN) },
-      ],
-      order: { stripePaymentId: "pi_seed_AB78IJ" },
-    },
-    {
-      code: "AB90KL",
-      clientName: "Camille",
-      status: DeliveryStatus.PURCHASED,
-      createdAt: new Date(now - 4 * HOUR),
-      claimedAt: new Date(now - 4 * HOUR + 8 * MIN),
-      clientPhone: "+33600000005",
-      consentImage: true,
-      media: [
-        { kind: MediaKind.PHOTO, sizeBytes: 2_800_000 },
-        { kind: MediaKind.VIDEO, sizeBytes: 95_000_000, durationSec: 110 },
-      ],
-      events: [
-        { name: "delivery_created", createdAt: new Date(now - 4 * HOUR) },
-        { name: "media_uploaded", createdAt: new Date(now - 4 * HOUR + 1 * MIN) },
-        { name: "media_uploaded", createdAt: new Date(now - 4 * HOUR + 1 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 4 * HOUR + 4 * MIN) },
-        { name: "media_ready", createdAt: new Date(now - 4 * HOUR + 4 * MIN) },
-        { name: "wa_message_received", createdAt: new Date(now - 4 * HOUR + 8 * MIN) },
-        { name: "gallery_opened", createdAt: new Date(now - 4 * HOUR + 9 * MIN) },
-        { name: "checkout_started", createdAt: new Date(now - 4 * HOUR + 12 * MIN) },
-        { name: "purchase_succeeded", createdAt: new Date(now - 4 * HOUR + 14 * MIN) },
-      ],
-      order: { stripePaymentId: "pi_seed_AB90KL" },
+      commonPhotoCount: 2,
     },
   ];
 
-  for (const d of deliveries) {
-    const delivery = await prisma.delivery.upsert({
-      where: { code: d.code },
-      update: {
-        sessionId: session.id,
-        clientName: d.clientName,
-        clientPhone: d.clientPhone,
-        status: d.status,
-        claimedAt: d.claimedAt,
-        consentImage: d.consentImage ?? false,
-        createdAt: d.createdAt,
-      },
-      create: {
-        sessionId: session.id,
-        code: d.code,
-        token: crypto.randomUUID(),
-        clientName: d.clientName,
-        clientPhone: d.clientPhone,
-        status: d.status,
-        claimedAt: d.claimedAt,
-        consentImage: d.consentImage ?? false,
-        createdAt: d.createdAt,
-      },
+  for (const s of sorties) {
+    let sortie = await prisma.sortie.findFirst({
+      where: { operatorId: operator.id, activity: s.activity, place: s.place },
     });
-
-    await prisma.media.deleteMany({ where: { deliveryId: delivery.id } });
-    for (const [i, m] of d.media.entries()) {
-      const ext = m.kind === MediaKind.PHOTO ? "jpg" : "mp4";
-      await prisma.media.create({
+    if (!sortie) {
+      sortie = await prisma.sortie.create({
         data: {
-          deliveryId: delivery.id,
-          kind: m.kind,
-          originalKey: `${delivery.id}/seed-${i}.${ext}`,
-          previewKey: `${delivery.id}/seed-${i}-preview.${ext}`,
-          thumbKey: `${delivery.id}/seed-${i}-thumb.jpg`,
-          status: MediaStatus.READY,
-          sizeBytes: m.sizeBytes,
-          durationSec: m.durationSec,
+          operatorId: operator.id,
+          activity: s.activity,
+          place: s.place,
+          startsAt: s.startsAt,
+          seats: s.seats,
+          guide: s.guide,
+          status: s.status,
+        },
+      });
+    } else {
+      sortie = await prisma.sortie.update({
+        where: { id: sortie.id },
+        data: { startsAt: s.startsAt, seats: s.seats, guide: s.guide, status: s.status },
+      });
+    }
+
+    await prisma.photo.deleteMany({ where: { sortieId: sortie.id } });
+    await prisma.order.deleteMany({ where: { participant: { sortieId: sortie.id } } });
+    await prisma.participant.deleteMany({ where: { sortieId: sortie.id } });
+
+    const participantIds: string[] = [];
+    for (const p of s.participants) {
+      const participant = await prisma.participant.create({
+        data: {
+          sortieId: sortie.id,
+          name: p.name,
+          contact: p.contact,
+          channel: deriveChannel(p.contact),
+          token: crypto.randomUUID(),
+          consentAt: p.createdAt,
+          deleteAt: new Date(p.createdAt.getTime() + 90 * DAY),
+          sentAt: p.sentAt,
+          openedAt: p.openedAt,
+          createdAt: p.createdAt,
+        },
+      });
+      participantIds.push(participant.id);
+
+      let photoIndex = 0;
+      for (let i = 0; i < p.photoCount; i++, photoIndex++) {
+        await prisma.photo.create({
+          data: {
+            sortieId: sortie.id,
+            ownerId: participant.id,
+            originalKey: `${sortie.id}/seed-${participant.id}-${photoIndex}.jpg`,
+            previewKey: `${sortie.id}/seed-${participant.id}-${photoIndex}-preview.jpg`,
+            thumbKey: `${sortie.id}/seed-${participant.id}-${photoIndex}-thumb.jpg`,
+            status: PhotoStatus.READY,
+            isFreeSample: i < p.freeCount,
+          },
+        });
+      }
+
+      if (p.order) {
+        await prisma.order.create({
+          data: {
+            participantId: participant.id,
+            photoIds: [], // seed doesn't need real photoIds for the balance/sales list to render
+            amountCents: p.order.amountCents,
+            feeCents: p.order.feeCents,
+            stripePi: p.order.stripePi,
+            status: "succeeded",
+            paidAt: p.order.paidAt,
+          },
+        });
+      }
+    }
+
+    for (let i = 0; i < s.commonPhotoCount; i++) {
+      await prisma.photo.create({
+        data: {
+          sortieId: sortie.id,
+          ownerId: null,
+          originalKey: `${sortie.id}/seed-common-${i}.jpg`,
+          previewKey: `${sortie.id}/seed-common-${i}-preview.jpg`,
+          thumbKey: `${sortie.id}/seed-common-${i}-thumb.jpg`,
+          status: PhotoStatus.READY,
         },
       });
     }
 
-    await prisma.event.deleteMany({ where: { deliveryId: delivery.id } });
-    await prisma.event.createMany({
-      data: d.events.map((e) => ({
-        operatorId: operator.id,
-        deliveryId: delivery.id,
-        name: e.name,
-        createdAt: e.createdAt,
-      })),
-    });
-
-    if (d.order) {
-      await prisma.order.upsert({
-        where: { deliveryId: delivery.id },
-        update: {},
-        create: {
-          deliveryId: delivery.id,
-          amountCents: operator.packPriceCents,
-          feeCents: Math.round((operator.packPriceCents * operator.feePercent) / 100),
-          stripePaymentId: d.order.stripePaymentId,
-          status: "succeeded",
-        },
-      });
-    }
+    await prisma.event.deleteMany({ where: { operatorId: operator.id, participantId: { in: participantIds } } });
   }
 
   console.log(`[seed] opérateur "${operator.name}" (${operator.slug}) prêt`);
-  console.log(`[seed] connecte-toi avec ${DEMO_EMAIL} pour voir le dashboard`);
-  console.log(`[seed] ${deliveries.length} deliveries dans "${session.label}"`);
+  console.log(`[seed] connecte-toi avec ${DEMO_EMAIL} pour voir les sorties`);
+  console.log(`[seed] ${sorties.length} sorties créées`);
 }
 
 main()

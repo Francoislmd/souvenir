@@ -26,7 +26,7 @@ export function Nav() {
           ))}
         </nav>
         <div className="lp-nav__actions">
-          <a href="/login" className="lp-nav__btn-ghost">Se connecter</a>
+          <a href="/connexion" className="lp-nav__btn-ghost">Se connecter</a>
           <a href="/signup" className="lp-nav__btn-dark">Créer ma boutique</a>
           <button
             type="button"
@@ -46,7 +46,7 @@ export function Nav() {
             {l.label}
           </a>
         ))}
-        <a href="/login" className="lp-mobile-menu__link" onClick={() => setOpen(false)}>Se connecter</a>
+        <a href="/connexion" className="lp-mobile-menu__link" onClick={() => setOpen(false)}>Se connecter</a>
         <div className="lp-mobile-menu__cta">
           <a href="/signup" className="lp-nav__btn-dark" onClick={() => setOpen(false)}>Créer ma boutique</a>
         </div>

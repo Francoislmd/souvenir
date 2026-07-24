@@ -1,27 +1,36 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { Mode } from "@souvenir/db";
 import { getOperatorUser } from "@/lib/current-user";
+import { ACTIVITIES } from "@/lib/onboarding/activities";
+
+const knownActivityIds = new Set(ACTIVITIES.map((a) => a.id));
 
 const schema = z.object({
   name: z.string().min(2).optional(),
   logoUrl: z.string().optional(),
-  location: z.string().optional(),
   brandColor: z.string().optional(),
-  packPriceCents: z.number().int().min(0).optional(),
-  defaultMode: z.nativeEnum(Mode).optional(),
+  pricePhotoCents: z.number().int().min(0).optional(),
+  pricePackCents: z.number().int().min(0).optional(),
+  priceAllCents: z.number().int().min(0).optional(),
+  packSize: z.number().int().min(1).optional(),
+  freeCount: z.number().int().min(0).optional(),
   googleReviewUrl: z.string().optional(),
-  trustpilotUrl: z.string().optional(),
-  tripadvisorUrl: z.string().optional(),
-  instagramHandle: z.string().optional(),
-  instagramPostCaption: z.string().optional(),
   whatsappNumber: z.string().optional(),
-  deliveryMessageTemplate: z.string().optional(),
+  activities: z.array(z.string()).refine((ids) => ids.every((id) => knownActivityIds.has(id)), {
+    message: "Activité inconnue",
+  }).optional(),
+  automations: z
+    .object({
+      resendUnopened: z.boolean(),
+      reducedPriceOffer: z.boolean(),
+      reviewRequest: z.boolean(),
+    })
+    .optional(),
 });
 
 export async function PATCH(request: Request): Promise<Response> {
   const dbUser = await getOperatorUser();
-  if (!dbUser || dbUser.role !== "ADMIN") {
+  if (!dbUser) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -31,32 +40,16 @@ export async function PATCH(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const {
-    logoUrl,
-    location,
-    googleReviewUrl,
-    trustpilotUrl,
-    tripadvisorUrl,
-    instagramHandle,
-    instagramPostCaption,
-    whatsappNumber,
-    deliveryMessageTemplate,
-    ...rest
-  } = parsed.data;
+  const { logoUrl, googleReviewUrl, whatsappNumber, automations, ...rest } = parsed.data;
 
   const operator = await prisma.operator.update({
     where: { id: dbUser.operatorId },
     data: {
       ...rest,
       ...(logoUrl !== undefined && { logoUrl: logoUrl || null }),
-      ...(location !== undefined && { location: location || null }),
       ...(googleReviewUrl !== undefined && { googleReviewUrl: googleReviewUrl || null }),
-      ...(trustpilotUrl !== undefined && { trustpilotUrl: trustpilotUrl || null }),
-      ...(tripadvisorUrl !== undefined && { tripadvisorUrl: tripadvisorUrl || null }),
-      ...(instagramHandle !== undefined && { instagramHandle: instagramHandle || null }),
-      ...(instagramPostCaption !== undefined && { instagramPostCaption: instagramPostCaption || null }),
       ...(whatsappNumber !== undefined && { whatsappNumber: whatsappNumber || null }),
-      ...(deliveryMessageTemplate !== undefined && { deliveryMessageTemplate: deliveryMessageTemplate || null }),
+      ...(automations !== undefined && { automations: { ...automations, referral: false } }),
     },
   });
 

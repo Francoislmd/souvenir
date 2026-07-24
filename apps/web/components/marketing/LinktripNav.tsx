@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "@/app/linktrip.module.css";
+import { Logo } from "@/components/brand/Logo";
 
 export function LinktripNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -26,14 +27,16 @@ export function LinktripNav() {
   return (
     <header className={`${styles.nav} ${scrolled ? styles.navScrolled : ""}`}>
       <div className={styles.navInner}>
-        <a href="#top" className={styles.brand}>Linktrip</a>
+        <a href="#top" className={styles.brand}>
+          <Logo height={34} />
+        </a>
         <nav className={styles.navMenu}>
           {links.map((l) => (
             <a key={l.href} href={l.href}>{l.label}</a>
           ))}
         </nav>
         <div className={styles.navActions}>
-          <a href="/login" className={`${styles.btn} ${styles.btnGhost}`}>Se connecter</a>
+          <a href="/connexion" className={`${styles.btn} ${styles.btnGhost}`}>Se connecter</a>
           <a href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>Créer ma boutique</a>
           <button
             type="button"
@@ -53,9 +56,9 @@ export function LinktripNav() {
             {l.label}
           </a>
         ))}
-        <a href="/login" className={styles.mlink} onClick={() => setOpen(false)}>Se connecter</a>
+        <a href="/connexion" className={styles.mlink} onClick={() => setOpen(false)}>Se connecter</a>
         <div className={styles.mcta}>
-          <a href="/login" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setOpen(false)}>Se connecter</a>
+          <a href="/connexion" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setOpen(false)}>Se connecter</a>
           <a href="/signup" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setOpen(false)}>Créer ma boutique</a>
         </div>
       </div>

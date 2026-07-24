@@ -5,13 +5,10 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { inputClass } from "@/components/ui/Input";
 
-type ModeOption = "BOUTIQUE" | "MARKETING";
-
 export function OnboardingForm() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [packPrice, setPackPrice] = useState("29");
-  const [defaultMode, setDefaultMode] = useState<ModeOption>("BOUTIQUE");
+  const [packPrice, setPackPrice] = useState("22");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,13 +17,16 @@ export function OnboardingForm() {
     setLoading(true);
     setError(null);
 
+    const packCents = Math.round(Number(packPrice) * 100);
+
     const res = await fetch("/api/operator", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        packPriceCents: Math.round(Number(packPrice) * 100),
-        defaultMode,
+        pricePhotoCents: Math.round(packCents / 3),
+        pricePackCents: packCents,
+        priceAllCents: Math.round(packCents * 1.6),
       }),
     });
 
@@ -36,14 +36,14 @@ export function OnboardingForm() {
       return;
     }
 
-    router.push("/settings");
+    router.push("/reglages");
     router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
       <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
-        Nom de ton école
+        Nom de votre structure
         <input
           required
           value={name}
@@ -54,7 +54,7 @@ export function OnboardingForm() {
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
-        Prix du pack HD
+        Prix du pack de 3 photos
         <div className="relative">
           <input
             type="number"
@@ -70,38 +70,9 @@ export function OnboardingForm() {
         </div>
       </label>
 
-      <fieldset className="flex flex-col gap-2 text-sm font-medium text-ink">
-        <legend className="mb-1">Mode par défaut</legend>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setDefaultMode("BOUTIQUE")}
-            className={`h-11 rounded-control border text-sm font-medium transition ${
-              defaultMode === "BOUTIQUE" ? "border-accent bg-accent-tint text-accent" : "border-border bg-surface text-ink-2"
-            }`}
-          >
-            Boutique
-          </button>
-          <button
-            type="button"
-            onClick={() => setDefaultMode("MARKETING")}
-            className={`h-11 rounded-control border text-sm font-medium transition ${
-              defaultMode === "MARKETING" ? "border-accent bg-accent-tint text-accent" : "border-border bg-surface text-ink-2"
-            }`}
-          >
-            Marketing
-          </button>
-        </div>
-        <p className="text-xs font-normal text-ink-2">
-          {defaultMode === "BOUTIQUE"
-            ? "Aperçu offert, le client achète le pack HD."
-            : "Tout est offert, en échange d'un avis, d'un email et d'un partage."}
-        </p>
-      </fieldset>
-
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
-      <Button type="submit" variant="accent" size="lg" disabled={loading} className="w-full">
+      <Button type="submit" size="lg" disabled={loading} className="w-full">
         {loading ? "Création…" : "Continuer"}
       </Button>
     </form>

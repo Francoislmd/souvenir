@@ -1,5 +1,9 @@
 {
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @souvenir/web build"
+  "buildCommand": "pnpm --filter @souvenir/web build",
+  "crons": [
+    { "path": "/api/cron/automations", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/gdpr-purge", "schedule": "0 3 * * *" }
+  ]
 }

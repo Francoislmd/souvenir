@@ -1,15 +1,14 @@
 import "dotenv/config";
 import { prisma } from "@souvenir/db";
 import { processPreviewJob } from "./jobs/preview.js";
-import { processZipJob } from "./jobs/zip.js";
 import { MAX_JOB_ATTEMPTS, MAX_PARALLEL_JOBS } from "./lib/limits.js";
 
 const POLL_INTERVAL_MS = 3000;
 
 async function claimNextJob() {
   return prisma.$transaction(async (tx) => {
-    const [job] = await tx.$queryRaw<{ id: string; mediaId: string; kind: string; attempts: number }[]>`
-      SELECT id, "mediaId", kind, attempts FROM "ProcessingJob"
+    const [job] = await tx.$queryRaw<{ id: string; photoId: string; kind: string; attempts: number }[]>`
+      SELECT id, "photoId", kind, attempts FROM "ProcessingJob"
       WHERE status = 'pending'
       ORDER BY "createdAt" ASC
       FOR UPDATE SKIP LOCKED
@@ -26,12 +25,10 @@ async function claimNextJob() {
   });
 }
 
-async function runJob(job: { id: string; mediaId: string; kind: string; attempts: number }): Promise<void> {
+async function runJob(job: { id: string; photoId: string; kind: string; attempts: number }): Promise<void> {
   try {
     if (job.kind === "preview") {
-      await processPreviewJob({ mediaId: job.mediaId });
-    } else if (job.kind === "zip") {
-      await processZipJob({ mediaId: job.mediaId });
+      await processPreviewJob({ photoId: job.photoId });
     } else {
       throw new Error(`Unknown job kind: ${job.kind}`);
     }
@@ -42,9 +39,7 @@ async function runJob(job: { id: string; mediaId: string; kind: string; attempts
 
     if (job.attempts >= MAX_JOB_ATTEMPTS) {
       await prisma.processingJob.update({ where: { id: job.id }, data: { status: "failed" } });
-      if (job.kind === "preview") {
-        await prisma.media.update({ where: { id: job.mediaId }, data: { status: "FAILED" } });
-      }
+      await prisma.photo.update({ where: { id: job.photoId }, data: { status: "FAILED" } });
     } else {
       await prisma.processingJob.update({ where: { id: job.id }, data: { status: "pending" } });
     }

@@ -24,7 +24,7 @@ export function StepActivities({
               type="button"
               aria-pressed={isSelected}
               onClick={() => onToggle(a.id)}
-              className={`relative flex flex-col items-center gap-2 rounded-card border p-4 text-center transition ${
+              className={`relative rounded-card border px-4 py-3 text-center transition ${
                 isSelected ? "border-brand bg-brand-tint" : "border-border bg-surface hover:border-border-strong"
               }`}
             >
@@ -38,22 +38,6 @@ export function StepActivities({
                   </svg>
                 </span>
               )}
-              <span
-                className={`flex h-11 w-11 items-center justify-center rounded-control ${isSelected ? "text-white" : "bg-canvas text-ink-2"}`}
-                style={isSelected ? { background: "var(--brand-gradient)" } : undefined}
-              >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  dangerouslySetInnerHTML={{ __html: a.glyph }}
-                />
-              </span>
               <span className="text-sm font-semibold text-ink">{a.label}</span>
             </button>
           );

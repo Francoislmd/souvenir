@@ -2,20 +2,18 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase-server";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { Mode, Role } from "@souvenir/db";
+import { Role } from "@souvenir/db";
+import { ACTIVITIES } from "@/lib/onboarding/activities";
 
 const schema = z.object({
   name: z.string().min(2),
-  packPriceCents: z.number().int().min(0),
-  defaultMode: z.nativeEnum(Mode),
-  location: z.string().optional(),
+  pricePhotoCents: z.number().int().min(0),
+  pricePackCents: z.number().int().min(0),
+  priceAllCents: z.number().int().min(0),
+  packSize: z.number().int().min(1).default(3),
+  freeCount: z.number().int().min(0).default(2),
   brandColor: z.string().optional(),
-  instagramHandle: z.string().optional(),
   googleReviewUrl: z.string().optional(),
-  trustpilotUrl: z.string().optional(),
-  tripadvisorUrl: z.string().optional(),
-  // Réponses de qualification de l'onboarding (activités, volumétrie, prise de
-  // photo) — pas de colonne dédiée, juste tracées pour l'analytics/CRM.
   qualification: z.record(z.unknown()).optional(),
 });
 
@@ -53,18 +51,8 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: message, details: parsed.error.errors }, { status: 400 });
   }
 
-  const {
-    name,
-    packPriceCents,
-    defaultMode,
-    location,
-    brandColor,
-    instagramHandle,
-    googleReviewUrl,
-    trustpilotUrl,
-    tripadvisorUrl,
-    qualification,
-  } = parsed.data;
+  const { name, pricePhotoCents, pricePackCents, priceAllCents, packSize, freeCount, brandColor, googleReviewUrl, qualification } =
+    parsed.data;
 
   const base = slugify(name) || "activite";
   let slug = base;
@@ -74,18 +62,24 @@ export async function POST(request: Request): Promise<Response> {
     slug = `${base}-${suffix}`;
   }
 
+  const knownIds = new Set(ACTIVITIES.map((a) => a.id));
+  const rawActivities = qualification?.activities;
+  const activities = Array.isArray(rawActivities)
+    ? rawActivities.filter((id): id is string => typeof id === "string" && knownIds.has(id))
+    : [];
+
   const operator = await prisma.operator.create({
     data: {
       name,
       slug,
-      packPriceCents,
-      defaultMode,
-      ...(location && { location }),
+      pricePhotoCents,
+      pricePackCents,
+      priceAllCents,
+      packSize,
+      freeCount,
+      activities,
       ...(brandColor && { brandColor }),
-      ...(instagramHandle && { instagramHandle: instagramHandle.replace(/^@/, "") }),
       ...(googleReviewUrl && { googleReviewUrl }),
-      ...(trustpilotUrl && { trustpilotUrl }),
-      ...(tripadvisorUrl && { tripadvisorUrl }),
       users: { create: { email: user.email, role: Role.ADMIN } },
     },
   });

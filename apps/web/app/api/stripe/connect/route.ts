@@ -5,7 +5,7 @@ import { getOperatorUser } from "@/lib/current-user";
 
 export async function POST(request: Request): Promise<Response> {
   const dbUser = await getOperatorUser();
-  if (!dbUser || dbUser.role !== "ADMIN") {
+  if (!dbUser) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -13,7 +13,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // returnPath permet à l'appelant de choisir la destination post-onboarding
   const body = await request.json().catch(() => ({})) as { returnPath?: string };
-  const returnPath = body.returnPath ?? "/settings";
+  const returnPath = body.returnPath ?? "/reglages";
 
   let stripeAccountId = operator.stripeAccountId;
 

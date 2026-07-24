@@ -3,6 +3,7 @@ import styles from "./linktrip.module.css";
 import { LinktripNav } from "@/components/marketing/LinktripNav";
 import { LinktripLeviers } from "@/components/marketing/LinktripLeviers";
 import { LinktripReveal } from "@/components/marketing/LinktripReveal";
+import { Logo } from "@/components/brand/Logo";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -470,7 +471,9 @@ export default function Home() {
         <div className={styles.container}>
           <div className={styles.footGrid}>
             <div className={styles.footBrand}>
-              <a href="#top" className={styles.brand}>Linktrip</a>
+              <a href="#top" className={styles.brand}>
+                <Logo height={34} />
+              </a>
               <p>Le souvenir qui prolonge l&apos;expérience et fait vivre votre activité, bien après la sortie.</p>
             </div>
             <div className={styles.footCol}>

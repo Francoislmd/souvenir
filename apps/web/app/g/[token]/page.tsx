@@ -1,312 +1,83 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { getPreviewUrl } from "@/lib/storage";
-import { stripe } from "@/lib/stripe";
-import { fulfillCheckoutSession } from "@/lib/checkout-fulfillment";
-import { type GalleryMedia } from "@/components/gallery/MediaTile";
-import { MediaFeed } from "@/components/gallery/MediaFeed";
+import { getPreviewUrl, getOriginalSignedUrl } from "@/lib/storage";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
-import { ReviewSection } from "@/components/gallery/ReviewSection";
-import { InstagramShareSection } from "@/components/gallery/InstagramShareSection";
-import { CheckoutButton } from "@/components/gallery/CheckoutButton";
-import { LockedCoverCard } from "@/components/gallery/LockedCoverCard";
-import { MarketingCtas } from "@/components/gallery/MarketingCtas";
-import { PurchaseSuccessRefresher } from "@/components/gallery/PurchaseSuccessRefresher";
-import { MediaStatusPoller } from "@/components/gallery/MediaStatusPoller";
-import { UnlockCelebration } from "@/components/gallery/UnlockCelebration";
-import { LogoMark } from "@/components/brand/Logo";
-import { CLIENT_BRAND_COLOR } from "@/lib/brand";
-import { defaultGalleryTitle, extractHashtags } from "@/lib/message-templates";
+import { BoutiqueGallery, type BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
+import styles from "./boutique.module.css";
 
-export default async function GalleryPage({
-  params,
-  searchParams,
-}: {
-  params: { token: string };
-  searchParams: { purchase?: string; session_id?: string };
-}) {
-  const tokenFilter = {
-    OR: [{ token: params.token }, { code: params.token.toUpperCase() }],
-  };
+// Page publique, non authentifiée — doit toujours refléter les derniers prix
+// et la dernière couleur choisis dans Réglages (critère d'acceptation #7).
+export const dynamic = "force-dynamic";
 
-  // Deux requêtes DB en parallèle — aucune dépendance entre elles
-  const [rawDelivery, priorOpenCount] = await Promise.all([
-    prisma.delivery.findFirst({
-      where: tokenFilter,
-      include: {
-        media: { orderBy: { id: "asc" } },
-        session: { include: { operator: true } },
-      },
-    }),
-    prisma.event.count({
-      where: {
-        name: "gallery_opened",
-        delivery: { OR: [{ token: params.token }, { code: params.token.toUpperCase() }] },
-      },
-    }),
-  ]);
+function formatDateFr(d: Date): string {
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+}
 
-  if (!rawDelivery) notFound();
-
-  // Stripe fallback — seulement après un checkout, cas rare
-  let delivery: typeof rawDelivery;
-  if (
-    searchParams.purchase === "success" &&
-    searchParams.session_id &&
-    rawDelivery.status !== "PURCHASED"
-  ) {
-    const checkoutSession = await stripe.checkout.sessions.retrieve(searchParams.session_id);
-    if (checkoutSession.metadata?.deliveryId === rawDelivery.id) {
-      await fulfillCheckoutSession(checkoutSession);
-      delivery = await prisma.delivery.findUniqueOrThrow({
-        where: { id: rawDelivery.id },
-        include: {
-          media: { orderBy: { id: "asc" } },
-          session: { include: { operator: true } },
-        },
-      });
-    } else {
-      delivery = rawDelivery;
-    }
-  } else {
-    delivery = rawDelivery;
-  }
-
-  const operator = delivery.session.operator;
-  const isMarketing = delivery.session.mode === "MARKETING";
-  const unlocked = isMarketing || delivery.status === "PURCHASED";
-
-  // Claim (1ère ouverture) : await pour la cohérence du funnel analytics
-  if (priorOpenCount === 0) {
-    await prisma.delivery.updateMany({
-      where: { id: delivery.id, status: "CREATED" },
-      data: { consentImage: true, status: "CLAIMED", claimedAt: new Date() },
-    });
-  }
-
-  // Analytics : fire-and-forget — ne bloque pas la réponse
-  void track("gallery_opened", { operatorId: operator.id, deliveryId: delivery.id });
-
-  const media: GalleryMedia[] = delivery.media
-    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "VIDEO" ? -1 : 1))
-    .map((item) => ({
-      id: item.id,
-      kind: item.kind,
-      status: item.status,
-      previewUrl: item.previewKey ? getPreviewUrl(item.previewKey) : null,
-      thumbUrl: item.thumbKey ? getPreviewUrl(item.thumbKey) : null,
-    }));
-
-  const showPurchaseRefresher = searchParams.purchase === "success" && !unlocked;
-  const justUnlocked = searchParams.purchase === "success" && unlocked;
-  const sessionDate = delivery.session.date.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
+export default async function GalleryPage({ params }: { params: { token: string } }) {
+  const participant = await prisma.participant.findUnique({
+    where: { token: params.token },
+    include: { sortie: { include: { operator: true } }, order: true },
   });
-  const photoCount = delivery.media.filter((m) => m.kind === "PHOTO").length;
-  const videoCount = delivery.media.filter((m) => m.kind === "VIDEO").length;
-  const heroTitle = delivery.title ?? defaultGalleryTitle(delivery.clientName ?? "");
-  const hashtags = extractHashtags(operator.instagramPostCaption);
 
-  const pendingMediaCount = delivery.media.filter((m) => m.status !== "READY" && m.status !== "FAILED").length;
+  if (!participant || participant.deletedAt) notFound();
 
-  // Pour la carte de paiement : première vidéo READY en aperçu, puis première photo
-  const firstReadyVideo = media.find((m) => m.kind === "VIDEO" && m.status === "READY");
-  const firstReadyPhoto = media.find((m) => m.kind === "PHOTO" && m.status === "READY");
-  const lockedCardProps = {
-    deliveryId: delivery.id,
-    priceCents: operator.packPriceCents,
-    firstVideoUrl: firstReadyVideo?.previewUrl ?? null,
-    firstPhotoUrl: firstReadyPhoto?.previewUrl ?? null,
-    videoCount,
-  };
+  const isFirstOpen = !participant.openedAt;
+  if (isFirstOpen) {
+    await prisma.participant.update({ where: { id: participant.id }, data: { openedAt: new Date() } });
+  }
+  void track("gallery_opened", { operatorId: participant.sortie.operatorId, participantId: participant.id });
 
-  const brandColor = operator.brandColor || CLIENT_BRAND_COLOR;
-  const themeStyle = {
-    "--accent": brandColor,
-    "--accent-tint": `color-mix(in srgb, ${brandColor} 12%, white)`,
-  } as React.CSSProperties;
+  const operator = participant.sortie.operator;
+  const bought = participant.order?.status === "succeeded";
+  const purchasedIds = participant.order?.status === "succeeded" ? participant.order.photoIds : [];
+  const purchasedSet = new Set(purchasedIds);
 
-  const headerProps = {
-    operator: { name: operator.name, logoUrl: operator.logoUrl },
-    location: operator.location,
-    sessionDate,
-    heroTitle,
-    photoCount,
-    videoCount,
-    instagramHandle: operator.instagramHandle,
-    hashtags,
-  };
-
-  const emptyState = (
-    <div
-      className="flex aspect-square w-full items-center justify-center rounded-card"
-      style={{
-        background: `linear-gradient(160deg, ${brandColor}, ${brandColor}99)`,
-      }}
-    >
-      <p className="px-8 text-center text-sm font-medium text-white/90">
-        Tes médias arrivent, reviens dans une minute 🙂
-      </p>
-    </div>
-  );
-
-  const statusCard = isMarketing ? (
-    <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-      <div className="flex items-center gap-3 px-4 py-3.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-tint">
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-accent">
-            <path d="M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3ZM8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-ink">Cadeau de {operator.name}</p>
-          <p className="text-xs text-ink-2">Tout est à toi, gratuitement, en HD et sans filigrane.</p>
-        </div>
-      </div>
-    </div>
-  ) : unlocked ? (
-    <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-tint">
-            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-success">
-              <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-ink">C&apos;est débloqué !</p>
-            <p className="text-xs text-ink-2">Toutes tes photos et vidéos, en HD, sans filigrane.</p>
-          </div>
-        </div>
-        <a
-          href={`/api/gallery/${delivery.token}/zip`}
-          className="flex items-center justify-center gap-2 border-t border-border bg-canvas py-3 text-sm font-semibold text-ink transition hover:bg-border/40 active:bg-border/60"
-        >
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-ink-2">
-            <path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Tout télécharger (.zip)
-        </a>
-      </div>
-      <ReviewSection
-        token={delivery.token}
-        operatorName={operator.name}
-        googleReviewUrl={operator.googleReviewUrl}
-        trustpilotUrl={operator.trustpilotUrl}
-        tripadvisorUrl={operator.tripadvisorUrl}
-      />
-      {operator.instagramHandle ? (
-        <InstagramShareSection
-          token={delivery.token}
-          operator={{
-            name: operator.name,
-            instagramHandle: operator.instagramHandle,
-            instagramPostCaption: operator.instagramPostCaption,
-          }}
-          hashtags={hashtags}
-        />
-      ) : null}
-    </div>
-  ) : null;
-
-  const marketingCtasProps = {
-    token: delivery.token,
-    operator: {
-      name: operator.name,
-      googleReviewUrl: operator.googleReviewUrl,
-      trustpilotUrl: operator.trustpilotUrl,
-      tripadvisorUrl: operator.tripadvisorUrl,
-      instagramHandle: operator.instagramHandle,
-      instagramPostCaption: operator.instagramPostCaption,
+  const rawPhotos = await prisma.photo.findMany({
+    where: {
+      sortieId: participant.sortieId,
+      status: "READY",
+      OR: [{ ownerId: participant.id }, { ownerId: null }],
     },
-    hashtags,
-    initialEmail: delivery.clientEmail,
-  };
+    orderBy: { createdAt: "asc" },
+  });
 
-  const footerContent = (
-    <footer className="mt-8 flex flex-col items-center gap-2 text-center text-xs text-muted">
-      <span className="inline-flex items-center gap-1.5">
-        <LogoMark className="h-4 w-4 rounded-[4px]" />
-        via Souvenir
-      </span>
-      <Link href={`/g/${delivery.token}/confidentialite`} className="underline">
-        Confidentialité
-      </Link>
-    </footer>
+  const photos: BoutiquePhoto[] = await Promise.all(
+    rawPhotos.map(async (p) => {
+      const unlocked = p.isFreeSample || purchasedSet.has(p.id);
+      return {
+        id: p.id,
+        previewUrl: p.previewKey ? getPreviewUrl(p.previewKey) : p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
+        // Jamais d'original pour une photo non achetée et non offerte (critère d'acceptation #4).
+        originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
+        isFreeSample: p.isFreeSample,
+        isVideo: p.isVideo,
+      };
+    }),
   );
+
+  const reducedOfferActive = !!participant.reducedOfferExpiresAt && participant.reducedOfferExpiresAt > new Date();
+  const dateLabel = `Sortie du ${formatDateFr(participant.sortie.startsAt)}${participant.sortie.place ? ` · ${participant.sortie.place}` : ""}`;
 
   return (
-    <main className="relative min-h-screen bg-canvas" style={themeStyle}>
-      {/* Effets globaux — pas de rendu visuel, une seule instance */}
-      {justUnlocked ? <UnlockCelebration id={delivery.id} /> : null}
-      {showPurchaseRefresher ? <PurchaseSuccessRefresher /> : null}
-      <MediaStatusPoller pendingCount={pendingMediaCount} />
-
-      <div className={`md:flex md:items-start ${!isMarketing && !unlocked ? "pb-24 md:pb-0" : "pb-10 md:pb-0"}`}>
-
-        {/* ===== PANNEAU GAUCHE : header + CTAs — desktop uniquement ===== */}
-        <div className="hidden md:flex md:sticky md:top-0 md:h-screen md:w-[420px] md:shrink-0 md:flex-col md:overflow-y-auto md:border-r md:border-border">
-          <GalleryHeader {...headerProps} />
-          <div className="mt-5 flex-1 px-4 pb-10">
-            {statusCard}
-            {isMarketing ? (
-              <div className="mt-5">
-                <MarketingCtas {...marketingCtasProps} />
-              </div>
-            ) : null}
-            {!isMarketing && !unlocked ? (
-              <div className="mt-5">
-                <LockedCoverCard {...lockedCardProps} />
-              </div>
-            ) : null}
-            {footerContent}
-          </div>
-        </div>
-
-        {/* ===== CONTENU PRINCIPAL (mobile : colonne, desktop : panneau droit flex-1) ===== */}
-        <div className="flex-1 min-w-0">
-          {/* Header — mobile uniquement */}
-          <div className="md:hidden">
-            <GalleryHeader {...headerProps} />
-          </div>
-
-          {/* Médias */}
-          <div className="mt-3 px-4 pb-2 md:min-h-screen md:bg-canvas md:p-4 lg:p-6">
-            {media.length > 0 ? (
-              <MediaFeed
-                media={media}
-                token={delivery.token}
-                locked={!unlocked}
-                gridClassName="grid grid-cols-3 gap-0.5 md:gap-1 lg:grid-cols-4"
-              />
-            ) : (
-              emptyState
-            )}
-          </div>
-
-          {/* CTAs + footer — mobile uniquement */}
-          <div className="md:hidden mt-4 px-4 pb-8">
-            {statusCard}
-            {isMarketing ? (
-              <div className="mt-5">
-                <MarketingCtas {...marketingCtasProps} />
-              </div>
-            ) : null}
-            {footerContent}
-          </div>
-        </div>
-      </div>
-
-      {/* Bouton de paiement flottant — mobile uniquement */}
-      {!isMarketing && !unlocked ? (
-        <div className="md:hidden">
-          <CheckoutButton deliveryId={delivery.id} priceCents={operator.packPriceCents} />
-        </div>
-      ) : null}
-
-    </main>
+    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+      <GalleryHeader operatorName={operator.name} dateLabel={dateLabel} />
+      <BoutiqueGallery
+        token={participant.token}
+        participantId={participant.id}
+        clientFirstName={participant.name.split(/\s+/)[0] ?? participant.name}
+        photos={photos}
+        pricing={{
+          pricePhotoCents: operator.pricePhotoCents,
+          pricePackCents: operator.pricePackCents,
+          priceAllCents: operator.priceAllCents,
+          packSize: operator.packSize,
+        }}
+        bought={bought}
+        purchasedIds={purchasedIds}
+        googleReviewUrl={operator.googleReviewUrl}
+        reducedOfferActive={reducedOfferActive}
+      />
+    </div>
   );
 }

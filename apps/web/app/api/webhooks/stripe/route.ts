@@ -1,7 +1,7 @@
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
-import { fulfillCheckoutSession } from "@/lib/checkout-fulfillment";
+import { fulfillPaymentIntent } from "@/lib/order-fulfillment";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
@@ -22,19 +22,16 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
-      await fulfillCheckoutSession(session);
+    case "payment_intent.succeeded": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      await fulfillPaymentIntent(intent);
       break;
     }
     case "payment_intent.payment_failed": {
       const intent = event.data.object as Stripe.PaymentIntent;
-      const deliveryId = intent.metadata?.deliveryId;
-      if (deliveryId) {
-        await prisma.order.updateMany({
-          where: { deliveryId },
-          data: { status: "failed" },
-        });
+      const participantId = intent.metadata?.participantId;
+      if (participantId) {
+        await prisma.order.updateMany({ where: { participantId }, data: { status: "failed" } });
       }
       break;
     }

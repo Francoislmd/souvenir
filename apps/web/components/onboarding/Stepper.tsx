@@ -1,4 +1,4 @@
-const STEP_LABELS = ["Activité", "Entreprise", "Expérience", "Photos", "Marque", "Revenus"];
+const STEP_LABELS = ["Activité", "Entreprise", "Expérience", "Marque", "Revenus"];
 
 // current: index 0-5 (Activité..Revenus). Affiché uniquement pendant ces 6 étapes —
 // masqué sur Compte / Aperçu de la valeur / Activation (géré par le parent).

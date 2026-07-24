@@ -11,7 +11,6 @@ import { Stepper } from "@/components/onboarding/Stepper";
 import { StepActivities } from "@/components/onboarding/StepActivities";
 import { StepCompany } from "@/components/onboarding/StepCompany";
 import { StepExperience } from "@/components/onboarding/StepExperience";
-import { StepPhotoMode } from "@/components/onboarding/StepPhotoMode";
 import { StepBrand } from "@/components/onboarding/StepBrand";
 import { StepPricing } from "@/components/onboarding/StepPricing";
 import { ValueEstimate } from "@/components/onboarding/ValueEstimate";
@@ -20,20 +19,18 @@ import { Activation } from "@/components/onboarding/Activation";
 import type {
   Company,
   Experience,
-  PhotoMode,
   Brand,
   Pricing,
   PersistedOnboardingState,
 } from "@/lib/onboarding/types";
 
-const STORAGE_KEY = "souvenir:onboarding:v1";
+const STORAGE_KEY = "linktrip:onboarding:v1";
 
 const STEP_ORDER = [
   "compte",
   "activites",
   "entreprise",
   "experience",
-  "photos",
   "marque",
   "revenus",
   "estimation",
@@ -42,13 +39,12 @@ const STEP_ORDER = [
 ] as const;
 type WizardStep = (typeof STEP_ORDER)[number];
 
-const STEPPER_STEPS: WizardStep[] = ["activites", "entreprise", "experience", "photos", "marque", "revenus"];
+const STEPPER_STEPS: WizardStep[] = ["activites", "entreprise", "experience", "marque", "revenus"];
 
 const DEFAULT_COMPANY: Company = { name: "", website: "", instagram: "", city: "" };
 const DEFAULT_EXP: Experience = { group: "6-15", freq: "6-15", guides: "oui" };
-const DEFAULT_PHOTO_MODE: PhotoMode = "guides";
 const DEFAULT_BRAND: Brand = { name: "", color: "#FF5A1F", touched: false };
-const DEFAULT_PRICING: Pricing = { packEuros: "22" };
+const DEFAULT_PRICING: Pricing = { photoEuros: "8", packEuros: "22", allEuros: "39" };
 
 export function OnboardingWizard({ initialName }: { initialName: string }) {
   const router = useRouter();
@@ -64,7 +60,6 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   const [activities, setActivities] = useState<Set<string>>(new Set());
   const [company, setCompany] = useState<Company>({ ...DEFAULT_COMPANY, name: initialName });
   const [exp, setExp] = useState<Experience>(DEFAULT_EXP);
-  const [photoMode, setPhotoMode] = useState<PhotoMode>(DEFAULT_PHOTO_MODE);
   const [brand, setBrand] = useState<Brand>(DEFAULT_BRAND);
   const [pricing, setPricing] = useState<Pricing>(DEFAULT_PRICING);
 
@@ -87,7 +82,6 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
         setActivities(new Set(saved.activities));
         setCompany(saved.company);
         setExp(saved.exp);
-        setPhotoMode(saved.photoMode);
         setBrand(saved.brand);
         setPricing(saved.pricing);
       }
@@ -105,12 +99,11 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
       activities: Array.from(activities),
       company,
       exp,
-      photoMode,
       brand,
       pricing,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [activities, company, exp, photoMode, brand, pricing]);
+  }, [activities, company, exp, brand, pricing]);
 
   const currentStep: WizardStep = STEP_ORDER[step];
   const stepperIndex = STEPPER_STEPS.indexOf(currentStep);
@@ -125,7 +118,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   })();
 
   const progress = ((step + 1) / STEP_ORDER.length) * 100;
-  const packPriceCents = Math.round(Number(pricing.packEuros) * 100) || 0;
+  const pricePackCents = Math.round(Number(pricing.packEuros) * 100) || 0;
 
   function goForward() {
     setError(null);
@@ -190,16 +183,15 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: brand.name.trim() || company.name,
-          packPriceCents,
-          defaultMode: "BOUTIQUE",
-          location: company.city || undefined,
+          pricePhotoCents: Math.round(Number(pricing.photoEuros) * 100) || 0,
+          pricePackCents,
+          priceAllCents: Math.round(Number(pricing.allEuros) * 100) || 0,
           brandColor: brand.color,
-          instagramHandle: company.instagram || undefined,
           qualification: {
             activities: Array.from(activities),
             website: company.website || undefined,
+            city: company.city || undefined,
             experience: exp,
-            photoMode,
           },
         }),
       });
@@ -270,7 +262,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   }, [showStepper, canContinue]);
 
   function openDashboard() {
-    router.push("/dashboard");
+    router.push("/sorties");
     router.refresh();
   }
 
@@ -307,14 +299,8 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
 
       {/* Header */}
       <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between px-6">
-        <div
-          className={`transition-all duration-300 ${
-            step === 0 ? "opacity-100" : "pointer-events-none opacity-0"
-          }`}
-        >
-          <Logo markClassName="h-8 w-8" textClassName="text-base" />
-        </div>
-        <Link href="/login" className="text-sm font-medium text-ink-2 transition hover:text-ink">
+        <Logo height={34} />
+        <Link href="/connexion" className="text-sm font-medium text-ink-2 transition hover:text-ink">
           Se connecter
         </Link>
       </header>
@@ -367,8 +353,6 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
             <StepExperience exp={exp} onChange={(patch) => setExp((e) => ({ ...e, ...patch }))} />
           )}
 
-          {currentStep === "photos" && <StepPhotoMode value={photoMode} onChange={setPhotoMode} />}
-
           {currentStep === "marque" && (
             <StepBrand
               brand={brand}
@@ -380,12 +364,12 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
           )}
 
           {currentStep === "revenus" && (
-            <StepPricing packEuros={pricing.packEuros} onChange={(v) => setPricing({ packEuros: v })} />
+            <StepPricing pricing={pricing} onChange={(patch) => setPricing((p) => ({ ...p, ...patch }))} />
           )}
 
           {currentStep === "estimation" && (
             <div>
-              <ValueEstimate exp={exp} packPriceCents={packPriceCents} />
+              <ValueEstimate exp={exp} packPriceCents={pricePackCents} />
               {error && (
                 <div className="mx-auto mt-4 max-w-md text-center">
                   <p className="text-sm text-danger">{error}</p>

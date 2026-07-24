@@ -1,0 +1,71 @@
+/* Tokens de marque Linktrip (cf. brief logo §5). Source de vérité pour
+   --brand/--ink/--line/--soft/--paper : chargé après les tokens legacy dans
+   globals.css pour que ces valeurs gagnent la cascade sans les dupliquer
+   ailleurs. --font-inter / --font-inter-tight aliasent les variables
+   next/font/google déjà déclarées dans app/layout.tsx (Inter → --font-space-grotesk,
+   Inter Tight → --font-bricolage) : les noms legacy sont conservés pour ne
+   pas casser les CSS existants, ceux-ci sont la lecture "propre". */
+:root {
+  --ink: #161320;
+  --ink-2: #413c4e;
+  --ink-3: #726c80;
+  --ink-4: #a6a0b2;
+  --line: #ece9ef;
+  --line-2: #f4f2f6;
+  --soft: #fff1eb;
+  --paper: #fbfaf9;
+
+  --brand: #ff5a1f;
+  --brand-ink: #e8460c;
+  --rose: #ff3d6e;
+  --amber: #ffb443;
+  --aqua: #0fbeb6;
+  --ok: #16a34a;
+  --sunset: linear-gradient(120deg, #ff3d6e, #ff5a1f 52%, #ffb443);
+
+  /* Alias vers les tokens Tailwind existants (voir tailwind.config.ts) pour
+     que .btn/.text-brand/etc suivent la nouvelle couleur de marque sans
+     dupliquer un second système de couleurs. */
+  --brand-hover: var(--brand-ink);
+  --brand-tint: var(--soft);
+  --brand-gradient: var(--sunset);
+
+  --font-inter: var(--font-space-grotesk);
+  --font-inter-tight: var(--font-bricolage);
+}
+
+/* Règle typographique de marque : titres en 700, chiffres et boutons en 800
+   avec tabular-nums, interlettrage négatif proportionnel à la taille. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+button,
+.btn,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+h1 {
+  letter-spacing: -0.022em;
+}
+
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
+h4,
+h5,
+h6,
+button,
+.btn {
+  letter-spacing: -0.008em;
+}

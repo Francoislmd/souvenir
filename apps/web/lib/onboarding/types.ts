@@ -17,8 +17,6 @@ export interface Experience {
   guides: GuidesAnswer;
 }
 
-export type PhotoMode = "guides" | "photographe" | "unsure";
-
 export interface Brand {
   name: string;
   color: string;
@@ -26,7 +24,9 @@ export interface Brand {
 }
 
 export interface Pricing {
+  photoEuros: string;
   packEuros: string;
+  allEuros: string;
 }
 
 // Sous-ensemble persisté en localStorage pour permettre la reprise (étapes 1-6
@@ -35,7 +35,6 @@ export interface PersistedOnboardingState {
   activities: string[];
   company: Company;
   exp: Experience;
-  photoMode: PhotoMode;
   brand: Brand;
   pricing: Pricing;
 }

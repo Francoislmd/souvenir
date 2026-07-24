@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
+import "@/styles/tokens.css";
 
 // Les variables --font-bricolage / --font-space-grotesk sont conservées pour
 // ne pas casser tous les composants qui les référencent déjà : on y fait
@@ -35,10 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <body className={`${interTight.variable} ${inter.variable} antialiased`}>
-        {children}
-      </body>
+    <html lang="fr" className={`${interTight.variable} ${inter.variable}`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

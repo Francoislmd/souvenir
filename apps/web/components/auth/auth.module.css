@@ -1,0 +1,447 @@
+/* Portage fidèle de linktrip-connexion.html / linktrip-inscription.html —
+   mêmes valeurs, mêmes noms de classes que le prototype (kebab-case via
+   styles['...']) pour rester traçable au pixel. Les sélecteurs bruts du
+   prototype (h1, button, label, :focus-visible) sont ici scopés sous .auth
+   pour ne pas fuiter sur le reste de l'app. */
+
+.auth {
+  display: flex;
+  min-height: 100vh;
+}
+.auth :where(button) {
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--ink);
+  border: 0;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.auth :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 24px;
+  min-width: 0;
+}
+.sideIn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 52px;
+}
+.box {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* ---------- panneau de marque ---------- */
+.brandcol {
+  flex: 1;
+  background: linear-gradient(150deg, #ff3d6e, #ff5a1f 52%, #ffb443);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 44px;
+  color: #fff;
+}
+.brandcol::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  top: -110px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+.top {
+  position: absolute;
+  top: 44px;
+  left: 44px;
+  z-index: 1;
+}
+.q {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-weight: 700;
+  font-size: 1.68rem;
+  letter-spacing: -0.024em;
+  line-height: 1.26;
+  max-width: 340px;
+}
+.qs {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-top: 14px;
+  max-width: 330px;
+}
+
+.mosaic {
+  position: absolute;
+  right: -30px;
+  top: 88px;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 116px);
+  gap: 12px;
+  transform: rotate(-8deg);
+  opacity: 0.92;
+}
+.mos {
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px rgba(20, 19, 32, 0.22);
+  position: relative;
+}
+.mos::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.mos::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -6%;
+  height: 52%;
+  background: rgba(20, 19, 32, 0.2);
+  clip-path: polygon(0 62%, 18% 30%, 33% 55%, 52% 18%, 72% 48%, 88% 26%, 100% 46%, 100% 100%, 0 100%);
+}
+.m1::before {
+  background: radial-gradient(circle at 72% 22%, #fff3ce 0 8%, transparent 8.5%), linear-gradient(#7fc5ee, #ffd9a8 82%);
+}
+.m2::before {
+  background: linear-gradient(#aedcf3, #5fa6c2 86%);
+}
+.m3::before {
+  background: linear-gradient(#a8e7da, #2f9f97 88%);
+}
+.m4::before {
+  background: radial-gradient(circle at 60% 28%, #fff1c6 0 9%, transparent 9.5%), linear-gradient(#ffdca0, #ff8a6b 86%);
+}
+
+/* ---------- formulaire ---------- */
+.head {
+  margin-bottom: 24px;
+}
+.head h1 {
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  margin: 0;
+  line-height: 1.18;
+  font-size: 1.62rem;
+}
+.lead {
+  color: var(--ink-3);
+  font-size: 0.94rem;
+  line-height: 1.55;
+  margin: 9px 0 0;
+}
+.lead b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.lrow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.lrow label {
+  margin-bottom: 0;
+}
+.sp {
+  flex: 1;
+}
+.lrowLink {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-ink);
+  padding: 0;
+}
+.wrapf {
+  position: relative;
+}
+.inp {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  padding: 14px 15px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+  transition: 0.15s;
+  min-height: 44px;
+}
+.inp.pw {
+  padding-right: 48px;
+}
+.inp::placeholder {
+  color: var(--ink-4);
+}
+.inp:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+}
+.inp.err {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+.eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-4);
+}
+.eye:hover {
+  color: var(--ink-2);
+  background: var(--line-2);
+}
+
+/* robustesse */
+.meter {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+.meter i {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--line);
+  transition: 0.25s;
+  font-style: normal;
+}
+.meter.s1 i:nth-child(1) {
+  background: var(--danger);
+}
+.meter.s2 i:nth-child(-n + 2) {
+  background: var(--warning);
+}
+.meter.s3 i:nth-child(-n + 3) {
+  background: #65a30d;
+}
+.meter.s4 i {
+  background: var(--success);
+}
+.hint {
+  font-size: 0.8rem;
+  color: var(--ink-4);
+  margin-top: 8px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hint.s1 {
+  color: var(--danger);
+}
+.hint.s2 {
+  color: var(--warning);
+}
+.hint.s3,
+.hint.s4 {
+  color: var(--success);
+}
+.caps {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  color: var(--warning);
+  margin-top: 8px;
+}
+
+.btn {
+  width: 100%;
+  border-radius: 999px;
+  padding: 15px;
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  min-height: 44px;
+  background: var(--ink);
+  color: #fff;
+  transition: 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 20px;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0) scale(0.99);
+}
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.ghost {
+  background: #fff;
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  font-weight: 700;
+  margin-top: 11px;
+}
+.ghost:hover {
+  border-color: var(--ink-4);
+  transform: none;
+}
+
+.msg {
+  font-size: 0.85rem;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+.msgErr {
+  color: var(--danger);
+}
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 13px;
+  padding: 13px 15px;
+  margin-bottom: 18px;
+  font-size: 0.86rem;
+  color: #991b1b;
+  line-height: 1.5;
+}
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  font-size: 0.87rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.remember input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-3);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 20px;
+  min-height: 44px;
+}
+.back:hover {
+  color: var(--ink);
+}
+.alt {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+  margin-top: 26px;
+}
+.alt a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+.legal {
+  text-align: center;
+  font-size: 0.76rem;
+  color: var(--ink-4);
+  line-height: 1.6;
+  margin-top: auto;
+  padding-top: 26px;
+}
+.legal a {
+  color: var(--ink-3);
+}
+
+.sp2 {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2.2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #eaf7ef;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  animation: pop 0.48s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .brandcol {
+    display: none;
+  }
+  .side {
+    padding: 22px 20px 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth *,
+  .auth *::before,
+  .auth *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

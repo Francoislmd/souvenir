@@ -8,13 +8,13 @@ import { getOperatorUser } from "@/lib/current-user";
 export async function GET(): Promise<Response> {
   const dbUser = await getOperatorUser();
   if (!dbUser || !dbUser.operator.stripeAccountId) {
-    redirect("/settings");
+    redirect("/reglages");
   }
 
   const accountLink = await stripe.accountLinks.create({
     account: dbUser.operator.stripeAccountId,
     refresh_url: `${env.NEXT_PUBLIC_APP_URL}/api/stripe/connect/refresh`,
-    return_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/reglages`,
     type: "account_onboarding",
   });
 

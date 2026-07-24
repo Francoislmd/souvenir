@@ -1,60 +1,46 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
-import ffmpeg from "fluent-ffmpeg";
-import ffmpegPath from "@ffmpeg-installer/ffmpeg";
-import ffprobePath from "@ffprobe-installer/ffprobe";
-import { prisma, MediaKind, track } from "@souvenir/db";
+import { prisma, track } from "@souvenir/db";
 import { supabaseAdmin, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "../lib/supabase.js";
-import { MAX_FILE_SIZE_BYTES, MAX_VIDEO_DURATION_SEC } from "../lib/limits.js";
-
-ffmpeg.setFfmpegPath(ffmpegPath.path);
-ffmpeg.setFfprobePath(ffprobePath.path);
 
 interface ProcessPreviewParams {
-  mediaId: string;
+  photoId: string;
 }
 
-export async function processPreviewJob({ mediaId }: ProcessPreviewParams): Promise<void> {
-  const media = await prisma.media.findUniqueOrThrow({
-    where: { id: mediaId },
-    include: {
-      delivery: { include: { session: { include: { operator: true } } } },
-      importBatch: { include: { session: { include: { operator: true } } } },
-    },
+export async function processPreviewJob({ photoId }: ProcessPreviewParams): Promise<void> {
+  const photo = await prisma.photo.findUniqueOrThrow({
+    where: { id: photoId },
+    include: { sortie: { include: { operator: true } } },
   });
+  const operator = photo.sortie.operator;
 
-  const operator = media.delivery?.session.operator ?? media.importBatch?.session.operator;
-  if (!operator) throw new Error(`Media ${mediaId} has no delivery or import batch`);
+  await prisma.photo.update({ where: { id: photoId }, data: { status: "PROCESSING" } });
 
-  await prisma.media.update({ where: { id: mediaId }, data: { status: "PROCESSING" } });
-
-  if (media.sizeBytes && media.sizeBytes > MAX_FILE_SIZE_BYTES) {
-    throw new Error(`Media ${mediaId} exceeds max file size`);
-  }
-
-  const dir = await mkdtemp(join(tmpdir(), "souvenir-"));
+  const dir = await mkdtemp(join(tmpdir(), "linktrip-"));
   try {
-    const { data: original, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(media.originalKey);
+    const { data: original, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(photo.originalKey);
     if (error || !original) throw error ?? new Error("Failed to download original");
 
     const inputPath = join(dir, "input");
     await writeFile(inputPath, Buffer.from(await original.arrayBuffer()));
 
-    if (media.kind === MediaKind.PHOTO) {
-      await processPhoto({ mediaId, inputPath, dir, operator });
-    } else {
-      await processVideo({ mediaId, inputPath, dir, operator });
-    }
+    const thumbBuffer = await sharp(inputPath).resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
+    const previewBase = sharp(inputPath).resize({ width: 1280 });
+    const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
 
-    await prisma.media.update({ where: { id: mediaId }, data: { status: "READY" } });
+    const thumbKey = `${photoId}/thumb.jpg`;
+    const previewKey = `${photoId}/preview.jpg`;
 
-    await track("media_ready", {
-      operatorId: operator.id,
-      deliveryId: media.deliveryId ?? undefined,
-      meta: { mediaId },
-    });
+    await Promise.all([
+      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
+      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
+    ]);
+
+    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, status: "READY" } });
+
+    await track("photo_ready", { operatorId: operator.id, meta: { photoId } });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -86,102 +72,4 @@ async function watermarkBuffer(image: sharp.Sharp, operator: OperatorBrand, widt
     console.error("[worker] watermark skipped, invalid operator logo", operator.logoUrl, error);
     return image.toBuffer();
   }
-}
-
-async function processPhoto({
-  mediaId,
-  inputPath,
-  dir,
-  operator,
-}: {
-  mediaId: string;
-  inputPath: string;
-  dir: string;
-  operator: OperatorBrand;
-}): Promise<void> {
-  const thumbBuffer = await sharp(inputPath).resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
-
-  const previewBase = sharp(inputPath).resize({ width: 1280 });
-  const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
-
-  const thumbKey = `${mediaId}/thumb.jpg`;
-  const previewKey = `${mediaId}/preview.jpg`;
-
-  await Promise.all([
-    supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
-    supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
-  ]);
-
-  await prisma.media.update({ where: { id: mediaId }, data: { thumbKey, previewKey } });
-
-  void dir;
-}
-
-async function processVideo({
-  mediaId,
-  inputPath,
-  dir,
-  operator,
-}: {
-  mediaId: string;
-  inputPath: string;
-  dir: string;
-  operator: OperatorBrand;
-}): Promise<void> {
-  const duration = await getDurationSec(inputPath);
-  if (duration > MAX_VIDEO_DURATION_SEC) {
-    throw new Error(`Media ${mediaId} exceeds max video duration`);
-  }
-
-  const thumbPath = join(dir, "thumb.jpg");
-  const previewPath = join(dir, "preview.mp4");
-
-  await extractThumbnail(inputPath, thumbPath, duration);
-  await transcodePreview(inputPath, previewPath);
-
-  const [thumbBuffer, previewBuffer] = await Promise.all([readFile(thumbPath), readFile(previewPath)]);
-
-  const thumbKey = `${mediaId}/thumb.jpg`;
-  const previewKey = `${mediaId}/preview.mp4`;
-
-  await Promise.all([
-    supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
-    supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "video/mp4", upsert: true }),
-  ]);
-
-  await prisma.media.update({ where: { id: mediaId }, data: { thumbKey, previewKey, durationSec: Math.round(duration) } });
-}
-
-function getDurationSec(inputPath: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(inputPath, (err, metadata) => {
-      if (err) reject(err);
-      else resolve(metadata.format.duration ?? 0);
-    });
-  });
-}
-
-function extractThumbnail(inputPath: string, outputPath: string, durationSec: number): Promise<void> {
-  // Capture à 1 s, ou au milieu si la vidéo est très courte
-  const ts = durationSec > 2 ? "00:00:01" : "00:00:00";
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .screenshots({ timestamps: [ts], filename: "thumb.jpg", folder: join(outputPath, ".."), size: "480x?" })
-      .on("end", () => resolve())
-      .on("error", reject);
-  });
-}
-
-function transcodePreview(inputPath: string, outputPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .videoCodec("libx264")
-      // vf scale assure des dimensions paires (libx264 l'exige)
-      .outputOptions(["-vf", "scale=-2:720", "-crf 28", "-preset veryfast", "-pix_fmt yuv420p", "-movflags +faststart"])
-      .audioCodec("aac")
-      .audioBitrate("96k")
-      .on("end", () => resolve())
-      .on("error", reject)
-      .save(outputPath);
-  });
 }

@@ -7,7 +7,7 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"]
 
 export async function POST(request: Request): Promise<Response> {
   const dbUser = await getOperatorUser();
-  if (!dbUser || dbUser.role !== "ADMIN") {
+  if (!dbUser) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -10,41 +10,41 @@ datasource db {
 }
 
 model Operator {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   name            String
-  slug            String    @unique
+  slug            String   @unique
   logoUrl         String?
-  location        String?
-  brandColor      String    @default("#4f46e5")
+  brandColor      String   @default("#FF5A1F") // one of the 7 Linktrip swatches; drives boutique --op only
+
   stripeAccountId String?
-  stripeOnboarded Boolean   @default(false)
-  packPriceCents  Int       @default(2900)
-  feePercent      Int       @default(20)
-  defaultMode     Mode      @default(BOUTIQUE)
-  googleReviewUrl      String?
-  trustpilotUrl        String?
-  tripadvisorUrl       String?
-  instagramHandle      String?
-  instagramPostCaption String?
-  whatsappNumber       String?
-  deliveryMessageTemplate String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  stripeOnboarded Boolean  @default(false)
 
-  users    User[]
-  sessions Session[]
-  events   Event[]
-}
+  pricePhotoCents Int      @default(800)
+  pricePackCents  Int      @default(2200)
+  priceAllCents   Int      @default(3900)
+  packSize        Int      @default(3)
+  freeCount       Int      @default(2)
+  feePercent      Int      @default(20)
 
-enum Mode {
-  BOUTIQUE
-  MARKETING
+  // { resendUnopened, reducedPriceOffer, reviewRequest, referral } — referral always false, "bientôt"
+  automations     Json     @default("{\"resendUnopened\":true,\"reducedPriceOffer\":true,\"reviewRequest\":true,\"referral\":false}")
+
+  googleReviewUrl String?
+  whatsappNumber  String?
+  activities      String[] @default([]) // ids @souvenir/web:lib/onboarding/activities.ts — choisis à l'inscription, modifiables en réglages
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  sorties Sortie[]
+  events  Event[]
 }
 
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
-  role       Role     @default(MONITEUR)
+  role       Role     @default(MONITEUR) // kept for future use; no longer gates the 3-tab nav
   operatorId String
   createdAt  DateTime @default(now())
 
@@ -58,93 +58,87 @@ enum Role {
   MONITEUR
 }
 
-model Session {
-  id         String   @id @default(cuid())
+model Sortie {
+  id         String       @id @default(cuid())
   operatorId String
-  date       DateTime @default(now())
-  label      String?
-  mode       Mode
-  createdAt  DateTime @default(now())
+  activity   String
+  place      String?
+  startsAt   DateTime
+  seats      Int          @default(8)
+  guide      String?
+  status     SortieStatus @default(UPCOMING) // UPCOMING -> SORTED -> SENT; "today" is computed from startsAt, never stored
+  createdAt  DateTime     @default(now())
 
-  operator   Operator   @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-  deliveries Delivery[]
-  importBatches ImportBatch[]
+  operator     Operator      @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  participants Participant[]
+  photos       Photo[]
 
   @@index([operatorId])
+  @@index([operatorId, startsAt])
 }
 
-model ImportBatch {
-  id        String   @id @default(cuid())
-  sessionId String
-  status    String   @default("uploading") // uploading | sorted | done
+enum SortieStatus {
+  UPCOMING
+  SORTED
+  SENT
+}
+
+model Participant {
+  id      String  @id @default(cuid())
+  sortieId String
+  name    String
+  contact String  // email OR phone, mandatory — cannot create without one
+  channel Channel // deriveChannel(contact)
+  token   String  @unique // /g/{token} — the only secret, must be non-guessable
+
+  consentAt DateTime  @default(now())
+  deleteAt  DateTime  // consentAt + 90d, RGPD purge cron target
+  deletedAt DateTime?
+
+  sentAt                DateTime?
+  openedAt               DateTime?
+  remindedAt             DateTime? // +2h resend idempotency
+  reducedOfferSentAt     DateTime? // +24h offer idempotency
+  reducedOfferExpiresAt  DateTime? // offer valid 48h, read by quote()
+  reviewRequestSentAt    DateTime? // post-purchase idempotency
+
   createdAt DateTime @default(now())
 
-  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  media   Media[]
+  sortie Sortie   @relation(fields: [sortieId], references: [id], onDelete: Cascade)
+  order  Order?
+  photos Photo[]  @relation("PhotoOwner")
 
-  @@index([sessionId])
+  @@index([sortieId])
+  @@index([deleteAt])
 }
 
-model Delivery {
-  id           String         @id @default(cuid())
-  sessionId    String
-  code         String         @unique
-  token        String         @unique
-  title        String?
-  clientName   String?
-  clientPhone  String?
-  clientEmail  String?
-  consentImage Boolean        @default(false)
-  consentEmail Boolean        @default(false)
-  status         DeliveryStatus @default(CREATED)
-  claimedAt      DateTime?
-  whatsappOptInAt DateTime?
-  reviewSentAt   DateTime?
-  sentAt         DateTime?
-  createdAt    DateTime       @default(now())
-
-  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  media   Media[]
-  order   Order?
-  events  Event[]
-
-  @@index([sessionId])
+enum Channel {
+  EMAIL
+  WHATSAPP
 }
 
-enum DeliveryStatus {
-  CREATED
-  CLAIMED
-  DELIVERED
-  PURCHASED
+model Photo {
+  id           String      @id @default(cuid())
+  sortieId     String
+  ownerId      String?     // null = common photo, visible to every participant of the sortie
+  originalKey  String
+  previewKey   String?
+  thumbKey     String?
+  takenAt      DateTime?   // unpopulated in v1, reserved for future EXIF clustering
+  isVideo      Boolean     @default(false)
+  isFreeSample Boolean     @default(false) // computed at assign time, see lib/assign.ts
+  status       PhotoStatus @default(UPLOADED)
+  createdAt    DateTime    @default(now())
+
+  sortie Sortie          @relation(fields: [sortieId], references: [id], onDelete: Cascade)
+  owner  Participant?    @relation("PhotoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  jobs   ProcessingJob[]
+
+  @@index([sortieId])
+  @@index([ownerId])
 }
 
-model Media {
-  id            String      @id @default(cuid())
-  deliveryId    String?
-  importBatchId String?
-  kind          MediaKind
-  originalKey String
-  previewKey  String?
-  thumbKey    String?
-  status      MediaStatus @default(UPLOADED)
-  durationSec Int?
-  sizeBytes   Int?
-  createdAt   DateTime    @default(now())
-
-  delivery    Delivery?    @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
-  importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
-  jobs        ProcessingJob[]
-
-  @@index([deliveryId])
-  @@index([importBatchId])
-}
-
-enum MediaKind {
-  PHOTO
-  VIDEO
-}
-
-enum MediaStatus {
+enum PhotoStatus {
   UPLOADED
   PROCESSING
   READY
@@ -152,44 +146,56 @@ enum MediaStatus {
 }
 
 model Order {
-  id              String   @id @default(cuid())
-  deliveryId      String   @unique
-  amountCents     Int
-  feeCents        Int
-  stripePaymentId String   @unique
-  status          String
-  createdAt       DateTime @default(now())
+  id            String    @id @default(cuid())
+  participantId String    @unique
+  photoIds      String[]
+  amountCents   Int
+  feeCents      Int
+  stripePi      String?   @unique
+  status        String    @default("pending") // pending | succeeded | failed
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
 
-  delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }
 
 model ProcessingJob {
   id        String    @id @default(cuid())
-  mediaId   String
-  kind      String
+  photoId   String
+  kind      String    // "preview" only in v1
   status    String    @default("pending")
   attempts  Int       @default(0)
   lockedAt  DateTime?
   createdAt DateTime  @default(now())
 
-  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  photo Photo @relation(fields: [photoId], references: [id], onDelete: Cascade)
 
   @@index([status])
-  @@index([mediaId])
+  @@index([photoId])
 }
 
 model Event {
-  id         String   @id @default(cuid())
-  deliveryId String?
-  operatorId String
-  name       String
-  meta       Json?
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  operatorId    String
+  participantId String?
+  name          String
+  meta          Json?
+  createdAt     DateTime @default(now())
 
-  operator Operator  @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-  delivery Delivery? @relation(fields: [deliveryId], references: [id], onDelete: SetNull)
+  operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
 
   @@index([operatorId])
-  @@index([deliveryId])
+  @@index([participantId])
   @@index([name])
+}
+
+// Limitation de débit sur la connexion et la demande de réinitialisation —
+// une ligne par tentative, comptée sur une fenêtre glissante. Pas de Redis :
+// même logique "table Postgres" que ProcessingJob (cf. CLAUDE.md §2.3).
+model AuthAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }

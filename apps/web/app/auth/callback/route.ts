@@ -15,9 +15,9 @@ export async function GET(request: Request): Promise<Response> {
       if (next) return NextResponse.redirect(`${origin}${next}`);
 
       const user = await prisma.user.findUnique({ where: { email: data.user.email } });
-      return NextResponse.redirect(`${origin}${user ? "/dashboard" : "/onboarding"}`);
+      return NextResponse.redirect(`${origin}${user ? "/sorties" : "/onboarding"}`);
     }
   }
 
-  return NextResponse.redirect(`${origin}/login`);
+  return NextResponse.redirect(`${origin}/connexion`);
 }

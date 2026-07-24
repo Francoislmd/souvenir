@@ -15,7 +15,7 @@ export const requireOperatorUser = cache(async (): Promise<OperatorUser> => {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session?.user?.email) redirect("/login");
+  if (!session?.user?.email) redirect("/connexion");
 
   const dbUser = await prisma.user.findUnique({
     where: { email: session.user.email },
@@ -26,12 +26,6 @@ export const requireOperatorUser = cache(async (): Promise<OperatorUser> => {
 
   return dbUser;
 });
-
-export async function requireAdminUser(): Promise<OperatorUser> {
-  const dbUser = await requireOperatorUser();
-  if (dbUser.role !== "ADMIN") redirect("/sessions");
-  return dbUser;
-}
 
 // Route Handlers — renvoie null au lieu de rediriger.
 // Pas de cache() ici : les route handlers n'ont pas de render tree React.
