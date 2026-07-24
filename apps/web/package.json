@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:email": "tsx scripts/send-test-email.ts"
+    "test:email": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/send-test-email.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
