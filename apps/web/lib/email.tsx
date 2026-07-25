@@ -8,6 +8,7 @@ import PhotosReminder, { type PhotosReminderProps } from "@/emails/PhotosReminde
 import PhotosOffer, { type PhotosOfferProps } from "@/emails/PhotosOffer";
 import OrderConfirmed, { type OrderConfirmedProps } from "@/emails/OrderConfirmed";
 import PhotoWithdrawn, { type PhotoWithdrawnProps } from "@/emails/PhotoWithdrawn";
+import GroupInvite, { type GroupInviteProps } from "@/emails/GroupInvite";
 
 let resendClient: Resend | null = null;
 
@@ -248,4 +249,34 @@ export async function sendPhotoWithdrawalNotifiedEmail(params: {
     galleryUrl: params.galleryUrl,
   };
   await dispatch({ to, subject: "Une photo a été retirée de votre galerie de groupe", element: <PhotoWithdrawn {...props} /> });
+}
+
+/**
+ * "Envoyer au groupe" (mode GROUPE) : l'opérateur saisit une liste d'emails
+ * à la main — personne n'a encore de fiche Participant à ce stade. Chaque
+ * envoi est indépendant ; un échec isolé ne doit pas bloquer les autres.
+ */
+export async function sendGroupInviteEmail(params: {
+  to: string;
+  operatorId: string;
+  operatorName: string;
+  operatorLogoUrl: string | null;
+  brandColor: string;
+  activity: string;
+  sortieDate: string;
+  sortiePlace: string | null;
+  galleryUrl: string;
+}): Promise<void> {
+  const replyTo = await getReplyTo(params.operatorId);
+  const props: GroupInviteProps = {
+    operatorName: params.operatorName,
+    operatorInitials: params.operatorName.slice(0, 2).toUpperCase(),
+    operatorColor: params.brandColor,
+    operatorLogoUrl: params.operatorLogoUrl ?? undefined,
+    activity: params.activity,
+    sortieDate: params.sortieDate,
+    sortiePlace: params.sortiePlace ?? undefined,
+    galleryUrl: params.galleryUrl,
+  };
+  await dispatch({ to: params.to, subject: "Vos photos vous attendent", element: <GroupInvite {...props} />, replyTo });
 }

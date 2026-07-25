@@ -1,36 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import QRCode from "qrcode";
 import styles from "@/app/(operator)/operator.module.css";
 import { useToast } from "@/components/operator/ToastProvider";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function parseEmails(text: string): { valid: string[]; invalidCount: number } {
+  const tokens = text
+    .split(/[,;\n\r\t]+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const valid = Array.from(new Set(tokens.filter((t) => EMAIL_RE.test(t))));
+  const invalidCount = tokens.length - tokens.filter((t) => EMAIL_RE.test(t)).length;
+  return { valid, invalidCount };
+}
 
 /**
  * Les deux actions de partage de la galerie de groupe (carte sortie +
  * écran "Galerie publiée") — un seul endroit pour cette logique, montée
  * deux fois dans l'app.
  */
-export function GroupShareActions({ shareUrl }: { shareUrl: string }) {
+export function GroupShareActions({ sortieId, shareUrl }: { sortieId: string; shareUrl: string }) {
   const toast = useToast();
   const [qrOpen, setQrOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [emailsText, setEmailsText] = useState("");
+  const [sending, setSending] = useState(false);
 
-  async function shareToGroup(): Promise<void> {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "Vos photos", url: shareUrl });
-      } catch {
-        // Partage annulé par l'opérateur — rien à faire.
-      }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-    } catch {
-      // repli silencieux — le lien reste visible et copiable à la main
-    }
-    toast("Le partage n'est pas disponible ici — lien copié, collez-le dans votre message");
-  }
+  const { valid: validEmails, invalidCount } = useMemo(() => parseEmails(emailsText), [emailsText]);
 
   async function openQr(): Promise<void> {
     setQrOpen(true);
@@ -39,16 +39,69 @@ export function GroupShareActions({ shareUrl }: { shareUrl: string }) {
     setQrDataUrl(dataUrl);
   }
 
+  async function sendInvites(): Promise<void> {
+    if (validEmails.length === 0 || sending) return;
+    setSending(true);
+    try {
+      const res = await fetch(`/api/sorties/${sortieId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: validEmails }),
+      });
+      if (!res.ok) {
+        toast("L'envoi a échoué — réessayez.");
+        return;
+      }
+      const data = (await res.json()) as { sent: number; total: number };
+      toast(`Envoyé à ${data.sent} adresse${data.sent > 1 ? "s" : ""}`);
+      setEmailsText("");
+      setInviteOpen(false);
+    } catch {
+      toast("Le réseau a coupé — réessayez.");
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <>
       <div className={styles.sharerow}>
-        <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => void shareToGroup()}>
+        <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => setInviteOpen(true)}>
           Envoyer au groupe
         </button>
         <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => void openQr()}>
           QR code
         </button>
       </div>
+
+      {inviteOpen ? (
+        <div className={styles.qrOverlay} onClick={() => setInviteOpen(false)}>
+          <div className={styles.qrCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.lt}>Envoyer le lien par email</div>
+            <div className={styles.lh}>Collez une liste d&rsquo;adresses — séparées par une virgule ou un retour à la ligne.</div>
+            <textarea
+              className={styles.inp}
+              rows={5}
+              style={{ resize: "vertical", fontFamily: "inherit" }}
+              placeholder={"julie@email.com\nthomas@email.com"}
+              value={emailsText}
+              onChange={(e) => setEmailsText(e.target.value)}
+            />
+            <div className={styles.lh}>
+              {validEmails.length} adresse{validEmails.length > 1 ? "s" : ""} valide{validEmails.length > 1 ? "s" : ""}
+              {invalidCount > 0 ? ` · ${invalidCount} ignorée${invalidCount > 1 ? "s" : ""}` : ""}
+            </div>
+            <div className={styles.sharerow} style={{ justifyContent: "center" }}>
+              <button type="button" className={`${styles.btn} ${styles.sm}`} onClick={() => void sendInvites()} disabled={validEmails.length === 0 || sending}>
+                {sending ? "Envoi…" : "Envoyer"}
+              </button>
+              <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => setInviteOpen(false)}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {qrOpen ? (
         <div className={styles.qrOverlay} onClick={() => setQrOpen(false)}>

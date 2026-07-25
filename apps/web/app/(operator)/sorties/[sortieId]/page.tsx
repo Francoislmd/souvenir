@@ -53,7 +53,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       </p>
 
       {isGroup ? (
-        <GroupShareCard shareUrl={`${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}`} />
+        <GroupShareCard sortieId={sortie.id} shareUrl={`${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}`} />
       ) : (
         <>
           <div className={styles.lbl}>

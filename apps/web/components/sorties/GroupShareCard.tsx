@@ -4,7 +4,7 @@ import styles from "@/app/(operator)/operator.module.css";
 import { useToast } from "@/components/operator/ToastProvider";
 import { GroupShareActions } from "@/components/sorties/GroupShareActions";
 
-export function GroupShareCard({ shareUrl }: { shareUrl: string }) {
+export function GroupShareCard({ sortieId, shareUrl }: { sortieId: string; shareUrl: string }) {
   const toast = useToast();
   const shortLabel = shareUrl.replace(/^https?:\/\//, "");
 
@@ -30,7 +30,7 @@ export function GroupShareCard({ shareUrl }: { shareUrl: string }) {
             Copier
           </button>
         </div>
-        <GroupShareActions shareUrl={shareUrl} />
+        <GroupShareActions sortieId={sortieId} shareUrl={shareUrl} />
       </div>
     </>
   );

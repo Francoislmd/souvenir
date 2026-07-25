@@ -19,6 +19,7 @@ export type EventName =
   | "onboarding_qualified"
   | "sortie_published"
   | "group_order_created"
+  | "group_invite_sent"
   | "photo_hidden"
   | "group_purge";
 

@@ -241,7 +241,7 @@ export function PhotosFlow({
                 Copier
               </button>
             </div>
-            {shareUrl ? <GroupShareActions shareUrl={shareUrl} /> : null}
+            {shareUrl ? <GroupShareActions sortieId={sortieId} shareUrl={shareUrl} /> : null}
           </div>
           <div className={styles.soon} style={{ marginTop: 14 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
