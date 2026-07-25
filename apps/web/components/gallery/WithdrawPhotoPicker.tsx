@@ -21,9 +21,9 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
   async function openDay(day: GroupDaySummary): Promise<void> {
     setActiveDay(day);
     setStep("slots");
-    const res = await fetch(`/api/g/s/${shareToken}/sorties/${day.sortieId}/slots`);
+    const res = await fetch(`/api/g/s/${shareToken}/days/${encodeURIComponent(day.dateKey)}/slots`);
     if (res.ok) {
-      const data = (await res.json()) as { activity: string; slots: GroupSlotSummary[] };
+      const data = (await res.json()) as { dateLabel: string; slots: GroupSlotSummary[] };
       setSlots(data.slots);
     }
   }
@@ -57,7 +57,7 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
         </div>
         <div className={styles.slots}>
           {days.map((day) => (
-            <button key={day.sortieId} type="button" className={styles.slot} onClick={() => void openDay(day)}>
+            <button key={day.dateKey} type="button" className={styles.slot} onClick={() => void openDay(day)}>
               <span className={styles.cov}>
                 {day.coverUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -66,7 +66,6 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
               </span>
               <span className={styles.info}>
                 <span className={styles.h}>{day.dateLabel}</span>
-                <span className={styles.a}>{day.activity}</span>
               </span>
               <span className={styles.n}>
                 {day.slotCount} créneau{day.slotCount > 1 ? "x" : ""}
@@ -99,6 +98,7 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
               </span>
               <span className={styles.info}>
                 <span className={styles.h}>{slot.label}</span>
+                <span className={styles.a}>{slot.activity}</span>
               </span>
               <span className={styles.n}>{slot.photoCount} photos</span>
             </button>

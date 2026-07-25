@@ -2,19 +2,17 @@ import { prisma } from "./prisma";
 import { getPreviewUrl } from "./storage";
 
 export interface GroupDaySummary {
-  sortieId: string;
-  activity: string;
-  place: string | null;
-  startsAt: Date;
-  dateLabel: string; // "Mercredi 22 juillet"
+  dateKey: string; // clé stable pour l'écran suivant, ex. "2026-07-25"
+  dateLabel: string; // "Samedi 25 juillet"
   slotCount: number;
   coverUrl: string | null;
 }
 
 export interface GroupSlotSummary {
   id: string;
-  label: string;
+  label: string; // heure, "11 h 00"
   startsAt: Date;
+  activity: string; // reprise de la sortie parente — un jour peut mélanger plusieurs activités
   guide: string | null;
   photoCount: number;
   coverUrl: string | null;
@@ -32,6 +30,10 @@ function formatDateFr(d: Date): string {
     .replace(/^./, (c) => c.toUpperCase());
 }
 
+function dateKeyFor(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
 function previewUrlFor(photo: { groupPreviewKey: string | null; previewKey: string | null; thumbKey: string | null }): string | null {
   const key = photo.groupPreviewKey ?? photo.previewKey ?? photo.thumbKey;
   return key ? getPreviewUrl(key) : null;
@@ -39,10 +41,12 @@ function previewUrlFor(photo: { groupPreviewKey: string | null; previewKey: stri
 
 /**
  * Jours publiés d'un opérateur (écran 1 de /g/s/[shareToken]) — un lien
- * unique par opérateur, réutilisé par toutes ses sorties GROUPE : le client
- * choisit d'abord son jour, puis son créneau (écran 2). Seules les sorties
- * déjà publiées (des Slot existent) apparaissent — une sortie purgée après
- * 90 jours (plus aucun Slot) disparaît d'elle-même.
+ * unique par opérateur, réutilisé par toutes ses sorties GROUPE. Une même
+ * date calendaire peut correspondre à plusieurs sorties (activités ou
+ * horaires différents) : elles sont regroupées sous une seule carte de
+ * jour, et tous leurs créneaux se retrouvent à l'écran suivant (écran 2).
+ * Seules les sorties déjà publiées (des Slot existent) comptent — une
+ * sortie purgée après 90 jours (plus aucun Slot) disparaît d'elle-même.
  */
 export async function getOperatorGroupDays(shareToken: string): Promise<{ operatorId: string; operatorName: string; days: GroupDaySummary[] } | null> {
   const operator = await prisma.operator.findUnique({
@@ -51,12 +55,7 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
       sorties: {
         where: { mode: "GROUPE", slots: { some: {} } },
         include: {
-          slots: {
-            include: { cover: true },
-            orderBy: { startsAt: "asc" },
-            take: 1,
-          },
-          _count: { select: { slots: true } },
+          slots: { include: { cover: true }, orderBy: { startsAt: "asc" } },
         },
         orderBy: { startsAt: "desc" },
       },
@@ -64,54 +63,75 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
   });
   if (!operator) return null;
 
-  return {
-    operatorId: operator.id,
-    operatorName: operator.name,
-    days: operator.sorties.map((sortie) => {
-      const cover = sortie.slots[0]?.cover ?? null;
-      return {
-        sortieId: sortie.id,
-        activity: sortie.activity,
-        place: sortie.place,
-        startsAt: sortie.startsAt,
+  const byDate = new Map<string, { dateLabel: string; startsAt: Date; slotCount: number; coverUrl: string | null }>();
+  for (const sortie of operator.sorties) {
+    const key = dateKeyFor(sortie.startsAt);
+    const cover = sortie.slots[0]?.cover ?? null;
+    const existing = byDate.get(key);
+    if (existing) {
+      existing.slotCount += sortie.slots.length;
+      if (!existing.coverUrl && cover) existing.coverUrl = previewUrlFor(cover);
+    } else {
+      byDate.set(key, {
         dateLabel: formatDateFr(sortie.startsAt),
-        slotCount: sortie._count.slots,
+        startsAt: sortie.startsAt,
+        slotCount: sortie.slots.length,
         coverUrl: cover ? previewUrlFor(cover) : null,
-      };
-    }),
-  };
+      });
+    }
+  }
+
+  const days = Array.from(byDate.entries())
+    .sort((a, b) => b[1].startsAt.getTime() - a[1].startsAt.getTime())
+    .map(([dateKey, d]) => ({ dateKey, dateLabel: d.dateLabel, slotCount: d.slotCount, coverUrl: d.coverUrl }));
+
+  return { operatorId: operator.id, operatorName: operator.name, days };
 }
 
 /**
- * Créneaux d'un jour (sortie) donné (écran 2) — aucune distinction
- * achetée/verrouillée à ce stade, juste de quoi choisir son créneau.
+ * Créneaux d'un jour donné (écran 2), tous services confondus — aucune
+ * distinction achetée/verrouillée à ce stade, juste de quoi choisir son
+ * créneau. Chaque créneau porte l'activité de sa sortie d'origine, un même
+ * jour pouvant mélanger plusieurs activités.
  */
-export async function getSortieSlots(sortieId: string): Promise<{ activity: string; slots: GroupSlotSummary[] } | null> {
-  const sortie = await prisma.sortie.findUnique({
-    where: { id: sortieId },
+export async function getSlotsForDate(shareToken: string, dateKey: string): Promise<{ dateLabel: string; slots: GroupSlotSummary[] } | null> {
+  const operator = await prisma.operator.findUnique({
+    where: { shareToken },
     include: {
-      slots: {
+      sorties: {
+        where: { mode: "GROUPE", slots: { some: {} } },
         include: {
-          cover: true,
-          _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
+          slots: {
+            include: {
+              cover: true,
+              _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
+            },
+            orderBy: { startsAt: "asc" },
+          },
         },
-        orderBy: { startsAt: "asc" },
       },
     },
   });
-  if (!sortie || sortie.mode !== "GROUPE") return null;
+  if (!operator) return null;
 
-  return {
-    activity: sortie.activity,
-    slots: sortie.slots.map((s) => ({
-      id: s.id,
-      label: s.label,
-      startsAt: s.startsAt,
-      guide: s.guide,
-      photoCount: s._count.photos,
-      coverUrl: s.cover ? previewUrlFor(s.cover) : null,
-    })),
-  };
+  const matching = operator.sorties.filter((sortie) => dateKeyFor(sortie.startsAt) === dateKey);
+  if (matching.length === 0) return null;
+
+  const slots = matching
+    .flatMap((sortie) =>
+      sortie.slots.map((slot) => ({
+        id: slot.id,
+        label: slot.label,
+        startsAt: slot.startsAt,
+        activity: sortie.activity,
+        guide: slot.guide,
+        photoCount: slot._count.photos,
+        coverUrl: slot.cover ? previewUrlFor(slot.cover) : null,
+      })),
+    )
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+
+  return { dateLabel: formatDateFr(matching[0]!.startsAt), slots };
 }
 
 /**

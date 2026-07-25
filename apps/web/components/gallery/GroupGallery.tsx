@@ -44,9 +44,9 @@ export function GroupGallery({
   async function openDay(day: GroupDaySummary): Promise<void> {
     setActiveDay(day);
     setView("slots");
-    const res = await fetch(`/api/g/s/${shareToken}/sorties/${day.sortieId}/slots`);
+    const res = await fetch(`/api/g/s/${shareToken}/days/${encodeURIComponent(day.dateKey)}/slots`);
     if (res.ok) {
-      const data = (await res.json()) as { activity: string; slots: GroupSlotSummary[] };
+      const data = (await res.json()) as { dateLabel: string; slots: GroupSlotSummary[] };
       setSlots(data.slots);
     }
   }
@@ -142,7 +142,7 @@ export function GroupGallery({
 
         <div className={styles.slots}>
           {days.map((day) => (
-            <button key={day.sortieId} type="button" className={styles.slot} onClick={() => void openDay(day)}>
+            <button key={day.dateKey} type="button" className={styles.slot} onClick={() => void openDay(day)}>
               <span className={styles.cov}>
                 {day.coverUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -151,10 +151,6 @@ export function GroupGallery({
               </span>
               <span className={styles.info}>
                 <span className={styles.h}>{day.dateLabel}</span>
-                <span className={styles.a}>
-                  {day.activity}
-                  {day.place ? ` · ${day.place}` : ""}
-                </span>
               </span>
               <span className={styles.n}>
                 {day.slotCount} créneau{day.slotCount > 1 ? "x" : ""}
@@ -181,7 +177,7 @@ export function GroupGallery({
     if (!activeDay) return null;
     return (
       <>
-        <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${activeDay.activity} · ${activeDay.dateLabel}`} />
+        <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={activeDay.dateLabel} />
         <div className={styles.hi}>
           <h1>{activeDay.dateLabel}</h1>
           <p>
@@ -200,7 +196,7 @@ export function GroupGallery({
               </span>
               <span className={styles.info}>
                 <span className={styles.h}>{slot.label}</span>
-                <span className={styles.a}>{activeDay.activity}</span>
+                <span className={styles.a}>{slot.activity}</span>
                 {slot.guide ? <span className={styles.g}>guide {slot.guide}</span> : null}
               </span>
               <span className={styles.n}>{slot.photoCount} photos</span>
@@ -232,12 +228,12 @@ export function GroupGallery({
 
   return (
     <>
-      <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${activeDay.activity} · ${activeSlot.label}`} />
+      <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${activeSlot.activity} · ${activeSlot.label}`} />
       <div className={styles.slotbar}>
         <div>
           <div className={styles.hh}>{activeSlot.label}</div>
           <div className={styles.dd}>
-            {activeDay.dateLabel}
+            {activeDay.dateLabel} · {activeSlot.activity}
             {activeSlot.guide ? ` · guide ${activeSlot.guide}` : ""}
           </div>
         </div>
