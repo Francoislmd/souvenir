@@ -900,7 +900,7 @@
   box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.1);
 }
 .mt {
-  font-family: "Inter Tight";
+  font-family: var(--font-bricolage);
   font-weight: 700;
   font-size: 0.92rem;
   color: var(--ink);

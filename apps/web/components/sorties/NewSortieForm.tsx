@@ -23,7 +23,6 @@ export function NewSortieForm({ activities: ACTIVITIES }: { activities: string[]
   const [activityIndex, setActivityIndex] = useState(0);
   const [date, setDate] = useState(defaultDate());
   const [time, setTime] = useState("10:00");
-  const [seats, setSeats] = useState("8");
   const [guide, setGuide] = useState("Marc");
   const [apName, setApName] = useState("");
   const [apTel, setApTel] = useState("");
@@ -64,7 +63,6 @@ export function NewSortieForm({ activities: ACTIVITIES }: { activities: string[]
         body: JSON.stringify({
           activity: ACTIVITIES[activityIndex],
           startsAt: new Date(`${date}T${time || "10:00"}:00`).toISOString(),
-          seats: Number(seats) || 8,
           guide: guide.trim() || null,
           mode,
         }),
@@ -89,8 +87,7 @@ export function NewSortieForm({ activities: ACTIVITIES }: { activities: string[]
             ? `Sortie créée avec ${participants.length} client${participants.length > 1 ? "s" : ""}`
             : "Sortie créée",
       );
-      router.push("/sorties");
-      router.refresh();
+      router.push(`/sorties/${sortieId}/photos`);
     } catch {
       toast("Le réseau a coupé — réessaie dans une minute.");
       setSaving(false);
@@ -123,15 +120,9 @@ export function NewSortieForm({ activities: ACTIVITIES }: { activities: string[]
       </div>
 
       <div className={styles.lbl}>Qui encadre</div>
-      <div className={styles.two}>
-        <div className={styles.field} style={{ margin: 0 }}>
-          <label htmlFor="nSeats">Places</label>
-          <input className={styles.inp} type="number" id="nSeats" min={1} value={seats} onChange={(e) => setSeats(e.target.value)} />
-        </div>
-        <div className={styles.field} style={{ margin: 0 }}>
-          <label htmlFor="nGuide">Guide</label>
-          <input className={styles.inp} id="nGuide" placeholder="Optionnel" value={guide} onChange={(e) => setGuide(e.target.value)} />
-        </div>
+      <div className={styles.field} style={{ margin: 0 }}>
+        <label htmlFor="nGuide">Guide</label>
+        <input className={styles.inp} id="nGuide" placeholder="Optionnel" value={guide} onChange={(e) => setGuide(e.target.value)} />
       </div>
 
       <div className={styles.lbl}>Comment envoyer les photos ?</div>
