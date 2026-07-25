@@ -286,6 +286,19 @@ export function PhotosFlow({
             <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} />
           </div>
         ) : null}
+        <div className={styles.thumbs} style={{ marginTop: 16 }}>
+          {photos.map((p) => {
+            const src = p.thumbUrl ?? localPreviews.get(p.id) ?? null;
+            return (
+              <span key={p.id} className={styles.th2} style={{ cursor: "default" }}>
+                {src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={src} alt="" draggable={false} />
+                ) : null}
+              </span>
+            );
+          })}
+        </div>
         <div className={styles.act}>
           <button type="button" className={`${styles.btn} ${styles.full}`} onClick={() => void publishGroup()} disabled={publishing || photos.length === 0}>
             {publishing ? "Publication…" : "Publier les photos"}
