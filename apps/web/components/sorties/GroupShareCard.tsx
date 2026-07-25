@@ -2,6 +2,7 @@
 
 import styles from "@/app/(operator)/operator.module.css";
 import { useToast } from "@/components/operator/ToastProvider";
+import { GroupShareActions } from "@/components/sorties/GroupShareActions";
 
 export function GroupShareCard({ shareUrl }: { shareUrl: string }) {
   const toast = useToast();
@@ -29,14 +30,7 @@ export function GroupShareCard({ shareUrl }: { shareUrl: string }) {
             Copier
           </button>
         </div>
-        <div className={styles.sharerow}>
-          <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => toast("Partagé au groupe")}>
-            Envoyer au groupe
-          </button>
-          <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => toast("Affiche à imprimer générée")}>
-            Affiche + QR
-          </button>
-        </div>
+        <GroupShareActions shareUrl={shareUrl} />
       </div>
     </>
   );

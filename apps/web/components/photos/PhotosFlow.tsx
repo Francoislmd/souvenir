@@ -6,6 +6,7 @@ import styles from "@/app/(operator)/operator.module.css";
 import { PhotoDropZone } from "@/components/photos/PhotoDropZone";
 import { AssignmentLanes, AV_VARIANTS, type LanePhoto } from "@/components/photos/AssignmentLanes";
 import { SendCascade, type SendParticipant } from "@/components/photos/SendCascade";
+import { GroupShareActions } from "@/components/sorties/GroupShareActions";
 import { useToast } from "@/components/operator/ToastProvider";
 import { getUploadItemsForSortie } from "@/lib/idb";
 
@@ -240,14 +241,7 @@ export function PhotosFlow({
                 Copier
               </button>
             </div>
-            <div className={styles.sharerow}>
-              <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => toast("Partagé au groupe")}>
-                Envoyer au groupe
-              </button>
-              <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => toast("Affiche à imprimer générée")}>
-                Affiche + QR
-              </button>
-            </div>
+            {shareUrl ? <GroupShareActions shareUrl={shareUrl} /> : null}
           </div>
           <div className={styles.soon} style={{ marginTop: 14 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>

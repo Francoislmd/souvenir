@@ -964,6 +964,39 @@
   margin-top: 11px;
 }
 
+/* ---------- QR code de la galerie de groupe ---------- */
+.qrOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 19, 32, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.qrCard {
+  background: #fff;
+  border-radius: 22px;
+  padding: 22px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: var(--sh-3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.qrImg {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--line-2);
+}
+.qrImg img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* ---------- revenus ---------- */
 .balance {
   position: relative;
