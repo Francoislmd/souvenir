@@ -137,18 +137,7 @@ export function NewSortieForm({ activities: ACTIVITIES }: { activities: string[]
         </button>
       </div>
 
-      {mode === "GROUPE" ? (
-        <div className={styles.soon} style={{ marginTop: 14 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 16v-5M12 8v.5" />
-          </svg>
-          <div>
-            <div className={styles.t}>Les photos seront visibles par tout le groupe</div>
-            <div className={styles.h}>Prévenez vos clients au briefing. Chacun pourra demander le retrait d&rsquo;une photo sans avoir à se justifier.</div>
-          </div>
-        </div>
-      ) : (
+      {mode === "INDIVIDUEL" ? (
         <>
           <div className={styles.lbl}>
             Participants <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 600 }}>· optionnel</span>
@@ -193,7 +182,7 @@ export function NewSortieForm({ activities: ACTIVITIES }: { activities: string[]
             ))}
           </div>
         </>
-      )}
+      ) : null}
 
       <div className={styles.act}>
         <button type="button" className={`${styles.btn} ${styles.full}`} onClick={createSortie} disabled={saving}>
