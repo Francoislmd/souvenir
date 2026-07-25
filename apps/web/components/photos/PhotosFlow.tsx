@@ -243,16 +243,9 @@ export function PhotosFlow({
             </div>
             {shareUrl ? <GroupShareActions sortieId={sortieId} shareUrl={shareUrl} /> : null}
           </div>
-          <div className={styles.soon} style={{ marginTop: 14 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 16v-5M12 8v.5" />
-            </svg>
-            <div>
-              <div className={styles.t}>Photos regroupées par créneau</div>
-              <div className={styles.h}>Le découpage se fait sur l&rsquo;horaire des prises de vue. Chacun retrouve son groupe sans que vous ayez rien à trier.</div>
-            </div>
-          </div>
+          <p className={styles.lead} style={{ marginTop: 14 }}>
+            Photos regroupées par créneau : le découpage se fait sur l&rsquo;horaire des prises de vue, chacun retrouve son groupe sans que vous ayez rien à trier.
+          </p>
           <div className={styles.act}>
             <button type="button" className={`${styles.btn} ${styles.full}`} onClick={() => router.push("/sorties")}>
               Revenir à mes sorties
