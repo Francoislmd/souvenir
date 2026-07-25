@@ -322,6 +322,23 @@
   height: 100%;
   object-fit: cover;
 }
+.hideBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 4px;
+  text-align: center;
+  background: rgba(20, 19, 32, 0.6);
+  color: #fff;
+  font-family: var(--font-bricolage);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+}
+.hideBar:disabled {
+  opacity: 0.6;
+}
 .wm {
   position: absolute;
   inset: 0;

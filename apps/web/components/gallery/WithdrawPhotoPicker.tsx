@@ -124,13 +124,11 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
           <div key={photo.id} className={styles.cell}>
             {photo.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo.previewUrl} alt="" onClick={() => confirmHide(photo.id)} style={{ cursor: "pointer" }} />
+              <img src={photo.previewUrl} alt="" />
             ) : null}
-            {pending === photo.id ? (
-              <span className={styles.wm}>
-                <span>…</span>
-              </span>
-            ) : null}
+            <button type="button" className={styles.hideBar} onClick={() => confirmHide(photo.id)} disabled={pending === photo.id}>
+              {pending === photo.id ? "Retrait…" : "Retirer cette photo"}
+            </button>
           </div>
         ))}
       </div>
