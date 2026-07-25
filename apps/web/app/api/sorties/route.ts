@@ -25,6 +25,16 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
     }
 
+    // Un seul lien de groupe par opérateur, réutilisé par toutes ses sorties
+    // GROUPE — le client y choisit son jour puis son créneau. Généré une
+    // fois, à la volée, à la première sortie GROUPE de cet opérateur.
+    if (parsed.data.mode === "GROUPE" && !dbUser.operator.shareToken) {
+      await prisma.operator.update({
+        where: { id: dbUser.operatorId },
+        data: { shareToken: crypto.randomUUID() },
+      });
+    }
+
     const sortie = await prisma.sortie.create({
       data: {
         operatorId: dbUser.operatorId,
@@ -34,9 +44,6 @@ export async function POST(request: Request): Promise<Response> {
         seats: parsed.data.seats,
         guide: parsed.data.guide,
         mode: parsed.data.mode,
-        // Aléatoire, jamais séquentiel (brief §5.1) — crypto.randomUUID(),
-        // même mécanisme que le token /g/{token} des participants individuels.
-        shareToken: parsed.data.mode === "GROUPE" ? crypto.randomUUID() : null,
       },
     });
 

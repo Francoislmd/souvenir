@@ -36,7 +36,7 @@ export default async function SortiePhotosPage({ params }: { params: { sortieId:
       <PhotosFlow
         sortieId={sortie.id}
         mode={sortie.mode}
-        shareUrl={sortie.shareToken ? `${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}` : null}
+        shareUrl={dbUser.operator.shareToken ? `${env.NEXT_PUBLIC_APP_URL}/g/s/${dbUser.operator.shareToken}` : null}
         initialPhase={initialPhase}
         participants={sortie.participants.map((p) => ({ id: p.id, name: p.name, contact: p.contact }))}
         initialPhotos={sortie.photos.map((p) => ({

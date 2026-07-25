@@ -33,11 +33,11 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       where: { id: params.sortieId, operatorId: dbUser.operatorId },
       include: { operator: true },
     });
-    if (!sortie || sortie.mode !== "GROUPE" || !sortie.shareToken) {
+    if (!sortie || sortie.mode !== "GROUPE" || !sortie.operator.shareToken) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}`;
+    const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.operator.shareToken}`;
     const emails = Array.from(new Set(parsed.data.emails.map((e) => e.trim().toLowerCase())));
 
     let sent = 0;

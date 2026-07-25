@@ -6,11 +6,11 @@ import { getSlotPhotos } from "@/lib/gallery-group";
 // encore en traitement, sans recharger la page (même pattern que
 // /api/g/[token]/photos côté individuel).
 export async function GET(_request: Request, { params }: { params: { shareToken: string; slotId: string } }): Promise<Response> {
-  const sortie = await prisma.sortie.findUnique({ where: { shareToken: params.shareToken }, select: { id: true, mode: true } });
-  if (!sortie || sortie.mode !== "GROUPE") {
+  const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken }, select: { id: true } });
+  if (!operator) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
-  const slot = await prisma.slot.findFirst({ where: { id: params.slotId, sortieId: sortie.id } });
+  const slot = await prisma.slot.findFirst({ where: { id: params.slotId, sortie: { operatorId: operator.id, mode: "GROUPE" } } });
   if (!slot) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }

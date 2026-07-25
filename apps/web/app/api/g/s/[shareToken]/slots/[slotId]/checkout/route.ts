@@ -23,11 +23,11 @@ export async function POST(request: Request, { params }: { params: { shareToken:
       return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
     }
 
-    const sortie = await prisma.sortie.findUnique({ where: { shareToken: params.shareToken } });
-    if (!sortie || sortie.mode !== "GROUPE") {
+    const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken } });
+    if (!operator) {
       return Response.json({ error: "not_found" }, { status: 404 });
     }
-    const slot = await prisma.slot.findFirst({ where: { id: params.slotId, sortieId: sortie.id } });
+    const slot = await prisma.slot.findFirst({ where: { id: params.slotId, sortie: { operatorId: operator.id, mode: "GROUPE" } } });
     if (!slot) {
       return Response.json({ error: "not_found" }, { status: 404 });
     }
@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: { params: { shareToken:
     const now = new Date();
     const participant = await prisma.participant.create({
       data: {
-        sortieId: sortie.id,
+        sortieId: slot.sortieId,
         slotId: slot.id,
         name: email.split("@")[0] ?? "Client",
         contact: email,
@@ -52,7 +52,7 @@ export async function POST(request: Request, { params }: { params: { shareToken:
       photoIds: parsed.data.photoIds,
     });
 
-    await track("group_order_created", { operatorId: sortie.operatorId, participantId: participant.id, meta: { slotId: slot.id } });
+    await track("group_order_created", { operatorId: operator.id, participantId: participant.id, meta: { slotId: slot.id } });
 
     return Response.json({ participantId: participant.id, token: participant.token, clientSecret, amountCents }, { status: 200 });
   } catch (error) {

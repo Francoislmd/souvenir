@@ -34,6 +34,11 @@ model Operator {
   whatsappNumber  String?
   activities      String[] @default([]) // ids @souvenir/web:lib/onboarding/activities.ts — choisis à l'inscription, modifiables en réglages
 
+  // Un seul lien de groupe par opérateur, réutilisé par toutes ses sorties
+  // GROUPE — le client y choisit son jour (Sortie) puis son créneau (Slot).
+  // Généré une fois, à la création de la première sortie GROUPE.
+  shareToken String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -70,9 +75,8 @@ model Sortie {
   status     SortieStatus @default(UPCOMING) // UPCOMING -> SORTED -> SENT; "today" is computed from startsAt, never stored
   createdAt  DateTime     @default(now())
 
-  mode       SortieMode @default(INDIVIDUEL)
-  shareToken String?    @unique // GROUPE uniquement — aléatoire, jamais séquentiel, /g/s/{shareToken}
-  purgeAt    DateTime? // GROUPE uniquement — fixé à la publication (startsAt + 90j)
+  mode    SortieMode @default(INDIVIDUEL)
+  purgeAt DateTime? // GROUPE uniquement — fixé à la publication (startsAt + 90j)
 
   operator       Operator        @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   participants   Participant[]

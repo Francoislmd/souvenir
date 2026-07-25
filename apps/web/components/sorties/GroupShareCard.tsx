@@ -22,8 +22,8 @@ export function GroupShareCard({ sortieId, shareUrl }: { sortieId: string; share
     <>
       <div className={styles.lbl}>Galerie de groupe</div>
       <div className={styles.linkcard}>
-        <div className={styles.lt}>Un lien pour tout le monde</div>
-        <div className={styles.lh}>Vos clients choisissent leur créneau et retrouvent leurs photos. Vous n&rsquo;avez personne à saisir.</div>
+        <div className={styles.lt}>Un lien pour toutes vos sorties de groupe</div>
+        <div className={styles.lh}>Le même lien pour chaque sortie — vos clients y choisissent leur jour, puis leur créneau, pour retrouver leurs photos.</div>
         <div className={styles.linkrow}>
           <code>{shortLabel}</code>
           <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={copyLink}>

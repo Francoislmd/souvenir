@@ -42,8 +42,9 @@ export async function runGdprPurgeScan(now: Date = new Date()): Promise<{ purged
  * d'un Slot n'appartiennent à personne (ownerId reste null) — elles ne sont
  * donc jamais supprimées par purgeParticipant, qui ne cible que les photos
  * possédées en propre. Ici on supprime tout le lot d'un coup, à l'échelle
- * de la sortie, et on désactive le lien (shareToken) plutôt que de le
- * laisser pointer vers une galerie vide.
+ * de la sortie (un jour) — le lien de partage vit sur l'Operator et sert
+ * d'autres sorties, on n'y touche pas ; ce jour disparaît simplement de la
+ * liste (getOperatorGroupDays ne montre que les sorties avec des Slot).
  */
 export async function purgeGroupSortie(sortieId: string): Promise<void> {
   const sortie = await prisma.sortie.findUnique({
@@ -61,7 +62,7 @@ export async function purgeGroupSortie(sortieId: string): Promise<void> {
   await prisma.$transaction([
     prisma.photo.deleteMany({ where: { sortieId: sortie.id } }),
     prisma.slot.deleteMany({ where: { sortieId: sortie.id } }),
-    prisma.sortie.update({ where: { id: sortie.id }, data: { shareToken: null, purgeAt: null } }),
+    prisma.sortie.update({ where: { id: sortie.id }, data: { purgeAt: null } }),
   ]);
 
   await track("group_purge", { operatorId: sortie.operatorId, meta: { sortieId: sortie.id } });

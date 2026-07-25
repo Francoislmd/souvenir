@@ -12,33 +12,30 @@ function formatDateFr(d: Date): string {
 // ni d'identité n'est demandée. Masquage immédiat, avant même traitement.
 export async function POST(_request: Request, { params }: { params: { shareToken: string; photoId: string } }): Promise<Response> {
   try {
-    const sortie = await prisma.sortie.findUnique({
-      where: { shareToken: params.shareToken },
-      include: { operator: true },
-    });
-    if (!sortie || sortie.mode !== "GROUPE") {
+    const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken } });
+    if (!operator) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
     const photo = await prisma.photo.findFirst({
-      where: { id: params.photoId, sortieId: sortie.id },
-      include: { slot: true },
+      where: { id: params.photoId, sortie: { operatorId: operator.id, mode: "GROUPE" } },
+      include: { slot: true, sortie: true },
     });
     if (!photo) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
     await prisma.photo.update({ where: { id: photo.id }, data: { hiddenAt: new Date() } });
-    await track("photo_hidden", { operatorId: sortie.operatorId, meta: { photoId: photo.id, sortieId: sortie.id } });
+    await track("photo_hidden", { operatorId: operator.id, meta: { photoId: photo.id, sortieId: photo.sortieId } });
 
     try {
       await sendPhotoWithdrawalNotifiedEmail({
-        operatorId: sortie.operatorId,
-        operatorName: sortie.operator.name,
-        activity: sortie.activity,
-        sortieDate: formatDateFr(sortie.startsAt),
+        operatorId: operator.id,
+        operatorName: operator.name,
+        activity: photo.sortie.activity,
+        sortieDate: formatDateFr(photo.sortie.startsAt),
         slotLabel: photo.slot?.label ?? "—",
-        galleryUrl: `${env.NEXT_PUBLIC_APP_URL}/sorties/${sortie.id}`,
+        galleryUrl: `${env.NEXT_PUBLIC_APP_URL}/sorties/${photo.sortieId}`,
       });
     } catch (error) {
       // Le masquage a déjà eu lieu — une notification manquée ne doit jamais

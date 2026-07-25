@@ -219,7 +219,7 @@ export function PhotosFlow({
       return (
         <div id="phPub">
           <h1 className={styles.h1}>Galerie publiée</h1>
-          <p className={styles.lead}>Vos clients choisissent leur créneau et retrouvent leurs photos.</p>
+          <p className={styles.lead}>Vos clients choisissent leur jour puis leur créneau pour retrouver leurs photos.</p>
           <div className={styles.linkcard} style={{ marginTop: 20 }}>
             <div className={styles.lt}>Le lien à partager</div>
             <div className={styles.linkrow}>

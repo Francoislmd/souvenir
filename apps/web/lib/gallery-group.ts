@@ -1,6 +1,16 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 
+export interface GroupDaySummary {
+  sortieId: string;
+  activity: string;
+  place: string | null;
+  startsAt: Date;
+  dateLabel: string; // "Mercredi 22 juillet"
+  slotCount: number;
+  coverUrl: string | null;
+}
+
 export interface GroupSlotSummary {
   id: string;
   label: string;
@@ -20,14 +30,64 @@ export interface GroupPhoto {
   isVideo: boolean;
 }
 
+function formatDateFr(d: Date): string {
+  return d
+    .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
 /**
- * Créneaux d'une sortie GROUPE (écran 1 de /g/s/[shareToken]) — aucune
- * distinction achetée/verrouillée à ce stade, juste de quoi choisir son
- * créneau.
+ * Jours publiés d'un opérateur (écran 1 de /g/s/[shareToken]) — un lien
+ * unique par opérateur, réutilisé par toutes ses sorties GROUPE : le client
+ * choisit d'abord son jour, puis son créneau (écran 2). Seules les sorties
+ * déjà publiées (des Slot existent) apparaissent — une sortie purgée après
+ * 90 jours (plus aucun Slot) disparaît d'elle-même.
  */
-export async function getGroupSlots(shareToken: string): Promise<{ sortieId: string; activity: string; slots: GroupSlotSummary[] } | null> {
-  const sortie = await prisma.sortie.findUnique({
+export async function getOperatorGroupDays(shareToken: string): Promise<{ operatorId: string; operatorName: string; days: GroupDaySummary[] } | null> {
+  const operator = await prisma.operator.findUnique({
     where: { shareToken },
+    include: {
+      sorties: {
+        where: { mode: "GROUPE", slots: { some: {} } },
+        include: {
+          slots: {
+            include: { cover: true },
+            orderBy: { startsAt: "asc" },
+            take: 1,
+          },
+          _count: { select: { slots: true } },
+        },
+        orderBy: { startsAt: "desc" },
+      },
+    },
+  });
+  if (!operator) return null;
+
+  return {
+    operatorId: operator.id,
+    operatorName: operator.name,
+    days: operator.sorties.map((sortie) => {
+      const cover = sortie.slots[0]?.cover ?? null;
+      return {
+        sortieId: sortie.id,
+        activity: sortie.activity,
+        place: sortie.place,
+        startsAt: sortie.startsAt,
+        dateLabel: formatDateFr(sortie.startsAt),
+        slotCount: sortie._count.slots,
+        coverUrl: cover?.previewKey ? getPreviewUrl(cover.previewKey) : cover?.thumbKey ? getPreviewUrl(cover.thumbKey) : null,
+      };
+    }),
+  };
+}
+
+/**
+ * Créneaux d'un jour (sortie) donné (écran 2) — aucune distinction
+ * achetée/verrouillée à ce stade, juste de quoi choisir son créneau.
+ */
+export async function getSortieSlots(sortieId: string): Promise<{ activity: string; slots: GroupSlotSummary[] } | null> {
+  const sortie = await prisma.sortie.findUnique({
+    where: { id: sortieId },
     include: {
       slots: {
         include: {
@@ -41,7 +101,6 @@ export async function getGroupSlots(shareToken: string): Promise<{ sortieId: str
   if (!sortie || sortie.mode !== "GROUPE") return null;
 
   return {
-    sortieId: sortie.id,
     activity: sortie.activity,
     slots: sortie.slots.map((s) => ({
       id: s.id,
@@ -55,7 +114,7 @@ export async function getGroupSlots(shareToken: string): Promise<{ sortieId: str
 }
 
 /**
- * Photos d'un créneau (écran 2) — jamais de flou : c'est la différence de
+ * Photos d'un créneau (écran 3) — jamais de flou : c'est la différence de
  * fond avec la boutique individuelle (brief §3), le client doit se
  * reconnaître dans le tas. On sert systématiquement previewKey (déjà
  * filigrané côté serveur), jamais blurKey ni l'original avant paiement.

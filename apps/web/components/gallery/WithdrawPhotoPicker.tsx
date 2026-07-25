@@ -3,20 +3,34 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "@/app/g/s/[shareToken]/collective.module.css";
-import type { GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
+import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
-// Sans justification, sans preuve d'identité — le shareToken de la sortie
+type Step = "days" | "slots" | "photos";
+
+// Sans justification, sans preuve d'identité — le shareToken de l'opérateur
 // suffit (brief §5.3). Accessible depuis les deux liens "Demander le
 // retrait" de /g/s/[shareToken] (critère d'acceptation #8).
-export function WithdrawPhotoPicker({ shareToken, slots }: { shareToken: string; slots: GroupSlotSummary[] }) {
-  const [slotId, setSlotId] = useState<string | null>(null);
+export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; days: GroupDaySummary[] }) {
+  const [step, setStep] = useState<Step>("days");
+  const [activeDay, setActiveDay] = useState<GroupDaySummary | null>(null);
+  const [slots, setSlots] = useState<GroupSlotSummary[]>([]);
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
 
+  async function openDay(day: GroupDaySummary): Promise<void> {
+    setActiveDay(day);
+    setStep("slots");
+    const res = await fetch(`/api/g/s/${shareToken}/sorties/${day.sortieId}/slots`);
+    if (res.ok) {
+      const data = (await res.json()) as { activity: string; slots: GroupSlotSummary[] };
+      setSlots(data.slots);
+    }
+  }
+
   async function openSlot(id: string): Promise<void> {
-    setSlotId(id);
     setConfirmedId(null);
+    setStep("photos");
     const res = await fetch(`/api/g/s/${shareToken}/slots/${id}/photos`);
     if (res.ok) {
       const data = (await res.json()) as { photos: GroupPhoto[] };
@@ -34,12 +48,45 @@ export function WithdrawPhotoPicker({ shareToken, slots }: { shareToken: string;
     }
   }
 
-  if (!slotId) {
+  if (step === "days") {
     return (
       <>
         <div className={styles.hi}>
           <h1>Demander le retrait d&rsquo;une photo</h1>
-          <p>Choisissez le créneau où se trouve la photo, puis touchez-la — elle sera masquée immédiatement, pour tout le monde.</p>
+          <p>Choisissez le jour, puis le créneau où se trouve la photo — elle sera masquée immédiatement, pour tout le monde.</p>
+        </div>
+        <div className={styles.slots}>
+          {days.map((day) => (
+            <button key={day.sortieId} type="button" className={styles.slot} onClick={() => void openDay(day)}>
+              <span className={styles.cov}>
+                {day.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={day.coverUrl} alt="" />
+                ) : null}
+              </span>
+              <span className={styles.info}>
+                <span className={styles.h}>{day.dateLabel}</span>
+                <span className={styles.a}>{day.activity}</span>
+              </span>
+              <span className={styles.n}>
+                {day.slotCount} créneau{day.slotCount > 1 ? "x" : ""}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className={styles.legal}>
+          <Link href={`/g/s/${shareToken}`}>← Retour à la galerie</Link>
+        </div>
+      </>
+    );
+  }
+
+  if (step === "slots") {
+    return (
+      <>
+        <div className={styles.hi}>
+          <h1>Choisissez le créneau</h1>
+          <p>{activeDay?.dateLabel}</p>
         </div>
         <div className={styles.slots}>
           {slots.map((slot) => (
@@ -58,7 +105,9 @@ export function WithdrawPhotoPicker({ shareToken, slots }: { shareToken: string;
           ))}
         </div>
         <div className={styles.legal}>
-          <Link href={`/g/s/${shareToken}`}>← Retour à la galerie</Link>
+          <button type="button" onClick={() => setStep("days")}>
+            ← Changer de jour
+          </button>
         </div>
       </>
     );
@@ -87,7 +136,7 @@ export function WithdrawPhotoPicker({ shareToken, slots }: { shareToken: string;
       </div>
       {confirmedId ? <div className={styles.legal}>Photo retirée — l&rsquo;opérateur a été prévenu.</div> : null}
       <div className={styles.legal}>
-        <button type="button" onClick={() => setSlotId(null)}>
+        <button type="button" onClick={() => setStep("slots")}>
           Changer de créneau
         </button>
       </div>

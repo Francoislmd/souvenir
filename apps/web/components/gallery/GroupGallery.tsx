@@ -9,31 +9,29 @@ import { formatEuros } from "@/lib/format";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { Logo } from "@/components/brand/Logo";
-import type { GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
+import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
 const ALL_LABEL = "Tout le créneau";
+
+type View = "days" | "slots" | "gallery";
 
 export function GroupGallery({
   shareToken,
   operatorName,
   logoUrl,
-  activity,
-  place,
-  sortieDateLabel,
-  slots,
+  days,
   pricing,
 }: {
   shareToken: string;
   operatorName: string;
   logoUrl: string | null;
-  activity: string;
-  place: string | null;
-  sortieDateLabel: string;
-  slots: GroupSlotSummary[];
+  days: GroupDaySummary[];
   pricing: PricingConfig;
 }) {
   const router = useRouter();
-  const [view, setView] = useState<"slots" | "gallery">("slots");
+  const [view, setView] = useState<View>("days");
+  const [activeDay, setActiveDay] = useState<GroupDaySummary | null>(null);
+  const [slots, setSlots] = useState<GroupSlotSummary[]>([]);
   const [activeSlot, setActiveSlot] = useState<GroupSlotSummary | null>(null);
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -51,6 +49,16 @@ export function GroupGallery({
 
   const purchasable = useMemo(() => photos.filter((p) => !p.isFreeSample), [photos]);
   const q = quote(selected.size, purchasable.length, pricing, ALL_LABEL);
+
+  async function openDay(day: GroupDaySummary): Promise<void> {
+    setActiveDay(day);
+    setView("slots");
+    const res = await fetch(`/api/g/s/${shareToken}/sorties/${day.sortieId}/slots`);
+    if (res.ok) {
+      const data = (await res.json()) as { activity: string; slots: GroupSlotSummary[] };
+      setSlots(data.slots);
+    }
+  }
 
   async function openSlot(slot: GroupSlotSummary): Promise<void> {
     setActiveSlot(slot);
@@ -80,6 +88,15 @@ export function GroupGallery({
       clearInterval(interval);
     };
   }, [view, activeSlot, shareToken, photos]);
+
+  function toDays(): void {
+    setView("days");
+    setActiveDay(null);
+    setSlots([]);
+    setActiveSlot(null);
+    setPhotos([]);
+    setSelected(new Set());
+  }
 
   function toSlots(): void {
     setView("slots");
@@ -125,12 +142,61 @@ export function GroupGallery({
     router.push(`/g/${checkout.token}`);
   }
 
-  if (view === "slots") {
+  if (view === "days") {
     return (
       <>
-        <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${place ?? activity} · ${sortieDateLabel}`} />
+        <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel="Galerie de groupe" />
         <div className={styles.hi}>
           <h1>Retrouvez vos photos</h1>
+          <p>
+            Choisissez d&rsquo;abord <b>votre jour</b>, puis votre créneau.
+          </p>
+        </div>
+
+        <div className={styles.slots}>
+          {days.map((day) => (
+            <button key={day.sortieId} type="button" className={styles.slot} onClick={() => void openDay(day)}>
+              <span className={styles.cov}>
+                {day.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={day.coverUrl} alt="" />
+                ) : null}
+              </span>
+              <span className={styles.info}>
+                <span className={styles.h}>{day.dateLabel}</span>
+                <span className={styles.a}>
+                  {day.activity}
+                  {day.place ? ` · ${day.place}` : ""}
+                </span>
+              </span>
+              <span className={styles.n}>
+                {day.slotCount} créneau{day.slotCount > 1 ? "x" : ""}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {days.length === 0 ? <p className={styles.d} style={{ padding: "0 18px" }}>Aucune galerie publiée pour le moment.</p> : null}
+
+        <div className={styles.privacy}>
+          <div className={styles.t}>Vous apparaissez sur une photo et ne le souhaitez pas ?</div>
+          <div className={styles.d}>
+            Ces photos ne sont visibles qu&rsquo;avec ce lien. Vous pouvez demander le retrait de n&rsquo;importe laquelle, sans justification.
+          </div>
+          <Link href={`/g/s/${shareToken}/retrait`}>Demander le retrait d&rsquo;une photo</Link>
+        </div>
+        <div className={styles.legal}>Lien actif 90 jours par sortie, puis suppression automatique des photos.</div>
+      </>
+    );
+  }
+
+  if (view === "slots") {
+    if (!activeDay) return null;
+    return (
+      <>
+        <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${activeDay.activity} · ${activeDay.dateLabel}`} />
+        <div className={styles.hi}>
+          <h1>{activeDay.dateLabel}</h1>
           <p>
             Nous ne savons pas qui est qui — <b>choisissez l&rsquo;heure de votre départ</b> et vos photos apparaîtront.
           </p>
@@ -147,7 +213,7 @@ export function GroupGallery({
               </span>
               <span className={styles.info}>
                 <span className={styles.h}>{slot.label}</span>
-                <span className={styles.a}>{activity}</span>
+                <span className={styles.a}>{activeDay.activity}</span>
                 {slot.guide ? <span className={styles.g}>guide {slot.guide}</span> : null}
               </span>
               <span className={styles.n}>{slot.photoCount} photos</span>
@@ -158,6 +224,9 @@ export function GroupGallery({
         <div className={styles.helper}>
           <div className={styles.t}>Vous ne savez plus à quelle heure ?</div>
           <div className={styles.d}>Regardez les photos de couverture : celle où vous reconnaissez votre groupe ou votre guide est la bonne.</div>
+          <button type="button" onClick={toDays}>
+            ← Changer de jour
+          </button>
         </div>
 
         <div className={styles.privacy}>
@@ -172,16 +241,16 @@ export function GroupGallery({
     );
   }
 
-  if (!activeSlot) return null;
+  if (!activeSlot || !activeDay) return null;
 
   return (
     <>
-      <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${place ?? activity} · ${activeSlot.label}`} />
+      <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${activeDay.activity} · ${activeSlot.label}`} />
       <div className={styles.slotbar}>
         <div>
           <div className={styles.hh}>{activeSlot.label}</div>
           <div className={styles.dd}>
-            {activity}
+            {activeDay.dateLabel}
             {activeSlot.guide ? ` · guide ${activeSlot.guide}` : ""}
           </div>
         </div>

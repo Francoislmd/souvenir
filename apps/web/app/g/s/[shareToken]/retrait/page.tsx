@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getGroupSlots } from "@/lib/gallery-group";
+import { getOperatorGroupDays } from "@/lib/gallery-group";
 import { WithdrawPhotoPicker } from "@/components/gallery/WithdrawPhotoPicker";
 import styles from "@/app/g/s/[shareToken]/collective.module.css";
 
@@ -11,15 +11,15 @@ export const metadata = {
 };
 
 export default async function WithdrawPage({ params }: { params: { shareToken: string } }) {
-  const sortie = await prisma.sortie.findUnique({ where: { shareToken: params.shareToken }, include: { operator: true } });
-  if (!sortie || sortie.mode !== "GROUPE") notFound();
+  const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken } });
+  if (!operator) notFound();
 
-  const data = await getGroupSlots(params.shareToken);
+  const data = await getOperatorGroupDays(params.shareToken);
   if (!data) notFound();
 
   return (
-    <div className={styles.page} style={{ "--op": sortie.operator.brandColor } as React.CSSProperties}>
-      <WithdrawPhotoPicker shareToken={params.shareToken} slots={data.slots} />
+    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+      <WithdrawPhotoPicker shareToken={params.shareToken} days={data.days} />
     </div>
   );
 }
