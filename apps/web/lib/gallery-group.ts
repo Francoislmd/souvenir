@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
+import { getPreviewUrl } from "./storage";
 
 export interface GroupDaySummary {
   sortieId: string;
@@ -23,10 +23,6 @@ export interface GroupSlotSummary {
 export interface GroupPhoto {
   id: string;
   previewUrl: string | null;
-  // Uniquement pour la photo de groupe offerte (isFreeSample) — critère
-  // d'acceptation #6 : gratuite ET téléchargeable, pas seulement visible.
-  originalUrl: string | null;
-  isFreeSample: boolean;
   isVideo: boolean;
 }
 
@@ -34,6 +30,11 @@ function formatDateFr(d: Date): string {
   return d
     .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
     .replace(/^./, (c) => c.toUpperCase());
+}
+
+function previewUrlFor(photo: { groupPreviewKey: string | null; previewKey: string | null; thumbKey: string | null }): string | null {
+  const key = photo.groupPreviewKey ?? photo.previewKey ?? photo.thumbKey;
+  return key ? getPreviewUrl(key) : null;
 }
 
 /**
@@ -75,7 +76,7 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
         startsAt: sortie.startsAt,
         dateLabel: formatDateFr(sortie.startsAt),
         slotCount: sortie._count.slots,
-        coverUrl: cover?.previewKey ? getPreviewUrl(cover.previewKey) : cover?.thumbKey ? getPreviewUrl(cover.thumbKey) : null,
+        coverUrl: cover ? previewUrlFor(cover) : null,
       };
     }),
   };
@@ -108,7 +109,7 @@ export async function getSortieSlots(sortieId: string): Promise<{ activity: stri
       startsAt: s.startsAt,
       guide: s.guide,
       photoCount: s._count.photos,
-      coverUrl: s.cover?.previewKey ? getPreviewUrl(s.cover.previewKey) : s.cover?.thumbKey ? getPreviewUrl(s.cover.thumbKey) : null,
+      coverUrl: s.cover ? previewUrlFor(s.cover) : null,
     })),
   };
 }
@@ -116,8 +117,9 @@ export async function getSortieSlots(sortieId: string): Promise<{ activity: stri
 /**
  * Photos d'un créneau (écran 3) — jamais de flou : c'est la différence de
  * fond avec la boutique individuelle (brief §3), le client doit se
- * reconnaître dans le tas. On sert systématiquement previewKey (déjà
- * filigrané côté serveur), jamais blurKey ni l'original avant paiement.
+ * reconnaître dans le tas. La protection tient au filigrane tuilé
+ * (groupPreviewKey, lib/group-watermark.ts) plutôt qu'à un flou — aucune
+ * photo n'est offerte ni téléchargeable avant paiement.
  */
 export async function getSlotPhotos(slotId: string): Promise<GroupPhoto[]> {
   const photos = await prisma.photo.findMany({
@@ -125,13 +127,9 @@ export async function getSlotPhotos(slotId: string): Promise<GroupPhoto[]> {
     orderBy: { createdAt: "asc" },
   });
 
-  return Promise.all(
-    photos.map(async (p) => ({
-      id: p.id,
-      previewUrl: p.previewKey ? getPreviewUrl(p.previewKey) : p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
-      originalUrl: p.isFreeSample ? await getOriginalSignedUrl(p.originalKey) : null,
-      isFreeSample: p.isFreeSample,
-      isVideo: p.isVideo,
-    })),
-  );
+  return photos.map((p) => ({
+    id: p.id,
+    previewUrl: previewUrlFor(p),
+    isVideo: p.isVideo,
+  }));
 }

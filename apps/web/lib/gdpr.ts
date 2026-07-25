@@ -54,7 +54,9 @@ export async function purgeGroupSortie(sortieId: string): Promise<void> {
   if (!sortie || sortie.mode !== "GROUPE" || !sortie.purgeAt) return;
 
   const originalKeys = sortie.photos.map((p) => p.originalKey);
-  const previewKeys = sortie.photos.flatMap((p) => [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey].filter((k): k is string => !!k));
+  const previewKeys = sortie.photos.flatMap((p) =>
+    [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
+  );
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
   await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);

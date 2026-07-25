@@ -23,7 +23,7 @@ export async function createOrUpdatePaymentIntent(params: {
 
   const purchasablePhotos = await prisma.photo.findMany({
     where: participant.slotId
-      ? { slotId: participant.slotId, hiddenAt: null, status: "READY", isFreeSample: false }
+      ? { slotId: participant.slotId, hiddenAt: null, status: "READY" }
       : {
           sortieId: participant.sortieId,
           status: "READY",

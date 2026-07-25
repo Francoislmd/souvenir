@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/app/g/s/[shareToken]/collective.module.css";
@@ -35,20 +35,11 @@ export function GroupGallery({
   const [activeSlot, setActiveSlot] = useState<GroupSlotSummary | null>(null);
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [toast, setToast] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function showToast(msg: string): void {
-    setToast(msg);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 2400);
-  }
-
-  const purchasable = useMemo(() => photos.filter((p) => !p.isFreeSample), [photos]);
-  const q = quote(selected.size, purchasable.length, pricing, ALL_LABEL);
+  const q = quote(selected.size, photos.length, pricing, ALL_LABEL);
 
   async function openDay(day: GroupDaySummary): Promise<void> {
     setActiveDay(day);
@@ -108,10 +99,6 @@ export function GroupGallery({
   function tap(photoId: string): void {
     const photo = photos.find((p) => p.id === photoId);
     if (!photo) return;
-    if (photo.isFreeSample) {
-      showToast("Celle-ci est déjà offerte à tout le monde");
-      return;
-    }
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(photoId)) next.delete(photoId);
@@ -121,10 +108,10 @@ export function GroupGallery({
   }
 
   function selectN(n: number): void {
-    setSelected(new Set(purchasable.slice(0, n).map((p) => p.id)));
+    setSelected(new Set(photos.slice(0, n).map((p) => p.id)));
   }
   function selectAll(): void {
-    setSelected(new Set(purchasable.map((p) => p.id)));
+    setSelected(new Set(photos.map((p) => p.id)));
   }
 
   function onCheckoutReady(data: { clientSecret: string; amountCents: number; token: string; participantId: string }): void {
@@ -260,34 +247,6 @@ export function GroupGallery({
         </button>
       </div>
 
-      {photos.some((p) => p.isFreeSample) ? (
-        <div className={styles.gift}>
-          <div className={styles.im}>
-            {(() => {
-              const gift = photos.find((p) => p.isFreeSample);
-              return gift?.previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={gift.previewUrl} alt="" />
-              ) : null;
-            })()}
-            <span className={styles.tag}>Offerte</span>
-          </div>
-          <div className={styles.b}>
-            <div className={styles.t}>
-              <b>La photo de groupe est offerte.</b> Elle est à tout le monde — téléchargez-la sans payer.
-            </div>
-            {(() => {
-              const gift = photos.find((p) => p.isFreeSample);
-              return gift?.originalUrl ? (
-                <a href={gift.originalUrl} download>
-                  Prendre
-                </a>
-              ) : null;
-            })()}
-          </div>
-        </div>
-      ) : null}
-
       <div className={styles.cnt}>
         <span className={styles.c}>
           {photos.length} photo{photos.length > 1 ? "s" : ""} de ce créneau
@@ -313,18 +272,11 @@ export function GroupGallery({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photo.previewUrl} alt="" />
             ) : null}
-            {!photo.isFreeSample ? (
-              <span className={styles.wm}>
-                <span>{operatorName}</span>
-              </span>
-            ) : null}
-            {!photo.isFreeSample ? (
-              <span className={styles.pick}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </span>
-            ) : null}
+            <span className={styles.pick}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
             <button
               type="button"
               className={styles.zoom}
@@ -367,7 +319,7 @@ export function GroupGallery({
         </button>
         <button
           type="button"
-          className={`${styles.of} ${selected.size === purchasable.length && purchasable.length > 0 ? styles.on : ""}`}
+          className={`${styles.of} ${selected.size === photos.length && photos.length > 0 ? styles.on : ""}`}
           onClick={selectAll}
         >
           <span className={styles.rad}>
@@ -375,13 +327,13 @@ export function GroupGallery({
           </span>
           <span className={styles.oi}>
             <span className={styles.ot}>{ALL_LABEL}</span>
-            <span className={styles.oh}>{purchasable.length} photos en haute définition</span>
+            <span className={styles.oh}>{photos.length} photos en haute définition</span>
           </span>
           <span className={styles.pz}>{formatEuros(pricing.priceAllCents)}</span>
         </button>
 
-        {selected.size > 0 && selected.size < purchasable.length ? (
-          <Nudge selectedCount={selected.size} paidTotal={purchasable.length} pricing={pricing} onSelectAll={selectAll} onSelectPack={() => selectN(pricing.packSize)} />
+        {selected.size > 0 && selected.size < photos.length ? (
+          <Nudge selectedCount={selected.size} paidTotal={photos.length} pricing={pricing} onSelectAll={selectAll} onSelectPack={() => selectN(pricing.packSize)} />
         ) : null}
       </div>
 
@@ -451,8 +403,6 @@ export function GroupGallery({
           </button>
         </div>
       ) : null}
-
-      <div className={`${styles.toast} ${toast ? styles.on : ""}`}>{toast}</div>
     </>
   );
 }

@@ -160,21 +160,22 @@ enum Channel {
 }
 
 model Photo {
-  id           String      @id @default(cuid())
-  sortieId     String
-  ownerId      String? // null = common photo, visible to every participant of the sortie (mode INDIVIDUEL)
-  slotId       String? // mode GROUPE — créneau détecté par clustering EXIF
-  hiddenAt     DateTime? // demande de retrait (mode GROUPE) — masquage immédiat, partout, sans justification
-  originalKey  String
-  previewKey   String?
-  thumbKey     String?
-  blurKey      String? // aperçu flouté généré côté serveur (JPEG) — jamais de CSS filter:blur, ça ne s'affiche pas dans les emails
-  blurEmailKey String? // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
-  takenAt      DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
-  isVideo      Boolean     @default(false)
-  isFreeSample Boolean     @default(false) // INDIVIDUEL : échantillon offert (lib/assign.ts) — GROUPE : photo de couverture du slot, offerte à tous
-  status       PhotoStatus @default(UPLOADED)
-  createdAt    DateTime    @default(now())
+  id              String      @id @default(cuid())
+  sortieId        String
+  ownerId         String? // null = common photo, visible to every participant of the sortie (mode INDIVIDUEL)
+  slotId          String? // mode GROUPE — créneau détecté par clustering EXIF
+  hiddenAt        DateTime? // demande de retrait (mode GROUPE) — masquage immédiat, partout, sans justification
+  originalKey     String
+  previewKey      String?
+  thumbKey        String?
+  blurKey         String? // aperçu flouté généré côté serveur (JPEG) — jamais de CSS filter:blur, ça ne s'affiche pas dans les emails
+  blurEmailKey    String? // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
+  groupPreviewKey String? // mode GROUPE uniquement — aperçu filigrané (motif répété), servi non floué avant paiement (lib/group-watermark.ts)
+  takenAt         DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
+  isVideo         Boolean     @default(false)
+  isFreeSample    Boolean     @default(false) // INDIVIDUEL uniquement : échantillon offert (lib/assign.ts) — plus utilisé en mode GROUPE
+  status          PhotoStatus @default(UPLOADED)
+  createdAt       DateTime    @default(now())
 
   sortie  Sortie          @relation(fields: [sortieId], references: [id], onDelete: Cascade)
   owner   Participant?    @relation("PhotoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
