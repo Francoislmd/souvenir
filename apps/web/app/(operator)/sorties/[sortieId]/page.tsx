@@ -56,6 +56,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
         <GroupShareCard sortieId={sortie.id} shareUrl={`${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}`} />
       ) : (
         <>
+          <p className={styles.lead}>Ajoutez vos clients</p>
           <div className={styles.lbl}>
             Vos clients · {sortie.participants.length} sur {sortie.seats}
           </div>
