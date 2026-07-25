@@ -10,24 +10,25 @@ datasource db {
 }
 
 model Operator {
-  id              String   @id @default(cuid())
-  name            String
-  slug            String   @unique
-  logoUrl         String?
-  brandColor      String   @default("#FF5A1F") // one of the 7 Linktrip swatches; drives boutique --op only
+  id         String  @id @default(cuid())
+  name       String
+  slug       String  @unique
+  logoUrl    String?
+  brandColor String  @default("#FF5A1F") // one of the 7 Linktrip swatches; drives boutique --op only
 
   stripeAccountId String?
-  stripeOnboarded Boolean  @default(false)
+  stripeOnboarded Boolean @default(false)
 
-  pricePhotoCents Int      @default(800)
-  pricePackCents  Int      @default(2200)
-  priceAllCents   Int      @default(3900)
-  packSize        Int      @default(3)
-  freeCount       Int      @default(2)
-  feePercent      Int      @default(20)
+  pricePhotoCents    Int @default(800)
+  pricePackCents     Int @default(2200)
+  priceAllCents      Int @default(3900)
+  priceAllGroupCents Int @default(4500) // "Tout le créneau" — mode GROUPE uniquement, brief §4
+  packSize           Int @default(3)
+  freeCount          Int @default(2)
+  feePercent         Int @default(20)
 
   // { resendUnopened, reducedPriceOffer, reviewRequest, referral } — referral always false, "bientôt"
-  automations     Json     @default("{\"resendUnopened\":true,\"reducedPriceOffer\":true,\"reviewRequest\":true,\"referral\":false}")
+  automations Json @default("{\"resendUnopened\":true,\"reducedPriceOffer\":true,\"reviewRequest\":true,\"referral\":false}")
 
   googleReviewUrl String?
   whatsappNumber  String?
@@ -69,12 +70,19 @@ model Sortie {
   status     SortieStatus @default(UPCOMING) // UPCOMING -> SORTED -> SENT; "today" is computed from startsAt, never stored
   createdAt  DateTime     @default(now())
 
-  operator     Operator      @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-  participants Participant[]
-  photos       Photo[]
+  mode       SortieMode @default(INDIVIDUEL)
+  shareToken String?    @unique // GROUPE uniquement — aléatoire, jamais séquentiel, /g/s/{shareToken}
+  purgeAt    DateTime? // GROUPE uniquement — fixé à la publication (startsAt + 90j)
+
+  operator       Operator        @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  participants   Participant[]
+  photos         Photo[]
+  slots          Slot[]
+  processingJobs ProcessingJob[]
 
   @@index([operatorId])
   @@index([operatorId, startsAt])
+  @@index([purgeAt])
 }
 
 enum SortieStatus {
@@ -83,34 +91,63 @@ enum SortieStatus {
   SENT
 }
 
+enum SortieMode {
+  INDIVIDUEL
+  GROUPE
+}
+
+// Mode GROUPE uniquement — un créneau détecté par regroupement EXIF (ou par
+// repli si l'horodatage manque), cf. apps/web/lib/cluster.ts. Chaque
+// acheteur devient un Participant rattaché au slot plutôt qu'à des photos
+// possédées en propre.
+model Slot {
+  id           String   @id @default(cuid())
+  sortieId     String
+  label        String // "11 h 00"
+  startsAt     DateTime // début du créneau (EXIF, ou réparti si repli)
+  guide        String? // repris de sortie.guide par défaut
+  coverPhotoId String?  @unique
+  createdAt    DateTime @default(now())
+
+  sortie       Sortie        @relation(fields: [sortieId], references: [id], onDelete: Cascade)
+  photos       Photo[]       @relation("SlotPhotos")
+  cover        Photo?        @relation("SlotCover", fields: [coverPhotoId], references: [id], onDelete: SetNull)
+  participants Participant[]
+
+  @@index([sortieId])
+}
+
 model Participant {
-  id      String  @id @default(cuid())
+  id       String  @id @default(cuid())
   sortieId String
-  name    String
-  contact String  // email OR phone, mandatory — cannot create without one
-  channel Channel // deriveChannel(contact)
-  token   String  @unique // /g/{token} — the only secret, must be non-guessable
+  slotId   String? // mode GROUPE uniquement — créé au paiement, jamais par l'opérateur
+  name     String
+  contact  String // email OR phone, mandatory — cannot create without one
+  channel  Channel // deriveChannel(contact)
+  token    String  @unique // /g/{token} — the only secret, must be non-guessable
 
   consentAt DateTime  @default(now())
-  deleteAt  DateTime  // consentAt + 90d, RGPD purge cron target
+  deleteAt  DateTime // consentAt + 90d, RGPD purge cron target
   deletedAt DateTime?
 
   sentAt                DateTime?
-  openedAt               DateTime?
-  remindedAt             DateTime? // +2h resend idempotency
-  reducedOfferSentAt     DateTime? // +24h offer idempotency
-  reducedOfferExpiresAt  DateTime? // offer valid 48h, read by quote()
-  reviewRequestSentAt    DateTime? // post-purchase idempotency
-  unsubscribedAt         DateTime? // coupe les emails 2/3/5 (marketing) — jamais 1/4 (transactionnels)
+  openedAt              DateTime?
+  remindedAt            DateTime? // +2h resend idempotency
+  reducedOfferSentAt    DateTime? // +24h offer idempotency
+  reducedOfferExpiresAt DateTime? // offer valid 48h, read by quote()
+  reviewRequestSentAt   DateTime? // post-purchase idempotency
+  unsubscribedAt        DateTime? // coupe les emails 2/3/5 (marketing) — jamais 1/4 (transactionnels)
 
   createdAt DateTime @default(now())
 
-  sortie Sortie   @relation(fields: [sortieId], references: [id], onDelete: Cascade)
+  sortie Sortie  @relation(fields: [sortieId], references: [id], onDelete: Cascade)
+  slot   Slot?   @relation(fields: [slotId], references: [id], onDelete: SetNull)
   order  Order?
-  photos Photo[]  @relation("PhotoOwner")
+  photos Photo[] @relation("PhotoOwner")
 
   @@index([sortieId])
   @@index([deleteAt])
+  @@index([slotId])
 }
 
 enum Channel {
@@ -121,24 +158,29 @@ enum Channel {
 model Photo {
   id           String      @id @default(cuid())
   sortieId     String
-  ownerId      String?     // null = common photo, visible to every participant of the sortie
+  ownerId      String? // null = common photo, visible to every participant of the sortie (mode INDIVIDUEL)
+  slotId       String? // mode GROUPE — créneau détecté par clustering EXIF
+  hiddenAt     DateTime? // demande de retrait (mode GROUPE) — masquage immédiat, partout, sans justification
   originalKey  String
   previewKey   String?
   thumbKey     String?
-  blurKey      String?     // aperçu flouté généré côté serveur (JPEG) — jamais de CSS filter:blur, ça ne s'affiche pas dans les emails
-  blurEmailKey String?     // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
-  takenAt      DateTime?   // unpopulated in v1, reserved for future EXIF clustering
+  blurKey      String? // aperçu flouté généré côté serveur (JPEG) — jamais de CSS filter:blur, ça ne s'affiche pas dans les emails
+  blurEmailKey String? // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
+  takenAt      DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
   isVideo      Boolean     @default(false)
-  isFreeSample Boolean     @default(false) // computed at assign time, see lib/assign.ts
+  isFreeSample Boolean     @default(false) // INDIVIDUEL : échantillon offert (lib/assign.ts) — GROUPE : photo de couverture du slot, offerte à tous
   status       PhotoStatus @default(UPLOADED)
   createdAt    DateTime    @default(now())
 
-  sortie Sortie          @relation(fields: [sortieId], references: [id], onDelete: Cascade)
-  owner  Participant?    @relation("PhotoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  jobs   ProcessingJob[]
+  sortie  Sortie          @relation(fields: [sortieId], references: [id], onDelete: Cascade)
+  owner   Participant?    @relation("PhotoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  slot    Slot?           @relation("SlotPhotos", fields: [slotId], references: [id], onDelete: SetNull)
+  coverOf Slot?           @relation("SlotCover")
+  jobs    ProcessingJob[]
 
   @@index([sortieId])
   @@index([ownerId])
+  @@index([slotId])
 }
 
 enum PhotoStatus {
@@ -164,17 +206,20 @@ model Order {
 
 model ProcessingJob {
   id        String    @id @default(cuid())
-  photoId   String
-  kind      String    // "preview" only in v1
+  photoId   String? // "preview" jobs — one photo
+  sortieId  String? // "publish_group" jobs — one GROUPE sortie, clusters its whole photo batch
+  kind      String // "preview" | "publish_group"
   status    String    @default("pending")
   attempts  Int       @default(0)
   lockedAt  DateTime?
   createdAt DateTime  @default(now())
 
-  photo Photo @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  photo  Photo?  @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  sortie Sortie? @relation(fields: [sortieId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([photoId])
+  @@index([sortieId])
 }
 
 model Event {

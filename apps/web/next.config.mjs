@@ -19,6 +19,18 @@ const nextConfig = {
       ],
     },
   },
+  async headers() {
+    return [
+      {
+        // Galerie de groupe (brief §5.1) : lien non indexable en plus du
+        // token aléatoire — posé ici plutôt que dans middleware.ts, qui
+        // exclut délibérément tout /g/ de son matcher (routes publiques,
+        // aucun cookie Supabase à y rafraîchir).
+        source: "/g/s/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -875,6 +875,95 @@
   }
 }
 
+/* ---------- sélecteur de mode (sortie individuelle / de groupe) ---------- */
+.modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+}
+.mode {
+  border: 1.6px solid var(--line);
+  background: #fff;
+  border-radius: 16px;
+  padding: 15px 14px;
+  text-align: left;
+  transition: 0.15s;
+  cursor: pointer;
+  font-family: inherit;
+}
+.mode:hover {
+  border-color: var(--ink-4);
+}
+.mode.on {
+  border-color: var(--brand);
+  background: var(--soft);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.1);
+}
+.mt {
+  font-family: "Inter Tight";
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.mh {
+  font-size: 0.79rem;
+  color: var(--ink-3);
+  line-height: 1.45;
+  margin-top: 4px;
+}
+.mode.on .mt {
+  color: var(--brand-ink);
+}
+@media (max-width: 520px) {
+  .modes {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- lien de partage (sortie de groupe) ---------- */
+.linkcard {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: var(--sh-1);
+}
+.lt {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.lh {
+  color: var(--ink-3);
+  font-size: 0.83rem;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.linkrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--line-2);
+  margin-top: 11px;
+}
+.linkrow code {
+  flex: 1;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.79rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sharerow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+}
+
 /* ---------- revenus ---------- */
 .balance {
   position: relative;

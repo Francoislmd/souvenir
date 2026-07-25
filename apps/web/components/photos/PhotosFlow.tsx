@@ -19,19 +19,25 @@ type Phase = "drop" | "lanes" | "sending" | "sent";
 
 export function PhotosFlow({
   sortieId,
+  mode,
+  shareUrl,
   initialPhase,
   participants,
   initialPhotos,
 }: {
   sortieId: string;
+  mode: "INDIVIDUEL" | "GROUPE";
+  shareUrl: string | null;
   initialPhase: "drop" | "lanes" | "sent";
   participants: Participant[];
   initialPhotos: LanePhoto[];
 }) {
   const router = useRouter();
   const toast = useToast();
+  const isGroup = mode === "GROUPE";
   const [phase, setPhase] = useState<Phase>(initialPhase);
   const [photos, setPhotos] = useState<LanePhoto[]>(initialPhotos);
+  const [publishing, setPublishing] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [addingMore, setAddingMore] = useState(false);
   const thumbPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -122,6 +128,23 @@ export function PhotosFlow({
     await fetch(`/api/sorties/${sortieId}/send`, { method: "POST" });
   }
 
+  // Mode GROUPE : pas de répartition manuelle — dépôt puis publication
+  // directe (critère d'acceptation #3). Le clustering EXIF tourne côté
+  // serveur (lib/group-publish.ts) pendant l'affichage de cet écran.
+  async function publishGroup(): Promise<void> {
+    setPublishing(true);
+    setPhase("sending");
+    const res = await fetch(`/api/sorties/${sortieId}/publish`, { method: "POST" });
+    setPublishing(false);
+    if (res.ok) {
+      setPhase("sent");
+      router.refresh();
+    } else {
+      setPhase("lanes");
+      toast("La publication a échoué — réessayez.");
+    }
+  }
+
   function toggleSelect(photoId: string): void {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -168,6 +191,108 @@ export function PhotosFlow({
       setPhotos(previous);
       toast("La suppression a échoué pour certaines photos — réessayez.");
     }
+  }
+
+  if (isGroup) {
+    if (phase === "drop") {
+      return (
+        <div id="phDrop">
+          <h1 className={styles.h1}>Les photos</h1>
+          <p className={styles.lead}>Videz votre carte mémoire d&rsquo;un coup. Aucun tri à faire — la publication regroupe tout par créneau.</p>
+          <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} />
+        </div>
+      );
+    }
+
+    if (phase === "sending") {
+      return (
+        <div id="phPublishing">
+          <h1 className={styles.h1}>Publication…</h1>
+          <p className={styles.lead}>On regroupe vos photos par créneau à partir de l&rsquo;heure de prise de vue. Ça prend quelques secondes.</p>
+        </div>
+      );
+    }
+
+    if (phase === "sent") {
+      const shortLabel = (shareUrl ?? "").replace(/^https?:\/\//, "");
+      return (
+        <div id="phPub">
+          <h1 className={styles.h1}>Galerie publiée</h1>
+          <p className={styles.lead}>Vos clients choisissent leur créneau et retrouvent leurs photos.</p>
+          <div className={styles.linkcard} style={{ marginTop: 20 }}>
+            <div className={styles.lt}>Le lien à partager</div>
+            <div className={styles.linkrow}>
+              <code>{shortLabel}</code>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.ghost} ${styles.sm}`}
+                onClick={async () => {
+                  if (shareUrl) {
+                    try {
+                      await navigator.clipboard.writeText(shareUrl);
+                    } catch {
+                      // presse-papiers indisponible — le lien reste lisible dans la carte
+                    }
+                  }
+                  toast("Lien copié");
+                }}
+              >
+                Copier
+              </button>
+            </div>
+            <div className={styles.sharerow}>
+              <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => toast("Partagé au groupe")}>
+                Envoyer au groupe
+              </button>
+              <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => toast("Affiche à imprimer générée")}>
+                Affiche + QR
+              </button>
+            </div>
+          </div>
+          <div className={styles.soon} style={{ marginTop: 14 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 16v-5M12 8v.5" />
+            </svg>
+            <div>
+              <div className={styles.t}>Photos regroupées par créneau</div>
+              <div className={styles.h}>Le découpage se fait sur l&rsquo;horaire des prises de vue. Chacun retrouve son groupe sans que vous ayez rien à trier.</div>
+            </div>
+          </div>
+          <div className={styles.act}>
+            <button type="button" className={`${styles.btn} ${styles.full}`} onClick={() => router.push("/sorties")}>
+              Revenir à mes sorties
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // phase === "lanes" en mode GROUPE : dépôt terminé, prêt à publier — pas
+    // d'écran de répartition (critère d'acceptation #3).
+    return (
+      <div id="phReady">
+        <h1 className={styles.h1}>Prêtes à publier</h1>
+        <p className={styles.lead}>
+          {photos.length} photo{photos.length > 1 ? "s" : ""} déposée{photos.length > 1 ? "s" : ""}. La publication les regroupe par créneau, sans rien à trier.
+        </p>
+        <div style={{ marginTop: 14 }}>
+          <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => setAddingMore((v) => !v)}>
+            {addingMore ? "Fermer" : "+ Ajouter des photos"}
+          </button>
+        </div>
+        {addingMore ? (
+          <div style={{ marginTop: 14 }}>
+            <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} />
+          </div>
+        ) : null}
+        <div className={styles.act}>
+          <button type="button" className={`${styles.btn} ${styles.full}`} onClick={() => void publishGroup()} disabled={publishing || photos.length === 0}>
+            {publishing ? "Publication…" : "Publier les photos"}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (phase === "drop") {

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { bucketSortie } from "@/lib/sorties";
+import { env } from "@/lib/env";
 import { SortieParticipantsSection } from "@/components/sorties/SortieParticipantsSection";
+import { GroupShareCard } from "@/components/sorties/GroupShareCard";
 import styles from "@/app/(operator)/operator.module.css";
 
 function formatMetaFr(d: Date, bucket: "today" | "upcoming" | "past"): string {
@@ -23,6 +25,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
 
   const bucket = bucketSortie(sortie.startsAt);
   const isToday = bucket === "today";
+  const isGroup = sortie.mode === "GROUPE";
 
   let btnLabel = "Les photos, après la sortie";
   let btnHref: string | null = null;
@@ -30,7 +33,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
   if (isToday) {
     btnDisabled = false;
     btnHref = `/sorties/${sortie.id}/photos`;
-    btnLabel = sortie.status === "SENT" ? "Voir ce que reçoit un client" : "Ajouter les photos";
+    btnLabel = sortie.status === "SENT" ? (isGroup ? "Voir où en sont les ventes" : "Voir ce que reçoit un client") : isGroup ? "Publier les photos" : "Ajouter les photos";
   } else if (bucket === "past") {
     btnLabel = "Sortie terminée";
   }
@@ -49,20 +52,26 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
         {sortie.guide ? ` · guide ${sortie.guide}` : ""}
       </p>
 
-      <div className={styles.lbl}>
-        Vos clients · {sortie.participants.length} sur {sortie.seats}
-      </div>
+      {isGroup ? (
+        <GroupShareCard shareUrl={`${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}`} />
+      ) : (
+        <>
+          <div className={styles.lbl}>
+            Vos clients · {sortie.participants.length} sur {sortie.seats}
+          </div>
 
-      <SortieParticipantsSection
-        sortieId={sortie.id}
-        participants={sortie.participants.map((p) => ({
-          id: p.id,
-          name: p.name,
-          contact: p.contact,
-          sentAt: p.sentAt ? p.sentAt.toISOString() : null,
-          token: p.token,
-        }))}
-      />
+          <SortieParticipantsSection
+            sortieId={sortie.id}
+            participants={sortie.participants.map((p) => ({
+              id: p.id,
+              name: p.name,
+              contact: p.contact,
+              sentAt: p.sentAt ? p.sentAt.toISOString() : null,
+              token: p.token,
+            }))}
+          />
+        </>
+      )}
 
       <div className={styles.act}>
         {btnHref ? (

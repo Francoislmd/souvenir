@@ -9,6 +9,7 @@ const schema = z.object({
   startsAt: z.string().min(1),
   seats: z.number().int().min(1).default(8),
   guide: z.string().min(1).nullable().optional(),
+  mode: z.enum(["INDIVIDUEL", "GROUPE"]).default("INDIVIDUEL"),
 });
 
 export async function POST(request: Request): Promise<Response> {
@@ -32,6 +33,10 @@ export async function POST(request: Request): Promise<Response> {
         startsAt: new Date(parsed.data.startsAt),
         seats: parsed.data.seats,
         guide: parsed.data.guide,
+        mode: parsed.data.mode,
+        // Aléatoire, jamais séquentiel (brief §5.1) — crypto.randomUUID(),
+        // même mécanisme que le token /g/{token} des participants individuels.
+        shareToken: parsed.data.mode === "GROUPE" ? crypto.randomUUID() : null,
       },
     });
 

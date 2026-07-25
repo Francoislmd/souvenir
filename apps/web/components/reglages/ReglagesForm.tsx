@@ -16,6 +16,7 @@ interface OperatorSettings {
   pricePhotoCents: number;
   pricePackCents: number;
   priceAllCents: number;
+  priceAllGroupCents: number;
   packSize: number;
   feePercent: number;
   stripeOnboarded: boolean;
@@ -39,6 +40,7 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
   const [pricePhoto, setPricePhoto] = useState(toEuros(operator.pricePhotoCents));
   const [pricePack, setPricePack] = useState(toEuros(operator.pricePackCents));
   const [priceAll, setPriceAll] = useState(toEuros(operator.priceAllCents));
+  const [priceAllGroup, setPriceAllGroup] = useState(toEuros(operator.priceAllGroupCents));
   const [automations, setAutomations] = useState(operator.automations);
   const [activities, setActivities] = useState<Set<string>>(new Set(operator.activities));
   const [saving, setSaving] = useState(false);
@@ -68,6 +70,7 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         pricePhotoCents: Math.round(Number(pricePhoto || 0) * 100),
         pricePackCents: Math.round(Number(pricePack || 0) * 100),
         priceAllCents: Math.round(Number(priceAll || 0) * 100),
+        priceAllGroupCents: Math.round(Number(priceAllGroup || 0) * 100),
         automations,
         activities: Array.from(activities),
       }),
@@ -185,6 +188,12 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         <span className={styles.a}>Toutes les photos</span>
         <span className={styles.net}>net {net(priceAll)} €</span>
         <input type="number" value={priceAll} onChange={(e) => setPriceAll(e.target.value)} />
+        <span>€</span>
+      </div>
+      <div className={styles.pr}>
+        <span className={styles.a}>Tout le créneau (galerie de groupe)</span>
+        <span className={styles.net}>net {net(priceAllGroup)} €</span>
+        <input type="number" value={priceAllGroup} onChange={(e) => setPriceAllGroup(e.target.value)} />
         <span>€</span>
       </div>
 

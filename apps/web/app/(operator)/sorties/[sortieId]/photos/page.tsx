@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getPreviewUrl } from "@/lib/storage";
+import { env } from "@/lib/env";
 import { PhotosFlow } from "@/components/photos/PhotosFlow";
 import styles from "@/app/(operator)/operator.module.css";
 
@@ -34,6 +35,8 @@ export default async function SortiePhotosPage({ params }: { params: { sortieId:
 
       <PhotosFlow
         sortieId={sortie.id}
+        mode={sortie.mode}
+        shareUrl={sortie.shareToken ? `${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.shareToken}` : null}
         initialPhase={initialPhase}
         participants={sortie.participants.map((p) => ({ id: p.id, name: p.name, contact: p.contact }))}
         initialPhotos={sortie.photos.map((p) => ({

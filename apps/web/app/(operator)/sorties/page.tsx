@@ -63,7 +63,13 @@ export default async function SortiesPage() {
         rows={upcoming.map((s, i) => ({
           id: s.id,
           title: `${s.activity}${s.place ? ` · ${s.place}` : ""}`,
-          subtitle: `${formatTimeFr(s.startsAt)} · ${s._count.participants > 0 ? `${s._count.participants} inscrits sur ${s.seats}` : `${s.seats} places`}`,
+          subtitle: `${formatTimeFr(s.startsAt)} · ${
+            s.mode === "GROUPE"
+              ? "galerie de groupe"
+              : s._count.participants > 0
+                ? `${s._count.participants} inscrits sur ${s.seats}`
+                : `${s.seats} places`
+          }`,
           ph: phVariant(i),
           kind: "upcoming",
         }))}

@@ -7,7 +7,7 @@ const POLL_INTERVAL_MS = 3000;
 
 async function claimNextJob() {
   return prisma.$transaction(async (tx) => {
-    const [job] = await tx.$queryRaw<{ id: string; photoId: string; kind: string; attempts: number }[]>`
+    const [job] = await tx.$queryRaw<{ id: string; photoId: string | null; kind: string; attempts: number }[]>`
       SELECT id, "photoId", kind, attempts FROM "ProcessingJob"
       WHERE status = 'pending'
       ORDER BY "createdAt" ASC
@@ -25,12 +25,17 @@ async function claimNextJob() {
   });
 }
 
-async function runJob(job: { id: string; photoId: string; kind: string; attempts: number }): Promise<void> {
+// "publish_group" (regroupement EXIF des sorties GROUPE) tourne en ligne
+// dans apps/web (lib/group-publish.ts), au même endroit que la génération
+// des aperçus déclenchée par /api/photos/[photoId]/complete — pas ici. Ce
+// worker ne traite donc encore que "preview" ; le cas "publish_group" n'a
+// pas de photoId et ne doit pas être réclamé par cette boucle.
+async function runJob(job: { id: string; photoId: string | null; kind: string; attempts: number }): Promise<void> {
   try {
-    if (job.kind === "preview") {
+    if (job.kind === "preview" && job.photoId) {
       await processPreviewJob({ photoId: job.photoId });
     } else {
-      throw new Error(`Unknown job kind: ${job.kind}`);
+      throw new Error(`Unknown or unsupported job kind: ${job.kind}`);
     }
 
     await prisma.processingJob.update({ where: { id: job.id }, data: { status: "done" } });
@@ -39,7 +44,7 @@ async function runJob(job: { id: string; photoId: string; kind: string; attempts
 
     if (job.attempts >= MAX_JOB_ATTEMPTS) {
       await prisma.processingJob.update({ where: { id: job.id }, data: { status: "failed" } });
-      await prisma.photo.update({ where: { id: job.photoId }, data: { status: "FAILED" } });
+      if (job.photoId) await prisma.photo.update({ where: { id: job.photoId }, data: { status: "FAILED" } });
     } else {
       await prisma.processingJob.update({ where: { id: job.id }, data: { status: "pending" } });
     }

@@ -33,7 +33,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const purchasedIds = participant.order?.status === "succeeded" ? participant.order.photoIds : [];
   const purchasedSet = new Set(purchasedIds);
 
-  const photos = await getBoutiquePhotos(participant, purchasedSet);
+  const photos = await getBoutiquePhotos({ id: participant.id, sortieId: participant.sortieId, slotId: participant.slotId }, purchasedSet);
 
   const reducedOfferActive = !!participant.reducedOfferExpiresAt && participant.reducedOfferExpiresAt > new Date();
   const dateLabel = `Sortie du ${formatDateFr(participant.sortie.startsAt)}${participant.sortie.place ? ` · ${participant.sortie.place}` : ""}`;

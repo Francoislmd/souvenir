@@ -24,6 +24,7 @@ export function TodaySorties({ sorties }: { sorties: TodaySortie[] }) {
         const open = openId === sortie.id;
         const regCount = sortie._count.participants;
         const sent = sortie.status === "SENT";
+        const isGroup = sortie.mode === "GROUPE";
         const header = (
           <span className={styles.info}>
             <span className={styles.ti}>
@@ -31,7 +32,8 @@ export function TodaySorties({ sorties }: { sorties: TodaySortie[] }) {
               {sortie.place ? ` · ${sortie.place}` : ""}
             </span>
             <span className={styles.sb}>
-              {formatTimeFr(sortie.startsAt)} · {regCount} client{regCount > 1 ? "s" : ""} sur {sortie.seats} places
+              {formatTimeFr(sortie.startsAt)} ·{" "}
+              {isGroup ? "galerie de groupe" : `${regCount} client${regCount > 1 ? "s" : ""} sur ${sortie.seats} places`}
             </span>
           </span>
         );
@@ -74,7 +76,7 @@ export function TodaySorties({ sorties }: { sorties: TodaySortie[] }) {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : isGroup ? null : (
                 <div>
                   <div className={styles.state}>
                     <b>{regCount}</b>
@@ -89,7 +91,7 @@ export function TodaySorties({ sorties }: { sorties: TodaySortie[] }) {
               )}
 
               <Link href={`/sorties/${sortie.id}`} className={`${styles.btn} ${styles.full}`} style={{ marginTop: 18 }}>
-                {sent ? "Voir où en sont les ventes" : "Voir mes clients"}
+                {sent ? "Voir où en sont les ventes" : isGroup ? "Publier les photos" : "Voir mes clients"}
               </Link>
             </div>
           </div>

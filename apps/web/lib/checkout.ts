@@ -22,12 +22,14 @@ export async function createOrUpdatePaymentIntent(params: {
   if (!operator.stripeOnboarded || !operator.stripeAccountId) throw new CheckoutError("stripe_not_ready");
 
   const purchasablePhotos = await prisma.photo.findMany({
-    where: {
-      sortieId: participant.sortieId,
-      status: "READY",
-      isFreeSample: false,
-      OR: [{ ownerId: participant.id }, { ownerId: null }],
-    },
+    where: participant.slotId
+      ? { slotId: participant.slotId, hiddenAt: null, status: "READY", isFreeSample: false }
+      : {
+          sortieId: participant.sortieId,
+          status: "READY",
+          isFreeSample: false,
+          OR: [{ ownerId: participant.id }, { ownerId: null }],
+        },
     select: { id: true },
   });
   const purchasableIds = new Set(purchasablePhotos.map((p) => p.id));
@@ -36,7 +38,7 @@ export async function createOrUpdatePaymentIntent(params: {
   const pricing: PricingConfig = {
     pricePhotoCents: operator.pricePhotoCents,
     pricePackCents: operator.pricePackCents,
-    priceAllCents: operator.priceAllCents,
+    priceAllCents: participant.slotId ? operator.priceAllGroupCents : operator.priceAllCents,
     packSize: operator.packSize,
   };
 

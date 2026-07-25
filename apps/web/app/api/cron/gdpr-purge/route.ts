@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import { runGdprPurgeScan } from "@/lib/gdpr";
+import { runGdprPurgeScan, runGroupPurgeScan } from "@/lib/gdpr";
 
 export async function POST(request: Request): Promise<Response> {
   const auth = request.headers.get("authorization");
@@ -7,6 +7,6 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runGdprPurgeScan();
-  return Response.json(result, { status: 200 });
+  const [individual, group] = await Promise.all([runGdprPurgeScan(), runGroupPurgeScan()]);
+  return Response.json({ purged: individual.purged + group.purged, individual, group }, { status: 200 });
 }

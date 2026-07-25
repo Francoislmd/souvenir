@@ -36,3 +36,46 @@ export async function runGdprPurgeScan(now: Date = new Date()): Promise<{ purged
 
   return { purged: due.length };
 }
+
+/**
+ * Purge des galeries GROUPE (brief §5 : conservation 90 jours). Les photos
+ * d'un Slot n'appartiennent à personne (ownerId reste null) — elles ne sont
+ * donc jamais supprimées par purgeParticipant, qui ne cible que les photos
+ * possédées en propre. Ici on supprime tout le lot d'un coup, à l'échelle
+ * de la sortie, et on désactive le lien (shareToken) plutôt que de le
+ * laisser pointer vers une galerie vide.
+ */
+export async function purgeGroupSortie(sortieId: string): Promise<void> {
+  const sortie = await prisma.sortie.findUnique({
+    where: { id: sortieId },
+    include: { photos: true },
+  });
+  if (!sortie || sortie.mode !== "GROUPE" || !sortie.purgeAt) return;
+
+  const originalKeys = sortie.photos.map((p) => p.originalKey);
+  const previewKeys = sortie.photos.flatMap((p) => [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey].filter((k): k is string => !!k));
+
+  await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
+  await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);
+
+  await prisma.$transaction([
+    prisma.photo.deleteMany({ where: { sortieId: sortie.id } }),
+    prisma.slot.deleteMany({ where: { sortieId: sortie.id } }),
+    prisma.sortie.update({ where: { id: sortie.id }, data: { shareToken: null, purgeAt: null } }),
+  ]);
+
+  await track("group_purge", { operatorId: sortie.operatorId, meta: { sortieId: sortie.id } });
+}
+
+export async function runGroupPurgeScan(now: Date = new Date()): Promise<{ purged: number }> {
+  const due = await prisma.sortie.findMany({
+    where: { mode: "GROUPE", purgeAt: { lte: now } },
+    select: { id: true },
+  });
+
+  for (const sortie of due) {
+    await purgeGroupSortie(sortie.id);
+  }
+
+  return { purged: due.length };
+}

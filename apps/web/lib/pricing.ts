@@ -15,11 +15,11 @@ export interface Quote {
   fullCents: number;
 }
 
-export function quote(selected: number, paidTotal: number, p: PricingConfig): Quote {
+export function quote(selected: number, paidTotal: number, p: PricingConfig, allLabel = "Toutes vos photos"): Quote {
   if (selected === 0) return { n: 0, totalCents: 0, label: "", fullCents: 0 };
 
   if (selected >= paidTotal) {
-    return { n: selected, totalCents: p.priceAllCents, label: "Toutes vos photos", fullCents: selected * p.pricePhotoCents };
+    return { n: selected, totalCents: p.priceAllCents, label: allLabel, fullCents: selected * p.pricePhotoCents };
   }
 
   if (selected >= p.packSize) {

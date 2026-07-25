@@ -7,6 +7,7 @@ import PhotosReady, { type PhotosReadyProps } from "@/emails/PhotosReady";
 import PhotosReminder, { type PhotosReminderProps } from "@/emails/PhotosReminder";
 import PhotosOffer, { type PhotosOfferProps } from "@/emails/PhotosOffer";
 import OrderConfirmed, { type OrderConfirmedProps } from "@/emails/OrderConfirmed";
+import PhotoWithdrawn, { type PhotoWithdrawnProps } from "@/emails/PhotoWithdrawn";
 
 let resendClient: Resend | null = null;
 
@@ -219,4 +220,32 @@ export async function sendOrderConfirmedEmail(params: {
     element: <OrderConfirmed {...props} />,
     replyTo,
   });
+}
+
+/**
+ * Notification interne (mode GROUPE) : une demande de retrait doit atteindre
+ * l'opérateur (brief §5.3). Envoyée à l'ADMIN le plus ancien — même
+ * destinataire que le Reply-To des emails clients (getReplyTo). Sans ADMIN
+ * configuré, le retrait reste malgré tout immédiat côté galerie : seule la
+ * notification est manquée, jamais le masquage.
+ */
+export async function sendPhotoWithdrawalNotifiedEmail(params: {
+  operatorId: string;
+  operatorName: string;
+  activity: string;
+  sortieDate: string;
+  slotLabel: string;
+  galleryUrl: string;
+}): Promise<void> {
+  const to = await getReplyTo(params.operatorId);
+  if (!to) return;
+
+  const props: PhotoWithdrawnProps = {
+    operatorName: params.operatorName,
+    activity: params.activity,
+    sortieDate: params.sortieDate,
+    slotLabel: params.slotLabel,
+    galleryUrl: params.galleryUrl,
+  };
+  await dispatch({ to, subject: "Une photo a été retirée de votre galerie de groupe", element: <PhotoWithdrawn {...props} /> });
 }

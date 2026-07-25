@@ -9,15 +9,21 @@ import type { BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
  * incomplète à l'ouverture du lien alors que les photos existent déjà.
  */
 export async function getBoutiquePhotos(
-  participant: { id: string; sortieId: string },
+  participant: { id: string; sortieId: string; slotId?: string | null },
   purchasedSet: Set<string>,
 ): Promise<BoutiquePhoto[]> {
+  // Un Participant de mode GROUPE n'est jamais propriétaire d'une photo
+  // (ownerId reste toujours null côté groupe) : il faut filtrer par slot,
+  // sinon la requête ownerId-based renverrait toutes les photos de la
+  // sortie, tous créneaux confondus.
   const rawPhotos = await prisma.photo.findMany({
-    where: {
-      sortieId: participant.sortieId,
-      status: { not: "FAILED" },
-      OR: [{ ownerId: participant.id }, { ownerId: null }],
-    },
+    where: participant.slotId
+      ? { slotId: participant.slotId, hiddenAt: null, status: { not: "FAILED" } }
+      : {
+          sortieId: participant.sortieId,
+          status: { not: "FAILED" },
+          OR: [{ ownerId: participant.id }, { ownerId: null }],
+        },
     orderBy: { createdAt: "asc" },
   });
 

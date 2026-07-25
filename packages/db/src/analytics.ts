@@ -16,7 +16,11 @@ export type EventName =
   | "automation_offer_sent"
   | "automation_review_sent"
   | "gdpr_deletion"
-  | "onboarding_qualified";
+  | "onboarding_qualified"
+  | "sortie_published"
+  | "group_order_created"
+  | "photo_hidden"
+  | "group_purge";
 
 interface TrackParams {
   operatorId: string;
