@@ -289,21 +289,59 @@ export function PhotosFlow({
         <div className={styles.thumbs} style={{ marginTop: 16 }}>
           {photos.map((p) => {
             const src = p.thumbUrl ?? localPreviews.get(p.id) ?? null;
+            const on = selected.has(p.id);
             return (
-              <span key={p.id} className={styles.th2} style={{ cursor: "default" }}>
+              <span
+                key={p.id}
+                className={`${styles.th2} ${on ? styles["th2-selected"] : ""}`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={on}
+                onClick={() => toggleSelect(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleSelect(p.id);
+                  }
+                }}
+              >
                 {src ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={src} alt="" draggable={false} />
                 ) : null}
+                <span className={`${styles["th2-check"]} ${on ? styles.on : ""}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </span>
               </span>
             );
           })}
         </div>
-        <div className={styles.act}>
-          <button type="button" className={`${styles.btn} ${styles.full}`} onClick={() => void publishGroup()} disabled={publishing || photos.length === 0}>
-            {publishing ? "Publication…" : "Publier les photos"}
-          </button>
-        </div>
+
+        {selected.size > 0 ? (
+          <div className={styles.assignbar}>
+            <span className={styles["assignbar-count"]}>
+              {selected.size} photo{selected.size > 1 ? "s" : ""}
+            </span>
+            <button
+              type="button"
+              className={`${styles["assignbar-chip"]} ${styles["assignbar-chip-danger"]}`}
+              onClick={() => void deleteSelected()}
+            >
+              Supprimer
+            </button>
+            <button type="button" className={styles["assignbar-chip"]} onClick={() => setSelected(new Set())}>
+              Annuler
+            </button>
+          </div>
+        ) : (
+          <div className={styles.act}>
+            <button type="button" className={`${styles.btn} ${styles.full}`} onClick={() => void publishGroup()} disabled={publishing || photos.length === 0}>
+              {publishing ? "Publication…" : "Publier les photos"}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
