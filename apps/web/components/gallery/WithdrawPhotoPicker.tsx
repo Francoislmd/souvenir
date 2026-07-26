@@ -58,17 +58,11 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
         <div className={styles.slots}>
           {days.map((day) => (
             <button key={day.dateKey} type="button" className={styles.slot} onClick={() => void openDay(day)}>
-              <span className={styles.cov}>
-                {day.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={day.coverUrl} alt="" />
-                ) : null}
-              </span>
               <span className={styles.info}>
                 <span className={styles.h}>{day.dateLabel}</span>
               </span>
               <span className={styles.n}>
-                {day.slotCount} créneau{day.slotCount > 1 ? "x" : ""}
+                {day.sessionCount} créneau{day.sessionCount > 1 ? "x" : ""}
               </span>
             </button>
           ))}
@@ -90,12 +84,6 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
         <div className={styles.slots}>
           {slots.map((slot) => (
             <button key={slot.id} type="button" className={styles.slot} onClick={() => void openSlot(slot.id)}>
-              <span className={styles.cov}>
-                {slot.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={slot.coverUrl} alt="" />
-                ) : null}
-              </span>
               <span className={styles.info}>
                 <span className={styles.h}>{slot.label}</span>
                 <span className={styles.a}>{slot.activity}</span>

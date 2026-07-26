@@ -1,21 +1,31 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl } from "./storage";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export interface GroupDaySummary {
   dateKey: string; // clé stable pour l'écran suivant, ex. "2026-07-25"
-  dateLabel: string; // "Samedi 25 juillet"
-  slotCount: number;
-  coverUrl: string | null;
+  weekday: string; // "Dimanche"
+  monthAbbr: string; // "JUIL"
+  dayNumber: string; // "26"
+  dateLabel: string; // "dimanche 26 juillet" — pour le fragment en dégradé du H1
+  recency: "today" | "yesterday" | "week" | "earlier";
+  sessionCount: number;
+  photoCount: number;
 }
 
 export interface GroupSlotSummary {
   id: string;
   label: string; // heure, "11 h 00"
-  startsAt: Date;
+  hourBucket: "morning" | "afternoon" | "evening";
   activity: string; // reprise de la sortie parente — un jour peut mélanger plusieurs activités
+  activityKey: string; // slug stable pour le filtre
   guide: string | null;
   photoCount: number;
-  coverUrl: string | null;
+  // Désambiguïsation des départs à la même minute (brief §11) — null hors
+  // collision. Faute d'un champ dédié "taille de groupe" dans le modèle, le
+  // seul signal disponible est le volume de photos.
+  groupSizeLabel: string | null;
 }
 
 export interface GroupPhoto {
@@ -24,14 +34,43 @@ export interface GroupPhoto {
   isVideo: boolean;
 }
 
+// Pas de fuseau horaire par opérateur dans le modèle actuel — tout le
+// regroupement (jour, matin/après-midi/soir, aujourd'hui/hier) se fait en
+// UTC de façon cohérente plutôt que de mélanger l'horloge locale du serveur
+// et des dates ISO. Simplification pragmatique documentée ; à revoir si un
+// opérateur signale un décalage.
 function formatDateFr(d: Date): string {
   return d
-    .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
+    .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" })
     .replace(/^./, (c) => c.toUpperCase());
+}
+
+function frWeekday(d: Date): string {
+  return d.toLocaleDateString("fr-FR", { weekday: "long", timeZone: "UTC" }).replace(/^./, (c) => c.toUpperCase());
+}
+
+function frMonthAbbr(d: Date): string {
+  return d.toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" }).replace(".", "").toUpperCase();
 }
 
 function dateKeyFor(d: Date): string {
   return d.toISOString().slice(0, 10);
+}
+
+function hourBucketFor(d: Date): "morning" | "afternoon" | "evening" {
+  const h = d.getUTCHours();
+  if (h < 12) return "morning";
+  if (h < 18) return "afternoon";
+  return "evening";
+}
+
+function slugify(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function previewUrlFor(photo: { groupPreviewKey: string | null; previewKey: string | null; thumbKey: string | null }): string | null {
@@ -55,7 +94,7 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
       sorties: {
         where: { mode: "GROUPE", slots: { some: {} } },
         include: {
-          slots: { include: { cover: true }, orderBy: { startsAt: "asc" } },
+          slots: { select: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } } },
         },
         orderBy: { startsAt: "desc" },
       },
@@ -63,27 +102,37 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
   });
   if (!operator) return null;
 
-  const byDate = new Map<string, { dateLabel: string; startsAt: Date; slotCount: number; coverUrl: string | null }>();
+  const now = new Date();
+  const todayKey = dateKeyFor(now);
+  const yesterdayKey = dateKeyFor(new Date(now.getTime() - DAY_MS));
+  const weekAgoKey = dateKeyFor(new Date(now.getTime() - 7 * DAY_MS));
+
+  const byDate = new Map<string, { startsAt: Date; sessionCount: number; photoCount: number }>();
   for (const sortie of operator.sorties) {
     const key = dateKeyFor(sortie.startsAt);
-    const cover = sortie.slots[0]?.cover ?? null;
+    const sessionCount = sortie.slots.length;
+    const photoCount = sortie.slots.reduce((sum, s) => sum + s._count.photos, 0);
     const existing = byDate.get(key);
     if (existing) {
-      existing.slotCount += sortie.slots.length;
-      if (!existing.coverUrl && cover) existing.coverUrl = previewUrlFor(cover);
+      existing.sessionCount += sessionCount;
+      existing.photoCount += photoCount;
     } else {
-      byDate.set(key, {
-        dateLabel: formatDateFr(sortie.startsAt),
-        startsAt: sortie.startsAt,
-        slotCount: sortie.slots.length,
-        coverUrl: cover ? previewUrlFor(cover) : null,
-      });
+      byDate.set(key, { startsAt: sortie.startsAt, sessionCount, photoCount });
     }
   }
 
   const days = Array.from(byDate.entries())
     .sort((a, b) => b[1].startsAt.getTime() - a[1].startsAt.getTime())
-    .map(([dateKey, d]) => ({ dateKey, dateLabel: d.dateLabel, slotCount: d.slotCount, coverUrl: d.coverUrl }));
+    .map(([dateKey, d]) => ({
+      dateKey,
+      weekday: frWeekday(d.startsAt),
+      monthAbbr: frMonthAbbr(d.startsAt),
+      dayNumber: String(d.startsAt.getUTCDate()),
+      dateLabel: formatDateFr(d.startsAt).toLowerCase(),
+      recency: (dateKey === todayKey ? "today" : dateKey === yesterdayKey ? "yesterday" : dateKey >= weekAgoKey ? "week" : "earlier") as GroupDaySummary["recency"],
+      sessionCount: d.sessionCount,
+      photoCount: d.photoCount,
+    }));
 
   return { operatorId: operator.id, operatorName: operator.name, days };
 }
@@ -102,10 +151,7 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
         where: { mode: "GROUPE", slots: { some: {} } },
         include: {
           slots: {
-            include: {
-              cover: true,
-              _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
-            },
+            include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },
             orderBy: { startsAt: "asc" },
           },
         },
@@ -117,27 +163,51 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
   const matching = operator.sorties.filter((sortie) => dateKeyFor(sortie.startsAt) === dateKey);
   if (matching.length === 0) return null;
 
-  const slots = matching
+  const raw = matching
     .flatMap((sortie) =>
       sortie.slots.map((slot) => ({
         id: slot.id,
         label: slot.label,
-        startsAt: slot.startsAt,
+        startsAtMs: slot.startsAt.getTime(),
+        hourBucket: hourBucketFor(slot.startsAt),
         activity: sortie.activity,
+        activityKey: slugify(sortie.activity),
         guide: slot.guide,
         photoCount: slot._count.photos,
-        coverUrl: slot.cover ? previewUrlFor(slot.cover) : null,
       })),
     )
-    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+    .sort((a, b) => a.startsAtMs - b.startsAtMs);
 
-  return { dateLabel: formatDateFr(matching[0]!.startsAt), slots };
+  const byStart = new Map<number, typeof raw>();
+  for (const s of raw) byStart.set(s.startsAtMs, [...(byStart.get(s.startsAtMs) ?? []), s]);
+
+  const slots: GroupSlotSummary[] = raw.map((s) => {
+    const collisionGroup = byStart.get(s.startsAtMs)!;
+    const groupSizeLabel =
+      collisionGroup.length < 2
+        ? null
+        : s.id === [...collisionGroup].sort((a, b) => b.photoCount - a.photoCount)[0]!.id
+          ? "grand groupe"
+          : "petit groupe";
+    return {
+      id: s.id,
+      label: s.label,
+      hourBucket: s.hourBucket,
+      activity: s.activity,
+      activityKey: s.activityKey,
+      guide: s.guide,
+      photoCount: s.photoCount,
+      groupSizeLabel,
+    };
+  });
+
+  return { dateLabel: formatDateFr(matching[0]!.startsAt).toLowerCase(), slots };
 }
 
 /**
- * Photos d'un créneau (écran 3) — jamais de flou : c'est la différence de
- * fond avec la boutique individuelle (brief §3), le client doit se
- * reconnaître dans le tas. La protection tient au filigrane tuilé
+ * Photos d'un créneau (écran galerie) — jamais de flou : c'est la
+ * différence de fond avec la boutique individuelle (brief §3), le client
+ * doit se reconnaître dans le tas. La protection tient au filigrane tuilé
  * (groupPreviewKey, lib/group-watermark.ts) plutôt qu'à un flou — aucune
  * photo n'est offerte ni téléchargeable avant paiement.
  */
