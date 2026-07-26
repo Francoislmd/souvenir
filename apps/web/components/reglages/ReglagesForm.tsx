@@ -248,6 +248,13 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
           {saving ? "Enregistrement…" : "Enregistrer"}
         </button>
       </div>
+
+      <div className={styles.lbl}>Compte</div>
+      <form action="/auth/signout" method="post">
+        <button type="submit" className={`${styles.btn} ${styles.ghost}`}>
+          Se déconnecter
+        </button>
+      </form>
     </>
   );
 }

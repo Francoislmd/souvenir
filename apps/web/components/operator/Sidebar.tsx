@@ -38,6 +38,11 @@ export function Sidebar({ operatorName }: { operatorName: string }) {
           <span className={styles.rl}>Compte opérateur</span>
         </div>
       </div>
+      <form action="/auth/signout" method="post">
+        <button type="submit" className={styles.signout}>
+          Se déconnecter
+        </button>
+      </form>
     </aside>
   );
 }

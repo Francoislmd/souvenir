@@ -2,7 +2,13 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } });
+  // Un seul objet réponse pour toute la requête : Supabase pose parfois
+  // plusieurs cookies d'affilée lors d'un rafraîchissement de session
+  // (access + refresh token). Recréer `response` à chaque set()/remove()
+  // (via NextResponse.next()) effaçait les cookies déjà posés par l'appel
+  // précédent — seul le dernier survivait, la session se corrompait et
+  // l'utilisateur se retrouvait déconnecté à la moindre navigation.
+  const response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
@@ -11,12 +17,10 @@ export async function middleware(request: NextRequest) {
       },
       set(name: string, value: string, options: CookieOptions) {
         request.cookies.set({ name, value, ...options });
-        response = NextResponse.next({ request: { headers: request.headers } });
         response.cookies.set({ name, value, ...options });
       },
       remove(name: string, options: CookieOptions) {
         request.cookies.set({ name, value: "", ...options });
-        response = NextResponse.next({ request: { headers: request.headers } });
         response.cookies.set({ name, value: "", ...options });
       },
     },
