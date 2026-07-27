@@ -1,5 +1,12 @@
 import sharp from "sharp";
-import opentype from "opentype.js";
+// Import nommé impératif ici : le build ESM d'opentype.js (dist/opentype.mjs,
+// résolu en priorité par le bundler webpack de Next.js pour les routes
+// serveur) n'a pas d'export default, seulement des exports nommés — un
+// `import opentype from "opentype.js"` s'y résout silencieusement en
+// `undefined` en production (aucune erreur au build ni au typecheck, plante
+// seulement à l'exécution). tsx/Node en local résout le build CommonJS à la
+// place, qui lui expose un default : d'où un bug invisible en dev.
+import { parse as parseFont, type Font } from "opentype.js";
 import { WATERMARK_FONT_WOFF_BASE64 } from "./fonts/watermark-font";
 
 const NAME_TILE = 260;
@@ -15,16 +22,16 @@ const LOGO_FRAME = "M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16
 // y produit des tofu (glyphes vides) en production alors que ça a l'air
 // correct en local (où une police système existe toujours). Voir
 // fonts/watermark-font.ts pour le détail du choix de police.
-let cachedFont: opentype.Font | null = null;
-function getWatermarkFont(): opentype.Font {
+let cachedFont: Font | null = null;
+function getWatermarkFont(): Font {
   if (!cachedFont) {
     const buf = Buffer.from(WATERMARK_FONT_WOFF_BASE64, "base64");
-    cachedFont = opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+    cachedFont = parseFont(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
   }
   return cachedFont;
 }
 
-function textPathData(font: opentype.Font, text: string, x: number, y: number, fontSize: number, letterSpacing: number): string {
+function textPathData(font: Font, text: string, x: number, y: number, fontSize: number, letterSpacing: number): string {
   return font.getPath(text, x, y, fontSize, { letterSpacing }).toPathData(2);
 }
 
