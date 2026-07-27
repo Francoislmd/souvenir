@@ -878,6 +878,21 @@
     gap: 5px;
   }
 }
+/* Cette page était plafonnée à 480px sans jamais s'élargir : sur un grand
+   écran, tout le contenu (y compris l'écran de sélection jour/créneau,
+   rendu comme enfant de .page) restait cantonné à une colonne étroite au
+   milieu d'un fond vide. On élargit le cadre et les barres fixes qui
+   doivent rester alignées avec lui (barre d'achat, feuille de paiement). */
+@media (min-width: 700px) {
+  .page,
+  .buybar,
+  .pn {
+    max-width: 640px;
+  }
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .page * {
     animation: none !important;

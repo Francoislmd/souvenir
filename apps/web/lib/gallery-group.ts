@@ -36,29 +36,39 @@ export interface GroupPhoto {
 
 // Pas de fuseau horaire par opérateur dans le modèle actuel — tout le
 // regroupement (jour, matin/après-midi/soir, aujourd'hui/hier) se fait en
-// UTC de façon cohérente plutôt que de mélanger l'horloge locale du serveur
-// et des dates ISO. Simplification pragmatique documentée ; à revoir si un
-// opérateur signale un décalage.
+// heure de Paris (seul fuseau du marché actuel), de façon cohérente avec
+// `formatSlotLabel` (lib/group-publish.ts) qui affiche le libellé du
+// créneau dans le même fuseau. Les deux doivent rester alignés : un
+// créneau affiché "19 h 30" doit tomber dans le bucket "evening" et sous
+// le bon jour calendaire, quel que soit le fuseau du serveur qui exécute
+// le code (souvent UTC en production).
+const TZ = "Europe/Paris";
+
 function formatDateFr(d: Date): string {
   return d
-    .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" })
+    .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: TZ })
     .replace(/^./, (c) => c.toUpperCase());
 }
 
 function frWeekday(d: Date): string {
-  return d.toLocaleDateString("fr-FR", { weekday: "long", timeZone: "UTC" }).replace(/^./, (c) => c.toUpperCase());
+  return d.toLocaleDateString("fr-FR", { weekday: "long", timeZone: TZ }).replace(/^./, (c) => c.toUpperCase());
 }
 
 function frMonthAbbr(d: Date): string {
-  return d.toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" }).replace(".", "").toUpperCase();
+  return d.toLocaleDateString("fr-FR", { month: "short", timeZone: TZ }).replace(".", "").toUpperCase();
 }
 
 function dateKeyFor(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Format "en-CA" = YYYY-MM-DD, dans le fuseau de Paris plutôt qu'UTC.
+  return d.toLocaleDateString("en-CA", { timeZone: TZ });
+}
+
+function dayNumberFor(d: Date): string {
+  return d.toLocaleDateString("en-US", { day: "numeric", timeZone: TZ });
 }
 
 function hourBucketFor(d: Date): "morning" | "afternoon" | "evening" {
-  const h = d.getUTCHours();
+  const h = Number(d.toLocaleString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: TZ }));
   if (h < 12) return "morning";
   if (h < 18) return "afternoon";
   return "evening";
@@ -127,7 +137,7 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
       dateKey,
       weekday: frWeekday(d.startsAt),
       monthAbbr: frMonthAbbr(d.startsAt),
-      dayNumber: String(d.startsAt.getUTCDate()),
+      dayNumber: dayNumberFor(d.startsAt),
       dateLabel: formatDateFr(d.startsAt).toLowerCase(),
       recency: (dateKey === todayKey ? "today" : dateKey === yesterdayKey ? "yesterday" : dateKey >= weekAgoKey ? "week" : "earlier") as GroupDaySummary["recency"],
       sessionCount: d.sessionCount,

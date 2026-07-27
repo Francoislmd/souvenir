@@ -129,10 +129,6 @@ export function SessionRetrieval({
       <div className={styles.who}>
         <b>{operatorName}</b>
       </div>
-      <div className={styles.powered}>
-        <i />
-        Souvenir
-      </div>
     </div>
   );
 

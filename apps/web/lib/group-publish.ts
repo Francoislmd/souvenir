@@ -8,8 +8,12 @@ import { clusterByTime, type ClusterItem } from "./cluster";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Toujours formaté en heure de Paris (le seul fuseau du marché actuel) :
+// sans ça, l'heure affichée dépend du fuseau du serveur qui exécute la
+// publication (souvent UTC en production) et ne correspond plus à l'heure
+// que l'opérateur a saisie à la création de la sortie.
 function formatSlotLabel(d: Date): string {
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", " h ");
 }
 
 interface PhotoPrep {
@@ -66,7 +70,7 @@ export async function publishGroupSortie(sortieId: string): Promise<void> {
 
   const prepared = await Promise.all(sortie.photos.map((photo) => preparePhoto(photo.id, photo.originalKey, sortie.operator.name)));
   const items: ClusterItem[] = prepared.map((p) => ({ id: p.id, takenAt: p.takenAt }));
-  const clusters = clusterByTime(items);
+  const clusters = clusterByTime(items, undefined, sortie.startsAt);
 
   await prisma.$transaction(async (tx) => {
     for (const cluster of clusters) {

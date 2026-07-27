@@ -15,9 +15,8 @@ export interface Cluster {
 }
 
 const DEFAULT_GAP_MINUTES = 40;
-const FALLBACK_CHUNK_SIZE = 20;
 
-export function clusterByTime(items: ClusterItem[], gapMinutes = DEFAULT_GAP_MINUTES): Cluster[] {
+export function clusterByTime(items: ClusterItem[], gapMinutes = DEFAULT_GAP_MINUTES, fallbackStartsAt = new Date()): Cluster[] {
   const dated = items.filter((i): i is ClusterItem & { takenAt: Date } => i.takenAt !== null);
   const undated = items.filter((i) => i.takenAt === null);
 
@@ -37,15 +36,16 @@ export function clusterByTime(items: ClusterItem[], gapMinutes = DEFAULT_GAP_MIN
   }
   if (current.length > 0) clusters.push(toCluster(current));
 
-  // Repli : photos sans EXIF, réparties en lots réguliers, datées sur le
-  // premier créneau existant (ou "maintenant" s'il n'y en a aucun) — juste
-  // assez pour leur donner un `startsAt` cohérent, l'ordre d'affichage réel
-  // dans la galerie ne dépend pas de cette date.
+  // Repli : photos sans EXIF, regroupées en un seul créneau daté sur le
+  // premier créneau existant (ou sur l'heure renseignée par l'opérateur à la
+  // création de la sortie s'il n'y en a aucun) — elles appartiennent toutes
+  // à la même sortie, donc au même départ réel. Ne jamais les répartir en
+  // plusieurs lots artificiels : ça créerait de faux créneaux distincts
+  // (vus côté client comme des départs séparés / "grand groupe" vs "petit
+  // groupe") pour ce qui n'est qu'une seule et même session.
   if (undated.length > 0) {
-    const baseline = clusters[0]?.startsAt ?? new Date();
-    for (let i = 0; i < undated.length; i += FALLBACK_CHUNK_SIZE) {
-      clusters.push({ ids: undated.slice(i, i + FALLBACK_CHUNK_SIZE).map((p) => p.id), startsAt: baseline });
-    }
+    const baseline = clusters[0]?.startsAt ?? fallbackStartsAt;
+    clusters.push({ ids: undated.map((p) => p.id), startsAt: baseline });
   }
 
   return clusters;
