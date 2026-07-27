@@ -161,7 +161,7 @@
   flex: 1;
 }
 .listSlot {
-  padding: 10px 22px 140px;
+  padding: 10px 22px 40px;
   flex: 1;
 }
 .groupLabel {
@@ -355,10 +355,6 @@
   outline: 2px solid var(--sunset-a);
   outline-offset: 2px;
 }
-.slot.selected {
-  border-color: transparent;
-  box-shadow: var(--shadow-card), 0 0 0 2px var(--sunset-a);
-}
 .slot .meta {
   flex: 1;
   min-width: 0;
@@ -387,9 +383,6 @@
   padding: 0 8px;
   font-weight: 700;
 }
-.slot.selected .tm {
-  color: var(--sunset-a);
-}
 .ssub {
   font-size: 13px;
   color: var(--ink-soft);
@@ -405,31 +398,6 @@
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
-.slot.selected .count {
-  background: var(--sunset-grad);
-  color: #fff;
-}
-.check {
-  position: absolute;
-  top: -7px;
-  right: -7px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--sunset-grad);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(255, 122, 89, 0.4);
-}
-.slot.selected .check {
-  display: flex;
-}
-.check svg {
-  width: 12px;
-  height: 12px;
-}
-
 .hintTwin {
   font-size: 12.5px;
   color: var(--ink-faint);
@@ -472,57 +440,6 @@
   padding-bottom: 1px;
 }
 
-/* ===== CTA sticky ===== */
-.ctaWrap {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  padding: 14px 22px calc(18px + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, #fff 65%, rgba(255, 255, 255, 0));
-  pointer-events: none;
-  transition: opacity 0.25s ease, translate 0.25s ease;
-  opacity: 0;
-  translate: 0 12px;
-  z-index: 20;
-}
-.ctaWrap.show {
-  opacity: 1;
-  translate: 0 0;
-  pointer-events: auto;
-}
-.cta {
-  width: 100%;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-space-grotesk);
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
-  background: var(--sunset-grad);
-  padding: 17px;
-  border-radius: 999px;
-  box-shadow: var(--shadow-cta);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: transform 0.12s ease;
-}
-.cta:active {
-  transform: scale(0.98);
-}
-.cta:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
-}
-.cta:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
 /* ===== états chargement / vide / erreur ===== */
 .skeletonCard {
   height: 86px;
@@ -557,12 +474,6 @@
   line-height: 1.5;
 }
 
-/* Garde le CTA sticky aligné avec .page élargie sur desktop (collective.module.css). */
-@media (min-width: 700px) {
-  .ctaWrap {
-    max-width: 640px;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .retrieval * {
     animation: none !important;

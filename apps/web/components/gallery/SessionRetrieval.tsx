@@ -49,10 +49,8 @@ export function SessionRetrieval({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [activityFilter, setActivityFilter] = useState("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedId(null);
     setActivityFilter("all");
     if (!activeDay) {
       setSlots([]);
@@ -102,12 +100,6 @@ export function SessionRetrieval({
   }, [slots]);
 
   const visibleSlots = activityFilter === "all" ? slots : slots.filter((s) => s.activityKey === activityFilter);
-
-  useEffect(() => {
-    setSelectedId((cur) => (cur && !visibleSlots.some((s) => s.id === cur) ? null : cur));
-  }, [visibleSlots]);
-
-  const selectedSlot = slots.find((s) => s.id === selectedId) ?? null;
 
   const header = (
     <div className={styles.topbar}>
@@ -255,7 +247,6 @@ export function SessionRetrieval({
                 <div key={bucket.key}>
                   {bucketCount > 1 ? <div className={styles.groupLabel}>{bucket.label}</div> : null}
                   {items.map((slot, i) => {
-                    const isSelected = selectedId === slot.id;
                     const isLastOfCollision = !!slot.groupSizeLabel && items.slice(i + 1).every((s) => s.label !== slot.label);
                     const showHint = !!slot.groupSizeLabel && isLastOfCollision && !seenCollisions.has(slot.label);
                     if (showHint) seenCollisions.add(slot.label);
@@ -263,8 +254,8 @@ export function SessionRetrieval({
                       <div key={slot.id}>
                         <button
                           type="button"
-                          className={`${styles.slot} ${isSelected ? styles.selected : ""}`}
-                          onClick={() => setSelectedId((cur) => (cur === slot.id ? null : slot.id))}
+                          className={styles.slot}
+                          onClick={() => onConfirm(slot, slotsDateLabel || activeDay.dateLabel)}
                         >
                           <span className={styles.meta}>
                             <span className={styles.slotTitle}>
@@ -278,11 +269,6 @@ export function SessionRetrieval({
                             ) : null}
                           </span>
                           <span className={styles.count}>{slot.photoCount} photos</span>
-                          <span className={styles.check}>
-                            <svg viewBox="0 0 16 16" fill="none">
-                              <path d="M3 8.5L6.5 12L13 4.5" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </span>
                         </button>
                         {showHint ? (
                           <div className={styles.hintTwin}>
@@ -306,17 +292,6 @@ export function SessionRetrieval({
             </div>
           </>
         )}
-      </div>
-
-      <div className={`${styles.ctaWrap} ${selectedSlot ? styles.show : ""}`}>
-        <button
-          type="button"
-          className={styles.cta}
-          disabled={!selectedSlot}
-          onClick={() => selectedSlot && onConfirm(selectedSlot, slotsDateLabel || activeDay.dateLabel)}
-        >
-          {selectedSlot ? `Voir mes ${selectedSlot.photoCount} photos · ${selectedSlot.activity} ${selectedSlot.label}` : "Voir mes photos"}
-        </button>
       </div>
     </div>
   );
