@@ -11,6 +11,10 @@ import { WATERMARK_FONT_WOFF_BASE64 } from "./fonts/watermark-font";
 
 const NAME_TILE = 260;
 const BADGE_TILE = 150;
+// Rotation légère plutôt qu'une vraie diagonale à -30° : chaque occurrence
+// du nom reste quasi horizontale et lisible d'un coup d'œil, seule la grille
+// dérive lentement ligne à ligne (le rendu demandé par l'opérateur).
+const ANGLE_DEG = -8;
 
 // Symbole Linktrip (cadre + point), extrait de components/brand/Logo.tsx —
 // à resynchroniser si le tracé du logo change là-bas.
@@ -49,7 +53,7 @@ function buildTiledWatermarkSvg(width: number, height: number, operatorName: str
   const font = getWatermarkFont();
   const name = operatorName.toUpperCase().replace(/[<>&]/g, "");
 
-  const nameFontSize = 21;
+  const nameFontSize = 22;
   const nameLetterSpacing = 2 / nameFontSize;
   const namePath = textPathData(font, name, 0, NAME_TILE / 2, nameFontSize, nameLetterSpacing);
 
@@ -62,16 +66,16 @@ function buildTiledWatermarkSvg(width: number, height: number, operatorName: str
   return Buffer.from(`
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <pattern id="wm-name" width="${NAME_TILE}" height="${NAME_TILE}" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
-          <path d="${namePath}" fill="rgba(255,255,255,0.55)" stroke="rgba(0,0,0,0.4)" stroke-width="0.8" />
+        <pattern id="wm-name" width="${NAME_TILE}" height="${NAME_TILE}" patternUnits="userSpaceOnUse" patternTransform="rotate(${ANGLE_DEG})">
+          <path d="${namePath}" fill="rgba(255,255,255,0.4)" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" />
         </pattern>
         <pattern id="wm-badge" width="${BADGE_TILE}" height="${BADGE_TILE}" patternUnits="userSpaceOnUse"
-                  patternTransform="rotate(-30) translate(${BADGE_TILE / 2} 0)">
+                  patternTransform="rotate(${ANGLE_DEG}) translate(${BADGE_TILE / 2} 0)">
           <svg x="${(BADGE_TILE - 26) / 2}" y="10" width="26" height="26" viewBox="0 0 100 100">
-            <path d="${LOGO_FRAME}" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="9" stroke-linecap="round" />
-            <circle cx="73" cy="27" r="12" fill="rgba(255,255,255,0.5)" />
+            <path d="${LOGO_FRAME}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="11" stroke-linecap="round" />
+            <circle cx="73" cy="27" r="13" fill="rgba(255,255,255,0.4)" />
           </svg>
-          <path d="${badgePath}" fill="rgba(255,255,255,0.5)" stroke="rgba(0,0,0,0.35)" stroke-width="0.5" />
+          <path d="${badgePath}" fill="rgba(255,255,255,0.4)" stroke="rgba(0,0,0,0.15)" stroke-width="0.4" />
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#wm-name)" />
