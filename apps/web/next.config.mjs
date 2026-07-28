@@ -10,7 +10,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ["@prisma/client", "prisma", "sharp"],
+    serverComponentsExternalPackages: ["@prisma/client", "prisma", "sharp", "@napi-rs/canvas"],
     outputFileTracingIncludes: {
       "/**": [
         "../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/*.node",
