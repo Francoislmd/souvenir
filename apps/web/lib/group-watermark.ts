@@ -11,7 +11,7 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
  * texte, et librsvg gère mal textLength/letter-spacing).
  */
 const PARAMS = {
-  opacity: 0.4,
+  opacity: 0.55,
   angleDeg: -22,
   fontRatio: 0.0179,
   // Tuile nominale / largeur image — valeur de référence documentée par le
