@@ -10,16 +10,22 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
  * @napi-rs/canvas (dessin + métriques de texte — sharp ne mesure pas le
  * texte, et librsvg gère mal textLength/letter-spacing).
  */
+// Resserre le corps et la maille ensemble pour coller à la référence
+// (retour utilisateur) — accepte en échange que les noms longs tronquent
+// plus tôt sur un mot entier (règle 2, dégradation prévue par le brief,
+// pas un bug : "Jet Côte d'Albatre" devient "Jet Côte…").
+const SIZE_SCALE = 0.65;
+
 const PARAMS = {
   opacity: 0.7,
   angleDeg: -22,
-  fontRatio: 0.0179,
+  fontRatio: 0.0179 * SIZE_SCALE,
   // Tuile nominale / largeur image — valeur de référence documentée par le
   // brief ; la formule de tuile réelle (règle 1 ci-dessous) ne dépend que de
   // fontRatio/trackingFactor/wordWidthRatio et des bornes min/max.
-  tileRatio: 0.183,
-  tileRatioMin: 0.15,
-  tileRatioMax: 0.26,
+  tileRatio: 0.183 * SIZE_SCALE,
+  tileRatioMin: 0.15 * SIZE_SCALE,
+  tileRatioMax: 0.26 * SIZE_SCALE,
   trackingFactor: 1.32,
   wordWidthRatio: 0.7,
   wordWidthMax: 0.86,
@@ -35,9 +41,9 @@ const PARAMS = {
   faceAttenuation: 0.72,
   faceRadiusScale: 1.3,
   faceFeather: 0.52,
-  lumaThreshold: 0.68,
-  inkLight: "#ffffff",
-  inkDark: "#0d0f12",
+  // Toujours blanc (retour utilisateur) : plus d'adaptation de teinte selon
+  // la luminance locale.
+  ink: "#ffffff",
   previewMaxWidth: 1000,
   jpegQuality: 72,
 } as const;
@@ -49,31 +55,6 @@ const MESH_SUBPOSITIONS: [number, number][] = [
   [0, 0],
   [0.5, 0.5],
 ];
-
-function luma(r: number, g: number, b: number): number {
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-}
-
-function sampleLocalLuma(rgb: Buffer, width: number, height: number, channels: number, cx: number, cy: number, boxW: number, boxH: number): number {
-  const x0 = Math.max(0, Math.floor(cx - boxW / 2));
-  const x1 = Math.min(width, Math.ceil(cx + boxW / 2));
-  const y0 = Math.max(0, Math.floor(cy - boxH / 2));
-  const y1 = Math.min(height, Math.ceil(cy + boxH / 2));
-  if (x1 <= x0 || y1 <= y0) return 0.5;
-
-  const strideX = Math.max(1, Math.floor((x1 - x0) / 24));
-  const strideY = Math.max(1, Math.floor((y1 - y0) / 24));
-  let sum = 0;
-  let count = 0;
-  for (let y = y0; y < y1; y += strideY) {
-    for (let x = x0; x < x1; x += strideX) {
-      const idx = (y * width + x) * channels;
-      sum += luma(rgb[idx]!, rgb[idx + 1]!, rgb[idx + 2]!);
-      count++;
-    }
-  }
-  return count > 0 ? sum / count : 0.5;
-}
 
 function faceAttenuationAt(faces: FaceZone[], x: number, y: number): number {
   let multiplier = 1;
@@ -140,7 +121,7 @@ function punchMarkDots(ctx: SKRSContext2D, dots: MarkDot[]): void {
   ctx.restore();
 }
 
-function buildWatermarkLayer(width: number, height: number, rgb: Buffer, channels: number, operatorName: string, faces: FaceZone[]): Buffer {
+function buildWatermarkLayer(width: number, height: number, operatorName: string, faces: FaceZone[]): Buffer {
   ensureWatermarkFont();
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
@@ -184,8 +165,7 @@ function buildWatermarkLayer(width: number, height: number, rgb: Buffer, channel
 
         if (screenX < -tile || screenX > width + tile || screenY < -tile || screenY > height + tile) continue;
 
-        const localLuma = sampleLocalLuma(rgb, width, height, channels, screenX, screenY, word.width, tile * 0.4);
-        const ink = localLuma > PARAMS.lumaThreshold ? PARAMS.inkDark : PARAMS.inkLight;
+        const ink = PARAMS.ink;
         const atten = faceAttenuationAt(faces, screenX, screenY);
         if (PARAMS.opacity * atten <= 0.002) continue;
 
@@ -244,7 +224,7 @@ export async function generateGroupPreview(original: Buffer, operatorName: strin
     return [] as FaceZone[];
   });
 
-  const layer = buildWatermarkLayer(width, height, rgb, channels, operatorName, faces);
+  const layer = buildWatermarkLayer(width, height, operatorName, faces);
 
   return sharp(rgb, { raw: { width, height, channels } })
     .composite([{ input: layer, top: 0, left: 0 }])
