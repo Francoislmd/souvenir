@@ -22,6 +22,11 @@ interface PhotoPrep {
   groupPreviewKey: string | null;
 }
 
+const parisDayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" });
+function isSameParisDay(a: Date, b: Date): boolean {
+  return parisDayFormatter.format(a) === parisDayFormatter.format(b);
+}
+
 // Le filigrane tourne désormais un modèle de détection de visage (TF.js,
 // backend CPU) en plus du rendu canvas — bien plus lourd en CPU/mémoire que
 // l'ancien rendu SVG. Lancer une dizaine de préparations de front sur une
@@ -62,7 +67,13 @@ async function preparePhotoOnce(photoId: string, originalKey: string, operatorNa
 
   const groupPreviewKey = `${photoId}/group-preview.jpg`;
   const previewBuffer = await generateGroupPreview(buffer, operatorName);
-  await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, previewBuffer, { contentType: "image/jpeg", upsert: true });
+  // cacheControl court (et non l'heure par défaut de Supabase) : cette clé
+  // peut être réécrite en place (upsert) si la sortie est republiée ou
+  // qu'un correctif du filigrane est déployé — sans ça, le CDN/le
+  // navigateur continue de servir l'ancien contenu pendant jusqu'à une
+  // heure après la mise à jour, ce qui a déjà semé la confusion (aperçus
+  // qui "ne changent pas" ou parlant les uns des autres après un correctif).
+  await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, previewBuffer, { contentType: "image/jpeg", upsert: true, cacheControl: "60" });
 
   return { id: photoId, takenAt, groupPreviewKey };
 }
@@ -110,13 +121,33 @@ export async function publishGroupSortie(sortieId: string): Promise<void> {
   });
   if (sortie.mode !== "GROUPE") throw new Error("publishGroupSortie: sortie is not in GROUPE mode");
 
-  const prepared = await mapWithConcurrency(sortie.photos, PREPARE_CONCURRENCY, (photo) =>
+  const preparedRaw = await mapWithConcurrency(sortie.photos, PREPARE_CONCURRENCY, (photo) =>
     preparePhoto(photo.id, photo.originalKey, sortie.operator.name),
   );
+  // L'EXIF n'est fiable que si elle tombe le même jour (heure de Paris) que
+  // la date renseignée par l'opérateur pour la sortie — sinon on l'ignore
+  // plutôt que de lui faire confiance aveuglément. Cas vus en pratique :
+  // photos de test/captures d'écran sans rapport, photos ré-uploadées d'une
+  // autre sortie, horloge d'appareil mal réglée. Sans ce garde-fou, une
+  // seule photo à l'EXIF aberrant peut (a) afficher un horaire de créneau
+  // sans rapport avec la sortie, et (b) entrer en collision avec le repli
+  // "sans EXIF" des autres photos si leur tuilage retombe sur cette même
+  // date par coïncidence — reproduisant le faux "grand groupe / petit
+  // groupe" (brief §11) pour ce qui n'est qu'une erreur de métadonnées.
+  const prepared = preparedRaw.map((p) => (p.takenAt && !isSameParisDay(p.takenAt, sortie.startsAt) ? { ...p, takenAt: null } : p));
   const items: ClusterItem[] = prepared.map((p) => ({ id: p.id, takenAt: p.takenAt }));
   const clusters = clusterByTime(items, undefined, sortie.startsAt);
 
   await prisma.$transaction(async (tx) => {
+    // Republier (photos ajoutées après coup, ou nouvelle tentative) doit
+    // repartir d'une ardoise propre : sans ça, les anciens Slot d'une
+    // publication précédente restent en base à côté des nouveaux — déjà
+    // vu produire un faux "grand groupe / petit groupe" (deux Slot d'une
+    // sortie différente coïncidant sur le même horaire de repli). La
+    // suppression met simplement Photo.slotId à null (onDelete: SetNull),
+    // aussitôt réassigné ci-dessous.
+    await tx.slot.deleteMany({ where: { sortieId: sortie.id } });
+
     for (const cluster of clusters) {
       const slot = await tx.slot.create({
         data: {
