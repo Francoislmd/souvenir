@@ -15,7 +15,7 @@ interface OperatorSettings {
   brandColor: string;
   pricePhotoCents: number;
   priceAllCents: number;
-  priceAllGroupCents: number;
+  packOnly: boolean;
   feePercent: number;
   stripeOnboarded: boolean;
   activities: string[];
@@ -37,7 +37,7 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
   const [brandColor, setBrandColor] = useState(operator.brandColor);
   const [pricePhoto, setPricePhoto] = useState(toEuros(operator.pricePhotoCents));
   const [priceAll, setPriceAll] = useState(toEuros(operator.priceAllCents));
-  const [priceAllGroup, setPriceAllGroup] = useState(toEuros(operator.priceAllGroupCents));
+  const [packOnly, setPackOnly] = useState(operator.packOnly);
   const [automations, setAutomations] = useState(operator.automations);
   const [activities, setActivities] = useState<Set<string>>(new Set(operator.activities));
   const [saving, setSaving] = useState(false);
@@ -66,7 +66,7 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         brandColor,
         pricePhotoCents: Math.round(Number(pricePhoto || 0) * 100),
         priceAllCents: Math.round(Number(priceAll || 0) * 100),
-        priceAllGroupCents: Math.round(Number(priceAllGroup || 0) * 100),
+        packOnly,
         automations,
         activities: Array.from(activities),
       }),
@@ -180,11 +180,24 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         <input type="number" value={priceAll} onChange={(e) => setPriceAll(e.target.value)} />
         <span>€</span>
       </div>
-      <div className={styles.pr}>
-        <span className={styles.a}>Tout le créneau (galerie de groupe)</span>
-        <span className={styles.net}>net {net(priceAllGroup)} €</span>
-        <input type="number" value={priceAllGroup} onChange={(e) => setPriceAllGroup(e.target.value)} />
-        <span>€</span>
+
+      <div className={styles.lbl}>Mode de vente</div>
+      <div className={styles.rel}>
+        <div className={styles.ri}>
+          <div className={styles.rt}>Vente à l&rsquo;unité</div>
+          <div className={styles.rh}>
+            Vos clients peuvent acheter photo par photo, en plus du pack complet. Désactivez pour ne proposer que le
+            pack.
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`${styles.tog} ${!packOnly ? styles.on : ""}`}
+          aria-label="Activer la vente à l'unité"
+          onClick={() => setPackOnly((v) => !v)}
+        >
+          <i />
+        </button>
       </div>
 
       <div className={styles.lbl}>Vos activités</div>

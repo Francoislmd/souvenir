@@ -50,6 +50,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
           pricePhotoCents: operator.pricePhotoCents,
           priceAllCents: operator.priceAllCents,
         }}
+        packOnly={operator.packOnly}
         bought={bought}
         purchasedIds={purchasedIds}
         googleReviewUrl={operator.googleReviewUrl}

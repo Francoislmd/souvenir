@@ -11,8 +11,8 @@ const schema = z.object({
   brandColor: z.string().optional(),
   pricePhotoCents: z.number().int().min(0).optional(),
   priceAllCents: z.number().int().min(0).optional(),
-  priceAllGroupCents: z.number().int().min(0).optional(),
   freeCount: z.number().int().min(0).optional(),
+  packOnly: z.boolean().optional(),
   googleReviewUrl: z.string().optional(),
   whatsappNumber: z.string().optional(),
   activities: z.array(z.string()).refine((ids) => ids.every((id) => knownActivityIds.has(id)), {

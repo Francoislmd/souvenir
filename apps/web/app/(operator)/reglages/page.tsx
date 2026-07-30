@@ -18,7 +18,7 @@ export default async function ReglagesPage() {
           brandColor: operator.brandColor,
           pricePhotoCents: operator.pricePhotoCents,
           priceAllCents: operator.priceAllCents,
-          priceAllGroupCents: operator.priceAllGroupCents,
+          packOnly: operator.packOnly,
           feePercent: operator.feePercent,
           stripeOnboarded: operator.stripeOnboarded,
           activities: operator.activities,

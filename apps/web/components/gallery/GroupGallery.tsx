@@ -22,12 +22,14 @@ export function GroupGallery({
   logoUrl,
   days,
   pricing,
+  packOnly,
 }: {
   shareToken: string;
   operatorName: string;
   logoUrl: string | null;
   days: GroupDaySummary[];
   pricing: PricingConfig;
+  packOnly: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("retrieval");
@@ -42,6 +44,13 @@ export function GroupGallery({
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
 
   const q = quote(selected.size, photos.length, pricing, ALL_LABEL);
+
+  // Pack uniquement (Réglages) : pas de sélection à la carte, le client
+  // achète tout le créneau — on la maintient toujours pleine.
+  useEffect(() => {
+    if (!packOnly) return;
+    setSelected(new Set(photos.map((p) => p.id)));
+  }, [packOnly, photos]);
 
   // Écrans 1 (jour) et 2 (créneau) — voir souvenir-handoff.md. Confirmé via
   // le CTA sticky de SessionRetrieval, qui gère seule sa navigation
@@ -91,6 +100,7 @@ export function GroupGallery({
   }
 
   function tap(photoId: string): void {
+    if (packOnly) return;
     const photo = photos.find((p) => p.id === photoId);
     if (!photo) return;
     setSelected((prev) => {
@@ -151,7 +161,7 @@ export function GroupGallery({
           {photos.length} photo{photos.length > 1 ? "s" : ""} de ce créneau
         </span>
         <span className={styles.sp} />
-        {selected.size > 0 ? (
+        {!packOnly && selected.size > 0 ? (
           <button type="button" onClick={() => setSelected(new Set())}>
             Tout enlever
           </button>
@@ -226,16 +236,18 @@ export function GroupGallery({
 
       <div className={styles.offers}>
         <div className={styles.lbl}>Votre formule</div>
-        <button type="button" className={`${styles.of} ${selected.size === 1 ? styles.on : ""}`} onClick={() => selectN(1)}>
-          <span className={styles.rad}>
-            <i />
-          </span>
-          <span className={styles.oi}>
-            <span className={styles.ot}>À la photo</span>
-            <span className={styles.oh}>celles que vous choisissez</span>
-          </span>
-          <span className={styles.pz}>{formatEuros(pricing.pricePhotoCents)}</span>
-        </button>
+        {!packOnly ? (
+          <button type="button" className={`${styles.of} ${selected.size === 1 ? styles.on : ""}`} onClick={() => selectN(1)}>
+            <span className={styles.rad}>
+              <i />
+            </span>
+            <span className={styles.oi}>
+              <span className={styles.ot}>À la photo</span>
+              <span className={styles.oh}>celles que vous choisissez</span>
+            </span>
+            <span className={styles.pz}>{formatEuros(pricing.pricePhotoCents)}</span>
+          </button>
+        ) : null}
         <button
           type="button"
           className={`${styles.of} ${selected.size === photos.length && photos.length > 0 ? styles.on : ""}`}

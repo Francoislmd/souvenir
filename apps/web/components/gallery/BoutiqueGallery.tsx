@@ -22,6 +22,7 @@ export function BoutiqueGallery({
   clientFirstName,
   photos: initialPhotos,
   pricing,
+  packOnly,
   bought,
   purchasedIds,
   googleReviewUrl,
@@ -32,6 +33,7 @@ export function BoutiqueGallery({
   clientFirstName: string;
   photos: BoutiquePhoto[];
   pricing: PricingConfig;
+  packOnly: boolean;
   bought: boolean;
   purchasedIds: string[];
   googleReviewUrl: string | null;
@@ -80,6 +82,14 @@ export function BoutiqueGallery({
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cur, setCur] = useState(0);
+
+  // Pack uniquement (Réglages) : pas de sélection à la carte, le client
+  // achète tout le lot — on la maintient toujours pleine.
+  useEffect(() => {
+    if (!packOnly) return;
+    setSelected(new Set(purchasable.map((p) => p.id)));
+  }, [packOnly, purchasable]);
+
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string } | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -101,6 +111,7 @@ export function BoutiqueGallery({
   }
 
   function toggle(photoId: string): void {
+    if (packOnly) return;
     const photo = photos.find((p) => p.id === photoId);
     if (!photo) return;
     if (photo.isFreeSample) {
@@ -210,7 +221,7 @@ export function BoutiqueGallery({
         </p>
       </div>
 
-      {selected.size > 0 ? (
+      {!packOnly && selected.size > 0 ? (
         <div className={styles.count}>
           <span className={styles.c}>
             {selected.size} photo{selected.size > 1 ? "s" : ""} choisie{selected.size > 1 ? "s" : ""}
@@ -276,7 +287,9 @@ export function BoutiqueGallery({
         })}
       </div>
 
-      <WantButton photo={photos[cur]} selected={photos[cur] ? selected.has(photos[cur].id) : false} pricePhotoCents={pricing.pricePhotoCents} onToggle={() => photos[cur] && toggle(photos[cur].id)} />
+      {!packOnly ? (
+        <WantButton photo={photos[cur]} selected={photos[cur] ? selected.has(photos[cur].id) : false} pricePhotoCents={pricing.pricePhotoCents} onToggle={() => photos[cur] && toggle(photos[cur].id)} />
+      ) : null}
 
       <div className={styles.film}>
         {photos.map((photo, i) => {
@@ -299,14 +312,16 @@ export function BoutiqueGallery({
 
       <div className={styles.offers}>
         <div className={styles.lbl}>Votre formule</div>
-        <OfferRow
-          active={selected.size === 1}
-          title="À la photo"
-          hint="Vous ne prenez que celles que vous aimez"
-          price={pricing.pricePhotoCents}
-          unit="la photo"
-          onClick={() => selectN(1)}
-        />
+        {!packOnly ? (
+          <OfferRow
+            active={selected.size === 1}
+            title="À la photo"
+            hint="Vous ne prenez que celles que vous aimez"
+            price={pricing.pricePhotoCents}
+            unit="la photo"
+            onClick={() => selectN(1)}
+          />
+        ) : null}
         <OfferRow
           active={selected.size === purchasable.length && purchasable.length > 0}
           best

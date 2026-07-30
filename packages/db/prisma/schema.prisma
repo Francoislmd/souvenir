@@ -19,11 +19,11 @@ model Operator {
   stripeAccountId String?
   stripeOnboarded Boolean @default(false)
 
-  pricePhotoCents    Int @default(800)
-  priceAllCents      Int @default(3900)
-  priceAllGroupCents Int @default(4500) // "Tout le créneau" — mode GROUPE uniquement, brief §4
-  freeCount          Int @default(2)
-  feePercent         Int @default(20)
+  pricePhotoCents Int     @default(800)
+  priceAllCents   Int     @default(3900) // "Toutes vos photos" — aussi "Tout le créneau" en mode GROUPE
+  freeCount       Int     @default(2)
+  feePercent      Int     @default(20)
+  packOnly        Boolean @default(false) // true = le client ne peut acheter que le pack complet, pas photo par photo
 
   // { resendUnopened, reducedPriceOffer, reviewRequest, referral } — referral always false, "bientôt"
   automations Json @default("{\"resendUnopened\":true,\"reducedPriceOffer\":true,\"reviewRequest\":true,\"referral\":false}")

@@ -104,8 +104,7 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
     .map((p) => (p.blurEmailKey ?? p.blurKey ? getPreviewUrl((p.blurEmailKey ?? p.blurKey) ?? "") : null))
     .filter((u): u is string => u !== null);
 
-  const priceFullCents = participant.slotId ? operator.priceAllGroupCents : operator.priceAllCents;
-  const pricePromoCents = applyReducedOffer(priceFullCents);
+  const pricePromoCents = applyReducedOffer(operator.priceAllCents);
 
   await sendPhotosOfferEmail({
     to: participant.contact,
@@ -119,7 +118,7 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
     thumbUrls,
     discountPercent: REDUCED_OFFER_DISCOUNT_PERCENT,
     pricePromo: formatEuros(pricePromoCents),
-    priceFull: formatEuros(priceFullCents),
+    priceFull: formatEuros(operator.priceAllCents),
     offerDeadlineDay: expiresAt.toLocaleDateString("fr-FR", { weekday: "long" }),
     offerDeadlineLabel: `${expiresAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}, ${expiresAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`,
     galleryUrl,

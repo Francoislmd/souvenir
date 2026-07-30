@@ -33,11 +33,15 @@ export async function createOrUpdatePaymentIntent(params: {
     select: { id: true },
   });
   const purchasableIds = new Set(purchasablePhotos.map((p) => p.id));
-  const selected = params.photoIds.filter((id) => purchasableIds.has(id));
+  // Le pro peut restreindre la vente au pack complet (Réglages) — dans ce
+  // cas on ignore la sélection reçue et on facture tout le lot, quoi que le
+  // client ait envoyé. C'est la seule application réellement fiable de la
+  // règle : la galerie ne fait que refléter ce choix côté UI.
+  const selected = operator.packOnly ? Array.from(purchasableIds) : params.photoIds.filter((id) => purchasableIds.has(id));
 
   const pricing: PricingConfig = {
     pricePhotoCents: operator.pricePhotoCents,
-    priceAllCents: participant.slotId ? operator.priceAllGroupCents : operator.priceAllCents,
+    priceAllCents: operator.priceAllCents,
   };
 
   const q = quote(selected.length, purchasableIds.size, pricing);
