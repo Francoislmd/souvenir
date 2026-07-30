@@ -14,7 +14,7 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
 // "zoom" plus important — un instance plus grande, moins répétée, pas plus
 // dense). Garder les deux liés préserve le ratio texte/tuile de la règle 1 :
 // un facteur plus grand agrandit tout sans jamais tronquer davantage un nom.
-const SIZE_SCALE = 1.4;
+const SIZE_SCALE = 1.25;
 
 const PARAMS = {
   // Plus sombre/opaque (retour utilisateur, deuxième passe : 0.55 puis 0.70
