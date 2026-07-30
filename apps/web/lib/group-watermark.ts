@@ -14,7 +14,7 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
 // (retour utilisateur) — accepte en échange que les noms longs tronquent
 // plus tôt sur un mot entier (règle 2, dégradation prévue par le brief,
 // pas un bug : "Jet Côte d'Albatre" devient "Jet Côte…").
-const SIZE_SCALE = 0.55;
+const SIZE_SCALE = 0.45;
 
 const PARAMS = {
   // Plus sombre/opaque (retour utilisateur, deuxième passe : 0.55 puis 0.70
