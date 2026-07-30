@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
+import { backfillGroupPreviews } from "./group-publish";
 import type { BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
 
 /**
@@ -11,6 +12,7 @@ import type { BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
 export async function getBoutiquePhotos(
   participant: { id: string; sortieId: string; slotId?: string | null },
   purchasedSet: Set<string>,
+  operatorName: string,
 ): Promise<BoutiquePhoto[]> {
   // Un Participant de mode GROUPE n'est jamais propriétaire d'une photo
   // (ownerId reste toujours null côté groupe) : il faut filtrer par slot,
@@ -27,29 +29,37 @@ export async function getBoutiquePhotos(
     orderBy: { createdAt: "asc" },
   });
 
+  // Rattrapage : processPhotoPreview (lib/photo-processing.ts) peut échouer à
+  // générer groupPreviewKey pour une poignée de photos (même mécanisme que
+  // lib/gallery-group.ts) ; cette route étant sondée toutes les 4s par
+  // BoutiqueGallery tant qu'il manque un aperçu, on retente ici à chaque appel.
+  const missing = rawPhotos.filter((p) => !p.groupPreviewKey && !p.isFreeSample && !purchasedSet.has(p.id));
+  const backfilled = await backfillGroupPreviews(
+    missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
+    operatorName,
+  );
+
   return Promise.all(
-    rawPhotos.map(async (p) => {
+    rawPhotos.map(async (rawP) => {
+      const p = backfilled.has(rawP.id) ? { ...rawP, groupPreviewKey: backfilled.get(rawP.id)! } : rawP;
       const unlocked = p.isFreeSample || purchasedSet.has(p.id);
-      // Verrouillée : on sert le JPEG flouté généré côté serveur (pixels réellement
-      // flous), jamais l'aperçu net avec un filter CSS — récupérable en un clic.
-      // Repli : si le worker n'a pas encore généré ce blurKey (déploiement en
-      // retard, ou photo traitée avant l'ajout de cette étape), on sert l'aperçu
-      // net mais le composant applique alors un flou CSS temporaire — imparfait,
-      // mais mieux que de montrer la photo intacte.
-      const lockedKey = p.blurKey ?? p.previewKey ?? p.thumbKey;
+      // Verrouillée : même filigrane tuilé qu'en mode GROUPE (Photo.groupPreviewKey,
+      // lib/group-watermark.ts) — jamais de flou, et jamais de repli sur
+      // previewKey/thumbKey (aperçus quasi nets) qui exposerait la photo avant
+      // achat. Tant que groupPreviewKey n'est pas prêt, previewUrl reste absent ;
+      // BoutiqueGallery sonde /api/g/[token]/photos toutes les 4s pour rattraper.
       const previewUrl = unlocked
         ? p.previewKey
           ? getPreviewUrl(p.previewKey)
           : p.thumbKey
             ? getPreviewUrl(p.thumbKey)
             : null
-        : lockedKey
-          ? getPreviewUrl(lockedKey)
+        : p.groupPreviewKey
+          ? getPreviewUrl(p.groupPreviewKey)
           : null;
       return {
         id: p.id,
         previewUrl,
-        previewIsBlurred: unlocked || !!p.blurKey,
         // Jamais d'original pour une photo non achetée et non offerte (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
         isFreeSample: p.isFreeSample,

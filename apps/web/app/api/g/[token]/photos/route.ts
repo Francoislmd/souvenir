@@ -7,14 +7,14 @@ import { getBoutiquePhotos } from "@/lib/gallery";
 export async function GET(_request: Request, { params }: { params: { token: string } }): Promise<Response> {
   const participant = await prisma.participant.findUnique({
     where: { token: params.token },
-    include: { order: true },
+    include: { order: true, sortie: { include: { operator: true } } },
   });
   if (!participant || participant.deletedAt) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
   const purchasedIds = participant.order?.status === "succeeded" ? participant.order.photoIds : [];
-  const photos = await getBoutiquePhotos(participant, new Set(purchasedIds));
+  const photos = await getBoutiquePhotos(participant, new Set(purchasedIds), participant.sortie.operator.name);
 
   return Response.json({ photos });
 }

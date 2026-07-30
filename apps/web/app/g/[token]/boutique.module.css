@@ -182,16 +182,6 @@
   height: 100%;
   object-fit: cover;
 }
-.slide.lock .slide-img {
-  /* L'image est déjà floutée côté serveur (voir Photo.blurKey) — un filter
-     CSS ici serait redondant et, pire, contournable (devtools). */
-  filter: saturate(0.92);
-}
-/* Repli tant que blurKey n'existe pas encore (worker pas à jour, ou photo
-   traitée avant l'ajout de cette étape) — mieux qu'une photo intacte. */
-.slide.lock.lock-fallback .slide-img {
-  filter: blur(5px) saturate(0.92);
-}
 .grad {
   position: absolute;
   left: 0;
@@ -237,16 +227,22 @@
   box-shadow: 0 0 0 3px var(--op), var(--sh-2);
 }
 
-/* verrou : flou léger, on doit se reconnaître */
-.wm {
+/* verrou : même badge qu'en galerie de groupe (collective.module.css) — la
+   protection tient au filigrane tuilé de l'image, pas à ce badge. */
+.slide .lock {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
   pointer-events: none;
-}
-.wm svg {
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
 }
 .tag {
   position: absolute;
@@ -333,10 +329,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-/* Image déjà floutée côté serveur pour les voies verrouillées — pas de filter CSS ici. */
-.fr.lock.lock-fallback .fr-img {
-  filter: blur(3px);
 }
 .fr.cur {
   opacity: 1;
@@ -857,6 +849,21 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.box-ph .lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 .cl {
   position: absolute;

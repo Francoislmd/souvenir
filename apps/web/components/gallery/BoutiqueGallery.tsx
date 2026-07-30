@@ -14,9 +14,6 @@ export interface BoutiquePhoto {
   originalUrl: string | null;
   isFreeSample: boolean;
   isVideo: boolean;
-  /** false = previewUrl est l'aperçu net (blurKey pas encore généré côté serveur) —
-   * le composant applique alors un flou CSS temporaire en repli. */
-  previewIsBlurred: boolean;
 }
 
 export function BoutiqueGallery({
@@ -97,7 +94,7 @@ export function BoutiqueGallery({
   const q = quote(selected.size, purchasable.length, pricing);
   const totalCents = reducedOfferActive ? applyReducedOffer(q.totalCents) : q.totalCents;
 
-  // Le flou/filigrane reste tant que l'achat n'est pas payé — la sélection
+  // Le filigrane reste tant que l'achat n'est pas payé — la sélection
   // (avant paiement) ne doit jamais dévoiler la photo en clair.
   function isLocked(photo: BoutiquePhoto): boolean {
     return !photo.isFreeSample;
@@ -232,7 +229,7 @@ export function BoutiqueGallery({
           return (
             <div
               key={photo.id}
-              className={`${styles.slide} ${locked ? styles.lock : ""} ${locked && !photo.previewIsBlurred ? styles["lock-fallback"] : ""} ${on ? styles.on : ""}`}
+              className={`${styles.slide} ${on ? styles.on : ""}`}
               onClick={() => {
                 setCur(i);
                 toggle(photo.id);
@@ -243,10 +240,10 @@ export function BoutiqueGallery({
                 <img src={photo.previewUrl} alt="" className={styles["slide-img"]} />
               ) : null}
               {locked ? (
-                <span className={styles.wm}>
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="4" y="10" width="16" height="10" rx="2" />
-                    <path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3" />
+                <span className={styles.lock} aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                   </svg>
                 </span>
               ) : null}
@@ -283,13 +280,12 @@ export function BoutiqueGallery({
 
       <div className={styles.film}>
         {photos.map((photo, i) => {
-          const locked = isLocked(photo);
           const on = selected.has(photo.id);
           return (
             <button
               key={photo.id}
               type="button"
-              className={`${styles.fr} ${locked ? styles.lock : ""} ${locked && !photo.previewIsBlurred ? styles["lock-fallback"] : ""} ${on ? styles.on : ""} ${i === cur ? styles.cur : ""}`}
+              className={`${styles.fr} ${on ? styles.on : ""} ${i === cur ? styles.cur : ""}`}
               onClick={() => goTo(i)}
             >
               {photo.previewUrl ? (
@@ -385,12 +381,15 @@ export function BoutiqueGallery({
           <div className={styles["box-ph"]}>
             {photos[lightbox]?.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photos[lightbox]!.previewUrl!}
-                alt=""
-                className={styles["box-img"]}
-                style={isLocked(photos[lightbox]!) && !photos[lightbox]!.previewIsBlurred ? { filter: "blur(6px)" } : undefined}
-              />
+              <img src={photos[lightbox]!.previewUrl!} alt="" className={styles["box-img"]} />
+            ) : null}
+            {photos[lightbox] && isLocked(photos[lightbox]!) ? (
+              <span className={styles.lock} aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+              </span>
             ) : null}
           </div>
           <button className={styles.cl} aria-label="Fermer">

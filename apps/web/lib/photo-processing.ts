@@ -6,6 +6,7 @@ import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { supabaseAdmin } from "./supabase";
 import { ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
+import { generateGroupPreview } from "./group-watermark";
 
 const LOCK_BADGE_SVG = `
 <svg width="112" height="112" xmlns="http://www.w3.org/2000/svg">
@@ -17,8 +18,10 @@ const LOCK_BADGE_SVG = `
 </svg>`;
 
 /**
- * Génère miniature, aperçu filigrané et aperçu flouté pour une photo, puis
- * passe son statut à READY (ou FAILED en cas d'échec).
+ * Génère miniature, aperçu filigrané (corner-logo, offert/acheté), aperçu
+ * flouté pour l'email et — mode INDIVIDUEL — aperçu filigrané tuilé verrouillé
+ * (même mécanisme qu'en mode GROUPE) pour une photo, puis passe son statut à
+ * READY (ou FAILED en cas d'échec).
  *
  * Tourne dans le même déploiement Vercel que le reste de l'app (déclenché
  * via `after()` juste après l'upload, voir /api/photos/[photoId]/complete)
@@ -38,8 +41,9 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const { data: original, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(photo.originalKey);
     if (error || !original) throw error ?? new Error("Failed to download original");
 
+    const originalBuffer = Buffer.from(await original.arrayBuffer());
     const inputPath = join(dir, "input");
-    await writeFile(inputPath, Buffer.from(await original.arrayBuffer()));
+    await writeFile(inputPath, originalBuffer);
 
     // .rotate() sans argument : réoriente les pixels selon le tag EXIF de la
     // photo puis le supprime. Indispensable — sans ça l'image reste physiquement
@@ -49,17 +53,13 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const thumbBuffer = await sharp(inputPath).rotate().resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
     const previewBase = sharp(inputPath).rotate().resize({ width: 1280 });
     const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
-    // Flou appliqué aux pixels, pas en CSS : les clients email (et les devtools
-    // navigateur) ignorent filter:blur, ce JPEG doit déjà être flou. Léger :
-    // on doit reconnaître la photo, pas juste deviner des couleurs. Source plus
-    // large (960) qu'avant pour limiter l'agrandissement à l'affichage (le
-    // carrousel l'étire sur ~1000px sur écran retina) — sinon le flou parait
-    // bien plus fort à l'écran que le sigma appliqué ne le laisse penser.
-    const blurBuffer = await sharp(inputPath).rotate().resize({ width: 960 }).blur(6).jpeg({ quality: 68 }).toBuffer();
-    // Variante email : un cran plus flouté, et le cadenas est incrusté dans le
-    // JPEG plutôt qu'en overlay CSS — Gmail (et la plupart des clients mail)
-    // supprime `position: absolute` des styles inline, un overlay CSS n'y
-    // survit pas. La galerie web, elle, garde son cadenas en CSS (BoutiqueGallery).
+    // Variante email : flou (pixels, pas CSS — les clients mail l'ignorent) et
+    // cadenas incrusté dans le JPEG plutôt qu'en overlay CSS, que Gmail (et la
+    // plupart des clients mail) supprime des styles inline. La galerie web,
+    // elle, n'a plus de flou : aperçu verrouillé = même filigrane tuilé qu'en
+    // mode GROUPE (Photo.groupPreviewKey, lib/group-watermark.ts), affiché net
+    // avec un cadenas en overlay CSS (BoutiqueGallery) — jamais de photo qui
+    // se dévoile en un clic devtools.
     const lockBadge = await sharp(Buffer.from(LOCK_BADGE_SVG)).resize(112, 112).png().toBuffer();
     const blurEmailBuffer = await sharp(inputPath)
       .rotate()
@@ -71,17 +71,30 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
 
     const thumbKey = `${photoId}/thumb.jpg`;
     const previewKey = `${photoId}/preview.jpg`;
-    const blurKey = `${photoId}/blur.jpg`;
     const blurEmailKey = `${photoId}/blur-email.jpg`;
+
+    // Mode GROUPE : l'aperçu filigrané est (re)généré à la publication de la
+    // sortie (lib/group-publish.ts) — pas ici, ce serait un calcul perdu (visages
+    // détectés puis jamais servi tant que la sortie n'est pas publiée).
+    const groupPreviewBuffer = photo.sortie.mode === "INDIVIDUEL" ? await generateGroupPreview(originalBuffer, operator.name) : null;
+    const groupPreviewKey = groupPreviewBuffer ? `${photoId}/group-preview.jpg` : null;
 
     await Promise.all([
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurKey, blurBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
+      groupPreviewKey && groupPreviewBuffer
+        ? supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg", upsert: true })
+        : Promise.resolve(),
     ]);
 
-    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, blurKey, blurEmailKey, status: "READY" } });
+    // groupPreviewKey omis (plutôt que mis à null) en mode GROUPE : un retry
+    // après publication ne doit pas effacer l'aperçu déjà généré par
+    // lib/group-publish.ts.
+    await prisma.photo.update({
+      where: { id: photoId },
+      data: { thumbKey, previewKey, blurEmailKey, status: "READY", ...(groupPreviewKey ? { groupPreviewKey } : {}) },
+    });
 
     await track("photo_ready", { operatorId: operator.id, meta: { photoId } });
   } finally {
