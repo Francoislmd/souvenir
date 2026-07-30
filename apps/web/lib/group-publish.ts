@@ -50,6 +50,26 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
 }
 
 /**
+ * Télécharge l'original et génère+stocke son aperçu filigrané de galerie
+ * de groupe (lib/group-watermark.ts) — jamais servi flouté, la protection
+ * tient entièrement au filigrane. Partagé entre la publication initiale
+ * (preparePhotoOnce, qui lit aussi l'EXIF sur le même buffer) et le
+ * rattrapage silencieux (regenerateGroupPreview, backfillGroupPreviews).
+ */
+async function uploadGroupPreview(photoId: string, buffer: Buffer, operatorName: string): Promise<string> {
+  const groupPreviewKey = `${photoId}/group-preview.jpg`;
+  const previewBuffer = await generateGroupPreview(buffer, operatorName);
+  // cacheControl court (et non l'heure par défaut de Supabase) : cette clé
+  // peut être réécrite en place (upsert) si la sortie est republiée ou
+  // qu'un correctif du filigrane est déployé — sans ça, le CDN/le
+  // navigateur continue de servir l'ancien contenu pendant jusqu'à une
+  // heure après la mise à jour, ce qui a déjà semé la confusion (aperçus
+  // qui "ne changent pas" ou parlant les uns des autres après un correctif).
+  await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, previewBuffer, { contentType: "image/jpeg", upsert: true, cacheControl: "60" });
+  return groupPreviewKey;
+}
+
+/**
  * Un seul téléchargement de l'original par photo : sert à la fois à lire
  * l'EXIF (regroupement par créneau) et à générer l'aperçu filigrané de
  * galerie de groupe (lib/group-watermark.ts) — jamais servi flouté, la
@@ -65,15 +85,7 @@ async function preparePhotoOnce(photoId: string, originalKey: string, operatorNa
   const takenAtRaw = exif?.DateTimeOriginal;
   const takenAt = takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime()) ? takenAtRaw : null;
 
-  const groupPreviewKey = `${photoId}/group-preview.jpg`;
-  const previewBuffer = await generateGroupPreview(buffer, operatorName);
-  // cacheControl court (et non l'heure par défaut de Supabase) : cette clé
-  // peut être réécrite en place (upsert) si la sortie est republiée ou
-  // qu'un correctif du filigrane est déployé — sans ça, le CDN/le
-  // navigateur continue de servir l'ancien contenu pendant jusqu'à une
-  // heure après la mise à jour, ce qui a déjà semé la confusion (aperçus
-  // qui "ne changent pas" ou parlant les uns des autres après un correctif).
-  await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, previewBuffer, { contentType: "image/jpeg", upsert: true, cacheControl: "60" });
+  const groupPreviewKey = await uploadGroupPreview(photoId, buffer, operatorName);
 
   return { id: photoId, takenAt, groupPreviewKey };
 }
@@ -119,6 +131,46 @@ async function preparePhoto(photoId: string, originalKey: string, operatorName: 
 }
 
 /**
+ * Rattrapage d'une photo dont l'aperçu filigrané a échoué à la publication
+ * (voir preparePhoto) — un seul essai, pas de retry avec backoff ici : ce
+ * sont les rappels successifs du client toutes les 4s (voir GroupGallery,
+ * getSlotPhotos) qui font office de nouvelles tentatives. gallery-group.ts
+ * ne sert plus jamais previewKey/thumbKey en repli quand groupPreviewKey
+ * est absent — sans ce rattrapage, une photo restée en échec resterait
+ * invisible pour toujours.
+ */
+export async function regenerateGroupPreview(photoId: string, originalKey: string, operatorName: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(originalKey);
+    if (error || !data) throw error ?? new Error("download returned no data");
+    const buffer = Buffer.from(await data.arrayBuffer());
+    return await uploadGroupPreview(photoId, buffer, operatorName);
+  } catch (error) {
+    console.error(`[group-publish] backfill preview failed for ${originalKey}`, error);
+    return null;
+  }
+}
+
+/**
+ * Retente en arrière-plan l'aperçu filigrané de chaque photo fournie
+ * (originalKey) et persiste les clés obtenues. Même limite de concurrence
+ * que la publication initiale — voir PREPARE_CONCURRENCY.
+ */
+export async function backfillGroupPreviews(photos: { id: string; originalKey: string }[], operatorName: string): Promise<Map<string, string>> {
+  if (photos.length === 0) return new Map();
+
+  const results = await mapWithConcurrency(photos, PREPARE_CONCURRENCY, async (photo) => ({
+    id: photo.id,
+    key: await regenerateGroupPreview(photo.id, photo.originalKey, operatorName),
+  }));
+
+  const updates = results.filter((r): r is { id: string; key: string } => r.key !== null);
+  await Promise.all(updates.map((u) => prisma.photo.update({ where: { id: u.id }, data: { groupPreviewKey: u.key } })));
+
+  return new Map(updates.map((u) => [u.id, u.key]));
+}
+
+/**
  * Publie une sortie GROUPE : lit l'EXIF de chaque original, génère son
  * aperçu filigrané, regroupe les photos par créneau (lib/cluster.ts), crée
  * les Slot, désigne une couverture par créneau (juste une vignette de
@@ -147,8 +199,8 @@ export async function publishGroupSortie(sortieId: string): Promise<void> {
   // seule photo à l'EXIF aberrant peut (a) afficher un horaire de créneau
   // sans rapport avec la sortie, et (b) entrer en collision avec le repli
   // "sans EXIF" des autres photos si leur tuilage retombe sur cette même
-  // date par coïncidence — reproduisant le faux "grand groupe / petit
-  // groupe" (brief §11) pour ce qui n'est qu'une erreur de métadonnées.
+  // date par coïncidence — créant un faux créneau distinct pour ce qui
+  // n'est qu'une erreur de métadonnées.
   const prepared = preparedRaw.map((p) => (p.takenAt && !isSameParisDay(p.takenAt, sortie.startsAt) ? { ...p, takenAt: null } : p));
   const items: ClusterItem[] = prepared.map((p) => ({ id: p.id, takenAt: p.takenAt }));
   const clusters = clusterByTime(items, undefined, sortie.startsAt);
@@ -156,10 +208,9 @@ export async function publishGroupSortie(sortieId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     // Republier (photos ajoutées après coup, ou nouvelle tentative) doit
     // repartir d'une ardoise propre : sans ça, les anciens Slot d'une
-    // publication précédente restent en base à côté des nouveaux — déjà
-    // vu produire un faux "grand groupe / petit groupe" (deux Slot d'une
-    // sortie différente coïncidant sur le même horaire de repli). La
-    // suppression met simplement Photo.slotId à null (onDelete: SetNull),
+    // publication précédente restent en base à côté des nouveaux — déjà vu
+    // produire deux Slot distincts coïncidant sur le même horaire de repli.
+    // La suppression met simplement Photo.slotId à null (onDelete: SetNull),
     // aussitôt réassigné ci-dessous.
     await tx.slot.deleteMany({ where: { sortieId: sortie.id } });
 

@@ -41,8 +41,8 @@ export function clusterByTime(items: ClusterItem[], gapMinutes = DEFAULT_GAP_MIN
   // création de la sortie s'il n'y en a aucun) — elles appartiennent toutes
   // à la même sortie, donc au même départ réel. Ne jamais les répartir en
   // plusieurs lots artificiels : ça créerait de faux créneaux distincts
-  // (vus côté client comme des départs séparés / "grand groupe" vs "petit
-  // groupe") pour ce qui n'est qu'une seule et même session.
+  // (vus côté client comme des départs séparés) pour ce qui n'est qu'une
+  // seule et même session.
   if (undated.length > 0) {
     const baseline = clusters[0]?.startsAt ?? fallbackStartsAt;
     clusters.push({ ids: undated.map((p) => p.id), startsAt: baseline });

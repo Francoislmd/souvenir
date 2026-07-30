@@ -6,7 +6,7 @@ import { getSlotPhotos } from "@/lib/gallery-group";
 // encore en traitement, sans recharger la page (même pattern que
 // /api/g/[token]/photos côté individuel).
 export async function GET(_request: Request, { params }: { params: { shareToken: string; slotId: string } }): Promise<Response> {
-  const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken }, select: { id: true } });
+  const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken }, select: { id: true, name: true } });
   if (!operator) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
@@ -15,6 +15,6 @@ export async function GET(_request: Request, { params }: { params: { shareToken:
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const photos = await getSlotPhotos(slot.id);
+  const photos = await getSlotPhotos(slot.id, operator.name);
   return Response.json({ photos });
 }

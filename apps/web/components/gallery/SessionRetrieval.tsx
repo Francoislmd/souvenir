@@ -242,43 +242,26 @@ export function SessionRetrieval({
               const items = visibleSlots.filter((s) => s.hourBucket === bucket.key);
               if (items.length === 0) return null;
               const bucketCount = HOUR_BUCKETS.filter((b) => visibleSlots.some((s) => s.hourBucket === b.key)).length;
-              const seenCollisions = new Set<string>();
               return (
                 <div key={bucket.key}>
                   {bucketCount > 1 ? <div className={styles.groupLabel}>{bucket.label}</div> : null}
-                  {items.map((slot, i) => {
-                    const isLastOfCollision = !!slot.groupSizeLabel && items.slice(i + 1).every((s) => s.label !== slot.label);
-                    const showHint = !!slot.groupSizeLabel && isLastOfCollision && !seenCollisions.has(slot.label);
-                    if (showHint) seenCollisions.add(slot.label);
-                    return (
-                      <div key={slot.id}>
-                        <button
-                          type="button"
-                          className={styles.slot}
-                          onClick={() => onConfirm(slot, slotsDateLabel || activeDay.dateLabel)}
-                        >
-                          <span className={styles.meta}>
-                            <span className={styles.slotTitle}>
-                              {slot.activity}
-                              <span className={styles.tm}>{slot.label}</span>
-                            </span>
-                            {slot.guide || slot.groupSizeLabel ? (
-                              <span className={styles.ssub}>
-                                {[slot.guide ? `guide ${slot.guide}` : null, slot.groupSizeLabel].filter(Boolean).join(" · ")}
-                              </span>
-                            ) : null}
-                          </span>
-                          <span className={styles.count}>{slot.photoCount} photos</span>
-                        </button>
-                        {showHint ? (
-                          <div className={styles.hintTwin}>
-                            <span>💡</span>
-                            <span>Deux départs à {slot.label} : distinguez le vôtre selon la taille du groupe (grand ou petit).</span>
-                          </div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
+                  {items.map((slot) => (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      className={styles.slot}
+                      onClick={() => onConfirm(slot, slotsDateLabel || activeDay.dateLabel)}
+                    >
+                      <span className={styles.meta}>
+                        <span className={styles.slotTitle}>
+                          {slot.activity}
+                          <span className={styles.tm}>{slot.label}</span>
+                        </span>
+                        {slot.guide ? <span className={styles.ssub}>{`guide ${slot.guide}`}</span> : null}
+                      </span>
+                      <span className={styles.count}>{slot.photoCount} photos</span>
+                    </button>
+                  ))}
                 </div>
               );
             })}

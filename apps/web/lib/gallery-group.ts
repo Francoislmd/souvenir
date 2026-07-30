@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl } from "./storage";
+import { backfillGroupPreviews } from "./group-publish";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -22,10 +23,6 @@ export interface GroupSlotSummary {
   activityKey: string; // slug stable pour le filtre
   guide: string | null;
   photoCount: number;
-  // Désambiguïsation des départs à la même minute (brief §11) — null hors
-  // collision. Faute d'un champ dédié "taille de groupe" dans le modèle, le
-  // seul signal disponible est le volume de photos.
-  groupSizeLabel: string | null;
 }
 
 export interface GroupPhoto {
@@ -83,9 +80,13 @@ function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function previewUrlFor(photo: { groupPreviewKey: string | null; previewKey: string | null; thumbKey: string | null }): string | null {
-  const key = photo.groupPreviewKey ?? photo.previewKey ?? photo.thumbKey;
-  return key ? getPreviewUrl(key) : null;
+// Jamais de repli sur previewKey/thumbKey ici : ce sont des aperçus non (ou
+// à peine) filigranés générés à l'upload pour la boutique individuelle — les
+// servir en galerie de groupe exposerait une photo en clair avant achat
+// (voir getSlotPhotos). Tant que groupPreviewKey n'est pas prêt, l'aperçu
+// reste absent et le client patiente (GroupGallery sonde toutes les 4s).
+function previewUrlFor(photo: { groupPreviewKey: string | null }): string | null {
+  return photo.groupPreviewKey ? getPreviewUrl(photo.groupPreviewKey) : null;
 }
 
 /**
@@ -173,7 +174,7 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
   const matching = operator.sorties.filter((sortie) => dateKeyFor(sortie.startsAt) === dateKey);
   if (matching.length === 0) return null;
 
-  const raw = matching
+  const slots: GroupSlotSummary[] = matching
     .flatMap((sortie) =>
       sortie.slots.map((slot) => ({
         id: slot.id,
@@ -186,30 +187,8 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
         photoCount: slot._count.photos,
       })),
     )
-    .sort((a, b) => a.startsAtMs - b.startsAtMs);
-
-  const byStart = new Map<number, typeof raw>();
-  for (const s of raw) byStart.set(s.startsAtMs, [...(byStart.get(s.startsAtMs) ?? []), s]);
-
-  const slots: GroupSlotSummary[] = raw.map((s) => {
-    const collisionGroup = byStart.get(s.startsAtMs)!;
-    const groupSizeLabel =
-      collisionGroup.length < 2
-        ? null
-        : s.id === [...collisionGroup].sort((a, b) => b.photoCount - a.photoCount)[0]!.id
-          ? "grand groupe"
-          : "petit groupe";
-    return {
-      id: s.id,
-      label: s.label,
-      hourBucket: s.hourBucket,
-      activity: s.activity,
-      activityKey: s.activityKey,
-      guide: s.guide,
-      photoCount: s.photoCount,
-      groupSizeLabel,
-    };
-  });
+    .sort((a, b) => a.startsAtMs - b.startsAtMs)
+    .map(({ startsAtMs, ...s }) => s);
 
   return { dateLabel: formatDateFr(matching[0]!.startsAt).toLowerCase(), slots };
 }
@@ -220,16 +199,29 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
  * doit se reconnaître dans le tas. La protection tient au filigrane tuilé
  * (groupPreviewKey, lib/group-watermark.ts) plutôt qu'à un flou — aucune
  * photo n'est offerte ni téléchargeable avant paiement.
+ *
+ * Rattrapage : la génération du filigrane à la publication peut échouer
+ * pour une poignée de photos (contention CPU, original pas encore répliqué
+ * — voir lib/group-publish.ts). Plutôt que de les laisser sans aperçu pour
+ * toujours, on retente ici, à chaque appel — cette route est sondée toutes
+ * les 4s par GroupGallery tant qu'il manque un aperçu, ce qui fait
+ * naturellement office de nouvelles tentatives.
  */
-export async function getSlotPhotos(slotId: string): Promise<GroupPhoto[]> {
+export async function getSlotPhotos(slotId: string, operatorName: string): Promise<GroupPhoto[]> {
   const photos = await prisma.photo.findMany({
     where: { slotId, hiddenAt: null, status: { not: "FAILED" } },
     orderBy: { createdAt: "asc" },
   });
 
+  const missing = photos.filter((p) => !p.groupPreviewKey);
+  const backfilled = await backfillGroupPreviews(
+    missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
+    operatorName,
+  );
+
   return photos.map((p) => ({
     id: p.id,
-    previewUrl: previewUrlFor(p),
+    previewUrl: previewUrlFor({ groupPreviewKey: p.groupPreviewKey ?? backfilled.get(p.id) ?? null }),
     isVideo: p.isVideo,
   }));
 }
