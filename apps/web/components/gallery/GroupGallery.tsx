@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/app/g/s/[shareToken]/collective.module.css";
@@ -35,6 +35,8 @@ export function GroupGallery({
   const [activeSlot, setActiveSlot] = useState<GroupSlotSummary | null>(null);
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [cur, setCur] = useState(0);
+  const deckRef = useRef<HTMLDivElement>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
@@ -48,6 +50,7 @@ export function GroupGallery({
     setActiveSlot(slot);
     setDayLabel(confirmedDayLabel);
     setSelected(new Set());
+    setCur(0);
     setView("gallery");
     const res = await fetch(`/api/g/s/${shareToken}/slots/${slot.id}/photos`);
     if (res.ok) {
@@ -79,6 +82,12 @@ export function GroupGallery({
     setActiveSlot(null);
     setPhotos([]);
     setSelected(new Set());
+  }
+
+  function goTo(i: number): void {
+    setCur(i);
+    const el = deckRef.current?.children[i] as HTMLElement | undefined;
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }
 
   function tap(photoId: string): void {
@@ -149,38 +158,63 @@ export function GroupGallery({
         ) : null}
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.deck} ref={deckRef}>
+        {photos.map((photo, i) => {
+          const on = selected.has(photo.id);
+          return (
+            <div
+              key={photo.id}
+              className={`${styles.slide} ${on ? styles.on : ""}`}
+              onClick={() => {
+                setCur(i);
+                tap(photo.id);
+              }}
+            >
+              {photo.previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo.previewUrl} alt="" className={styles["slide-img"]} />
+              ) : null}
+              <span className={styles.grad} />
+              <span className={styles.num}>
+                {i + 1} / {photos.length}
+              </span>
+              <span className={styles.chosen}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Choisie
+              </span>
+              <button
+                type="button"
+                aria-label="Agrandir"
+                className={styles.zoom}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightbox(i);
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round">
+                  <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
+                </svg>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className={styles.film}>
         {photos.map((photo, i) => (
-          <div
+          <button
             key={photo.id}
-            className={`${styles.cell} ${selected.has(photo.id) ? styles.on : ""}`}
-            onClick={() => tap(photo.id)}
-            role="button"
-            tabIndex={0}
+            type="button"
+            className={`${styles.fr} ${selected.has(photo.id) ? styles.on : ""} ${i === cur ? styles.cur : ""}`}
+            onClick={() => goTo(i)}
           >
             {photo.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo.previewUrl} alt="" />
+              <img src={photo.previewUrl} alt="" className={styles["fr-img"]} />
             ) : null}
-            <span className={styles.pick}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            </span>
-            <button
-              type="button"
-              className={styles.zoom}
-              onClick={(e) => {
-                e.stopPropagation();
-                setLightbox(i);
-              }}
-              aria-label="Agrandir"
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round">
-                <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
-              </svg>
-            </button>
-          </div>
+          </button>
         ))}
       </div>
 

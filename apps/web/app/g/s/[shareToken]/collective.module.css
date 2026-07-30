@@ -339,58 +339,135 @@
 .hideBar:disabled {
   opacity: 0.6;
 }
-.wm {
+/* ===== carrousel (diapo + pellicule, même disposition que la boutique
+   individuelle, cf. app/g/[token]/boutique.module.css) ===== */
+.deck {
+  display: flex;
+  gap: 11px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 12px 18px 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.deck::-webkit-scrollbar {
+  display: none;
+}
+.slide {
+  flex: 0 0 calc(100% - 56px);
+  scroll-snap-align: center;
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--sh-2);
+  cursor: pointer;
+  background: var(--line-2);
+}
+.slide-img {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.grad {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  background: linear-gradient(rgba(20, 19, 32, 0), rgba(20, 19, 32, 0.5));
   pointer-events: none;
 }
-.wm span {
-  font-family: var(--font-bricolage);
-  font-weight: 800;
-  font-size: 0.5rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.74);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-  transform: rotate(-26deg);
-  white-space: nowrap;
-}
-.pick {
+.num {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  display: grid;
-  place-items: center;
-  transition: 0.16s;
-  box-shadow: var(--sh-1);
+  top: 12px;
+  right: 12px;
+  background: rgba(20, 19, 32, 0.5);
+  color: #fff;
+  font-family: var(--font-bricolage);
+  font-weight: 700;
+  font-size: 0.74rem;
+  padding: 5px 11px;
+  border-radius: 99px;
+  backdrop-filter: blur(6px);
+  font-variant-numeric: tabular-nums;
 }
-.pick svg {
-  opacity: 0;
-  transform: scale(0.5);
-  transition: 0.16s;
-}
-.cell.on .pick {
+.chosen {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
   background: var(--op);
-  border-color: #fff;
+  color: #fff;
+  font-family: var(--font-bricolage);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 5px 11px;
+  border-radius: 99px;
+  display: none;
+  align-items: center;
+  gap: 5px;
 }
-.cell.on .pick svg {
+.slide.on .chosen {
+  display: flex;
+}
+.slide.on {
+  box-shadow: 0 0 0 3px var(--op), var(--sh-2);
+}
+.film {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 14px 18px 0;
+  scrollbar-width: none;
+}
+.film::-webkit-scrollbar {
+  display: none;
+}
+.fr {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+  overflow: hidden;
+  position: relative;
+  opacity: 0.5;
+  transition: 0.18s;
+  cursor: pointer;
+}
+.fr-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fr.cur {
   opacity: 1;
-  transform: none;
+  box-shadow: 0 0 0 2px var(--ink);
+}
+.fr.on {
+  opacity: 1;
+}
+.fr.on::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--op);
+  border: 1.5px solid #fff;
 }
 .zoom {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
+  bottom: 9px;
+  right: 9px;
+  width: 27px;
+  height: 27px;
+  border-radius: 9px;
   background: rgba(20, 19, 32, 0.5);
   display: grid;
   place-items: center;
