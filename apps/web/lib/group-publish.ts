@@ -78,25 +78,40 @@ async function preparePhotoOnce(photoId: string, originalKey: string, operatorNa
   return { id: photoId, takenAt, groupPreviewKey };
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Délais entre essais (ms) — pas un retry immédiat. Cas vu en pratique :
+// l'opérateur publie quelques secondes après avoir déposé les photos, et le
+// stockage renvoie "Object not found" sur un original pourtant bien
+// uploadé (juste pas encore répliqué/lisible partout) : sur une sortie de
+// 14 photos, 10 ont échoué ainsi avec un seul essai immédiat, alors que le
+// fichier existait bel et bien une poignée de secondes plus tard.
+const RETRY_DELAYS_MS = [1000, 2000, 4000];
+
 /**
  * Un seul téléchargement de l'original par photo : sert à la fois à lire
  * l'EXIF (regroupement par créneau) et à générer l'aperçu filigrané de
  * galerie de groupe (lib/group-watermark.ts) — jamais servi flouté, la
- * protection tient entièrement au filigrane. Un essai supplémentaire avant
- * d'abandonner : le rendu du filigrane sollicite fortement le CPU (détection
- * de visage TF.js), un échec isolé sous contention mérite une deuxième
- * chance plutôt que de laisser la photo sans filigrane.
+ * protection tient entièrement au filigrane. Plusieurs essais espacés avant
+ * d'abandonner : le rendu sollicite fortement le CPU (détection de visage
+ * TF.js, contention possible), et un original tout juste uploadé peut
+ * renvoyer "Object not found" le temps d'être répliqué côté stockage.
  */
 async function preparePhoto(photoId: string, originalKey: string, operatorName: string): Promise<PhotoPrep> {
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  const maxAttempts = RETRY_DELAYS_MS.length + 1;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await preparePhotoOnce(photoId, originalKey, operatorName);
     } catch (error) {
-      if (attempt === 2) {
+      if (attempt === maxAttempts) {
         console.error(`[group-publish] preparation failed for ${originalKey}`, error);
         return { id: photoId, takenAt: null, groupPreviewKey: null };
       }
-      console.warn(`[group-publish] preparation attempt ${attempt} failed for ${originalKey}, retrying`, error);
+      const delay = RETRY_DELAYS_MS[attempt - 1]!;
+      console.warn(`[group-publish] preparation attempt ${attempt} failed for ${originalKey}, retrying in ${delay}ms`, error);
+      await sleep(delay);
     }
   }
   // Inatteignable (la boucle retourne toujours dans l'une des deux branches ci-dessus).
