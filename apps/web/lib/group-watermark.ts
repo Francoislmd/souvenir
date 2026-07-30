@@ -17,17 +17,19 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
 const SIZE_SCALE = 0.65;
 
 const PARAMS = {
-  opacity: 0.7,
+  // Plus sombre/opaque (retour utilisateur, deuxième passe : 0.55 puis 0.70
+  // jugés encore trop clairs).
+  opacity: 0.85,
   angleDeg: -22,
   fontRatio: 0.0179 * SIZE_SCALE,
-  // Tuile nominale / largeur image — valeur de référence documentée par le
-  // brief ; la formule de tuile réelle (règle 1 ci-dessous) ne dépend que de
-  // fontRatio/trackingFactor/wordWidthRatio et des bornes min/max.
-  tileRatio: 0.183 * SIZE_SCALE,
-  tileRatioMin: 0.15 * SIZE_SCALE,
-  tileRatioMax: 0.26 * SIZE_SCALE,
+  // Tuile FIXE (retour utilisateur : le quadrillage doit être identique sur
+  // toutes les photos) — ne dépend plus de la longueur du nom. Avant, la
+  // tuile était dérivée du nom (trackingFactor/wordWidthRatio/bornes
+  // min-max), ce qui rendait le motif plus ou moins dense selon
+  // l'opérateur ; maintenant seul le nom s'adapte à la tuile (interlettrage
+  // puis troncature), jamais l'inverse.
+  tileRatio: 0.26 * SIZE_SCALE,
   trackingFactor: 1.32,
-  wordWidthRatio: 0.7,
   wordWidthMax: 0.86,
   wordWeight: 500,
   wordMaxChars: 30,

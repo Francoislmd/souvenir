@@ -51,51 +51,42 @@ function letterSpacingFor(finalWidth: number, naturalWidth: number, charCount: n
 
 export interface WordParams {
   fontRatio: number;
+  tileRatio: number;
   trackingFactor: number;
-  wordWidthRatio: number;
   wordWidthMax: number;
   wordMaxChars: number;
-  tileRatioMin: number;
-  tileRatioMax: number;
 }
 
 /**
- * Règle 1 : le corps est constant (fontRatio × largeur image), la tuile
- * s'adapte au nom. Règle 2 : quand le nom ne rentre pas, ordre de
- * dégradation imposé — aérer la tuile (implicite : c'est le calcul nominal
- * tant qu'il reste sous tileRatioMax) → élargir la cible dans la tuile
- * (jusqu'à wordWidthMax) → tronquer sur un mot entier + "…" → réduire le
- * corps en tout dernier recours. Jamais d'interlettrage négatif à aucune
- * étape.
+ * Corps et tuile constants (fontRatio/tileRatio × largeur image) — jamais
+ * dérivés du nom, pour garantir la même maille sur toutes les photos, quel
+ * que soit l'opérateur ou la longueur de son nom (retour utilisateur :
+ * quadrillage identique partout). Seul le nom s'adapte à la tuile, jamais
+ * l'inverse : interlettrage étendu jusqu'à wordWidthMax, puis troncature
+ * sur un mot entier + "…", puis réduction du corps en tout dernier
+ * recours (seul cas où une photo peut différer des autres — un nom
+ * pathologiquement long qui ne tient même pas tronqué). Jamais
+ * d'interlettrage négatif.
  */
 export function layoutWord(ctx: SKRSContext2D, rawName: string, imageWidth: number, params: WordParams): WordLayout & { tile: number } {
   ensureWatermarkFont();
-  const minTile = params.tileRatioMin * imageWidth;
-  const maxTile = params.tileRatioMax * imageWidth;
+  const tile = params.tileRatio * imageWidth;
   let fontSize = params.fontRatio * imageWidth;
   let text = truncateToMaxChars(rawName.toUpperCase(), params.wordMaxChars);
 
   for (let iteration = 0; iteration < 40; iteration++) {
     const naturalWidth = measureNatural(ctx, text, fontSize);
     const targetWidth = naturalWidth * params.trackingFactor;
-    const tileRaw = targetWidth / params.wordWidthRatio;
+    const ceiling = params.wordWidthMax * tile;
     const charCount = Array.from(text).length;
 
-    if (tileRaw <= maxTile) {
-      // Aérer la tuile : le calcul nominal rentre déjà sous le plafond.
-      const tile = Math.max(tileRaw, minTile);
+    if (targetWidth <= ceiling) {
       return { text, fontSize, letterSpacingPx: letterSpacingFor(targetWidth, naturalWidth, charCount), width: targetWidth, tile };
     }
-
-    // Tuile plafonnée à tileRatioMax : élargir la cible dans la tuile.
-    const widenedCeiling = params.wordWidthMax * maxTile;
-    if (targetWidth <= widenedCeiling) {
-      return { text, fontSize, letterSpacingPx: letterSpacingFor(targetWidth, naturalWidth, charCount), width: targetWidth, tile: maxTile };
-    }
-    if (naturalWidth <= widenedCeiling) {
-      // Le mot tient à interlettrage nul sous le plafond élargi : on plafonne
+    if (naturalWidth <= ceiling) {
+      // Le mot tient à interlettrage nul sous le plafond : on plafonne
       // l'interlettrage à 0 plutôt que de tronquer inutilement.
-      return { text, fontSize, letterSpacingPx: 0, width: naturalWidth, tile: maxTile };
+      return { text, fontSize, letterSpacingPx: 0, width: naturalWidth, tile };
     }
 
     // Tronquer sur un mot entier.
@@ -105,12 +96,13 @@ export function layoutWord(ctx: SKRSContext2D, rawName: string, imageWidth: numb
       continue;
     }
 
-    // Dernier recours : réduire le corps.
+    // Dernier recours : réduire le corps (seul cas où la maille peut
+    // différer d'une photo à l'autre — nom pathologique, cf. docstring).
     fontSize *= 0.94;
   }
 
   const naturalWidth = measureNatural(ctx, text, fontSize);
-  return { text, fontSize, letterSpacingPx: 0, width: naturalWidth, tile: maxTile };
+  return { text, fontSize, letterSpacingPx: 0, width: naturalWidth, tile };
 }
 
 export interface MicroParams {
