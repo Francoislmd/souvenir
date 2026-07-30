@@ -17,9 +17,10 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
 const SIZE_SCALE = 1.25;
 
 const PARAMS = {
-  // Plus sombre/opaque (retour utilisateur, deuxième passe : 0.55 puis 0.70
-  // jugés encore trop clairs).
-  opacity: 0.85,
+  // Plus sombre/opaque (retour utilisateur, passes successives : 0.55, 0.70
+  // puis 0.85 jugés encore trop clairs) — reste blanc (#ffffff), confirmé
+  // explicitement, seule l'opacité augmente.
+  opacity: 0.95,
   angleDeg: -22,
   fontRatio: 0.0179 * SIZE_SCALE,
   // Tuile FIXE (retour utilisateur : le quadrillage doit être identique sur
