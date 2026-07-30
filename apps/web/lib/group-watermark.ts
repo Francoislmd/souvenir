@@ -130,7 +130,20 @@ function buildWatermarkLayer(width: number, height: number, operatorName: string
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
-  const word = layoutWord(ctx, operatorName, width, PARAMS);
+  // La maille est dimensionnée sur le plus petit côté, pas sur la largeur :
+  // toutes les images sortent de sharp à une largeur fixe (previewMaxWidth)
+  // mais avec des hauteurs très différentes selon leur cadrage d'origine.
+  // Or la grille de la galerie affiche chaque vignette dans une case CARRÉE
+  // (object-fit: cover, collective.module.css) — le navigateur y met donc
+  // à l'échelle chaque photo selon son côté le plus court. Baser la tuile
+  // sur la largeur seule faisait paraître le filigrane bien plus "zoomé"
+  // sur les photos au format paysage (mises à l'échelle davantage pour
+  // remplir la case carrée) que sur les photos portrait. En basant la
+  // tuile sur min(largeur, hauteur), sa taille à l'écran dans la vignette
+  // carrée redevient la même quel que soit le cadrage d'origine.
+  const meshBasis = Math.min(width, height);
+
+  const word = layoutWord(ctx, operatorName, meshBasis, PARAMS);
   const micro = layoutMicro(ctx, PARAMS.microText, word.fontSize, word.width, PARAMS);
   const tile = word.tile;
   const markSize = PARAMS.markRatio * tile;
