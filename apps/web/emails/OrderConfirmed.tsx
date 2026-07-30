@@ -13,7 +13,7 @@ export interface OrderConfirmedProps {
   operatorName: string;
   photoCount: number;
   downloadUrl: string;
-  packLabel: string; // « Pack 3 photos + 2 offertes »
+  orderLabel: string; // « 3 photos + 2 offertes »
   amountLabel: string; // « 22,00 € » — déjà formaté
   orderRef: string; // « SV-4821 »
   orderDateLabel: string; // « 22 juillet »
@@ -25,7 +25,7 @@ export default function OrderConfirmed({
   operatorName,
   photoCount,
   downloadUrl,
-  packLabel,
+  orderLabel,
   amountLabel,
   orderRef,
   orderDateLabel,
@@ -76,7 +76,7 @@ export default function OrderConfirmed({
                     <table width="100%" cellPadding={0} cellSpacing={0} border={0}>
                       <tbody>
                         <tr>
-                          <td style={{ paddingBottom: 7 }}>{packLabel}</td>
+                          <td style={{ paddingBottom: 7 }}>{orderLabel}</td>
                           <td align="right" style={{ fontFamily: brand.fontHead, fontWeight: 700, color: brand.ink }}>{amountLabel}</td>
                         </tr>
                         <tr>
@@ -141,7 +141,7 @@ OrderConfirmed.PreviewProps = {
   operatorName: "Annecy Vol Libre",
   photoCount: 5,
   downloadUrl: "https://linktrip.co/g/julie-4k2p",
-  packLabel: "Pack 3 photos + 2 offertes",
+  orderLabel: "3 photos + 2 offertes",
   amountLabel: "22,00 €",
   orderRef: "SV-4821",
   orderDateLabel: "22 juillet",

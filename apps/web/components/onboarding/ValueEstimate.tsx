@@ -5,8 +5,8 @@ import { estimateRevenue } from "@/lib/onboarding/estimate";
 import { formatEuros } from "@/lib/format";
 import type { Experience } from "@/lib/onboarding/types";
 
-export function ValueEstimate({ exp, packPriceCents }: { exp: Experience; packPriceCents: number }) {
-  const { monthly, buyers, revenueCents } = estimateRevenue(exp.group, exp.freq, packPriceCents);
+export function ValueEstimate({ exp, pricePhotoCents }: { exp: Experience; pricePhotoCents: number }) {
+  const { monthly, buyers, revenueCents } = estimateRevenue(exp.group, exp.freq, pricePhotoCents);
 
   const rows: { value: number; format: (n: number) => string; label: string; grad?: boolean }[] = [
     { value: monthly, format: (n) => n.toLocaleString("fr-FR"), label: "participants accueillis par mois" },

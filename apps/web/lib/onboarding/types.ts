@@ -25,7 +25,6 @@ export interface Brand {
 
 export interface Pricing {
   photoEuros: string;
-  packEuros: string;
   allEuros: string;
 }
 

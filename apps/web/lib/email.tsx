@@ -196,7 +196,7 @@ export async function sendOrderConfirmedEmail(params: {
   operatorName: string;
   photoCount: number;
   downloadUrl: string;
-  packLabel: string;
+  orderLabel: string;
   amountLabel: string;
   orderRef: string;
   orderDateLabel: string;
@@ -208,7 +208,7 @@ export async function sendOrderConfirmedEmail(params: {
     operatorName: params.operatorName,
     photoCount: params.photoCount,
     downloadUrl: params.downloadUrl,
-    packLabel: params.packLabel,
+    orderLabel: params.orderLabel,
     amountLabel: params.amountLabel,
     orderRef: params.orderRef,
     orderDateLabel: params.orderDateLabel,

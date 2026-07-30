@@ -33,9 +33,7 @@ export default async function GroupGalleryPage({ params }: { params: { shareToke
         days={data.days}
         pricing={{
           pricePhotoCents: operator.pricePhotoCents,
-          pricePackCents: operator.pricePackCents,
           priceAllCents: operator.priceAllGroupCents,
-          packSize: operator.packSize,
         }}
       />
     </div>

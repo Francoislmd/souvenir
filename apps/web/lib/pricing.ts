@@ -3,9 +3,7 @@
 
 export interface PricingConfig {
   pricePhotoCents: number;
-  pricePackCents: number;
   priceAllCents: number;
-  packSize: number;
 }
 
 export interface Quote {
@@ -22,23 +20,12 @@ export function quote(selected: number, paidTotal: number, p: PricingConfig, all
     return { n: selected, totalCents: p.priceAllCents, label: allLabel, fullCents: selected * p.pricePhotoCents };
   }
 
-  if (selected >= p.packSize) {
-    const packs = Math.floor(selected / p.packSize);
-    const rest = selected % p.packSize;
-    const t = packs * p.pricePackCents + rest * p.pricePhotoCents;
-    return {
-      n: selected,
-      totalCents: Math.min(t, p.priceAllCents),
-      label: selected === p.packSize ? `Pack ${p.packSize} photos` : `${selected} photos`,
-      fullCents: selected * p.pricePhotoCents,
-    };
-  }
-
+  const t = selected * p.pricePhotoCents;
   return {
     n: selected,
-    totalCents: selected * p.pricePhotoCents,
+    totalCents: Math.min(t, p.priceAllCents),
     label: selected === 1 ? "1 photo" : `${selected} photos`,
-    fullCents: selected * p.pricePhotoCents,
+    fullCents: t,
   };
 }
 

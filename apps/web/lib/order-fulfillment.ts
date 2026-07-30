@@ -48,9 +48,8 @@ async function sendPostPurchaseMessages(
     where: { sortieId: sortie.id, ownerId: participant.id, isFreeSample: true },
   });
   const paidCount = order.photoIds.length;
-  const paidLabel =
-    paidCount === operator.packSize ? `Pack ${operator.packSize} photos` : `${paidCount} photo${paidCount > 1 ? "s" : ""}`;
-  const packLabel = freeSampleCount > 0 ? `${paidLabel} + ${freeSampleCount} offerte${freeSampleCount > 1 ? "s" : ""}` : paidLabel;
+  const paidLabel = `${paidCount} photo${paidCount > 1 ? "s" : ""}`;
+  const orderLabel = freeSampleCount > 0 ? `${paidLabel} + ${freeSampleCount} offerte${freeSampleCount > 1 ? "s" : ""}` : paidLabel;
 
   try {
     await sendOrderConfirmedEmail({
@@ -59,7 +58,7 @@ async function sendPostPurchaseMessages(
       operatorName: operator.name,
       photoCount: paidCount + freeSampleCount,
       downloadUrl: galleryUrl,
-      packLabel,
+      orderLabel,
       amountLabel: formatEurosPrecise(order.amountCents),
       orderRef: `SV-${order.id.slice(-6).toUpperCase()}`,
       orderDateLabel: formatDateFr(order.paidAt ?? new Date()),

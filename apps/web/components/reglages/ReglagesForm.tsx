@@ -14,10 +14,8 @@ interface OperatorSettings {
   logoUrl: string | null;
   brandColor: string;
   pricePhotoCents: number;
-  pricePackCents: number;
   priceAllCents: number;
   priceAllGroupCents: number;
-  packSize: number;
   feePercent: number;
   stripeOnboarded: boolean;
   activities: string[];
@@ -38,7 +36,6 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [brandColor, setBrandColor] = useState(operator.brandColor);
   const [pricePhoto, setPricePhoto] = useState(toEuros(operator.pricePhotoCents));
-  const [pricePack, setPricePack] = useState(toEuros(operator.pricePackCents));
   const [priceAll, setPriceAll] = useState(toEuros(operator.priceAllCents));
   const [priceAllGroup, setPriceAllGroup] = useState(toEuros(operator.priceAllGroupCents));
   const [automations, setAutomations] = useState(operator.automations);
@@ -68,7 +65,6 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         name,
         brandColor,
         pricePhotoCents: Math.round(Number(pricePhoto || 0) * 100),
-        pricePackCents: Math.round(Number(pricePack || 0) * 100),
         priceAllCents: Math.round(Number(priceAll || 0) * 100),
         priceAllGroupCents: Math.round(Number(priceAllGroup || 0) * 100),
         automations,
@@ -179,12 +175,6 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         <span>€</span>
       </div>
       <div className={styles.pr}>
-        <span className={styles.a}>Pack {operator.packSize} photos</span>
-        <span className={styles.net}>net {net(pricePack)} €</span>
-        <input type="number" value={pricePack} onChange={(e) => setPricePack(e.target.value)} />
-        <span>€</span>
-      </div>
-      <div className={styles.pr}>
         <span className={styles.a}>Toutes les photos</span>
         <span className={styles.net}>net {net(priceAll)} €</span>
         <input type="number" value={priceAll} onChange={(e) => setPriceAll(e.target.value)} />
@@ -225,7 +215,7 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
       <div className={styles.rel}>
         <div className={styles.ri}>
           <div className={styles.rt}>Ils ont regardé sans acheter</div>
-          <div className={styles.rh}>Le lendemain, on leur propose le pack à prix réduit. C&rsquo;est ce qui rapporte le plus.</div>
+          <div className={styles.rh}>Le lendemain, on leur propose leurs photos à prix réduit. C&rsquo;est ce qui rapporte le plus.</div>
         </div>
         <button type="button" className={`${styles.tog} ${automations.reducedPriceOffer ? styles.on : ""}`} aria-label="Activer" onClick={() => toggle("reducedPriceOffer")}>
           <i />

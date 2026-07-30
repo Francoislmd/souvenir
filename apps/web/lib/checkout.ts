@@ -37,9 +37,7 @@ export async function createOrUpdatePaymentIntent(params: {
 
   const pricing: PricingConfig = {
     pricePhotoCents: operator.pricePhotoCents,
-    pricePackCents: operator.pricePackCents,
     priceAllCents: participant.slotId ? operator.priceAllGroupCents : operator.priceAllCents,
-    packSize: operator.packSize,
   };
 
   const q = quote(selected.length, purchasableIds.size, pricing);

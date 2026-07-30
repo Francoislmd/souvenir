@@ -312,16 +312,8 @@ export function BoutiqueGallery({
           onClick={() => selectN(1)}
         />
         <OfferRow
-          active={selected.size === pricing.packSize}
-          best
-          title={`Pack ${pricing.packSize} photos`}
-          hint="Le choix de la plupart"
-          price={pricing.pricePackCents}
-          unit={`${formatEuros(Math.round(pricing.pricePackCents / pricing.packSize))} la photo`}
-          onClick={() => selectN(pricing.packSize)}
-        />
-        <OfferRow
           active={selected.size === purchasable.length && purchasable.length > 0}
+          best
           title="Toutes vos photos"
           hint={`${purchasable.length} photos`}
           price={pricing.priceAllCents}
@@ -329,7 +321,7 @@ export function BoutiqueGallery({
           onClick={selectAll}
         />
 
-        <Nudge selectedCount={selected.size} paidTotal={purchasable.length} pricing={pricing} onSelectAll={selectAll} onSelectPack={() => selectN(pricing.packSize)} />
+        <Nudge selectedCount={selected.size} paidTotal={purchasable.length} pricing={pricing} onSelectAll={selectAll} />
       </div>
 
       {googleReviewUrl ? (
@@ -488,13 +480,11 @@ function Nudge({
   paidTotal,
   pricing,
   onSelectAll,
-  onSelectPack,
 }: {
   selectedCount: number;
   paidTotal: number;
   pricing: PricingConfig;
   onSelectAll: () => void;
-  onSelectPack: () => void;
 }) {
   if (selectedCount === 0 || selectedCount >= paidTotal) return null;
   const q = quote(selectedCount, paidTotal, pricing);
@@ -511,26 +501,6 @@ function Nudge({
             Vos {selectedCount} photos coûtent {formatEuros(q.totalCents)}. Toutes reviennent à {formatEuros(pricing.priceAllCents)}.
           </div>
           <button onClick={onSelectAll}>Tout prendre pour {formatEuros(pricing.priceAllCents)}</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (selectedCount < pricing.packSize) {
-    const miss = pricing.packSize - selectedCount;
-    return (
-      <div className={styles.nudge}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        <div>
-          <div className={styles.nt}>
-            Encore {miss} photo{miss > 1 ? "s" : ""} et vous passez au pack
-          </div>
-          <div className={styles.nh}>
-            {pricing.packSize} photos pour {formatEuros(pricing.pricePackCents)} au lieu de {formatEuros(pricing.packSize * pricing.pricePhotoCents)}.
-          </div>
-          <button onClick={onSelectPack}>Passer au pack</button>
         </div>
       </div>
     );

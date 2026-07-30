@@ -8,7 +8,7 @@ import { inputClass } from "@/components/ui/Input";
 export function OnboardingForm() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [packPrice, setPackPrice] = useState("22");
+  const [allPrice, setAllPrice] = useState("39");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -17,16 +17,15 @@ export function OnboardingForm() {
     setLoading(true);
     setError(null);
 
-    const packCents = Math.round(Number(packPrice) * 100);
+    const allCents = Math.round(Number(allPrice) * 100);
 
     const res = await fetch("/api/operator", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        pricePhotoCents: Math.round(packCents / 3),
-        pricePackCents: packCents,
-        priceAllCents: Math.round(packCents * 1.6),
+        pricePhotoCents: Math.round(allCents / 5),
+        priceAllCents: allCents,
       }),
     });
 
@@ -54,7 +53,7 @@ export function OnboardingForm() {
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
-        Prix du pack de 3 photos
+        Prix pour toutes les photos
         <div className="relative">
           <input
             type="number"
@@ -62,8 +61,8 @@ export function OnboardingForm() {
             min="0"
             step="1"
             required
-            value={packPrice}
-            onChange={(event) => setPackPrice(event.target.value)}
+            value={allPrice}
+            onChange={(event) => setAllPrice(event.target.value)}
             className={`${inputClass} w-full pr-9`}
           />
           <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-2">€</span>

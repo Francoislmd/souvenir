@@ -8,9 +8,7 @@ import { ACTIVITIES } from "@/lib/onboarding/activities";
 const schema = z.object({
   name: z.string().min(2),
   pricePhotoCents: z.number().int().min(0),
-  pricePackCents: z.number().int().min(0),
   priceAllCents: z.number().int().min(0),
-  packSize: z.number().int().min(1).default(3),
   freeCount: z.number().int().min(0).default(2),
   brandColor: z.string().optional(),
   googleReviewUrl: z.string().optional(),
@@ -51,8 +49,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: message, details: parsed.error.errors }, { status: 400 });
   }
 
-  const { name, pricePhotoCents, pricePackCents, priceAllCents, packSize, freeCount, brandColor, googleReviewUrl, qualification } =
-    parsed.data;
+  const { name, pricePhotoCents, priceAllCents, freeCount, brandColor, googleReviewUrl, qualification } = parsed.data;
 
   const base = slugify(name) || "activite";
   let slug = base;
@@ -73,9 +70,7 @@ export async function POST(request: Request): Promise<Response> {
       name,
       slug,
       pricePhotoCents,
-      pricePackCents,
       priceAllCents,
-      packSize,
       freeCount,
       activities,
       ...(brandColor && { brandColor }),

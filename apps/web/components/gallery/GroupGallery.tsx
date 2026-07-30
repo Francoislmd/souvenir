@@ -236,22 +236,12 @@ export function GroupGallery({
           </span>
           <span className={styles.pz}>{formatEuros(pricing.pricePhotoCents)}</span>
         </button>
-        <button type="button" className={`${styles.of} ${selected.size === pricing.packSize ? styles.on : ""}`} onClick={() => selectN(pricing.packSize)}>
-          <span className={styles.best}>Le plus pris</span>
-          <span className={styles.rad}>
-            <i />
-          </span>
-          <span className={styles.oi}>
-            <span className={styles.ot}>Pack {pricing.packSize} photos</span>
-            <span className={styles.oh}>le choix de la plupart</span>
-          </span>
-          <span className={styles.pz}>{formatEuros(pricing.pricePackCents)}</span>
-        </button>
         <button
           type="button"
           className={`${styles.of} ${selected.size === photos.length && photos.length > 0 ? styles.on : ""}`}
           onClick={selectAll}
         >
+          <span className={styles.best}>Le plus pris</span>
           <span className={styles.rad}>
             <i />
           </span>
@@ -263,7 +253,7 @@ export function GroupGallery({
         </button>
 
         {selected.size > 0 && selected.size < photos.length ? (
-          <Nudge selectedCount={selected.size} paidTotal={photos.length} pricing={pricing} onSelectAll={selectAll} onSelectPack={() => selectN(pricing.packSize)} />
+          <Nudge selectedCount={selected.size} paidTotal={photos.length} pricing={pricing} onSelectAll={selectAll} />
         ) : null}
       </div>
 
@@ -359,13 +349,11 @@ function Nudge({
   paidTotal,
   pricing,
   onSelectAll,
-  onSelectPack,
 }: {
   selectedCount: number;
   paidTotal: number;
   pricing: PricingConfig;
   onSelectAll: () => void;
-  onSelectPack: () => void;
 }) {
   const q = quote(selectedCount, paidTotal, pricing, ALL_LABEL);
 
@@ -382,28 +370,6 @@ function Nudge({
           </div>
           <button type="button" onClick={onSelectAll}>
             Tout prendre pour {formatEuros(pricing.priceAllCents)}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (selectedCount < pricing.packSize) {
-    const miss = pricing.packSize - selectedCount;
-    return (
-      <div className={styles.nudge}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        <div>
-          <div className={styles.nt}>
-            Encore {miss} photo{miss > 1 ? "s" : ""} et vous passez au pack
-          </div>
-          <div className={styles.nh}>
-            {pricing.packSize} photos pour {formatEuros(pricing.pricePackCents)} au lieu de {formatEuros(pricing.packSize * pricing.pricePhotoCents)}.
-          </div>
-          <button type="button" onClick={onSelectPack}>
-            Passer au pack
           </button>
         </div>
       </div>

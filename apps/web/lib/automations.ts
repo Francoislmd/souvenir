@@ -88,7 +88,7 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
   const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`;
 
   if (participant.channel === "WHATSAPP") {
-    await sendWhatsAppMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, votre pack est à prix réduit pendant 48h : ${galleryUrl}`);
+    await sendWhatsAppMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, vos photos sont à prix réduit pendant 48h : ${galleryUrl}`);
     return;
   }
 
@@ -104,7 +104,7 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
     .map((p) => (p.blurEmailKey ?? p.blurKey ? getPreviewUrl((p.blurEmailKey ?? p.blurKey) ?? "") : null))
     .filter((u): u is string => u !== null);
 
-  const priceFullCents = operator.pricePackCents;
+  const priceFullCents = participant.slotId ? operator.priceAllGroupCents : operator.priceAllCents;
   const pricePromoCents = applyReducedOffer(priceFullCents);
 
   await sendPhotosOfferEmail({

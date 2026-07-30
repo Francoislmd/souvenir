@@ -44,7 +44,7 @@ const STEPPER_STEPS: WizardStep[] = ["activites", "entreprise", "experience", "m
 const DEFAULT_COMPANY: Company = { name: "", website: "", instagram: "", city: "" };
 const DEFAULT_EXP: Experience = { group: "6-15", freq: "6-15", guides: "oui" };
 const DEFAULT_BRAND: Brand = { name: "", color: "#FF5A1F", touched: false };
-const DEFAULT_PRICING: Pricing = { photoEuros: "8", packEuros: "22", allEuros: "39" };
+const DEFAULT_PRICING: Pricing = { photoEuros: "8", allEuros: "39" };
 
 export function OnboardingWizard({ initialName }: { initialName: string }) {
   const router = useRouter();
@@ -118,7 +118,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   })();
 
   const progress = ((step + 1) / STEP_ORDER.length) * 100;
-  const pricePackCents = Math.round(Number(pricing.packEuros) * 100) || 0;
+  const pricePhotoCents = Math.round(Number(pricing.photoEuros) * 100) || 0;
 
   function goForward() {
     setError(null);
@@ -183,8 +183,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: brand.name.trim() || company.name,
-          pricePhotoCents: Math.round(Number(pricing.photoEuros) * 100) || 0,
-          pricePackCents,
+          pricePhotoCents,
           priceAllCents: Math.round(Number(pricing.allEuros) * 100) || 0,
           brandColor: brand.color,
           qualification: {
@@ -369,7 +368,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
 
           {currentStep === "estimation" && (
             <div>
-              <ValueEstimate exp={exp} packPriceCents={pricePackCents} />
+              <ValueEstimate exp={exp} pricePhotoCents={pricePhotoCents} />
               {error && (
                 <div className="mx-auto mt-4 max-w-md text-center">
                   <p className="text-sm text-danger">{error}</p>

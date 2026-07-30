@@ -37,7 +37,6 @@ export function StepPricing({ pricing, onChange }: { pricing: Pricing; onChange:
 
       <div className="mt-8 flex max-w-md flex-col gap-2.5">
         <Row label="Une photo" hint="à la carte" value={pricing.photoEuros} onChange={(v) => onChange({ photoEuros: v })} />
-        <Row label="Pack de 3 photos" hint="recommandé : 15–30 €" value={pricing.packEuros} onChange={(v) => onChange({ packEuros: v })} />
         <Row label="Toutes les photos" hint="prix plafond" value={pricing.allEuros} onChange={(v) => onChange({ allEuros: v })} />
 
         <p className="mt-2 rounded-control bg-canvas px-4 py-3 text-sm text-ink-2">

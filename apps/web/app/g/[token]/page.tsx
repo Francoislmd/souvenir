@@ -48,9 +48,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
         photos={photos}
         pricing={{
           pricePhotoCents: operator.pricePhotoCents,
-          pricePackCents: operator.pricePackCents,
           priceAllCents: operator.priceAllCents,
-          packSize: operator.packSize,
         }}
         bought={bought}
         purchasedIds={purchasedIds}

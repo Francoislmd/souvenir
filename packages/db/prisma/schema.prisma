@@ -20,10 +20,8 @@ model Operator {
   stripeOnboarded Boolean @default(false)
 
   pricePhotoCents    Int @default(800)
-  pricePackCents     Int @default(2200)
   priceAllCents      Int @default(3900)
   priceAllGroupCents Int @default(4500) // "Tout le créneau" — mode GROUPE uniquement, brief §4
-  packSize           Int @default(3)
   freeCount          Int @default(2)
   feePercent         Int @default(20)
 

@@ -11,10 +11,11 @@ export const BUCKET_MIDPOINT: Record<Bucket, number> = {
 // Coefficients de l'estimation — indicatifs, à calibrer avec de la donnée réelle.
 // monthly = MID[group] * MID[freq] * MONTHLY_MULTIPLIER (mini 20)
 // buyers  = monthly * BUYER_RATE
-// revenue = buyers * prix du pack
+// revenue = buyers * panier moyen (prix photo * AVG_PHOTOS_PER_ORDER)
 export const MONTHLY_MULTIPLIER = 4.3;
 export const BUYER_RATE = 0.35;
 export const MIN_MONTHLY_PARTICIPANTS = 20;
+export const AVG_PHOTOS_PER_ORDER = 3;
 
 export interface RevenueEstimate {
   monthly: number;
@@ -22,13 +23,13 @@ export interface RevenueEstimate {
   revenueCents: number;
 }
 
-export function estimateRevenue(group: Bucket, freq: Bucket, packPriceCents: number): RevenueEstimate {
+export function estimateRevenue(group: Bucket, freq: Bucket, pricePhotoCents: number): RevenueEstimate {
   const monthly = Math.max(
     MIN_MONTHLY_PARTICIPANTS,
     Math.round(BUCKET_MIDPOINT[group] * BUCKET_MIDPOINT[freq] * MONTHLY_MULTIPLIER),
   );
   const buyers = Math.round(monthly * BUYER_RATE);
-  const revenueCents = buyers * packPriceCents;
+  const revenueCents = buyers * pricePhotoCents * AVG_PHOTOS_PER_ORDER;
 
   return { monthly, buyers, revenueCents };
 }
