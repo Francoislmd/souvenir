@@ -837,6 +837,21 @@
   height: 100%;
   object-fit: cover;
 }
+.box .lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
 .box .cl {
   position: absolute;
   top: calc(14px + env(safe-area-inset-top));
