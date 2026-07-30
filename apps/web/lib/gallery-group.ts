@@ -175,20 +175,17 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
   if (matching.length === 0) return null;
 
   const slots: GroupSlotSummary[] = matching
-    .flatMap((sortie) =>
-      sortie.slots.map((slot) => ({
-        id: slot.id,
-        label: slot.label,
-        startsAtMs: slot.startsAt.getTime(),
-        hourBucket: hourBucketFor(slot.startsAt),
-        activity: sortie.activity,
-        activityKey: slugify(sortie.activity),
-        guide: slot.guide,
-        photoCount: slot._count.photos,
-      })),
-    )
-    .sort((a, b) => a.startsAtMs - b.startsAtMs)
-    .map(({ startsAtMs, ...s }) => s);
+    .flatMap((sortie) => sortie.slots.map((slot) => ({ slot, sortie })))
+    .sort((a, b) => a.slot.startsAt.getTime() - b.slot.startsAt.getTime())
+    .map(({ slot, sortie }) => ({
+      id: slot.id,
+      label: slot.label,
+      hourBucket: hourBucketFor(slot.startsAt),
+      activity: sortie.activity,
+      activityKey: slugify(sortie.activity),
+      guide: slot.guide,
+      photoCount: slot._count.photos,
+    }));
 
   return { dateLabel: formatDateFr(matching[0]!.startsAt).toLowerCase(), slots };
 }
