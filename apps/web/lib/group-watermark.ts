@@ -10,11 +10,11 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
  * @napi-rs/canvas (dessin + métriques de texte — sharp ne mesure pas le
  * texte, et librsvg gère mal textLength/letter-spacing).
  */
-// Resserre le corps et la maille ensemble pour coller à la référence
-// (retour utilisateur) — accepte en échange que les noms longs tronquent
-// plus tôt sur un mot entier (règle 2, dégradation prévue par le brief,
-// pas un bug : "Jet Côte d'Albatre" devient "Jet Côte…").
-const SIZE_SCALE = 0.45;
+// Facteur d'échelle du corps et de la tuile ensemble (retour utilisateur :
+// "zoom" plus important — un instance plus grande, moins répétée, pas plus
+// dense). Garder les deux liés préserve le ratio texte/tuile de la règle 1 :
+// un facteur plus grand agrandit tout sans jamais tronquer davantage un nom.
+const SIZE_SCALE = 1.4;
 
 const PARAMS = {
   // Plus sombre/opaque (retour utilisateur, deuxième passe : 0.55 puis 0.70
