@@ -415,6 +415,21 @@
 .slide.on {
   box-shadow: 0 0 0 3px var(--op), var(--sh-2);
 }
+.slide .lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
 .film {
   display: flex;
   gap: 7px;
