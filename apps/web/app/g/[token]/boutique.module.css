@@ -922,9 +922,13 @@
    pleine largeur au-dessus. grid-area: top ci-dessous ne s'applique donc
    qu'à la galerie de groupe (où .top est bien un enfant de sa propre .g3). */
 @media (min-width: 821px) {
+  /* Cf collective.module.css : plus de largeur fixe sur .page, le fond
+     occupe tout le viewport et le contenu est centré par un padding
+     calculé — évite l'effet de boîte grise entre le fond du body et celui
+     de .page une fois élargi. */
   .page {
-    max-width: 1240px;
-    padding-inline: 40px;
+    max-width: none;
+    padding-inline: max(40px, calc((100% - 1240px) / 2));
     box-shadow: none;
   }
   .top {

@@ -521,6 +521,13 @@
     background: var(--sand);
     color: var(--ink);
   }
+  /* .retrieval avait son propre fond opaque (#efede8), distinct de celui de
+     .page (collective.module.css) qui remplit maintenant tout le viewport
+     — les deux juxtaposés donnaient l'effet de boîte grise signalé. On le
+     rend transparent pour ne laisser qu'un seul fond, uniforme. */
+  .retrieval {
+    background: transparent;
+  }
   .hero {
     padding: 10px 40px 30px;
   }

@@ -1006,9 +1006,19 @@
    (nouveau, regroupe rappel du créneau / formule / total+CTA / réassurance /
    retrait) devient la colonne sticky de droite. */
 @media (min-width: 821px) {
+  /* Le fond de .page (--bg) et celui, distinct, de .retrieval (#efede8)
+     ne se voyaient jamais côte à côte en mobile — .retrieval remplit toute
+     la largeur de .page. En élargissant simplement .page à 1240px, les deux
+     tons se retrouvaient juxtaposés, avec en plus le --canvas du body
+     visible au-delà : effet de « boîte » grise disgracieux, pas un vrai
+     plein écran. On supprime la largeur fixe (le fond de .page occupe tout
+     le viewport) et on centre le contenu par un padding calculé, comme
+     .wrap dans les maquettes — plus de bandeau ni de fond différent.
+     .g3/.retrieval héritent de cette largeur de contenu sans avoir besoin
+     de leur propre max-width. */
   .page {
-    max-width: 1240px;
-    padding-inline: 40px;
+    max-width: none;
+    padding-inline: max(40px, calc((100% - 1240px) / 2));
     box-shadow: none;
   }
 
