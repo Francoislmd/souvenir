@@ -909,6 +909,152 @@
   transform: translate(-50%, 0);
 }
 
+/* ===== desktop (≥821px) — écran 3 (galerie + achat), version individuelle.
+   Même traitement que la galerie de groupe (collective.module.css) : .g3
+   (nouveau, enveloppe le rendu de BoutiqueGallery) passe en grille 2
+   colonnes, .buyCol (nouveau) devient la colonne sticky de droite. Pas de
+   ligne "top" ici : GalleryHeader est un sibling de BoutiqueGallery rendu
+   par page.tsx, pas un enfant de .g3 — .top reste un simple bloc sticky
+   pleine largeur au-dessus. grid-area: top ci-dessous ne s'applique donc
+   qu'à la galerie de groupe (où .top est bien un enfant de sa propre .g3). */
+@media (min-width: 821px) {
+  .page {
+    max-width: 1240px;
+    padding-inline: 40px;
+    box-shadow: none;
+  }
+  .top {
+    grid-area: top;
+    margin-inline: -40px;
+    padding-inline: 40px;
+  }
+
+  .g3 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: 34px;
+    align-items: start;
+    grid-template-areas:
+      "hi buy"
+      "deck buy"
+      "want buy"
+      "film buy"
+      "legal legal"
+      "poweredby poweredby";
+  }
+  .hi {
+    grid-area: hi;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .deck {
+    grid-area: deck;
+  }
+  .film {
+    grid-area: film;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .legal {
+    grid-area: legal;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .poweredBy {
+    grid-area: poweredby;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .buyCol {
+    grid-area: buy;
+    position: sticky;
+    top: 98px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .deck {
+    position: relative;
+    padding: 0;
+  }
+  .slide {
+    flex: 0 0 100%;
+    aspect-ratio: 4 / 3;
+    scroll-snap-align: start;
+    border-radius: 16px;
+  }
+  .navArrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--ink);
+    box-shadow: var(--sh-2);
+    transition: background 0.15s;
+  }
+  .navArrow:hover {
+    background: #fff;
+  }
+  .navArrow:focus-visible {
+    outline: 2px solid var(--op);
+    outline-offset: 2px;
+  }
+  .navArrow.prev {
+    left: 14px;
+  }
+  .navArrow.next {
+    right: 14px;
+  }
+
+  .want {
+    grid-area: want;
+    width: 100%;
+    margin: 0;
+  }
+
+  .offers,
+  .trust,
+  .buybar {
+    margin: 0;
+  }
+  .offers {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--sh-2);
+  }
+  .trust {
+    padding: 18px 20px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--sh-1);
+  }
+  .free {
+    margin: 0;
+  }
+
+  .buybar {
+    position: static;
+    max-width: none;
+    transform: none;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--sh-1);
+    padding: 18px 20px;
+    backdrop-filter: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page * {
     animation: none !important;

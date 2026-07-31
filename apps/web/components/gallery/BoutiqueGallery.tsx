@@ -82,6 +82,7 @@ export function BoutiqueGallery({
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cur, setCur] = useState(0);
+  const curRef = useRef(0);
 
   // Pack uniquement (Réglages) : pas de sélection à la carte, le client
   // achète tout le lot — on la maintient toujours pleine.
@@ -137,10 +138,27 @@ export function BoutiqueGallery({
   }
 
   function goTo(i: number): void {
+    curRef.current = i;
     setCur(i);
     const el = deckRef.current?.children[i] as HTMLElement | undefined;
     el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }
+
+  // Navigation clavier de la visionneuse (desktop) — ignorée si le focus est
+  // dans un champ de saisie. curRef (plutôt que `cur` en dépendance) évite
+  // qu'une pression rapide et répétée relise une valeur de fermeture
+  // obsolète avant le re-render.
+  useEffect(() => {
+    if (bought || photos.length === 0) return;
+    function onKeyDown(e: KeyboardEvent): void {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowLeft") goTo((curRef.current - 1 + photos.length) % photos.length);
+      if (e.key === "ArrowRight") goTo((curRef.current + 1) % photos.length);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [bought, photos.length]);
 
   async function openSheet(): Promise<void> {
     setCheckoutError(null);
@@ -211,7 +229,7 @@ export function BoutiqueGallery({
   }
 
   return (
-    <>
+    <div className={styles.g3}>
       <div className={styles.hi}>
         <h1>{clientFirstName}, vos photos sont là</h1>
         <p>
@@ -285,6 +303,20 @@ export function BoutiqueGallery({
             </div>
           );
         })}
+        {photos.length > 1 ? (
+          <>
+            <button type="button" className={`${styles.navArrow} ${styles.prev}`} aria-label="Photo précédente" onClick={() => goTo((curRef.current - 1 + photos.length) % photos.length)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button type="button" className={`${styles.navArrow} ${styles.next}`} aria-label="Photo suivante" onClick={() => goTo((curRef.current + 1) % photos.length)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        ) : null}
       </div>
 
       {!packOnly ? (
@@ -310,52 +342,68 @@ export function BoutiqueGallery({
         })}
       </div>
 
-      <div className={styles.offers}>
-        <div className={styles.lbl}>Votre formule</div>
-        {!packOnly ? (
+      <div className={styles.buyCol}>
+        <div className={styles.offers}>
+          <div className={styles.lbl}>Votre formule</div>
+          {!packOnly ? (
+            <OfferRow
+              active={selected.size === 1}
+              title="À la photo"
+              hint="Vous ne prenez que celles que vous aimez"
+              price={pricing.pricePhotoCents}
+              unit="la photo"
+              onClick={() => selectN(1)}
+            />
+          ) : null}
           <OfferRow
-            active={selected.size === 1}
-            title="À la photo"
-            hint="Vous ne prenez que celles que vous aimez"
-            price={pricing.pricePhotoCents}
-            unit="la photo"
-            onClick={() => selectN(1)}
+            active={selected.size === purchasable.length && purchasable.length > 0}
+            best
+            title="Toutes vos photos"
+            hint={`${purchasable.length} photos`}
+            price={pricing.priceAllCents}
+            unit={purchasable.length > 0 ? `${formatEuros(Math.round(pricing.priceAllCents / purchasable.length))} la photo` : ""}
+            onClick={selectAll}
           />
-        ) : null}
-        <OfferRow
-          active={selected.size === purchasable.length && purchasable.length > 0}
-          best
-          title="Toutes vos photos"
-          hint={`${purchasable.length} photos`}
-          price={pricing.priceAllCents}
-          unit={purchasable.length > 0 ? `${formatEuros(Math.round(pricing.priceAllCents / purchasable.length))} la photo` : ""}
-          onClick={selectAll}
-        />
 
-        <Nudge selectedCount={selected.size} paidTotal={purchasable.length} pricing={pricing} onSelectAll={selectAll} />
-      </div>
-
-      {googleReviewUrl ? (
-        <div className={styles.free}>
-          <div className={styles.ic}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E8460C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 17.8 6.2 21l1.1-6.5L2.6 9.9l6.5-.9L12 3l2.9 6 6.5.9-4.7 4.6 1.1 6.5z" />
-            </svg>
-          </div>
-          <div>
-            <div className={styles.ft}>Un avis Google, ça compte énormément</div>
-            <div className={styles.fh}>Aidez cette petite structure — 30 secondes, ça change beaucoup pour elle.</div>
-            <a href={googleReviewUrl} target="_blank" rel="noreferrer">
-              Laisser un avis →
-            </a>
-          </div>
+          <Nudge selectedCount={selected.size} paidTotal={purchasable.length} pricing={pricing} onSelectAll={selectAll} />
         </div>
-      ) : null}
 
-      <div className={styles.trust}>
-        <TrustLine text="Téléchargement immédiat, en pleine résolution, sans filigrane." />
-        <TrustLine text="Paiement sécurisé. Aucun compte à créer." />
-        <TrustLine text="Votre lien reste actif 90 jours." />
+        {checkoutError ? <p style={{ margin: 0, fontSize: ".85rem", color: "#dc2626" }}>{checkoutError}</p> : null}
+
+        <div className={`${styles.buybar} ${selected.size > 0 ? styles.on : ""}`}>
+          <div className={styles["bb-l"]}>
+            <span className={styles.n}>{q.label}</span>
+            <span className={styles.sp} />
+            {q.fullCents > totalCents ? <span className={styles.old}>{formatEuros(q.fullCents)}</span> : null}
+            <span className={styles.tot}>{formatEuros(totalCents)}</span>
+          </div>
+          <button type="button" className={styles.pay} onClick={openSheet} disabled={selected.size === 0}>
+            Récupérer mes photos
+          </button>
+        </div>
+
+        {googleReviewUrl ? (
+          <div className={styles.free}>
+            <div className={styles.ic}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E8460C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 17.8 6.2 21l1.1-6.5L2.6 9.9l6.5-.9L12 3l2.9 6 6.5.9-4.7 4.6 1.1 6.5z" />
+              </svg>
+            </div>
+            <div>
+              <div className={styles.ft}>Un avis Google, ça compte énormément</div>
+              <div className={styles.fh}>Aidez cette petite structure — 30 secondes, ça change beaucoup pour elle.</div>
+              <a href={googleReviewUrl} target="_blank" rel="noreferrer">
+                Laisser un avis →
+              </a>
+            </div>
+          </div>
+        ) : null}
+
+        <div className={styles.trust}>
+          <TrustLine text="Téléchargement immédiat, en pleine résolution, sans filigrane." />
+          <TrustLine text="Paiement sécurisé. Aucun compte à créer." />
+          <TrustLine text="Votre lien reste actif 90 jours." />
+        </div>
       </div>
 
       <div className={styles.legal}>
@@ -365,20 +413,6 @@ export function BoutiqueGallery({
 
       <div className={styles.poweredBy}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
-      </div>
-
-      {checkoutError ? <p style={{ margin: "12px 20px 0", fontSize: ".85rem", color: "#dc2626" }}>{checkoutError}</p> : null}
-
-      <div className={`${styles.buybar} ${selected.size > 0 ? styles.on : ""}`}>
-        <div className={styles["bb-l"]}>
-          <span className={styles.n}>{q.label}</span>
-          <span className={styles.sp} />
-          {q.fullCents > totalCents ? <span className={styles.old}>{formatEuros(q.fullCents)}</span> : null}
-          <span className={styles.tot}>{formatEuros(totalCents)}</span>
-        </div>
-        <button type="button" className={styles.pay} onClick={openSheet} disabled={selected.size === 0}>
-          Récupérer mes photos
-        </button>
       </div>
 
       {checkout ? (
@@ -417,7 +451,7 @@ export function BoutiqueGallery({
       ) : null}
 
       <div className={`${styles.toast} ${toast ? styles.on : ""}`}>{toast}</div>
-    </>
+    </div>
   );
 }
 

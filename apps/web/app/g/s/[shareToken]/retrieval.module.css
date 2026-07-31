@@ -467,3 +467,85 @@
     transition: none !important;
   }
 }
+
+/* ===== desktop (≥821px) — écrans 1 & 2, cf BRIEF-desktop-linktrip.md §5.
+   .retrieval vit dans .page (collective.module.css), déjà élargi à 1240px à
+   cette largeur ; on ne touche qu'à la mise en page interne. */
+@media (min-width: 821px) {
+  .topbar {
+    padding: 26px 40px 18px;
+  }
+  .hero {
+    padding: 10px 40px 30px;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 3.4vw, 46px);
+  }
+  .hero p {
+    font-size: 16px;
+    max-width: 48ch;
+  }
+  .list {
+    padding: 6px 40px 60px;
+  }
+  .listSlot {
+    padding: 0 40px 60px;
+  }
+  .chips {
+    padding: 8px 40px 8px;
+  }
+
+  /* Chaque groupe (jour ou plage horaire) devient une grille de cartes ; le
+     libellé du groupe reste en pleine largeur au-dessus. */
+  .group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+    align-items: stretch;
+  }
+  .list .groupLabel,
+  .listSlot .groupLabel {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    margin: 0 0 4px;
+  }
+  .list .group + .group .groupLabel,
+  .listSlot .group + .group .groupLabel {
+    margin-top: 12px;
+  }
+  .date,
+  .slot {
+    margin-bottom: 0;
+  }
+  .date:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+  }
+  .slot:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .help {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 30px;
+  }
+  .help p {
+    margin-top: 4px;
+  }
+  .help a {
+    flex: none;
+    margin-top: 0;
+    border-bottom: none;
+    background: var(--ink);
+    color: #fff;
+    padding: 11px 20px;
+    border-radius: 11px;
+  }
+  .help a:hover {
+    background: #262830;
+  }
+}

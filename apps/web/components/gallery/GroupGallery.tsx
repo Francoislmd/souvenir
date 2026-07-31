@@ -38,6 +38,7 @@ export function GroupGallery({
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cur, setCur] = useState(0);
+  const curRef = useRef(0);
   const deckRef = useRef<HTMLDivElement>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -94,10 +95,27 @@ export function GroupGallery({
   }
 
   function goTo(i: number): void {
+    curRef.current = i;
     setCur(i);
     const el = deckRef.current?.children[i] as HTMLElement | undefined;
     el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }
+
+  // Navigation clavier de la visionneuse (desktop) — ignorée si le focus est
+  // dans un champ de saisie (email du checkout) pour ne pas voler les flèches.
+  // curRef (plutôt que `cur` en dépendance) évite qu'une pression rapide et
+  // répétée relise une valeur de fermeture obsolète avant le re-render.
+  useEffect(() => {
+    if (view !== "gallery" || photos.length === 0) return;
+    function onKeyDown(e: KeyboardEvent): void {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowLeft") goTo((curRef.current - 1 + photos.length) % photos.length);
+      if (e.key === "ArrowRight") goTo((curRef.current + 1) % photos.length);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [view, photos.length]);
 
   function tap(photoId: string): void {
     if (packOnly) return;
@@ -140,21 +158,8 @@ export function GroupGallery({
   if (!activeSlot) return null;
 
   return (
-    <>
+    <div className={styles.g3}>
       <GalleryHeader operatorName={operatorName} logoUrl={logoUrl} dateLabel={`${activeSlot.activity} · ${activeSlot.label}`} />
-      <div className={styles.slotbar}>
-        <div>
-          <div className={styles.hh}>{activeSlot.label}</div>
-          <div className={styles.dd}>
-            {dayLabel} · {activeSlot.activity}
-            {activeSlot.guide ? ` · guide ${activeSlot.guide}` : ""}
-          </div>
-        </div>
-        <span className={styles.sp} />
-        <button type="button" onClick={toSlots}>
-          Changer
-        </button>
-      </div>
 
       <div className={styles.cnt}>
         <span className={styles.c}>
@@ -216,6 +221,20 @@ export function GroupGallery({
             </div>
           );
         })}
+        {photos.length > 1 ? (
+          <>
+            <button type="button" className={`${styles.navArrow} ${styles.prev}`} aria-label="Photo précédente" onClick={() => goTo((curRef.current - 1 + photos.length) % photos.length)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button type="button" className={`${styles.navArrow} ${styles.next}`} aria-label="Photo suivante" onClick={() => goTo((curRef.current + 1) % photos.length)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        ) : null}
       </div>
 
       <div className={styles.film}>
@@ -234,68 +253,85 @@ export function GroupGallery({
         ))}
       </div>
 
-      <div className={styles.offers}>
-        <div className={styles.lbl}>Votre formule</div>
-        {!packOnly ? (
-          <button type="button" className={`${styles.of} ${selected.size === 1 ? styles.on : ""}`} onClick={() => selectN(1)}>
+      <div className={styles.buyCol}>
+        <div className={styles.slotbar}>
+          <div>
+            <div className={styles.hh}>{activeSlot.label}</div>
+            <div className={styles.dd}>
+              {dayLabel} · {activeSlot.activity}
+              {activeSlot.guide ? ` · guide ${activeSlot.guide}` : ""}
+            </div>
+          </div>
+          <span className={styles.sp} />
+          <button type="button" onClick={toSlots}>
+            Changer
+          </button>
+        </div>
+
+        <div className={styles.offers}>
+          <div className={styles.lbl}>Votre formule</div>
+          {!packOnly ? (
+            <button type="button" className={`${styles.of} ${selected.size === 1 ? styles.on : ""}`} onClick={() => selectN(1)}>
+              <span className={styles.rad}>
+                <i />
+              </span>
+              <span className={styles.oi}>
+                <span className={styles.ot}>À la photo</span>
+                <span className={styles.oh}>celles que vous choisissez</span>
+              </span>
+              <span className={styles.pz}>{formatEuros(pricing.pricePhotoCents)}</span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={`${styles.of} ${selected.size === photos.length && photos.length > 0 ? styles.on : ""}`}
+            onClick={selectAll}
+          >
+            <span className={styles.best}>Le plus pris</span>
             <span className={styles.rad}>
               <i />
             </span>
             <span className={styles.oi}>
-              <span className={styles.ot}>À la photo</span>
-              <span className={styles.oh}>celles que vous choisissez</span>
+              <span className={styles.ot}>{ALL_LABEL}</span>
+              <span className={styles.oh}>{photos.length} photos en haute définition</span>
             </span>
-            <span className={styles.pz}>{formatEuros(pricing.pricePhotoCents)}</span>
+            <span className={styles.pz}>{formatEuros(pricing.priceAllCents)}</span>
           </button>
-        ) : null}
-        <button
-          type="button"
-          className={`${styles.of} ${selected.size === photos.length && photos.length > 0 ? styles.on : ""}`}
-          onClick={selectAll}
-        >
-          <span className={styles.best}>Le plus pris</span>
-          <span className={styles.rad}>
-            <i />
-          </span>
-          <span className={styles.oi}>
-            <span className={styles.ot}>{ALL_LABEL}</span>
-            <span className={styles.oh}>{photos.length} photos en haute définition</span>
-          </span>
-          <span className={styles.pz}>{formatEuros(pricing.priceAllCents)}</span>
-        </button>
 
-        {selected.size > 0 && selected.size < photos.length ? (
-          <Nudge selectedCount={selected.size} paidTotal={photos.length} pricing={pricing} onSelectAll={selectAll} />
-        ) : null}
+          {selected.size > 0 && selected.size < photos.length ? (
+            <Nudge selectedCount={selected.size} paidTotal={photos.length} pricing={pricing} onSelectAll={selectAll} />
+          ) : null}
+        </div>
+
+        <div className={`${styles.buybar} ${selected.size > 0 ? styles.on : ""}`}>
+          <div className={styles["bb-l"]}>
+            <span className={styles.n}>{q.label}</span>
+            <span className={styles.sp} />
+            {q.fullCents > q.totalCents ? <span className={styles.old}>{formatEuros(q.fullCents)}</span> : null}
+            <span className={styles.tot}>{formatEuros(q.totalCents)}</span>
+          </div>
+          <button type="button" className={styles.pay} onClick={() => setCheckoutOpen(true)} disabled={selected.size === 0}>
+            Récupérer mes photos
+          </button>
+        </div>
+
+        <div className={styles.trust}>
+          <TrustLine text="Téléchargement immédiat, pleine résolution, sans filigrane." />
+          <TrustLine text="Paiement sécurisé. Aucun compte à créer." />
+          <TrustLine text="Vous recevez vos photos par email, elles restent 90 jours." />
+        </div>
+
+        <div className={styles.privacy}>
+          <div className={styles.t}>Une photo de vous que vous ne voulez pas ici ?</div>
+          <div className={styles.d}>Demandez son retrait, sans justification.</div>
+          <Link href={`/g/s/${shareToken}/retrait`}>Demander le retrait</Link>
+        </div>
       </div>
 
-      <div className={styles.trust}>
-        <TrustLine text="Téléchargement immédiat, pleine résolution, sans filigrane." />
-        <TrustLine text="Paiement sécurisé. Aucun compte à créer." />
-        <TrustLine text="Vous recevez vos photos par email, elles restent 90 jours." />
-      </div>
-
-      <div className={styles.privacy}>
-        <div className={styles.t}>Une photo de vous que vous ne voulez pas ici ?</div>
-        <div className={styles.d}>Demandez son retrait, sans justification.</div>
-        <Link href={`/g/s/${shareToken}/retrait`}>Demander le retrait</Link>
-      </div>
       <div className={styles.legal}>Photos conservées 90 jours puis supprimées automatiquement.</div>
 
       <div className={styles.poweredBy}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
-      </div>
-
-      <div className={`${styles.buybar} ${selected.size > 0 ? styles.on : ""}`}>
-        <div className={styles["bb-l"]}>
-          <span className={styles.n}>{q.label}</span>
-          <span className={styles.sp} />
-          {q.fullCents > q.totalCents ? <span className={styles.old}>{formatEuros(q.fullCents)}</span> : null}
-          <span className={styles.tot}>{formatEuros(q.totalCents)}</span>
-        </div>
-        <button type="button" className={styles.pay} onClick={() => setCheckoutOpen(true)} disabled={selected.size === 0}>
-          Récupérer mes photos
-        </button>
       </div>
 
       {checkoutOpen ? (
@@ -341,7 +377,7 @@ export function GroupGallery({
           </button>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
 

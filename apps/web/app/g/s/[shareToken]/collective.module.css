@@ -1000,6 +1000,147 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
+/* ===== desktop (≥821px) — écran 3 (galerie + achat), cf
+   BRIEF-desktop-linktrip.md §5.3. .g3 (nouveau, enveloppe le rendu de
+   GroupGallery en vue "gallery") passe en grille 2 colonnes ; .buyCol
+   (nouveau, regroupe rappel du créneau / formule / total+CTA / réassurance /
+   retrait) devient la colonne sticky de droite. */
+@media (min-width: 821px) {
+  .page {
+    max-width: 1240px;
+    padding-inline: 40px;
+    box-shadow: none;
+  }
+
+  .g3 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: 34px;
+    align-items: start;
+    grid-template-areas:
+      "top top"
+      "cnt buy"
+      "deck buy"
+      "film buy"
+      "legal legal"
+      "poweredby poweredby";
+  }
+  .cnt {
+    grid-area: cnt;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .deck {
+    grid-area: deck;
+  }
+  .film {
+    grid-area: film;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .legal {
+    grid-area: legal;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .poweredBy {
+    grid-area: poweredby;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .buyCol {
+    grid-area: buy;
+    position: sticky;
+    top: 98px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* La visionneuse devient une scène unique (une photo à la fois) avec
+     flèches, plutôt que le carrousel swipeable du mobile. */
+  .deck {
+    position: relative;
+    padding: 0;
+  }
+  .slide {
+    flex: 0 0 100%;
+    aspect-ratio: 4 / 3;
+    scroll-snap-align: start;
+    border-radius: 16px;
+  }
+  .navArrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--ink);
+    box-shadow: var(--sh-2);
+    transition: background 0.15s;
+  }
+  .navArrow:hover {
+    background: #fff;
+  }
+  .navArrow:focus-visible {
+    outline: 2px solid var(--op);
+    outline-offset: 2px;
+  }
+  .navArrow.prev {
+    left: 14px;
+  }
+  .navArrow.next {
+    right: 14px;
+  }
+
+  .slotbar,
+  .offers,
+  .trust,
+  .buybar {
+    margin: 0;
+  }
+  .slotbar {
+    padding: 18px 20px;
+  }
+  .offers {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--sh-1);
+  }
+  .trust {
+    padding: 18px 20px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--sh-1);
+  }
+  .privacy {
+    margin: 0;
+  }
+
+  /* La barre d'achat quitte la position fixe du mobile pour devenir une
+     carte de plus dans la colonne sticky, toujours visible (pas seulement
+     quand une sélection existe). */
+  .buybar {
+    position: static;
+    max-width: none;
+    transform: none;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--sh-1);
+    padding: 18px 20px;
+    backdrop-filter: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page * {
     animation: none !important;

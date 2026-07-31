@@ -148,7 +148,7 @@ export function SessionRetrieval({
               const items = days.filter((d) => d.recency === recency);
               if (items.length === 0) return null;
               return (
-                <div key={recency}>
+                <div key={recency} className={styles.group}>
                   <div className={styles.groupLabel}>{RECENCY_LABELS[recency]}</div>
                   {items.map((day) => (
                     <button key={day.dateKey} type="button" className={styles.date} onClick={() => openDay(day)}>
@@ -243,7 +243,7 @@ export function SessionRetrieval({
               if (items.length === 0) return null;
               const bucketCount = HOUR_BUCKETS.filter((b) => visibleSlots.some((s) => s.hourBucket === b.key)).length;
               return (
-                <div key={bucket.key}>
+                <div key={bucket.key} className={styles.group}>
                   {bucketCount > 1 ? <div className={styles.groupLabel}>{bucket.label}</div> : null}
                   {items.map((slot) => (
                     <button
