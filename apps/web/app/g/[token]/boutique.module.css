@@ -106,6 +106,10 @@
   display: block;
   margin-top: 1px;
 }
+.nav,
+.actions {
+  display: none;
+}
 
 /* ===== accroche ===== */
 .hi {
@@ -927,6 +931,50 @@
     grid-area: top;
     margin-inline: -40px;
     padding-inline: 40px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+  .nav {
+    display: flex;
+    gap: 4px;
+  }
+  .navLink {
+    padding: 9px 14px;
+    border-radius: 9px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-3);
+    transition: background 0.15s, color 0.15s;
+  }
+  .navLink:hover {
+    background: var(--line-2);
+    color: var(--ink);
+  }
+  .navLinkActive {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .iconBtn {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink-3);
+    transition: background 0.15s, color 0.15s;
+  }
+  .iconBtn:hover {
+    background: var(--line-2);
+    color: var(--ink);
   }
 
   .g3 {
