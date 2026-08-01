@@ -137,11 +137,17 @@ export function BoutiqueGallery({
     setSelected(new Set(purchasable.map((p) => p.id)));
   }
 
+  // scrollTo sur le conteneur (plutôt que el.scrollIntoView) — scrollIntoView
+  // remonte la chaîne des ancêtres scrollables pour l'axe vertical, et .deck
+  // ne contraint que overflow-x : au clic sur une flèche, le navigateur
+  // pouvait aussi faire défiler la PAGE pour "révéler" la diapo, ce qui
+  // envoyait l'image (et les flèches, posées dessus) sous le header sticky.
   function goTo(i: number): void {
     curRef.current = i;
     setCur(i);
-    const el = deckRef.current?.children[i] as HTMLElement | undefined;
-    el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    const deck = deckRef.current;
+    const el = deck?.children[i] as HTMLElement | undefined;
+    if (deck && el) deck.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
   }
 
   // Navigation clavier de la visionneuse (desktop) — ignorée si le focus est
