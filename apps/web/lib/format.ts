@@ -9,6 +9,12 @@ export function maskPhone(phone: string): string {
   return `…${last.slice(0, 2)} ${last.slice(2)}`;
 }
 
+/** "Mar. 28 juil." — jour et mois abrégés, comme dans le tableau des sorties. */
+export function formatDateShortFr(d: Date): string {
+  const formatted = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  return formatted.replace(/^./, (c) => c.toUpperCase());
+}
+
 export function formatDuration(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)} s`;
 

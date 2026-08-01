@@ -1,5 +1,6 @@
-// Activités affichées en pastilles de texte — pas de pictogramme par
-// activité (une marque de photo montre des photos, pas des icônes).
+// Catalogue des activités proposées à l'onboarding et à la création d'une
+// sortie. Le rendu visuel (emoji + teinte) associé à chaque activité vit
+// dans lib/activity-visuals.ts, matché sur le label.
 export interface ActivityDef {
   id: string;
   label: string;

@@ -13,3 +13,21 @@ export function sortieStatusLabel(status: SortieStatus, bucket: SortieBucket): s
   if (status === "SORTED") return "Photos triées";
   return bucket === "past" ? "Non envoyée" : "À venir";
 }
+
+export type PublicationStatus = "online" | "pending" | "none";
+
+/**
+ * "en ligne" = la galerie a été envoyée aux clients (statut SENT) — elle
+ * reste accessible par token quel que soit le statut, donc SENT est bien
+ * le marqueur de publication, pas juste d'envoi.
+ */
+export function publicationStatus(photoCount: number, status: SortieStatus): PublicationStatus {
+  if (photoCount === 0) return "none";
+  return status === "SENT" ? "online" : "pending";
+}
+
+export function publicationStatusLabel(status: PublicationStatus): string {
+  if (status === "online") return "Photos en ligne";
+  if (status === "pending") return "Photos à publier";
+  return "Sans photo";
+}

@@ -26,12 +26,3 @@ export function ReglagesIcon({ size = 19 }: { size?: number }) {
     </svg>
   );
 }
-
-export function ReglagesIconSimple({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3.4" />
-      <circle cx="12" cy="12" r="8.6" />
-    </svg>
-  );
-}
