@@ -1041,6 +1041,7 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 26;
     width: 42px;
     height: 42px;
     display: grid;
