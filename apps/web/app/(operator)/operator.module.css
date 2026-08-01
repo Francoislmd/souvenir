@@ -312,16 +312,19 @@
 }
 .content {
   padding: 34px 28px 40px;
+  width: 100%;
+}
+.view {
   max-width: 720px;
   margin: 0 auto;
   width: 100%;
-}
-/* Page Sorties uniquement — tableau + KPI ont besoin de la largeur de l'écran. */
-.contentWide {
-  max-width: 1320px;
-}
-.view {
   animation: appRise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Page Sorties uniquement — tableau + KPI ont besoin de la largeur de l'écran.
+   Sélecteur composé (.view.contentWide) pour battre .view quel que soit
+   l'ordre des règles dans le fichier. */
+.view.contentWide {
+  max-width: 1320px;
 }
 @keyframes appRise {
   from {
