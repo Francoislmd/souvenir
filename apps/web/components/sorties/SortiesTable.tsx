@@ -72,7 +72,7 @@ export function SortiesTable({ rows }: { rows: SortieTableRow[] }) {
   return (
     <>
       <div className={styles.toolbar}>
-        <h3 className={styles.lbl}>Sorties précédentes</h3>
+        <h3 className={styles.lbl}>Toutes les sorties</h3>
         <div className={styles.seg} role="group" aria-label="Période">
           {PERIODS.map((p) => (
             <button key={p.key} type="button" aria-pressed={period === p.key} onClick={() => setParam("period", p.key)}>

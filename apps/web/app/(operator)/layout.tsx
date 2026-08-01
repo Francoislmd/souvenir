@@ -14,8 +14,8 @@ export default async function OperatorLayout({ children }: { children: React.Rea
   const { operator } = dbUser;
   const now = new Date();
 
-  // Sorties du jour pas encore envoyées aux clients — même logique que ce
-  // que TodaySorties met déjà en avant comme « à traiter ».
+  // Sorties du jour pas encore envoyées aux clients — c'est ce qui reste
+  // « à traiter » pour l'opérateur.
   const badgeCount = await prisma.sortie.count({
     where: {
       operatorId: operator.id,

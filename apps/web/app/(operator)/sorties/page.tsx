@@ -2,8 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getSortiesKpis } from "@/lib/metrics";
-import { bucketSortie, publicationStatus } from "@/lib/sorties";
-import { TodaySorties } from "@/components/sorties/TodaySorties";
+import { publicationStatus } from "@/lib/sorties";
 import { SortiesKpis } from "@/components/sorties/SortiesKpis";
 import { SortiesTable, type SortieTableRow } from "@/components/sorties/SortiesTable";
 import styles from "@/app/(operator)/operator.module.css";
@@ -29,14 +28,11 @@ export default async function SortiesPage() {
     getSortiesKpis(dbUser.operatorId, now),
   ]);
 
-  const today = sorties.filter((s) => bucketSortie(s.startsAt, now) === "today");
-  const rest = sorties.filter((s) => bucketSortie(s.startsAt, now) !== "today");
-
   const weekAhead = new Date(now);
   weekAhead.setDate(weekAhead.getDate() + 7);
   const thisWeekCount = sorties.filter((s) => s.startsAt >= now && s.startsAt <= weekAhead).length;
 
-  const tableRows: SortieTableRow[] = rest.map((s) => ({
+  const tableRows: SortieTableRow[] = sorties.map((s) => ({
     id: s.id,
     startsAt: s.startsAt,
     activity: s.activity,
@@ -68,30 +64,6 @@ export default async function SortiesPage() {
       </div>
 
       <SortiesKpis kpis={kpis} />
-
-      {today.length > 0 ? (
-        <TodaySorties sorties={today} />
-      ) : (
-        <div className={styles.today}>
-          <div className={styles["today-in"]}>
-            <div className={styles.emptyToday}>
-              <span className={styles.emptyTodayIcon}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="8.5" />
-                  <path d="M12 7.5V12l3 2" />
-                </svg>
-              </span>
-              <div>
-                <b>Aucune sortie aujourd&rsquo;hui</b>
-                <p>Rien de prévu pour aujourd&rsquo;hui.</p>
-              </div>
-              <Link href="/sorties/nouvelle" className={styles.emptyTodayCta}>
-                Programmer
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       <SortiesTable rows={tableRows} />
     </section>

@@ -480,56 +480,6 @@
   color: var(--ok-ink);
 }
 
-/* ---------- état du jour : vide ---------- */
-.emptyToday {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.emptyTodayIcon {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  border-radius: 12px;
-  background: var(--sunset);
-  color: #fff;
-  display: grid;
-  place-items: center;
-}
-.emptyToday b {
-  display: block;
-  font-size: 0.97rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  margin-bottom: 2px;
-}
-.emptyToday p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--ink-3);
-}
-.emptyTodayCta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  flex: 0 0 auto;
-  height: 38px;
-  padding: 0 16px;
-  border: 1px solid var(--line-3);
-  border-radius: 10px;
-  background: var(--surface);
-  font-size: 0.87rem;
-  font-weight: 600;
-  color: var(--ink);
-  text-decoration: none;
-  transition: border-color 0.15s, color 0.15s;
-}
-.emptyTodayCta:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 /* ---------- barre de filtres ---------- */
 .toolbar {
   display: flex;
@@ -749,110 +699,6 @@ a.trow:hover .tgo {
 .statusTag.none {
   background: var(--chip);
   color: var(--ink-4);
-}
-
-/* ---------- carte du jour : UNE seule action ---------- */
-.today {
-  border-radius: 24px;
-  padding: 2px;
-  background: var(--sunset);
-  box-shadow: var(--sh-3);
-}
-.today-in {
-  background: #fff;
-  border-radius: 22px;
-  padding: 24px;
-}
-/* En-tête cliquable de la sortie du jour dépliée — replie au clic. */
-.today-head {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  width: 100%;
-  text-align: left;
-  padding: 0 0 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--line);
-}
-.today-head svg {
-  flex: 0 0 auto;
-  color: var(--ink-4);
-}
-.today h2 {
-  font-size: 1.34rem;
-  font-weight: 700;
-  margin-top: 4px;
-  letter-spacing: -0.02em;
-}
-.when {
-  font-family: var(--font-bricolage);
-  font-weight: 700;
-  font-size: 0.72rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--brand-ink);
-}
-.meta {
-  color: var(--ink-3);
-  font-size: 0.88rem;
-  margin-top: 5px;
-}
-.state {
-  margin-top: 18px;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--ink-3);
-}
-.state b {
-  font-family: var(--font-bricolage);
-  font-size: 1.36rem;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.track {
-  height: 7px;
-  border-radius: 99px;
-  background: var(--line-2);
-  margin-top: 9px;
-  overflow: hidden;
-}
-.track i {
-  display: block;
-  height: 100%;
-  background: var(--sunset);
-  border-radius: 99px;
-  transition: width 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.trio {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 18px;
-}
-.tri {
-  background: var(--line-2);
-  border-radius: 13px;
-  padding: 12px 14px;
-}
-.tri .k {
-  font-size: 0.72rem;
-  color: var(--ink-4);
-  font-weight: 600;
-}
-.tri .v {
-  font-family: var(--font-bricolage);
-  font-weight: 800;
-  font-size: 1.32rem;
-  margin-top: 3px;
-  font-variant-numeric: tabular-nums;
-}
-.tri .v.grad {
-  background: var(--sunset);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* ---------- listes ---------- */
@@ -1773,21 +1619,6 @@ a.trow:hover .tgo {
     align-self: stretch;
     justify-content: center;
   }
-  .today-in {
-    padding: 20px;
-  }
-  .today h2 {
-    font-size: 1.18rem;
-  }
-  .trio {
-    gap: 8px;
-  }
-  .tri {
-    padding: 10px 12px;
-  }
-  .tri .v {
-    font-size: 1.14rem;
-  }
   .thumbs {
     grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
     gap: 6px;
@@ -1796,15 +1627,6 @@ a.trow:hover .tgo {
     position: static;
     background: none;
     padding: 0;
-  }
-
-  .emptyToday {
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .emptyTodayCta {
-    margin-left: 0;
-    width: 100%;
   }
 
   .seg {
