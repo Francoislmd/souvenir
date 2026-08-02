@@ -13,10 +13,12 @@ export function NavList({
   operatorName,
   badgeCount,
   onNavigate,
+  closeButtonRef,
 }: {
   operatorName: string;
   badgeCount: number;
   onNavigate?: () => void;
+  closeButtonRef?: React.RefObject<HTMLButtonElement>;
 }) {
   const pathname = usePathname();
 
@@ -27,7 +29,7 @@ export function NavList({
           <Logo height={34} />
         </Link>
         {onNavigate ? (
-          <button type="button" className={styles.drawerClose} aria-label="Fermer le menu" onClick={onNavigate}>
+          <button ref={closeButtonRef} type="button" className={styles.drawerClose} aria-label="Fermer le menu" onClick={onNavigate}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>

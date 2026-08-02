@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { requireOperatorUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { startOfDay, endOfDay } from "@/lib/dates";
@@ -8,6 +9,15 @@ import { TopbarSearch } from "@/components/operator/TopbarSearch";
 import { StripeSyncBanner } from "@/components/operator/StripeSyncBanner";
 import { ToastProvider } from "@/components/operator/ToastProvider";
 import styles from "./operator.module.css";
+
+// viewport-fit=cover pour ce segment uniquement (pas le site marketing / la
+// boutique client) : le tiroir mobile a besoin de env(safe-area-inset-*)
+// pour ne pas laisser de bande sous l'encoche/la barre d'état iOS.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export default async function OperatorLayout({ children }: { children: React.ReactNode }) {
   const dbUser = await requireOperatorUser();
@@ -26,7 +36,7 @@ export default async function OperatorLayout({ children }: { children: React.Rea
 
   return (
     <ToastProvider>
-      <div className={styles.app}>
+      <div className={styles.app} id="app-root">
         <Sidebar operatorName={operator.name} badgeCount={badgeCount} />
 
         <div className={styles.main}>
