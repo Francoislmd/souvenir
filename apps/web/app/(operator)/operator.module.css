@@ -1093,6 +1093,12 @@ a.trow:hover .tgo {
   .addp .btn {
     grid-column: 1 / -1;
   }
+  /* input[type=time] a une largeur minimale imposée par le navigateur
+     (le picker segmenté HH:MM) plus large qu'une colonne de 1fr 1fr sur
+     mobile — il débordait de l'écran. Empilé au lieu de côte à côte. */
+  .two {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- sélecteur de mode (sortie individuelle / de groupe) ---------- */
