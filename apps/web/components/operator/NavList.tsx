@@ -22,9 +22,18 @@ export function NavList({
 
   return (
     <>
-      <Link href="/sorties" className={styles.logo} onClick={onNavigate}>
-        <Logo height={34} />
-      </Link>
+      <div className={styles.logoRow}>
+        <Link href="/sorties" className={styles.logo} onClick={onNavigate}>
+          <Logo height={34} />
+        </Link>
+        {onNavigate ? (
+          <button type="button" className={styles.drawerClose} aria-label="Fermer le menu" onClick={onNavigate}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
 
       {NAV_ITEMS.map((item) => {
         const Icon = ICONS[item.key];
