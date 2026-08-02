@@ -1592,13 +1592,12 @@ a.trow:hover .tgo {
     top: 0;
     right: 0;
     bottom: 0;
-    left: auto;
+    left: 0;
     z-index: 80;
-    width: 270px;
+    width: 100%;
     height: 100dvh;
     padding: calc(22px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));
-    border-right: 0;
-    border-left: 1px solid var(--line);
+    border: 0;
     background: var(--side);
     flex-direction: column;
     overscroll-behavior: contain;
