@@ -1727,24 +1727,21 @@ a.trow:hover .tgo {
     content: " · ";
   }
   .trow .col-photos {
-    display: block;
-    order: 3;
-    text-align: left;
-    font-size: 0.82rem;
-  }
-  .trow .col-photos::after {
-    content: " photos";
-    color: var(--ink-4);
-    font-weight: 400;
+    display: none;
   }
   .trow .tmid:not(.col-photos) {
-    order: 4;
-    text-align: left;
+    order: 3;
+    margin-left: auto;
+    text-align: right;
+  }
+  .trow .tmid:not(.col-photos) b {
+    font-size: 1.05rem;
   }
   .trow .col-statut {
     display: block;
-    order: 5;
-    margin-left: auto;
+    order: 4;
+    flex: 1 1 100%;
+    margin-left: 0;
   }
   .trow .tgo {
     display: none;
@@ -1762,13 +1759,6 @@ a.trow:hover .tgo {
   }
 }
 
-/* Très petits écrans */
-@media (max-width: 420px) {
-  .trow .col-statut {
-    margin-left: 0;
-    flex: 1 1 100%;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .app * {
     animation: none !important;
