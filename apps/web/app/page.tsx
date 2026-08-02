@@ -42,8 +42,8 @@ export default function Home() {
         <div className={cx(styles.container, styles.heroGrid)}>
           <div>
             <h1 className={cx(styles.h1, "rv", "d1")}>
-              Transformez chaque sortie en{" "}
-              <span className={styles.gradText}>revenu et en souvenir.</span>
+              La 1ère plateforme de vente de photos{" "}
+              <span className={styles.gradText}>pour les activités outdoor.</span>
             </h1>
             <p className={cx(styles.heroLead, "rv", "d2")}>
               Pendant l&apos;activité, vos guides prennent des photos. À la fin, chaque client retrouve les siennes
