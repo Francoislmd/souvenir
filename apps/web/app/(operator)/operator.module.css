@@ -1044,7 +1044,7 @@ a.trow:hover .tgo {
      explicite, input[type=time] imposait sa largeur min-content au
      track et débordait de l'écran sur mobile. */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
+  gap: 20px;
 }
 .acts {
   display: flex;
