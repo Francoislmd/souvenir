@@ -8,6 +8,7 @@ import { HeaderTitle } from "@/components/operator/HeaderTitle";
 import { TopbarSearch } from "@/components/operator/TopbarSearch";
 import { StripeSyncBanner } from "@/components/operator/StripeSyncBanner";
 import { ToastProvider } from "@/components/operator/ToastProvider";
+import { Logo } from "@/components/brand/Logo";
 import styles from "./operator.module.css";
 
 // viewport-fit=cover pour ce segment uniquement (pas le site marketing / la
@@ -42,7 +43,9 @@ export default async function OperatorLayout({ children }: { children: React.Rea
         <div className={styles.main}>
           <header className={styles.hdr}>
             <MobileNavDrawer operatorName={operator.name} badgeCount={badgeCount} />
-            <span className={styles["hdr-logo"]}>{operator.name.slice(0, 2).toUpperCase()}</span>
+            <span className={styles["hdr-logo"]}>
+              <Logo variant="symbol" height={30} />
+            </span>
             <HeaderTitle />
             <TopbarSearch />
             <span className={styles.hsp} />

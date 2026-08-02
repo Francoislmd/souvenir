@@ -227,16 +227,7 @@
 }
 .hdr-logo {
   display: none;
-  width: 30px;
-  height: 30px;
   flex: 0 0 auto;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink-3);
-  font-family: var(--font-bricolage);
-  font-weight: 800;
-  font-size: 0.72rem;
   align-items: center;
   justify-content: center;
 }
@@ -1572,7 +1563,6 @@ a.trow:hover .tgo {
   .hdr-logo {
     width: 44px;
     height: 44px;
-    font-size: 0.85rem;
   }
   .burger {
     display: grid;
