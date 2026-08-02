@@ -57,6 +57,12 @@ export default async function OperatorLayout({ children }: { children: React.Rea
 
           <div className={styles.content}>{children}</div>
         </div>
+
+        {/* Cible du portal du tiroir mobile — sœur de <header>, donc hors de
+            son backdrop-filter (qui casse position:fixed), mais toujours
+            enfant de .app pour hériter les tokens (--ink, --side, etc.),
+            définis sur .app et pas sur :root. */}
+        <div id="mobile-drawer-root" />
       </div>
     </ToastProvider>
   );

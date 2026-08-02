@@ -10,13 +10,17 @@ const FOCUSABLE_SELECTOR = "a[href], button:not([disabled])";
 
 export function MobileNavDrawer({ operatorName, badgeCount }: { operatorName: string; badgeCount: number }) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const pathname = usePathname();
   const burgerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
-  useEffect(() => setMounted(true), []);
+  // Portalé vers #mobile-drawer-root (sœur de <header>, enfant de .app) plutôt
+  // que document.body : .app définit les tokens de couleur (--ink, --side…)
+  // utilisés par le tiroir — un portal vers body en sortirait et casserait
+  // tout le style (fond transparent, texte sans couleur, box-sizing perdu).
+  useEffect(() => setPortalTarget(document.getElementById("mobile-drawer-root")), []);
 
   // Ferme sur changement de route (lien dans le tiroir déjà géré par
   // onNavigate, ceci couvre aussi retour navigateur / navigation externe).
@@ -114,11 +118,10 @@ export function MobileNavDrawer({ operatorName, badgeCount }: { operatorName: st
         </svg>
       </button>
 
-      {/* Portal hors du header : .hdr a un backdrop-filter, qui devient le
-          containing block de tout descendant position:fixed — le voile et
-          le tiroir se retrouvaient confinés à la hauteur du header (64px)
-          au lieu de couvrir l'écran. */}
-      {mounted ? createPortal(overlay, document.body) : null}
+      {/* .hdr a un backdrop-filter, qui devient le containing block de tout
+          descendant position:fixed — le voile et le tiroir se retrouvaient
+          confinés à la hauteur du header (64px) au lieu de couvrir l'écran. */}
+      {portalTarget ? createPortal(overlay, portalTarget) : null}
     </>
   );
 }
