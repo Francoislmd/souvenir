@@ -42,32 +42,39 @@ export function LinktripNav() {
   ];
 
   return (
-    <header className={`${styles.nav} ${scrolled ? styles.navScrolled : ""}`}>
-      <div className={styles.navInner}>
-        <a href="#top" className={styles.brand}>
-          <Logo height={34} />
-        </a>
-        <nav className={styles.navMenu}>
-          {links.map((l) => (
-            <a key={l.href} href={l.href}>{l.label}</a>
-          ))}
-        </nav>
-        <div className={styles.navActions}>
-          <a href="/connexion" className={`${styles.btn} ${styles.btnGhost}`}>Se connecter</a>
-          <a href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>Créer ma boutique</a>
-          <button
-            type="button"
-            className={`${styles.burger} ${open ? styles.burgerOpen : ""}`}
-            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-            aria-expanded={open}
-            aria-controls="mobile-menu-panel"
-            onClick={() => setOpen((o) => !o)}
-          >
-            <span />
-          </button>
+    <>
+      <header className={`${styles.nav} ${scrolled ? styles.navScrolled : ""}`}>
+        <div className={styles.navInner}>
+          <a href="#top" className={styles.brand}>
+            <Logo height={34} />
+          </a>
+          <nav className={styles.navMenu}>
+            {links.map((l) => (
+              <a key={l.href} href={l.href}>{l.label}</a>
+            ))}
+          </nav>
+          <div className={styles.navActions}>
+            <a href="/connexion" className={`${styles.btn} ${styles.btnGhost}`}>Se connecter</a>
+            <a href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>Créer ma boutique</a>
+            <button
+              type="button"
+              className={`${styles.burger} ${open ? styles.burgerOpen : ""}`}
+              aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={open}
+              aria-controls="mobile-menu-panel"
+              onClick={() => setOpen((o) => !o)}
+            >
+              <span />
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
+      {/* Rendu hors du <header> : quand celui-ci passe en navScrolled, son
+          backdrop-filter crée un bloc conteneur pour ses descendants en
+          position fixed. Le tiroir, imbriqué dans le header, se retrouvait
+          alors positionné par rapport à la barre de 66px (donc invisible)
+          dès qu'on avait scrollé avant de cliquer sur l'icône burger. */}
       <div
         id="mobile-menu-panel"
         className={`${styles.mobileMenu} ${open ? styles.mobileMenuOpen : ""}`}
@@ -83,6 +90,6 @@ export function LinktripNav() {
           <a href="/signup" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setOpen(false)}>Créer ma boutique</a>
         </div>
       </div>
-    </header>
+    </>
   );
 }

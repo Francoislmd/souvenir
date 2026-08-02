@@ -33,5 +33,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|g/|api/webhooks/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // "$" exclut la racine "/" : la landing page est 100% statique et ne lit
+  // jamais la session, mais restait derrière ce middleware — chaque visite
+  // déclenchait un aller-retour réseau vers Supabase Auth (getUser()) avant
+  // de servir le HTML déjà pré-généré, ralentissant inutilement la page la
+  // plus visitée du site.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|g/|api/webhooks/|$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
