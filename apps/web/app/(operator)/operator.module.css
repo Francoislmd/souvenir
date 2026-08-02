@@ -1097,8 +1097,8 @@ a.trow:hover .tgo {
     grid-column: 1 / -1;
   }
   .two .inp {
-    padding: 12px 8px;
-    font-size: 0.87rem;
+    padding: 10px 6px;
+    font-size: 0.8rem;
   }
 }
 
