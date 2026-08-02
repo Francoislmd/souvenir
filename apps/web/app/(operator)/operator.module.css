@@ -1040,8 +1040,11 @@ a.trow:hover .tgo {
 }
 .two {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  /* minmax(0, 1fr) et pas 1fr seul (= minmax(auto, 1fr)) : sans le 0
+     explicite, input[type=time] imposait sa largeur min-content au
+     track et débordait de l'écran sur mobile. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
 }
 .acts {
   display: flex;
@@ -1093,11 +1096,9 @@ a.trow:hover .tgo {
   .addp .btn {
     grid-column: 1 / -1;
   }
-  /* input[type=time] a une largeur minimale imposée par le navigateur
-     (le picker segmenté HH:MM) plus large qu'une colonne de 1fr 1fr sur
-     mobile — il débordait de l'écran. Empilé au lieu de côte à côte. */
-  .two {
-    grid-template-columns: 1fr;
+  .two .inp {
+    padding: 12px 8px;
+    font-size: 0.87rem;
   }
 }
 
@@ -1279,6 +1280,7 @@ a.trow:hover .tgo {
 }
 .inp {
   width: 100%;
+  min-width: 0;
   border: 1.5px solid var(--line);
   border-radius: 12px;
   padding: 12px 14px;
