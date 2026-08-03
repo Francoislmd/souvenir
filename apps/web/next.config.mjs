@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -10,6 +12,9 @@ const nextConfig = {
     ],
   },
   experimental: {
+    // Requis sur Next 14.x pour activer instrumentation.ts (Sentry) — à
+    // retirer si upgrade vers Next 15+, où c'est stable par défaut.
+    instrumentationHook: true,
     serverComponentsExternalPackages: ["@prisma/client", "prisma", "sharp", "@napi-rs/canvas"],
     outputFileTracingIncludes: {
       "/**": [
@@ -33,4 +38,14 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Sans SENTRY_AUTH_TOKEN (variable de build, absente en local), l'étape
+// d'upload des source maps est silencieusement ignorée — le build réussit
+// quand même, cf. https://docs.sentry.io/platforms/javascript/guides/nextjs/.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  widenClientFileUpload: true,
+  webpack: { automaticVercelMonitors: true },
+});

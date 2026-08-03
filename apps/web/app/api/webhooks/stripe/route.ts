@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
@@ -65,6 +66,7 @@ export async function POST(request: Request): Promise<Response> {
     }
   } catch (error) {
     console.error(`[webhooks/stripe] handler failed for ${event.type} (${event.id})`, error);
+    Sentry.captureException(error, { tags: { stripeEventType: event.type, stripeEventId: event.id } });
     return new Response("Webhook handler error", { status: 500 });
   }
 

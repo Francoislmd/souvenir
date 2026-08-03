@@ -15,6 +15,7 @@
     "@napi-rs/canvas": "^1.0.2",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
+    "@sentry/nextjs": "^10.69.0",
     "@souvenir/db": "workspace:*",
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^4.10.0",
