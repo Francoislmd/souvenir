@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    # Valeurs factices : lib/env.ts valide leur seule présence au chargement
+    # (zod), aucune n'est réellement appelée pendant lint/typecheck/test/build
+    # (les pages statiques ne font pas de requête DB/Stripe/Twilio au build).
+    env:
+      DATABASE_URL: "postgresql://user:password@localhost:5432/ci"
+      DIRECT_URL: "postgresql://user:password@localhost:5432/ci"
+      NEXT_PUBLIC_SUPABASE_URL: "https://ci.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "ci-anon-key"
+      SUPABASE_SERVICE_ROLE_KEY: "ci-service-role-key"
+      STRIPE_SECRET_KEY: "sk_test_ci"
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_ci"
+      STRIPE_WEBHOOK_SECRET: "whsec_ci"
+      # Le SDK Twilio valide le format du SID au chargement du module (doit
+      # commencer par "AC") — une valeur factice mais mal formée fait
+      # planter le build, pas seulement les appels réseau (jamais atteints ici).
+      TWILIO_ACCOUNT_SID: "ACffffffffffffffffffffffffffffffff"
+      TWILIO_AUTH_TOKEN: "ci-auth-token"
+      TWILIO_WHATSAPP_FROM: "whatsapp:+10000000000"
+      RESEND_FROM_EMAIL: "Linktrip <ci@linktrip.co>"
+      NEXT_PUBLIC_APP_URL: "https://ci.linktrip.co"
+      CRON_SECRET: "ci-cron-secret-placeholder"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build

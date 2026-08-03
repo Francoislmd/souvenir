@@ -14,6 +14,7 @@
     "db:seed": "pnpm --filter @souvenir/db db:seed",
     "setup:storage": "pnpm --filter @souvenir/worker setup:storage",
     "lint": "pnpm --filter @souvenir/web lint",
-    "typecheck": "pnpm -r --parallel typecheck"
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm --filter @souvenir/web test"
   }
 }
