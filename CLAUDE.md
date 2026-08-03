@@ -116,157 +116,102 @@ Considère Souvenir comme une startup ambitieuse en phase de lancement et propos
 
 ## 2. Décisions verrouillées 🔒
 
-1. **Stack** : Next.js 14 (App Router, TypeScript strict) · Supabase (Postgres + Auth + Storage) · Prisma · Stripe Connect (Express) · Twilio WhatsApp · Tailwind. C'est la stack des projets précédents (Yieldly/Linktrip) — réutilise les patterns, n'introduis pas de nouveau framework.
-2. **Monorepo** pnpm : `apps/web` (Next, déployé Vercel) + `apps/worker` (Node + ffmpeg, déployé Railway/Fly) + `packages/db` (Prisma partagé).
-3. **Queue de traitement = table Postgres** (`processing_jobs`, polling `FOR UPDATE SKIP LOCKED`). Pas de Redis, pas de BullMQ, pas d'Inngest. Zéro infra en plus.
+1. **Stack** : Next.js 14 (App Router, TypeScript strict) · Supabase (Postgres + Auth + Storage) · Prisma · Stripe Connect (Express) · Twilio WhatsApp · Resend (email) · Tailwind. C'est la stack des projets précédents (Yieldly/Linktrip) — réutilise les patterns, n'introduis pas de nouveau framework.
+2. **Monorepo** pnpm : `apps/web` (Next, déployé Vercel) + `apps/worker` (Node, déployé via Dockerfile/Railway-Fly) + `packages/db` (Prisma partagé).
+3. **Queue de traitement = table Postgres** (`ProcessingJob`, polling `FOR UPDATE SKIP LOCKED`). Pas de Redis, pas de BullMQ, pas d'Inngest. Zéro infra en plus.
 
+> **Le produit s'appelle Linktrip en interface** (logo, emails, titres, `hello@linktrip.co`). "Souvenir" est le nom du repo et de ce document — historique, jamais utilisé côté utilisateur.
 
 ---
 
-## 3. Architecture
+## 3. Architecture réelle
+
+Le modèle métier a divergé de la v1 : plus de "Session/Delivery/Media" ni de compte client — le vocabulaire réel est **Sortie / Slot / Participant / Photo**, en français dans le code et l'UI.
 
 ```
 souvenir/
 ├── apps/
-│   ├── web/                  # Next.js 14 App Router
+│   ├── web/                        # Next.js 14 App Router
 │   │   ├── app/
-│   │   │   ├── (operator)/   # dashboard opérateur (auth Supabase)
-│   │   │   │   ├── dashboard/        # KPIs : attach, GMV, panier
-│   │   │   │   ├── sessions/         # rotations du jour, upload
-│   │   │   │   ├── settings/         # marque, prix, mode, Stripe
-│   │   │   ├── g/[token]/    # galerie client (publique, brandée)
-│   │   │   ├── api/
-│   │   │   │   ├── webhooks/twilio/  # messages WhatsApp entrants
-│   │   │   │   ├── webhooks/stripe/  # paiements + Connect
-│   │   │   │   ├── uploads/          # création signed upload URLs
+│   │   │   ├── (operator)/         # dashboard opérateur, derrière middleware.ts (session Supabase)
+│   │   │   │   ├── sorties/                # liste + sorties/[sortieId] + sorties/nouvelle
+│   │   │   │   ├── reglages/               # marque, prix, mode, Stripe Connect, automations
+│   │   │   │   └── revenus/                # KPIs, GMV, panier moyen
+│   │   │   ├── (auth)/             # connexion, mot-de-passe-oublie, reinitialiser
+│   │   │   ├── (legal)/            # mentions-legales, cgu, cgv, confidentialite — pages racine
+│   │   │   ├── onboarding/         # wizard de création de compte + qualification
+│   │   │   ├── signup/
+│   │   │   ├── g/[token]/          # galerie individuelle (mode INDIVIDUEL) — pas de compte, token = seul secret
+│   │   │   │   └── confidentialite/, desinscription/, supprimer/
+│   │   │   ├── g/s/[shareToken]/   # galerie de groupe (mode GROUPE) — jour → créneau → photos
+│   │   │   ├── sitemap.ts, robots.ts   # landing + pages légales uniquement, le reste est exclu
+│   │   │   └── api/
+│   │   │       ├── webhooks/stripe/        # payment_intent.*, charge.refunded, charge.dispute.*, account.updated
+│   │   │       ├── stripe/connect/         # onboarding Connect Express (+refresh, +sync)
+│   │   │       ├── checkout/, checkout/confirm/
+│   │   │       ├── cron/automations/       # relances email/WhatsApp — Vercel Cron, secured by CRON_SECRET
+│   │   │       ├── cron/gdpr-purge/        # purge RGPD — Vercel Cron, secured by CRON_SECRET
+│   │   │       ├── sorties/, participants/, photos/, operator/
+│   │   │       └── g/[token]/, g/s/[shareToken]/    # endpoints publics de la galerie (poll, achats, retrait)
+│   │   ├── sentry.client.config.ts, sentry.server.config.ts, sentry.edge.config.ts, instrumentation.ts
 │   │   ├── components/
-│   │   └── lib/              # stripe.ts, twilio.ts, supabase.ts, analytics.ts
-│   └── worker/               # Node 20 + ffmpeg : preview, watermark, thumbs, zip
-└── packages/db/              # schema.prisma + client partagé
+│   │   └── lib/                    # stripe.ts, twilio.ts, supabase-server.ts, analytics.ts, gdpr.ts, order-fulfillment.ts, order-refunds.ts, automations.ts…
+│   └── worker/                     # Node 20 + sharp, tourne via `npx tsx src/index.ts`
+└── packages/db/                    # schema.prisma + client Prisma partagé (source TS brute, pas de build)
 ```
 
-- **Auth** : Supabase Auth (email magic link) pour les opérateurs/moniteurs uniquement. Le client final n'a JAMAIS de compte — il accède via token de galerie.
-- **Storage** : 2 buckets Supabase. `originals` (privé, accès worker + signed URLs post-achat) ; `previews` (public non-listable : thumbs + basse-déf watermarkées).
+- **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie (`/g/[token]` ou `/g/s/[shareToken]`). `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
+- **Storage** : buckets Supabase `originals` (privé) et `previews` (aperçus/miniatures/flous — voir `lib/storage.ts`).
 - **Accès DB** : Prisma côté serveur uniquement (server components / route handlers / worker). Pas de requête Supabase côté client.
+- **SEO** : `app/sitemap.ts` et `app/robots.ts` n'exposent que la landing et les 4 pages légales — galeries, espace opérateur et auth sont explicitement exclus (`Disallow` + header `X-Robots-Tag: noindex` sur `/g/:path*`, posé dans `next.config.mjs`).
+- **Monitoring** : Sentry (`@sentry/nextjs` côté web, `@sentry/node` côté worker), entièrement optionnel — inerte tant que `NEXT_PUBLIC_SENTRY_DSN`/`SENTRY_DSN` ne sont pas définies, l'app démarre sans.
 
 ---
 
-## 4. Modèle de données (Prisma, version condensée)
+## 4. Le worker — ce qu'il fait vraiment
 
-```prisma
-model Operator {
-  id              String   @id @default(cuid())
-  name            String                    // "Vol Passion Annecy"
-  slug            String   @unique
-  logoUrl         String?
-  brandColor      String   @default("#2E6BFF")
-  stripeAccountId String?                   // Connect Express
-  packPriceCents  Int      @default(2900)
-  feePercent      Int      @default(20)     // part Souvenir
-  defaultMode     Mode     @default(BOUTIQUE)
-  googleReviewUrl String?
-  instagramHandle String?
-  whatsappNumber  String?                   // numéro Twilio dédié ou partagé
-  users           User[]
-  sessions        Session[]
-}
+`apps/worker` ne traite **qu'un seul type de job : `"preview"`** (`apps/worker/src/index.ts` → `jobs/preview.ts`), via `sharp` : génère miniature, aperçu, et les versions floutées (`blurKey`, `blurEmailKey`) et filigranées (`groupPreviewKey`, mode GROUPE) d'une photo.
 
-enum Mode { BOUTIQUE MARKETING }
+Écarts à connaître par rapport à la vision produit (§1) et au schéma :
+- **Pas de ffmpeg, pas de traitement vidéo**, malgré `Photo.isVideo` dans le schéma — la vidéo n'est pas implémentée.
+- **Pas de zip de téléchargement groupé.**
+- Le job `"publish_group"` (regroupement EXIF des photos d'une sortie GROUPE en `Slot`) ne passe **pas** par ce worker — il tourne en ligne, synchrone, dans `apps/web/lib/group-publish.ts`, déclenché par `api/photos/[photoId]/complete`.
 
-model User {            // opérateur ou moniteur
-  id         String   @id @default(cuid())
-  email      String   @unique
-  role       Role     @default(MONITEUR)
-  operatorId String
-}
-enum Role { ADMIN MONITEUR }
-
-model Session {          // une rotation / un créneau
-  id         String   @id @default(cuid())
-  operatorId String
-  date       DateTime @default(now())
-  label      String?                        // "Rotation 14h"
-  mode       Mode                           // copié de l'operator, modifiable
-  deliveries Delivery[]
-}
-
-model Delivery {         // = un client final et son lot de médias
-  id           String   @id @default(cuid())
-  sessionId    String
-  code         String   @unique             // "X7K2P9" — affiché au moniteur
-  token        String   @unique             // URL galerie /g/[token]
-  clientName   String?
-  clientPhone  String?                      // capté au 1er message WhatsApp
-  clientEmail  String?
-  consentImage Boolean  @default(false)     // droit à l'image (réutilisation com)
-  consentEmail Boolean  @default(false)
-  status       DeliveryStatus @default(CREATED)
-  claimedAt    DateTime?
-  media        Media[]
-  order        Order?
-  events       Event[]
-}
-enum DeliveryStatus { CREATED CLAIMED DELIVERED PURCHASED }
-
-model Media {
-  id          String   @id @default(cuid())
-  deliveryId  String
-  kind        MediaKind                     // PHOTO | VIDEO
-  originalKey String
-  previewKey  String?
-  thumbKey    String?
-  status      MediaStatus @default(UPLOADED) // UPLOADED → PROCESSING → READY | FAILED
-  durationSec Int?
-  sizeBytes   Int?
-}
-enum MediaKind { PHOTO VIDEO }
-enum MediaStatus { UPLOADED PROCESSING READY FAILED }
-
-model Order {
-  id              String  @id @default(cuid())
-  deliveryId      String  @unique
-  amountCents     Int
-  feeCents        Int
-  stripePaymentId String  @unique
-  status          String                     // succeeded | refunded
-  createdAt       DateTime @default(now())
-}
-
-model ProcessingJob {
-  id        String   @id @default(cuid())
-  mediaId   String
-  kind      String                           // "preview" | "zip"
-  status    String   @default("pending")     // pending | running | done | failed
-  attempts  Int      @default(0)
-  lockedAt  DateTime?
-  createdAt DateTime @default(now())
-}
-
-model Event {           // source de vérité analytics — voir §10
-  id         String   @id @default(cuid())
-  deliveryId String?
-  operatorId String
-  name       String                          // cf. taxonomie §10
-  meta       Json?
-  createdAt  DateTime @default(now())
-}
-```
+Le worker interroge `ProcessingJob` par polling `FOR UPDATE SKIP LOCKED` (§2.3), avec retry borné (`MAX_JOB_ATTEMPTS`) et parallélisme borné (`MAX_PARALLEL_JOBS`).
 
 ---
 
-## 15. Variables d'environnement
+## 5. Paiements — Stripe Connect
 
-```
-DATABASE_URL=               # Supabase Postgres (pooled)
-DIRECT_URL=                 # Supabase Postgres (direct, pour Prisma migrate)
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=  # worker + signed URLs
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_CONNECT_WEBHOOK_SECRET=
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
-TWILIO_WHATSAPP_FROM=       # ex: whatsapp:+14155238886 (sandbox en dev)
-NEXT_PUBLIC_APP_URL=        # https://app.souvenir... (ou http://localhost:3000)
-```
+- Connect **Express**, split par `application_fee_amount` + `transfer_data.destination` (pas de `on_behalf_of`) — voir `lib/checkout.ts`.
+- `Order.status` est un `String` libre (pas d'enum Prisma) : `pending | succeeded | failed | refunded | disputed`. Les vérifications d'accès galerie sont en égalité stricte (`=== "succeeded"`, `lib/gallery.ts`) — tout autre statut re-verrouille automatiquement l'accès au prochain chargement, sans code de révocation séparé.
+- Idempotence par relecture d'état DB avant écriture (pas de table d'event-id Stripe) — voir `lib/order-fulfillment.ts` et `lib/order-refunds.ts`.
+- Webhook (`api/webhooks/stripe/route.ts`) géré : `payment_intent.succeeded/payment_failed`, `charge.refunded` (total et partiel — pas de politique de remboursement partiel côté produit, tout remboursement verrouille la galerie), `charge.dispute.created/closed`, `account.updated`.
+
+---
+
+## 6. RGPD & rétention
+
+`lib/gdpr.ts`, deux scans distincts pilotés par les crons Vercel (`vercel.json`, secured by `CRON_SECRET`) :
+- **Participant individuel** : purge 90 jours après `consentAt` (`Participant.deleteAt`) — supprime les fichiers Storage et les `Photo`, anonymise la ligne `Participant` en base (jamais de hard-delete de la ligne elle-même).
+- **Sortie GROUPE** : purge 90 jours après publication (`Sortie.purgeAt`) — supprime tout le lot de photos et les `Slot` de la sortie.
+
+Désinscription marketing séparée (`Participant.unsubscribedAt`) : coupe les emails de relance/offre, jamais les emails transactionnels (livraison, confirmation de commande).
+
+---
+
+## 7. Analytics
+
+`packages/db/src/analytics.ts` — `track(name: EventName, { operatorId, participantId?, meta? })`, écrit dans la table `Event`. Réellement instrumenté (pas juste défini en schéma) à une vingtaine d'emplacements : checkout, fulfillment, remboursements/litiges, RGPD, automations, publication de galerie de groupe, ouverture de galerie, etc.
+
+---
+
+## 8. Variables d'environnement
+
+Voir `apps/web/.env.example` pour la liste exhaustive et à jour (copier en `.env.local`) — toutes requises sauf mention contraire, validées au démarrage par `lib/env.ts` (zod, `envSchema.parse(process.env)`, l'app ne démarre pas si une variable requise manque).
+
+Points notables :
+- `CRON_SECRET` (min. 20 caractères) protège les deux crons Vercel.
+- `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` / `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` sont **optionnelles**, hors du schéma zod — l'app tourne sans.
+- `RESEND_FROM_EMAIL` est requise, sans repli sur un domaine Resend partagé (mauvais pour la délivrabilité).
+- `STRIPE_CONNECT_WEBHOOK_SECRET` traîne parfois dans des `.env.local` existants mais n'est référencée nulle part dans le code actuel (`account.updated` est traité dans le webhook principal via `STRIPE_WEBHOOK_SECRET`) — probablement un reliquat, à confirmer avant de le retirer pour de bon.

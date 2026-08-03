@@ -1,7 +1,9 @@
+import * as Sentry from "@sentry/nextjs";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
 import { fulfillPaymentIntent } from "@/lib/order-fulfillment";
+import { handleChargeRefunded, handleDisputeCreated, handleDisputeClosed } from "@/lib/order-refunds";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
@@ -21,30 +23,51 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  switch (event.type) {
-    case "payment_intent.succeeded": {
-      const intent = event.data.object as Stripe.PaymentIntent;
-      await fulfillPaymentIntent(intent);
-      break;
-    }
-    case "payment_intent.payment_failed": {
-      const intent = event.data.object as Stripe.PaymentIntent;
-      const participantId = intent.metadata?.participantId;
-      if (participantId) {
-        await prisma.order.updateMany({ where: { participantId }, data: { status: "failed" } });
+  try {
+    switch (event.type) {
+      case "payment_intent.succeeded": {
+        const intent = event.data.object as Stripe.PaymentIntent;
+        await fulfillPaymentIntent(intent);
+        break;
       }
-      break;
+      case "payment_intent.payment_failed": {
+        const intent = event.data.object as Stripe.PaymentIntent;
+        const participantId = intent.metadata?.participantId;
+        if (participantId) {
+          await prisma.order.updateMany({ where: { participantId }, data: { status: "failed" } });
+        }
+        break;
+      }
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
+        break;
+      }
+      case "charge.dispute.created": {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleDisputeCreated(dispute);
+        break;
+      }
+      case "charge.dispute.closed": {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleDisputeClosed(dispute);
+        break;
+      }
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        await prisma.operator.updateMany({
+          where: { stripeAccountId: account.id },
+          data: { stripeOnboarded: !!account.charges_enabled },
+        });
+        break;
+      }
+      default:
+        break;
     }
-    case "account.updated": {
-      const account = event.data.object as Stripe.Account;
-      await prisma.operator.updateMany({
-        where: { stripeAccountId: account.id },
-        data: { stripeOnboarded: !!account.charges_enabled },
-      });
-      break;
-    }
-    default:
-      break;
+  } catch (error) {
+    console.error(`[webhooks/stripe] handler failed for ${event.type} (${event.id})`, error);
+    Sentry.captureException(error, { tags: { stripeEventType: event.type, stripeEventId: event.id } });
+    return new Response("Webhook handler error", { status: 500 });
   }
 
   return new Response("OK", { status: 200 });

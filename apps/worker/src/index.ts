@@ -1,7 +1,14 @@
 import "dotenv/config";
+import * as Sentry from "@sentry/node";
 import { prisma } from "@souvenir/db";
 import { processPreviewJob } from "./jobs/preview.js";
 import { MAX_JOB_ATTEMPTS, MAX_PARALLEL_JOBS } from "./lib/limits.js";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: !!process.env.SENTRY_DSN,
+  tracesSampleRate: 0.1,
+});
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -41,6 +48,7 @@ async function runJob(job: { id: string; photoId: string | null; kind: string; a
     await prisma.processingJob.update({ where: { id: job.id }, data: { status: "done" } });
   } catch (error) {
     console.error(`[worker] job ${job.id} (${job.kind}) failed`, error);
+    Sentry.captureException(error, { tags: { jobId: job.id, jobKind: job.kind } });
 
     if (job.attempts >= MAX_JOB_ATTEMPTS) {
       await prisma.processingJob.update({ where: { id: job.id }, data: { status: "failed" } });
@@ -71,13 +79,16 @@ async function pollLoop(): Promise<void> {
       }
     } catch (error) {
       console.error("[worker] poll loop error, retrying", error);
+      Sentry.captureException(error);
       await prisma.$disconnect().catch(() => undefined);
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
     }
   }
 }
 
-pollLoop().catch((error) => {
+pollLoop().catch(async (error) => {
   console.error("[worker] fatal error", error);
+  Sentry.captureException(error);
+  await Sentry.flush(2000).catch(() => undefined); // laisse l'événement partir avant process.exit
   process.exit(1);
 });

@@ -200,9 +200,15 @@ model Order {
   amountCents   Int
   feeCents      Int
   stripePi      String?   @unique
-  status        String    @default("pending") // pending | succeeded | failed
+  status        String    @default("pending") // pending | succeeded | failed | refunded | disputed
   paidAt        DateTime?
   createdAt     DateTime  @default(now())
+
+  refundedAmountCents Int       @default(0) // cumulatif, depuis charge.amount_refunded
+  refundedAt          DateTime?
+  disputeStatus       String? // reflète Stripe Dispute.status brut ; null = pas de litige
+  disputedAt          DateTime?
+  disputeClosedAt     DateTime?
 
   participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }

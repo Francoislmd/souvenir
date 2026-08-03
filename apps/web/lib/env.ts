@@ -14,7 +14,7 @@ const envSchema = z.object({
   TWILIO_WHATSAPP_FROM: z.string().min(1),
   TWILIO_SMS_FROM: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().default("Linktrip <onboarding@resend.dev>"),
+  RESEND_FROM_EMAIL: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   CRON_SECRET: z.string().min(20),
 });
