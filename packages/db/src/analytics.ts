@@ -21,7 +21,10 @@ export type EventName =
   | "group_order_created"
   | "group_invite_sent"
   | "photo_hidden"
-  | "group_purge";
+  | "group_purge"
+  | "order_refunded"
+  | "order_disputed"
+  | "order_dispute_resolved";
 
 interface TrackParams {
   operatorId: string;

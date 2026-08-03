@@ -161,7 +161,7 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
       reducedOfferSentAt: null,
       deletedAt: null,
       unsubscribedAt: null,
-      OR: [{ order: null }, { order: { status: { not: "succeeded" } } }],
+      OR: [{ order: null }, { order: { status: { notIn: ["succeeded", "refunded", "disputed"] } } }],
     },
     include: { sortie: { include: { operator: true } } },
   });
