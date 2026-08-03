@@ -469,7 +469,8 @@ function StepAccount({
         {error && <p className="text-sm text-danger">{error}</p>}
         <p className="mt-1 text-xs leading-relaxed text-muted">
           En créant ton compte, tu acceptes nos{" "}
-          <Link href="/cgu" className="underline hover:text-ink-2">CGU</Link>{" "}
+          <Link href="/cgu" className="underline hover:text-ink-2">CGU</Link>,{" "}
+          nos <Link href="/cgv" className="underline hover:text-ink-2">CGV</Link>{" "}
           et notre{" "}
           <Link href="/confidentialite" className="underline hover:text-ink-2">politique de confidentialité</Link>.
         </p>

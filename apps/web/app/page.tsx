@@ -486,7 +486,7 @@ export default function Home() {
             </div>
             <div className={styles.footCol}>
               <h6>Légal</h6>
-              <a href="/confidentialite">Confidentialité</a><a href="/cgu">Conditions</a><a href="/confidentialite">RGPD</a>
+              <a href="/mentions-legales">Mentions légales</a><a href="/cgu">CGU</a><a href="/cgv">CGV</a><a href="/confidentialite">Confidentialité</a>
             </div>
           </div>
           <div className={styles.footBottom}>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { BrandPanel } from "./BrandPanel";
 import styles from "./auth.module.css";
@@ -13,8 +14,8 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <div className={styles.box}>{children}</div>
         </div>
         <div className={styles.legal}>
-          En continuant, vous acceptez les <a href="#">conditions</a> et la{" "}
-          <a href="#">politique de confidentialité</a>.
+          En continuant, vous acceptez les <Link href="/cgu">conditions</Link> et la{" "}
+          <Link href="/confidentialite">politique de confidentialité</Link>.
           <br />
           Un souci&nbsp;? <a href="mailto:hello@linktrip.co">Écrivez-nous</a>.
         </div>

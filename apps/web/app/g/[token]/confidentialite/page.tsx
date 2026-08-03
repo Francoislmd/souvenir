@@ -63,6 +63,20 @@ export default async function PrivacyPage({ params }: { params: { token: string 
       >
         🗑 Demander la suppression immédiate
       </Link>
+
+      <Link
+        href="/confidentialite"
+        style={{
+          marginTop: 16,
+          display: "block",
+          textAlign: "center",
+          fontSize: "0.85rem",
+          color: "#726C80",
+          textDecoration: "underline",
+        }}
+      >
+        Voir notre politique de confidentialité complète →
+      </Link>
     </main>
   );
 }
