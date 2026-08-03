@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight } from "next/font/google";
+import { env } from "@/lib/env";
 import "./globals.css";
 import "@/styles/tokens.css";
 
@@ -24,10 +25,27 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const title = "Linktrip — Vos photos de sortie deviennent un revenu";
+const description =
+  "SaaS pour prestataires d'activités outdoor : vos guides prennent des photos, vos clients les achètent, vous touchez une commission automatiquement.";
+
 export const metadata: Metadata = {
-  title: "Linktrip — Vos photos de sortie deviennent un revenu",
-  description:
-    "SaaS pour prestataires d'activités outdoor : vos guides prennent des photos, vos clients les achètent, vous touchez une commission automatiquement.",
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: env.NEXT_PUBLIC_APP_URL,
+    siteName: "Linktrip",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({
