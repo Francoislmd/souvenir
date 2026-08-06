@@ -6,42 +6,50 @@ import { TileArt, type TileArtKind } from "./TileArt";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
+const EXTENSIONS = ["webp", "jpg", "jpeg", "png"];
+
 interface Tile {
   kind: TileArtKind;
   activity: string;
   place: string;
   count: number;
   ratio: "r34" | "r11" | "r45";
-  /** Nom de fichier attendu dans /public/landing — dépose-le pour remplacer l'illustration. */
-  file: string;
+  /** Nom de base attendu dans /public/landing (n'importe quelle extension : .webp/.jpg/.jpeg/.png). */
+  base: string;
   locked?: boolean;
   priority?: boolean;
 }
 
 const COL_A: Tile[] = [
-  { kind: "parapente", activity: "Parapente", place: "Annecy", count: 14, ratio: "r34", file: "parapente.webp", priority: true },
-  { kind: "kayak", activity: "Kayak de mer", place: "Crozon", count: 22, ratio: "r11", file: "kayak.webp" },
-  { kind: "surf", activity: "Cours de surf", place: "Hossegor", count: 31, ratio: "r45", file: "surf.webp" },
+  { kind: "via-ferrata", activity: "Tyrolienne", place: "Istanbul", count: 16, ratio: "r34", base: "tyrolienne", priority: true },
+  { kind: "jetski", activity: "Jet ski", place: "Cangas", count: 24, ratio: "r11", base: "jetski" },
 ];
 
 const COL_B: Tile[] = [
-  { kind: "via-ferrata", activity: "Via ferrata", place: "Chamonix", count: 18, ratio: "r45", file: "via-ferrata.webp", priority: true },
+  { kind: "surf", activity: "Bouée tractée", place: "Dubaï", count: 19, ratio: "r45", base: "bouee-tractee", priority: true },
   // Verrouillée à dessein : le modèle économique reste visible dans le mur d'images.
-  // Le fichier attendu doit déjà être une version dégradée/floutée (cf. §14 du brief) —
-  // ne jamais poser un filter:blur() CSS sur une vraie photo HD ici (piège §15).
-  { kind: "jetski", activity: "Jet ski", place: "Dieppe", count: 24, ratio: "r34", file: "jetski-locked.webp", locked: true },
-  { kind: "plongee", activity: "Baptême de plongée", place: "Marseille", count: 12, ratio: "r11", file: "plongee.webp" },
+  // Ici la source est une photo de marque (pas un achat client réel), donc le
+  // flou CSS est acceptable — ne jamais faire ça sur une vraie photo HD d'un
+  // client payant (piège §15) : générer une variante floutée côté serveur.
+  { kind: "parapente", activity: "Parachute ascensionnel", place: "", count: 21, ratio: "r34", base: "parachute-ascensionnel", locked: true },
 ];
 
+function resolveImage(base: string): string | null {
+  const dir = path.join(process.cwd(), "public", "landing");
+  for (const ext of EXTENSIONS) {
+    if (existsSync(path.join(dir, `${base}.${ext}`))) return `/landing/${base}.${ext}`;
+  }
+  return null;
+}
+
 function TileView({ tile }: { tile: Tile }) {
-  const filePath = path.join(process.cwd(), "public", "landing", tile.file);
-  const hasImage = existsSync(filePath);
+  const src = resolveImage(tile.base);
 
   return (
     <div className={cx(styles.tile, styles[tile.ratio])}>
-      {hasImage ? (
+      {src ? (
         <Image
-          src={`/landing/${tile.file}`}
+          src={src}
           alt=""
           fill
           sizes="(max-width: 1000px) 50vw, 25vw"
@@ -66,7 +74,8 @@ function TileView({ tile }: { tile: Tile }) {
       <div className={styles.tileTag}>
         {tile.activity}
         <span>
-          {tile.place} · {tile.count} photos
+          {tile.place ? `${tile.place} · ` : ""}
+          {tile.count} photos
         </span>
       </div>
     </div>
@@ -79,12 +88,12 @@ export function PhotoMosaic() {
       <div className={styles.mos}>
         <div className={styles.mcol}>
           {COL_A.map((tile) => (
-            <TileView key={tile.file} tile={tile} />
+            <TileView key={tile.base} tile={tile} />
           ))}
         </div>
         <div className={cx(styles.mcol, styles.mcolOffset)}>
           {COL_B.map((tile) => (
-            <TileView key={tile.file} tile={tile} />
+            <TileView key={tile.base} tile={tile} />
           ))}
         </div>
       </div>
