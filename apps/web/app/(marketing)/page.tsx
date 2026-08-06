@@ -23,7 +23,12 @@ export default function AccueilPage() {
       <div className={styles.rail}>
         <Header />
 
-        <main className={cx(styles.main, "grid items-stretch gap-[58px] py-4 min-[1000px]:grid-cols-[minmax(0,440px)_1fr]")}>
+        <main
+          className={cx(
+            styles.main,
+            "grid items-stretch gap-[58px] py-4 min-[1000px]:grid-cols-[minmax(0,440px)_1fr] min-[1000px]:gap-[clamp(58px,6vw,120px)]",
+          )}
+        >
           <div className="flex flex-col justify-center">
             <h1 className={cx(styles.h1Accueil, styles.reveal, "font-display font-bold text-ink")}>
               Ouvrez la boutique photo de <span className={styles.gradText}>votre activité outdoor.</span>
