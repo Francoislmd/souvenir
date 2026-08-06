@@ -166,8 +166,8 @@
 .scene {
   position: relative;
   width: 100%;
-  max-width: 640px;
-  height: clamp(280px, 44vh, 460px);
+  max-width: 460px;
+  height: clamp(340px, 58vh, 600px);
   overflow: hidden;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
   mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
