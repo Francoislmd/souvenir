@@ -256,3 +256,21 @@ model AuthAttempt {
 
   @@index([key, createdAt])
 }
+
+// Liste d'attente pré-lancement (landing /liste-attente). L'accueil ne
+// capture que l'e-mail puis redirige vers /liste-attente pour compléter la
+// qualification — la route /api/waitlist fait donc un upsert par e-mail
+// (jamais un no-op sur doublon), sinon la seconde soumission, plus riche,
+// serait silencieusement perdue.
+model Waitlist {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  email        String   @unique
+  company      String?
+  activity     String?
+  yearlyGuests String?
+  photoUsage   String?
+  source       String?
+  userAgent    String?
+}

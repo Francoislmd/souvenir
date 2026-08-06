@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "accent" | "secondary" | "outline-light" | "ghost";
+export type ButtonVariant = "primary" | "accent" | "secondary" | "outline-light" | "ghost" | "sunset" | "dark";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
@@ -13,6 +13,10 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary: "border border-border bg-surface text-ink hover:border-border-strong",
   "outline-light": "border border-white/25 bg-white/10 text-white hover:bg-white/20",
   ghost: "text-ink-2 hover:text-ink",
+  // Dégradé signature (--sunset) : réservé aux CTA principaux de la landing (cf. HANDOFF §4 règle 1).
+  sunset:
+    "bg-[image:var(--sunset)] text-white shadow-[0_10px_26px_-9px_rgba(255,90,31,0.6)] hover:brightness-105 hover:-translate-y-px",
+  dark: "bg-ink text-white hover:bg-[#2A2438] hover:-translate-y-px",
 };
 
 const SIZES: Record<ButtonSize, string> = {

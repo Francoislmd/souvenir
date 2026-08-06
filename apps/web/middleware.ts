@@ -37,6 +37,10 @@ export const config = {
   // jamais la session, mais restait derrière ce middleware — chaque visite
   // déclenchait un aller-retour réseau vers Supabase Auth (getUser()) avant
   // de servir le HTML déjà pré-généré, ralentissant inutilement la page la
-  // plus visitée du site.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|g/|api/webhooks/|$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // plus visitée du site. Même raison pour les trois autres routes de la
+  // landing pré-lancement (fonctionnement/simulation/liste-attente) : pages
+  // publiques tout aussi statiques, sans session à lire.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|g/|api/webhooks/|$|fonctionnement$|simulation$|liste-attente$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

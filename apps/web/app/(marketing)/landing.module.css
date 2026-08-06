@@ -1,0 +1,418 @@
+/* Landing pré-lancement (4 routes, une par écran) — cf. HANDOFF-landing-linktrip.md.
+   Tout ce qui est exprimable proprement en Tailwind vit dans les pages/composants ;
+   ce module ne porte que ce que Tailwind ne sait pas faire : la chaîne min-height:0,
+   le mask-image de la mosaïque, le clamp() vw+vh, les pseudo-éléments de <input type=range>. */
+
+.page {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 1000px) {
+  .page {
+    height: auto;
+    min-height: 100svh;
+    /* Défilement vertical réactivé, mais jamais horizontal : les halos de
+       fond pleine page (cf. règle §4.4) débordent volontairement du rail,
+       overflow-x doit donc rester clippé même une fois overflow-y libéré. */
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+}
+
+.rail {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 46px;
+}
+@media (max-width: 1280px) {
+  .rail { padding: 0 34px; }
+}
+@media (max-width: 700px) {
+  .rail { padding: 0 22px; }
+}
+
+.header {
+  flex-shrink: 0;
+  padding: clamp(18px, 3vh, 30px) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.headerLinks {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+  margin-left: auto;
+}
+.headerCta { flex-shrink: 0; }
+@media (max-width: 1000px) {
+  .headerLinks a:not(.headerCta) { display: none; }
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+}
+
+.footer {
+  flex-shrink: 0;
+  padding: clamp(14px, 2.2vh, 24px) 0 clamp(18px, 3vh, 34px);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 3;
+}
+
+/* ─── Voiles de fond : pleine page, jamais découpés (piège §15.5) ─── */
+.auraWarm {
+  position: absolute;
+  top: -380px;
+  right: -320px;
+  width: 1180px;
+  height: 1020px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(closest-side, rgba(255, 180, 67, 0.4), rgba(255, 90, 31, 0.18) 44%, rgba(255, 61, 110, 0.07) 66%, transparent 78%);
+}
+.auraWarmCenter {
+  position: absolute;
+  top: -420px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1400px;
+  height: 1000px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(closest-side, rgba(255, 180, 67, 0.32), rgba(255, 90, 31, 0.16) 44%, rgba(255, 61, 110, 0.06) 66%, transparent 78%);
+}
+.auraCool {
+  position: absolute;
+  bottom: -420px;
+  left: -280px;
+  width: 820px;
+  height: 760px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(closest-side, rgba(15, 190, 182, 0.13), transparent 72%);
+}
+
+/* ─── Typographie ─── */
+.gradText {
+  background: var(--sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.h1Accueil {
+  font-size: clamp(38px, 3.6vw + 1.3vh, 86px);
+  line-height: 1.04;
+  letter-spacing: -0.042em;
+  max-width: 13ch;
+}
+.h1Video {
+  font-size: clamp(30px, 2.4vw + 1vh, 54px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.h1Sim {
+  font-size: clamp(28px, 2.2vw + 1vh, 50px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.h1Waitlist {
+  font-size: clamp(28px, 2.2vw + 1vh, 52px);
+  line-height: 1.04;
+  letter-spacing: -0.042em;
+}
+@media (min-width: 1001px) and (max-height: 760px) {
+  .h1Accueil { font-size: clamp(34px, 2.9vw + 1.2vh, 62px); }
+}
+
+/* ─── Apparition au chargement (pas au scroll — rien ne défile) ─── */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.reveal {
+  animation: reveal 700ms cubic-bezier(0.2, 0.75, 0.3, 1) both;
+}
+.reveal:nth-child(1) { animation-delay: 0ms; }
+.reveal:nth-child(2) { animation-delay: 30ms; }
+.reveal:nth-child(3) { animation-delay: 60ms; }
+.reveal:nth-child(4) { animation-delay: 90ms; }
+.reveal:nth-child(5) { animation-delay: 120ms; }
+.reveal:nth-child(6) { animation-delay: 150ms; }
+.reveal:nth-child(7) { animation-delay: 180ms; }
+.reveal:nth-child(8) { animation-delay: 210ms; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+}
+
+/* ─── Mosaïque photo (page d'accueil) ─── */
+.scene {
+  position: relative;
+  width: 100%;
+  height: clamp(360px, 58vh, 640px);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
+}
+@media (max-width: 1000px) {
+  .scene { height: 480px; }
+}
+.mos {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(10px, 1.4vh, 16px);
+}
+.mcol {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 16px);
+}
+.mcolOffset {
+  margin-top: clamp(26px, 5vh, 52px);
+}
+@media (max-width: 560px) {
+  .mcolOffset { display: none; }
+  .mos { grid-template-columns: 1fr; }
+}
+
+.tile {
+  position: relative;
+  border-radius: clamp(14px, 1.6vw, 20px);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 16px 34px -20px rgba(22, 19, 32, 0.34), 0 0 0 1px rgba(22, 19, 32, 0.04);
+  transition: transform 500ms ease;
+}
+.tile:hover { transform: scale(1.05); }
+@media (prefers-reduced-motion: reduce) {
+  .tile { transition: none; }
+  .tile:hover { transform: none; }
+}
+.r34 { aspect-ratio: 3 / 4; }
+.r11 { aspect-ratio: 1 / 1; }
+.r45 { aspect-ratio: 4 / 5; }
+
+.tileArt { position: absolute; inset: 0; }
+.tileVeil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(22, 19, 32, 0) 52%, rgba(22, 19, 32, 0.8));
+}
+.tileTag {
+  position: absolute;
+  left: 12px;
+  bottom: 11px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.tileTag span {
+  display: block;
+  font-weight: 400;
+  font-size: 10.5px;
+  opacity: 0.82;
+  margin-top: 1px;
+}
+
+/* Tuile verrouillée : le modèle économique reste visible dans le mur d'images.
+   ATTENTION : ceci ne floute qu'un placeholder. Une vraie photo HD ne doit
+   JAMAIS être floutée côté client (filter: blur() s'annule en 3s dans
+   l'inspecteur) — générer une variante floutée côté serveur, comme le fait
+   déjà le worker pour les galeries (apps/worker/src/jobs/preview.ts, blurKey). */
+.tileLockedArt {
+  filter: blur(8px);
+  transform: scale(1.12);
+}
+.tileLock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(22, 19, 32, 0.26);
+}
+.tilePrice {
+  position: absolute;
+  right: 11px;
+  top: 11px;
+  background: var(--sunset);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 13px;
+  border-radius: 99px;
+  box-shadow: 0 6px 16px -5px rgba(255, 90, 31, 0.7);
+}
+
+/* ─── Champ e-mail (pilule, bouton intégré) ─── */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 530px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
+  padding: 6px 6px 6px 8px;
+}
+.field input {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px; /* >=16px : évite le zoom auto de Safari iOS (piège §15.8) */
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  outline: none;
+  padding: clamp(11px, 1.6vh, 14px) 16px;
+}
+.field input::placeholder { color: var(--ink-3); }
+@media (max-width: 520px) {
+  .field { flex-direction: column; border-radius: 26px; padding: 8px; }
+  .field input { width: 100%; text-align: center; }
+  .field button { width: 100%; }
+}
+
+/* ─── Curseurs (page /simulation) ─── */
+.range {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--line);
+  outline: none;
+  cursor: pointer;
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  background: #fff;
+  border: 2px solid var(--brand);
+  box-shadow: 0 3px 9px rgba(22, 19, 32, 0.24);
+  cursor: pointer;
+}
+.range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 99px;
+  background: #fff;
+  border: 2px solid var(--brand);
+  box-shadow: 0 3px 9px rgba(22, 19, 32, 0.24);
+  cursor: pointer;
+}
+
+/* ─── Lecteur vidéo (page /fonctionnement) ─── */
+.player {
+  position: relative;
+  width: 100%;
+  max-width: 940px;
+  margin: clamp(10px, 2vh, 26px) auto clamp(14px, 2.6vh, 32px);
+  aspect-ratio: 16 / 9;
+  border-radius: clamp(14px, 1.4vw, 22px);
+  overflow: hidden;
+  background: #12161b;
+  cursor: pointer;
+  box-shadow: 0 40px 80px -34px rgba(22, 19, 32, 0.55), 0 0 0 1px rgba(22, 19, 32, 0.07);
+}
+@media (max-height: 800px) {
+  .player { max-width: min(940px, 116vh); }
+}
+.player video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
+.playBtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 82px;
+  height: 82px;
+  border-radius: 99px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 40px rgba(10, 14, 18, 0.4);
+  transition: transform 180ms ease;
+  border: 0;
+  cursor: pointer;
+}
+.player:hover .playBtn { transform: translate(-50%, -50%) scale(1.06); }
+@media (prefers-reduced-motion: reduce) {
+  .playBtn, .player:hover .playBtn { transition: none; transform: translate(-50%, -50%); }
+}
+.playBtn::after {
+  content: "";
+  width: 0;
+  height: 0;
+  margin-left: 5px;
+  border-left: 20px solid var(--brand);
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+}
+.playerDur {
+  position: absolute;
+  right: 14px;
+  bottom: 13px;
+  background: rgba(10, 14, 18, 0.66);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 99px;
+}
+.playerLabel {
+  position: absolute;
+  left: 16px;
+  bottom: 13px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.playerLabel span {
+  display: block;
+  font-weight: 400;
+  font-size: 11.5px;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+/* ─── Champ honeypot (anti-spam, invisible aux humains et aux lecteurs d'écran) ───
+   clip plutôt qu'un left:-9999px : un décalage hors-écran élargit le
+   scrollWidth du document et provoque un défilement horizontal parasite. */
+.hp {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
