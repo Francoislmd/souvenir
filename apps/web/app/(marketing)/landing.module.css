@@ -172,9 +172,6 @@
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
   mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
 }
-@media (max-width: 1000px) {
-  .scene { height: 480px; }
-}
 .mos {
   position: absolute;
   inset: 0;
@@ -190,9 +187,22 @@
 .mcolOffset {
   margin-top: clamp(26px, 5vh, 52px);
 }
-@media (max-width: 560px) {
-  .mcolOffset { display: none; }
-  .mos { grid-template-columns: 1fr; }
+@media (max-width: 1000px) {
+  /* Sur mobile la page défile déjà (cf. .page) : plus besoin de forcer une
+     hauteur fixe ni de masquer/rogner — les 4 tuiles s'affichent en entier,
+     sinon la moitié de la mosaïque (dont la tuile verrouillée qui montre le
+     modèle économique) disparaissait purement et simplement. Doit venir
+     APRÈS les règles de base ci-dessus : même sélecteur, l'ordre de
+     déclaration tranche à spécificité égale, peu importe le media query. */
+  .scene {
+    height: auto;
+    max-width: 560px; /* pleine largeur sur téléphone (rail < 560px), plafonné sur tablette */
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .mos { position: static; inset: auto; }
+  .mcolOffset { margin-top: 0; }
 }
 
 .tile {
@@ -392,11 +402,15 @@
 .playerLabel {
   position: absolute;
   left: 16px;
+  right: 92px; /* laisse la place à .playerDur — évite le chevauchement sur mobile étroit */
   bottom: 13px;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .playerLabel span {
   display: block;
@@ -404,6 +418,9 @@
   font-size: 11.5px;
   opacity: 0.8;
   margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Champ honeypot (anti-spam, invisible aux humains et aux lecteurs d'écran) ───

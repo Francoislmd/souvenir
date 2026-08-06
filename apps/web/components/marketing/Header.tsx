@@ -31,8 +31,15 @@ export function Header({ current }: HeaderProps) {
         >
           Simulation
         </Link>
-        <ButtonLink href="/liste-attente" variant="sunset" size="md" className={styles.headerCta}>
-          Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
+        <ButtonLink
+          href="/liste-attente"
+          variant="sunset"
+          size="md"
+          className={cx(styles.headerCta, "max-[420px]:h-9 max-[420px]:px-3 max-[420px]:text-xs")}
+        >
+          <span className="max-[380px]:hidden">Rejoindre la liste d&apos;attente</span>
+          <span className="hidden max-[380px]:inline">Liste d&apos;attente</span>{" "}
+          <span aria-hidden="true">→</span>
         </ButtonLink>
       </nav>
     </header>
