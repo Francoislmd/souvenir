@@ -166,26 +166,26 @@
 .scene {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  height: clamp(300px, 52vh, 540px);
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
-  mask-image: linear-gradient(180deg, transparent, #000 11%, #000 89%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
 }
 .mos {
   position: absolute;
   inset: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(10px, 1.4vh, 16px);
+  gap: 16px;
 }
 .mcol {
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 1.4vh, 16px);
+  gap: 16px;
 }
 .mcolOffset {
-  margin-top: clamp(26px, 5vh, 52px);
+  margin-top: 64px;
 }
 @media (max-width: 1000px) {
   /* Sur mobile la page défile déjà (cf. .page) : plus besoin de forcer une
@@ -203,11 +203,14 @@
   }
   .mos { position: static; inset: auto; }
   .mcolOffset { margin-top: 0; }
+  /* Doublons desktop (remplissage du fondu haut/bas) : invisibles sur mobile,
+     où la mosaïque s'affiche en entier sans rognage — sinon même photo deux fois. */
+  .hideMobile { display: none; }
 }
 
 .tile {
   position: relative;
-  border-radius: clamp(14px, 1.6vw, 20px);
+  border-radius: 18px;
   overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 16px 34px -20px rgba(22, 19, 32, 0.34), 0 0 0 1px rgba(22, 19, 32, 0.04);

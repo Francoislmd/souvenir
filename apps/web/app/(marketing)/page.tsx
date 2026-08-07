@@ -26,7 +26,7 @@ export default function AccueilPage() {
         <main
           className={cx(
             styles.main,
-            "grid items-stretch gap-[58px] py-4 min-[1000px]:grid-cols-[minmax(0,440px)_1fr] min-[1000px]:gap-[clamp(58px,6vw,120px)]",
+            "grid items-stretch gap-[58px] py-4 min-[1000px]:grid-cols-[minmax(0,460px)_minmax(0,1fr)] min-[1000px]:gap-[clamp(60px,7vw,120px)]",
           )}
         >
           <div className="flex flex-col justify-center">
@@ -52,7 +52,7 @@ export default function AccueilPage() {
             </p>
           </div>
 
-          <div className="flex min-h-0 flex-col justify-center">
+          <div className="min-h-0">
             <PhotoMosaic />
           </div>
         </main>
