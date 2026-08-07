@@ -13,8 +13,6 @@
 export type MarketingEventName =
   | "hero_email_submit"
   | "waitlist_submit"
-  | "video_play"
-  | "video_complete"
   | "sim_interact"
   | "sim_values";
 

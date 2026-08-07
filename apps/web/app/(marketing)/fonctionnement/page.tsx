@@ -1,9 +1,7 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
 import type { Metadata } from "next";
 import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
-import { VideoPlayer } from "@/components/marketing/VideoPlayer";
+import { ArcadeEmbed } from "@/components/marketing/ArcadeEmbed";
 import styles from "../landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -13,14 +11,7 @@ export const metadata: Metadata = {
   description: "Tout ce qu'un opérateur a réellement à faire, en une minute quarante.",
 };
 
-const VIDEO_SRC = "/videos/demo.mp4";
-const POSTER_SRC = "/videos/poster.jpg";
-
 export default function FonctionnementPage() {
-  const publicDir = path.join(process.cwd(), "public");
-  const hasVideo = existsSync(path.join(publicDir, "videos", "demo.mp4"));
-  const hasPoster = existsSync(path.join(publicDir, "videos", "poster.jpg"));
-
   return (
     <div className={styles.page}>
       <span className={styles.auraWarmCenter} />
@@ -39,7 +30,7 @@ export default function FonctionnementPage() {
             </p>
           </div>
 
-          <VideoPlayer hasVideo={hasVideo} hasPoster={hasPoster} videoSrc={VIDEO_SRC} posterSrc={POSTER_SRC} />
+          <ArcadeEmbed />
         </main>
 
         <Footer variant="fonctionnement" />
