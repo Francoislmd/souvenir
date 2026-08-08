@@ -57,7 +57,7 @@ export function EmailCaptureField() {
           disabled={submitting}
           className={cx(
             "flex-shrink-0 rounded-full px-6 text-[15px] font-semibold text-white transition disabled:opacity-60",
-            "bg-[image:var(--sunset)] shadow-[0_8px_22px_-8px_rgba(255,90,31,0.6)] hover:brightness-105",
+            "bg-ink shadow-[0_8px_22px_-8px_rgba(22,19,32,0.5)] hover:bg-[#2A2438]",
           )}
           style={{ paddingTop: "clamp(12px, 1.7vh, 15px)", paddingBottom: "clamp(12px, 1.7vh, 15px)" }}
         >
