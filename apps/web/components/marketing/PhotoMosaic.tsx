@@ -62,7 +62,7 @@ function TileView({ tile }: { tile: Tile }) {
           src={src}
           alt=""
           fill
-          sizes="(max-width: 1000px) 50vw, 25vw"
+          sizes="(max-width: 1000px) 62vw, 25vw"
           priority={tile.priority}
           className={cx("object-cover", tile.locked && styles.tileLockedArt)}
         />

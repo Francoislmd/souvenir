@@ -21,13 +21,19 @@ export function Header({ current }: HeaderProps) {
       <nav className={styles.headerLinks}>
         <Link
           href="/fonctionnement"
-          className={cx("text-[15.5px] text-ink-2 hover:text-ink transition", current === "fonctionnement" && "font-semibold text-ink")}
+          className={cx(
+            "text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink",
+            current === "fonctionnement" && "font-semibold text-ink",
+          )}
         >
           Fonctionnement
         </Link>
         <Link
           href="/simulation"
-          className={cx("text-[15.5px] text-ink-2 hover:text-ink transition", current === "simulation" && "font-semibold text-ink")}
+          className={cx(
+            "text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink",
+            current === "simulation" && "font-semibold text-ink",
+          )}
         >
           Simulation
         </Link>
@@ -35,10 +41,10 @@ export function Header({ current }: HeaderProps) {
           href="/liste-attente"
           variant="sunset"
           size="md"
-          className={cx(styles.headerCta, "max-[420px]:h-9 max-[420px]:px-3 max-[420px]:text-xs")}
+          className={cx(styles.headerCta, "max-[420px]:h-10 max-[420px]:px-3 max-[420px]:text-xs")}
         >
-          <span className="max-[380px]:hidden">Rejoindre la liste d&apos;attente</span>
-          <span className="hidden max-[380px]:inline">Liste d&apos;attente</span>{" "}
+          <span className="max-[699px]:hidden">Rejoindre la liste d&apos;attente</span>
+          <span className="hidden max-[699px]:inline">Rejoindre</span>
           <span aria-hidden="true">→</span>
         </ButtonLink>
       </nav>

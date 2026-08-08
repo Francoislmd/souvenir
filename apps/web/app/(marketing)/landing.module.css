@@ -14,11 +14,15 @@
   .page {
     height: auto;
     min-height: 100svh;
-    /* Défilement vertical réactivé, mais jamais horizontal : les halos de
-       fond pleine page (cf. règle §4.4) débordent volontairement du rail,
-       overflow-x doit donc rester clippé même une fois overflow-y libéré. */
-    overflow-x: hidden;
-    overflow-y: visible;
+    /* Défilement vertical réactivé. PAS de overflow-x:hidden ici : un axe
+       non-"visible" force silencieusement l'autre à passer en "auto" (règle
+       CSS de résolution des overflow mixtes), ce qui transforme .page en
+       conteneur de défilement — et casse position:sticky de TOUS ses
+       descendants (header, barres collantes), qui restent alors immobiles
+       au lieu de se coller au viewport. Le clip horizontal des halos se
+       fait maintenant sur .haloClip, un wrapper dédié qui ne porte aucun
+       contenu scrollable/collant (cf. .haloClip ci-dessous). */
+    overflow: visible;
   }
 }
 
@@ -32,13 +36,14 @@
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
-  padding: 0 46px;
+  --gutter: 46px;
+  padding: 0 var(--gutter);
 }
 @media (max-width: 1280px) {
-  .rail { padding: 0 34px; }
+  .rail { --gutter: 34px; padding: 0 var(--gutter); }
 }
 @media (max-width: 700px) {
-  .rail { padding: 0 22px; }
+  .rail { --gutter: 20px; padding: 0 var(--gutter); }
 }
 
 .header {
@@ -57,6 +62,20 @@
 .headerCta { flex-shrink: 0; }
 @media (max-width: 1000px) {
   .headerLinks a:not(.headerCta) { display: none; }
+  /* Header collant, fond opaque (jamais backdrop-filter — coûteux et instable
+     au scroll sur Safari iOS) : le contenu défile désormais sous lui (cf.
+     .page), il doit donc rester lisible en toute circonstance. */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 60px;
+    padding: 0;
+    margin: 0 calc(-1 * var(--gutter));
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+    background: var(--canvas);
+  }
 }
 
 .main {
@@ -73,6 +92,35 @@
   flex-wrap: wrap;
   position: relative;
   z-index: 3;
+}
+@media (max-width: 1000px) {
+  /* Le pied de page reprend les liens masqués du header : empilés, centrés
+     (règles transverses + § header). */
+  .footer {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    padding-bottom: max(clamp(18px, 3vh, 34px), env(safe-area-inset-bottom));
+  }
+}
+
+/* ─── Rogne les halos (ci-dessous), jamais le reste de la page ─── */
+.haloClip {
+  display: contents;
+}
+@media (max-width: 1000px) {
+  /* .page ne peut plus faire ce clip lui-même sous 1000px (cf. commentaire
+     sur .page) : les halos oversized ont donc leur propre boîte de clip,
+     sœur de .rail, qui ne contient aucun contenu collant/défilant. */
+  .haloClip {
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 /* ─── Voiles de fond : pleine page, jamais découpés (piège §15.5) ─── */
@@ -106,6 +154,13 @@
   pointer-events: none;
   z-index: 0;
   background: radial-gradient(closest-side, rgba(15, 190, 182, 0.13), transparent 72%);
+}
+/* Halos décoratifs : réduits de moitié sous 700px, sinon ils saturent un
+   petit écran (cf. règles transverses). */
+@media (max-width: 700px) {
+  .auraWarm { top: -190px; right: -160px; width: 590px; height: 510px; }
+  .auraWarmCenter { top: -210px; width: 700px; height: 500px; }
+  .auraCool { bottom: -210px; left: -140px; width: 410px; height: 380px; }
 }
 
 /* ─── Typographie ─── */
@@ -141,6 +196,11 @@
 @media (min-width: 1001px) and (max-height: 760px) {
   .h1Accueil { font-size: clamp(28px, 2.2vw + 0.9vh, 46px); }
 }
+@media (max-width: 1000px) {
+  /* Mobile : jamais de tassement par largeur en "ch" (dépend de la police),
+     un simple clamp en vw suffit et couvre tous les mobiles jusqu'à l'iPad. */
+  .h1Accueil { font-size: clamp(30px, 8.5vw, 44px); max-width: 100%; }
+}
 
 /* ─── Apparition au chargement (pas au scroll — rien ne défile) ─── */
 @keyframes reveal {
@@ -148,7 +208,15 @@
   to { opacity: 1; transform: none; }
 }
 .reveal {
-  animation: reveal 700ms cubic-bezier(0.2, 0.75, 0.3, 1) both;
+  /* fill-mode "backwards" (pas "both") : tient l'état de départ pendant le
+     délai (évite le flash avant l'animation), mais rend la main à la valeur
+     statique (transform:none, hors animation) une fois terminée. Avec
+     "both"/"forwards", Chrome garde un transform animé "figé" (matrix
+     identité, jamais littéralement "none") qui crée un bloc englobant
+     parasite pour tout descendant position:sticky/fixed (piège CSS connu) —
+     ici, la barre collante de /simulation et /liste-attente ne se
+     "décollait" jamais, immobile au défilement. Rendu final identique. */
+  animation: reveal 700ms cubic-bezier(0.2, 0.75, 0.3, 1) backwards;
 }
 .reveal:nth-child(1) { animation-delay: 0ms; }
 .reveal:nth-child(2) { animation-delay: 30ms; }
@@ -187,27 +255,6 @@
 .mcolOffset {
   margin-top: 64px;
 }
-@media (max-width: 1000px) {
-  /* Sur mobile la page défile déjà (cf. .page) : plus besoin de forcer une
-     hauteur fixe ni de masquer/rogner — les 4 tuiles s'affichent en entier,
-     sinon la moitié de la mosaïque (dont la tuile verrouillée qui montre le
-     modèle économique) disparaissait purement et simplement. Doit venir
-     APRÈS les règles de base ci-dessus : même sélecteur, l'ordre de
-     déclaration tranche à spécificité égale, peu importe le media query. */
-  .scene {
-    height: auto;
-    max-width: 560px; /* pleine largeur sur téléphone (rail < 560px), plafonné sur tablette */
-    overflow: visible;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-  .mos { position: static; inset: auto; }
-  .mcolOffset { margin-top: 0; }
-  /* Doublons desktop (remplissage du fondu haut/bas) : invisibles sur mobile,
-     où la mosaïque s'affiche en entier sans rognage — sinon même photo deux fois. */
-  .hideMobile { display: none; }
-}
-
 .tile {
   position: relative;
   border-radius: 18px;
@@ -216,7 +263,9 @@
   box-shadow: 0 16px 34px -20px rgba(22, 19, 32, 0.34), 0 0 0 1px rgba(22, 19, 32, 0.04);
   transition: transform 500ms ease;
 }
-.tile:hover { transform: scale(1.05); }
+@media (hover: hover) {
+  .tile:hover { transform: scale(1.05); }
+}
 @media (prefers-reduced-motion: reduce) {
   .tile { transition: none; }
   .tile:hover { transform: none; }
@@ -224,6 +273,48 @@
 .r34 { aspect-ratio: 3 / 4; }
 .r11 { aspect-ratio: 1 / 1; }
 .r45 { aspect-ratio: 4 / 5; }
+
+@media (max-width: 1000px) {
+  /* Sur mobile la mosaïque devient un rail horizontal à défilement (snap),
+     plein écran (débord via --gutter négatif, cf. .rail). Doit être déclaré
+     APRÈS .r34/.r11/.r45 ci-dessus : même sélecteur .tile, même spécificité,
+     l'ordre de déclaration tranche — sinon le ratio par tuile regagne. */
+  .scene {
+    height: auto;
+    max-width: none;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .mos {
+    position: static;
+    inset: auto;
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    overflow-y: visible;
+    gap: 12px;
+    scroll-snap-type: x mandatory;
+    padding: 4px var(--gutter);
+    margin: -4px calc(-1 * var(--gutter));
+    scrollbar-width: none;
+    /* Fondu horizontal à droite : signale qu'on peut faire défiler (remplace
+       le fondu vertical desktop, inutile ici puisque rien n'est rogné). */
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
+  }
+  .mos::-webkit-scrollbar { display: none; }
+  .mcol { display: contents; }
+  .mcolOffset { margin-top: 0; }
+  .tile {
+    flex: 0 0 62vw;
+    aspect-ratio: 3 / 4;
+    scroll-snap-align: start;
+  }
+  /* Doublons desktop (remplissage du fondu haut/bas) : inutiles ici, le rail
+     n'affiche qu'un exemplaire de chaque photo. */
+  .hideMobile { display: none; }
+}
 
 .tileArt { position: absolute; inset: 0; }
 .tileVeil {
@@ -308,7 +399,7 @@
 }
 .field input::placeholder { color: var(--ink-3); }
 @media (max-width: 520px) {
-  .field { flex-direction: column; border-radius: 26px; padding: 8px; }
+  .field { flex-direction: column; border-radius: 20px; padding: 8px; }
   .field input { width: 100%; text-align: center; }
   .field button { width: 100%; }
 }
@@ -343,6 +434,14 @@
   box-shadow: 0 3px 9px rgba(22, 19, 32, 0.24);
   cursor: pointer;
 }
+@media (max-width: 1000px) {
+  /* Zone tactile du pouce : 20px est trop petit au doigt (règles transverses,
+     cible ≥ 28px) — on agrandit le thumb lui-même plutôt qu'un ::before
+     transparent, un <input type=range> n'exposant pas de pseudo-élément
+     positionnable indépendamment de son thumb natif. */
+  .range::-webkit-slider-thumb { width: 28px; height: 28px; }
+  .range::-moz-range-thumb { width: 28px; height: 28px; }
+}
 
 /* ─── Démo produit interactive (Arcade, page /fonctionnement) ─── */
 /* .page bloque tout défilement desktop (overflow:hidden, cf. §page) car les
@@ -350,14 +449,16 @@
    hauteur variable (ratio fixé par sa largeur, cf. .arcadeFrame) qui peut
    dépasser le viewport sur les écrans courts ou les fenêtres redimensionnées
    — sans ce override le bas de la démo est purement rogné, inaccessible.
-   Composé avec .page sur cette page uniquement : mêmes valeurs que le
-   fallback mobile de .page, mais actives à toutes les largeurs. Doit être
-   déclaré après .page (cascade, spécificité égale) pour gagner. */
-.pageArcade {
-  height: auto;
-  min-height: 100svh;
-  overflow-x: hidden;
-  overflow-y: visible;
+   Scopé à ≥1001px seulement : sous 1000px, .page gère déjà le défilement
+   (cf. §page) — dupliquer overflow-x:hidden ici casserait à nouveau
+   position:sticky (même piège que celui documenté sur .page). */
+@media (min-width: 1001px) {
+  .pageArcade {
+    height: auto;
+    min-height: 100svh;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
 }
 .arcadeFrame {
   position: relative;
@@ -371,6 +472,60 @@
 }
 @media (max-height: 800px) {
   .arcadeFrame { max-width: min(940px, 130vh); }
+}
+@media (max-width: 1000px) {
+  /* Pleine largeur sur mobile : marges latérales à 0 (débord via --gutter
+     négatif, cf. .rail), coins conservés à 14px fixe (pas de clamp). */
+  .arcadeFrame {
+    max-width: none;
+    margin-left: calc(-1 * var(--gutter));
+    margin-right: calc(-1 * var(--gutter));
+    border-radius: 14px;
+  }
+}
+
+/* ─── Barre collante mobile (montant /simulation, envoi /liste-attente) ───
+   position: sticky plutôt que fixed : reste dans le flux (aucun élément
+   suivant ne se retrouve masqué, cf. règles transverses) tout en restant
+   visible pendant qu'on manipule les curseurs / remplit les champs au-dessus. */
+.stickyBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+@media (max-width: 1000px) {
+  /* Pas de débord plein écran ici (contrairement à la mosaïque/vidéo) : la
+     barre vit dans une carte blanche à coins arrondis (cf. RevenueSlider /
+     WaitlistForm) — débordait, elle dépasserait de ces coins une fois
+     "décollée" au repos. Elle reste donc dans le padding horizontal de la
+     carte, seul le repère visuel (fond blanc + trait du haut) compte. */
+  .stickyBar {
+    background: #fff;
+    border-top: 1px solid var(--line);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ─── Nav mobile du footer : reprend les liens masqués du header (§ header) ─── */
+.footerNavMobile {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .footerNavMobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    order: -1;
+  }
+  .footerNavMobile a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 12px;
+  }
 }
 
 /* ─── Champ honeypot (anti-spam, invisible aux humains et aux lecteurs d'écran) ───

@@ -7,16 +7,19 @@ export type ButtonSize = "sm" | "md" | "lg";
 const BASE =
   "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100";
 
+// hover: gated par [@media(hover:hover)] plutôt que la pseudo-classe seule :
+// sur tactile, :hover reste "collé" après un tap tant qu'on n'a pas touché
+// ailleurs (règles transverses landing) — no-op sur desktop (souris = hover:hover).
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-brand text-white shadow-card hover:bg-brand-hover",
-  accent: "bg-accent text-white shadow-card hover:bg-accent-hover",
-  secondary: "border border-border bg-surface text-ink hover:border-border-strong",
-  "outline-light": "border border-white/25 bg-white/10 text-white hover:bg-white/20",
-  ghost: "text-ink-2 hover:text-ink",
+  primary: "bg-brand text-white shadow-card [@media(hover:hover)]:hover:bg-brand-hover",
+  accent: "bg-accent text-white shadow-card [@media(hover:hover)]:hover:bg-accent-hover",
+  secondary: "border border-border bg-surface text-ink [@media(hover:hover)]:hover:border-border-strong",
+  "outline-light": "border border-white/25 bg-white/10 text-white [@media(hover:hover)]:hover:bg-white/20",
+  ghost: "text-ink-2 [@media(hover:hover)]:hover:text-ink",
   // Dégradé signature (--sunset) : réservé aux CTA principaux de la landing (cf. HANDOFF §4 règle 1).
   sunset:
-    "bg-[image:var(--sunset)] text-white shadow-[0_10px_26px_-9px_rgba(255,90,31,0.6)] hover:brightness-105 hover:-translate-y-px",
-  dark: "bg-ink text-white hover:bg-[#2A2438] hover:-translate-y-px",
+    "bg-[image:var(--sunset)] text-white shadow-[0_10px_26px_-9px_rgba(255,90,31,0.6)] [@media(hover:hover)]:hover:brightness-105 [@media(hover:hover)]:hover:-translate-y-px",
+  dark: "bg-ink text-white [@media(hover:hover)]:hover:bg-[#2A2438] [@media(hover:hover)]:hover:-translate-y-px",
 };
 
 const SIZES: Record<ButtonSize, string> = {

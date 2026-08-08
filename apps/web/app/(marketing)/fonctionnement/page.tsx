@@ -14,8 +14,10 @@ export const metadata: Metadata = {
 export default function FonctionnementPage() {
   return (
     <div className={cx(styles.page, styles.pageArcade)}>
-      <span className={styles.auraWarmCenter} />
-      <span className={styles.auraCool} />
+      <div className={styles.haloClip}>
+        <span className={styles.auraWarmCenter} />
+        <span className={styles.auraCool} />
+      </div>
 
       <div className={styles.rail}>
         <Header current="fonctionnement" />

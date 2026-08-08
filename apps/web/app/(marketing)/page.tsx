@@ -17,8 +17,10 @@ export const metadata: Metadata = {
 export default function AccueilPage() {
   return (
     <div className={styles.page}>
-      <span className={styles.auraWarm} />
-      <span className={styles.auraCool} />
+      <div className={styles.haloClip}>
+        <span className={styles.auraWarm} />
+        <span className={styles.auraCool} />
+      </div>
 
       <div className={styles.rail}>
         <Header />
@@ -26,10 +28,10 @@ export default function AccueilPage() {
         <main
           className={cx(
             styles.main,
-            "grid items-stretch gap-[58px] py-4 min-[1000px]:grid-cols-[minmax(0,460px)_minmax(0,1fr)] min-[1000px]:gap-[clamp(60px,7vw,120px)]",
+            "grid items-stretch gap-10 py-4 min-[1000px]:grid-cols-[minmax(0,460px)_minmax(0,1fr)] min-[1000px]:gap-[clamp(60px,7vw,120px)]",
           )}
         >
-          <div className="flex flex-col justify-center">
+          <div className="min-w-0 flex flex-col justify-center">
             <h1 className={cx(styles.h1Accueil, styles.reveal, "font-display font-bold text-ink")}>
               Ouvrez la boutique photo de <span className={styles.gradText}>votre activité outdoor.</span>
             </h1>
@@ -45,14 +47,14 @@ export default function AccueilPage() {
             <p className={cx(styles.reveal, "ml-[9px] mt-[clamp(18px,3.2vh,30px)]")}>
               <Link
                 href="/fonctionnement"
-                className="border-b-[1.5px] border-line text-[13.5px] font-semibold text-ink transition hover:border-brand"
+                className="border-b-[1.5px] border-line text-[13.5px] font-semibold text-ink transition [@media(hover:hover)]:hover:border-brand"
               >
                 Voir le produit en vidéo <span aria-hidden="true">→</span>
               </Link>
             </p>
           </div>
 
-          <div className="min-h-0">
+          <div className="min-h-0 min-w-0">
             <PhotoMosaic />
           </div>
         </main>

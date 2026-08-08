@@ -59,7 +59,7 @@ export function RevenueSlider() {
   return (
     <>
       <div className="mx-auto w-full max-w-[880px] rounded-[clamp(18px,1.6vw,26px)] border border-line bg-white px-[clamp(20px,2.4vw,38px)] py-[clamp(20px,3vh,34px)] shadow-[0_30px_60px_-34px_rgba(22,19,32,0.34)]">
-        <div className="grid grid-cols-1 gap-x-[clamp(22px,3vw,44px)] gap-y-[clamp(14px,2vh,22px)] sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-[clamp(22px,3vw,44px)] gap-y-[clamp(14px,2vh,22px)] max-[999px]:gap-y-5 min-[1000px]:grid-cols-2">
           {SLIDERS.map((s) => {
             const value = values[s.id]!;
             const pct = ((value - s.min) / (s.max - s.min)) * 100;
@@ -85,10 +85,20 @@ export function RevenueSlider() {
           })}
         </div>
 
-        <div className="mt-[clamp(18px,2.8vh,30px)] flex flex-wrap items-end gap-5 border-t border-line pt-[clamp(16px,2.4vh,26px)]">
+        <div
+          className={cx(
+            styles.stickyBar,
+            "mt-[clamp(18px,2.8vh,30px)] flex flex-wrap items-end gap-5 border-t border-line pt-[clamp(16px,2.4vh,26px)]",
+          )}
+        >
           <div>
             <div className="text-[13.5px] text-ink-3">Ce que vous encaissez, par mois</div>
-            <div className={cx(styles.gradText, "mt-1 font-display text-[clamp(38px,3vw+1.4vh,68px)] font-bold leading-none tracking-tight")}>
+            <div
+              className={cx(
+                styles.gradText,
+                "mt-1 font-display text-[clamp(38px,3vw+1.4vh,68px)] font-bold leading-none tracking-tight max-[999px]:text-[clamp(32px,9vw,44px)]",
+              )}
+            >
               {eur(net)}
             </div>
           </div>

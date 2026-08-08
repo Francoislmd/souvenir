@@ -8,10 +8,13 @@ import { trackEvent } from "@/lib/marketing-analytics";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
+// text-base (16px) sous 1000px : en dessous, Safari iOS zoome au focus et casse la mise en page.
+const inputClassResponsive = cx(inputClass, "max-[999px]:text-base");
 const selectClass = cx(
   inputClass,
   "appearance-none cursor-pointer bg-no-repeat bg-[right_14px_center] pr-9",
   "bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2212%22%20height=%228%22%3E%3Cpath%20d=%22M1%201l5%205%205-5%22%20stroke=%22%238A8496%22%20stroke-width=%221.8%22%20fill=%22none%22%20stroke-linecap=%22round%22/%3E%3C/svg%3E')]",
+  "max-[999px]:text-base",
 );
 
 const ACTIVITIES = [
@@ -96,12 +99,18 @@ export function WaitlistForm({ initialEmail = "" }: WaitlistFormProps) {
 
   return (
     <div className={cardClass}>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-[clamp(14px,1.6vw,22px)] gap-y-[clamp(12px,1.8vh,18px)] sm:grid-cols-2">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-[clamp(14px,1.6vw,22px)] gap-y-[clamp(12px,1.8vh,18px)] min-[1000px]:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="wl-company" className="text-[12.5px] font-semibold text-ink-2">
             Votre structure
           </label>
-          <input id="wl-company" className={inputClass} placeholder="Grand Large Parapente" value={company} onChange={(e) => setCompany(e.target.value)} />
+          <input
+            id="wl-company"
+            className={inputClassResponsive}
+            placeholder="Grand Large Parapente"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -140,14 +149,16 @@ export function WaitlistForm({ initialEmail = "" }: WaitlistFormProps) {
             id="wl-email"
             type="email"
             required
-            className={inputClass}
+            inputMode="email"
+            autoComplete="email"
+            className={inputClassResponsive}
             placeholder="vous@structure.fr"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <div className="flex flex-col gap-1.5 min-[1000px]:col-span-2">
           <label htmlFor="wl-photo-usage" className="text-[12.5px] font-semibold text-ink-2">
             Aujourd&apos;hui, que faites-vous des photos de vos sorties&nbsp;?
           </label>
@@ -166,7 +177,7 @@ export function WaitlistForm({ initialEmail = "" }: WaitlistFormProps) {
           <input id="wl-website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
         </div>
 
-        <div className="sm:col-span-2">
+        <div className={cx(styles.stickyBar, "min-[1000px]:col-span-2")}>
           <Button type="submit" variant="sunset" size="lg" disabled={submitting} className="mt-1 w-full">
             {submitting ? "…" : <>Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span></>}
           </Button>
