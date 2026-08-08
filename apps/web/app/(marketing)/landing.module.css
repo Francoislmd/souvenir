@@ -345,6 +345,20 @@
 }
 
 /* ─── Démo produit interactive (Arcade, page /fonctionnement) ─── */
+/* .page bloque tout défilement desktop (overflow:hidden, cf. §page) car les
+   3 autres routes tiennent toujours sur un seul écran. L'embed Arcade a une
+   hauteur variable (ratio fixé par sa largeur, cf. .arcadeFrame) qui peut
+   dépasser le viewport sur les écrans courts ou les fenêtres redimensionnées
+   — sans ce override le bas de la démo est purement rogné, inaccessible.
+   Composé avec .page sur cette page uniquement : mêmes valeurs que le
+   fallback mobile de .page, mais actives à toutes les largeurs. Doit être
+   déclaré après .page (cascade, spécificité égale) pour gagner. */
+.pageArcade {
+  height: auto;
+  min-height: 100svh;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
 .arcadeFrame {
   position: relative;
   width: 100%;
