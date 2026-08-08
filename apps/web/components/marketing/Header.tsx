@@ -16,7 +16,7 @@ export function Header({ current }: HeaderProps) {
   return (
     <header className={styles.header}>
       <Link href="/" aria-label="Linktrip — accueil" className="flex items-center">
-        <Logo variant="lockup" height={30} />
+        <Logo variant="lockup" height={36} />
       </Link>
       <nav className={styles.headerLinks}>
         <Link
