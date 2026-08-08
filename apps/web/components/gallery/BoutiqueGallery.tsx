@@ -257,58 +257,60 @@ export function BoutiqueGallery({
         </div>
       ) : null}
 
-      <div className={styles.deck} ref={deckRef}>
-        {photos.map((photo, i) => {
-          const locked = isLocked(photo);
-          const on = selected.has(photo.id);
-          return (
-            <div
-              key={photo.id}
-              className={`${styles.slide} ${on ? styles.on : ""}`}
-              onClick={() => {
-                setCur(i);
-                toggle(photo.id);
-              }}
-            >
-              {photo.previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.previewUrl} alt="" className={styles["slide-img"]} />
-              ) : null}
-              {locked ? (
-                <span className={styles.lock} aria-hidden="true">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="11" width="14" height="10" rx="2" />
-                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                  </svg>
-                </span>
-              ) : null}
-              {photo.isFreeSample ? <span className={styles.tag}>Offerte</span> : null}
-              <span className={styles.grad} />
-              <span className={styles.num}>
-                {i + 1} / {photos.length}
-              </span>
-              <span className={styles.chosen}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-                Choisie
-              </span>
-              <button
-                type="button"
-                aria-label="Agrandir"
-                className={styles.zoom}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightbox(i);
+      <div className={styles.deckWrap}>
+        <div className={styles.deck} ref={deckRef}>
+          {photos.map((photo, i) => {
+            const locked = isLocked(photo);
+            const on = selected.has(photo.id);
+            return (
+              <div
+                key={photo.id}
+                className={`${styles.slide} ${on ? styles.on : ""}`}
+                onClick={() => {
+                  setCur(i);
+                  toggle(photo.id);
                 }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round">
-                  <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
-                </svg>
-              </button>
-            </div>
-          );
-        })}
+                {photo.previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photo.previewUrl} alt="" className={styles["slide-img"]} />
+                ) : null}
+                {locked ? (
+                  <span className={styles.lock} aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="11" width="14" height="10" rx="2" />
+                      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                    </svg>
+                  </span>
+                ) : null}
+                {photo.isFreeSample ? <span className={styles.tag}>Offerte</span> : null}
+                <span className={styles.grad} />
+                <span className={styles.num}>
+                  {i + 1} / {photos.length}
+                </span>
+                <span className={styles.chosen}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  Choisie
+                </span>
+                <button
+                  type="button"
+                  aria-label="Agrandir"
+                  className={styles.zoom}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightbox(i);
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round">
+                    <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
+                  </svg>
+                </button>
+              </div>
+            );
+          })}
+        </div>
         {photos.length > 1 ? (
           <>
             <button type="button" className={`${styles.navArrow} ${styles.prev}`} aria-label="Photo précédente" onClick={() => goTo((curRef.current - 1 + photos.length) % photos.length)}>

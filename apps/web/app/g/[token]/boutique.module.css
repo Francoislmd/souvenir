@@ -999,8 +999,9 @@
     padding-left: 0;
     padding-right: 0;
   }
-  .deck {
+  .deckWrap {
     grid-area: deck;
+    position: relative;
   }
   .film {
     grid-area: film;
@@ -1028,7 +1029,6 @@
   }
 
   .deck {
-    position: relative;
     padding: 0;
   }
   .slide {
