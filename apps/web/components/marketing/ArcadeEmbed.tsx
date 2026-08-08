@@ -1,14 +1,14 @@
 import styles from "@/app/(marketing)/landing.module.css";
 
-const ARCADE_SRC = "https://demo.arcade.software/XiV6muU0BY6QMpsQBZZw?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true";
+const ARCADE_SRC = "https://demo.arcade.software/bPkIR0jKiJ7fvxzUNK0e?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true";
 
 export function ArcadeEmbed() {
   return (
     <div className={styles.arcadeFrame}>
-      <div style={{ position: "relative", paddingBottom: "calc(53.0994% + 41px)", height: 0, width: "100%" }}>
+      <div style={{ position: "relative", paddingBottom: "calc(53.0409% + 41px)", height: 0, width: "100%" }}>
         <iframe
           src={ARCADE_SRC}
-          title="Acheter et télécharger les photos d'une activité"
+          title="Acheter et télécharger toutes les photos de son activité"
           frameBorder={0}
           loading="lazy"
           allowFullScreen
