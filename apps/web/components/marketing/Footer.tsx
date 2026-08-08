@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { ButtonLink } from "@/components/ui/Button";
 import styles from "@/app/(marketing)/landing.module.css";
 
 interface FooterProps {
-  /** "accueil" : trois liens à droite. "fonctionnement" : CTA + mention. "default" : simple mention, rien à gauche. */
-  variant?: "accueil" | "fonctionnement" | "default";
+  /** "accueil" : trois liens à droite. "default" : simple mention, rien à gauche. */
+  variant?: "accueil" | "default";
 }
 
 export function Footer({ variant = "default" }: FooterProps) {
@@ -22,17 +21,6 @@ export function Footer({ variant = "default" }: FooterProps) {
             Nous écrire
           </a>
         </div>
-      </footer>
-    );
-  }
-
-  if (variant === "fonctionnement") {
-    return (
-      <footer className={styles.footer}>
-        <ButtonLink href="/" variant="dark" size="md">
-          Ouvrir ma boutique <span aria-hidden="true">→</span>
-        </ButtonLink>
-        <span className="text-[13.5px] text-ink-3">Sans matériel ni&nbsp;abonnement.&nbsp;🇪🇺</span>
       </footer>
     );
   }

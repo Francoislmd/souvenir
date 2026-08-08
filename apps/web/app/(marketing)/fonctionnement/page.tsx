@@ -33,7 +33,7 @@ export default function FonctionnementPage() {
           <ArcadeEmbed />
         </main>
 
-        <Footer variant="fonctionnement" />
+        <Footer />
       </div>
     </div>
   );
