@@ -35,7 +35,7 @@ export default function AccueilPage() {
             </h1>
             <p className={cx(styles.reveal, "mt-[clamp(14px,2vh,24px)] max-w-[470px] text-[clamp(15px,0.6vw+0.7vh,17.5px)] leading-[1.55] text-ink-2")}>
               Chaque sortie devient une boutique en ligne&nbsp;: vos clients y retrouvent leurs photos et achètent
-              celles qu&apos;ils veulent. Vous encaissez, sans matériel ni&nbsp;abonnement.&nbsp;🇪🇺
+              celles qu&apos;ils veulent. Vous encaissez, sans matériel ni&nbsp;abonnement.
             </p>
 
             <div className={cx(styles.reveal, "mt-[clamp(20px,3.4vh,36px)]")}>

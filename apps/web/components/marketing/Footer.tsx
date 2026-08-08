@@ -27,7 +27,7 @@ export function Footer({ variant = "default" }: FooterProps) {
 
   return (
     <footer className={styles.footer}>
-      <span className="text-[13.5px] text-ink-3">Sans matériel ni&nbsp;abonnement.&nbsp;🇪🇺</span>
+      <span className="text-[13.5px] text-ink-3">Sans matériel ni&nbsp;abonnement.</span>
     </footer>
   );
 }
