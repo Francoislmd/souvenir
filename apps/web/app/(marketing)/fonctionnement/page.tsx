@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function FonctionnementPage() {
   return (
-    <div className={cx(styles.page, styles.pageArcade)}>
+    <div className={styles.page}>
       <div className={styles.haloClip}>
         <span className={styles.auraWarmCenter} />
         <span className={styles.auraCool} />
@@ -34,9 +34,9 @@ export default function FonctionnementPage() {
 
           <ArcadeEmbed />
         </main>
-
-        <Footer />
       </div>
+
+      <Footer />
     </div>
   );
 }

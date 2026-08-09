@@ -37,9 +37,9 @@ export default function ListeAttentePage({ searchParams }: ListeAttentePageProps
             <WaitlistForm initialEmail={searchParams.email} />
           </div>
         </main>
-
-        <Footer />
       </div>
+
+      <Footer />
     </div>
   );
 }

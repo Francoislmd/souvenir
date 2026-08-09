@@ -69,9 +69,9 @@ export default function AccueilPage() {
             <PhotoMosaic />
           </div>
         </main>
-
-        <Footer variant="accueil" />
       </div>
+
+      <Footer />
     </div>
   );
 }

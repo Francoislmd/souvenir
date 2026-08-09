@@ -1,29 +1,27 @@
-/* Landing pré-lancement (4 routes, une par écran) — cf. HANDOFF-landing-linktrip.md.
+/* Landing pré-lancement (4 routes) — cf. HANDOFF-landing-linktrip.md et
+   SPEC-footer-linktrip.md (§0 : le contenu principal tient sur 100svh, seul
+   le pied de page vit sous la ligne de flottaison — plus jamais de page
+   totalement bloquée en défilement, cf. .page ci-dessous).
    Tout ce qui est exprimable proprement en Tailwind vit dans les pages/composants ;
    ce module ne porte que ce que Tailwind ne sait pas faire : la chaîne min-height:0,
    le mask-image de la mosaïque, le clamp() vw+vh, les pseudo-éléments de <input type=range>. */
 
 .page {
   position: relative;
-  height: 100svh;
-  overflow: hidden;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
+  /* Porté par .page (pas .rail) : le pied de page (SPEC §1) est un frère de
+     .rail à l'intérieur de .page et a besoin de la même valeur pour son
+     débord pleine largeur — une variable CSS ne franchit pas les frères,
+     seulement les descendants d'un ancêtre commun. */
+  --gutter: 46px;
 }
-@media (max-width: 1000px) {
-  .page {
-    height: auto;
-    min-height: 100svh;
-    /* Défilement vertical réactivé. PAS de overflow-x:hidden ici : un axe
-       non-"visible" force silencieusement l'autre à passer en "auto" (règle
-       CSS de résolution des overflow mixtes), ce qui transforme .page en
-       conteneur de défilement — et casse position:sticky de TOUS ses
-       descendants (header, barres collantes), qui restent alors immobiles
-       au lieu de se coller au viewport. Le clip horizontal des halos se
-       fait maintenant sur .haloClip, un wrapper dédié qui ne porte aucun
-       contenu scrollable/collant (cf. .haloClip ci-dessous). */
-    overflow: visible;
-  }
+@media (max-width: 1280px) {
+  .page { --gutter: 34px; }
+}
+@media (max-width: 700px) {
+  .page { --gutter: 20px; }
 }
 
 .rail {
@@ -36,14 +34,7 @@
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
-  --gutter: 46px;
   padding: 0 var(--gutter);
-}
-@media (max-width: 1280px) {
-  .rail { --gutter: 34px; padding: 0 var(--gutter); }
-}
-@media (max-width: 700px) {
-  .rail { --gutter: 20px; padding: 0 var(--gutter); }
 }
 
 .header {
@@ -146,44 +137,19 @@
   min-height: 0;
 }
 
-.footer {
-  flex-shrink: 0;
-  padding: clamp(14px, 2.2vh, 24px) 0 clamp(18px, 3vh, 34px);
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  position: relative;
-  z-index: 3;
-}
-@media (max-width: 1000px) {
-  /* Le pied de page reprend les liens masqués du header : empilés, centrés
-     (règles transverses + § header). */
-  .footer {
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    gap: 10px;
-    padding-bottom: max(clamp(18px, 3vh, 34px), env(safe-area-inset-bottom));
-  }
-}
-
-/* ─── Rogne les halos (ci-dessous), jamais le reste de la page ─── */
+/* ─── Rogne les halos (ci-dessous), jamais le reste de la page ───
+   .page ne peut pas faire ce clip lui-même (overflow-x seul forcerait
+   silencieusement overflow-y à "auto" — règle CSS de résolution des overflow
+   mixtes — ce qui romprait position:sticky sur TOUS ses descendants : header,
+   barres collantes, restent alors immobiles au lieu de se coller au
+   viewport). Les halos oversized ont donc leur propre boîte de clip, sœur de
+   .rail, qui ne contient aucun contenu collant/défilant. */
 .haloClip {
-  display: contents;
-}
-@media (max-width: 1000px) {
-  /* .page ne peut plus faire ce clip lui-même sous 1000px (cf. commentaire
-     sur .page) : les halos oversized ont donc leur propre boîte de clip,
-     sœur de .rail, qui ne contient aucun contenu collant/défilant. */
-  .haloClip {
-    display: block;
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 0;
-  }
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ─── Voiles de fond : pleine page, jamais découpés (piège §15.5) ─── */
@@ -554,23 +520,12 @@
   .range::-moz-range-thumb { width: 28px; height: 28px; }
 }
 
-/* ─── Démo produit interactive (Arcade, page /fonctionnement) ─── */
-/* .page bloque tout défilement desktop (overflow:hidden, cf. §page) car les
-   3 autres routes tiennent toujours sur un seul écran. L'embed Arcade a une
-   hauteur variable (ratio fixé par sa largeur, cf. .arcadeFrame) qui peut
-   dépasser le viewport sur les écrans courts ou les fenêtres redimensionnées
-   — sans ce override le bas de la démo est purement rogné, inaccessible.
-   Scopé à ≥1001px seulement : sous 1000px, .page gère déjà le défilement
-   (cf. §page) — dupliquer overflow-x:hidden ici casserait à nouveau
-   position:sticky (même piège que celui documenté sur .page). */
-@media (min-width: 1001px) {
-  .pageArcade {
-    height: auto;
-    min-height: 100svh;
-    overflow-x: hidden;
-    overflow-y: visible;
-  }
-}
+/* ─── Démo produit interactive (Arcade, page /fonctionnement) ───
+   .page permet déjà le défilement à toutes les tailles (cf. §page) : l'embed
+   Arcade, à hauteur variable (ratio fixé par sa largeur, cf. .arcadeFrame),
+   n'a donc plus besoin d'un override dédié pour rester accessible sur les
+   écrans courts — il pousse simplement la page en dessous de 100svh comme le
+   reste du contenu. */
 .arcadeFrame {
   position: relative;
   width: 100%;
@@ -614,28 +569,6 @@
     background: #fff;
     border-top: 1px solid var(--line);
     padding-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-}
-
-/* ─── Nav mobile du footer : reprend les liens masqués du header (§ header) ─── */
-.footerNavMobile {
-  display: none;
-}
-@media (max-width: 1000px) {
-  .footerNavMobile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-    order: -1;
-  }
-  .footerNavMobile a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 0 12px;
   }
 }
 

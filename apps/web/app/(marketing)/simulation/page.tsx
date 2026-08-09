@@ -36,9 +36,9 @@ export default function SimulationPage() {
             <RevenueSlider />
           </div>
         </main>
-
-        <Footer />
       </div>
+
+      <Footer />
     </div>
   );
 }
