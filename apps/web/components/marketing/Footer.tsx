@@ -14,13 +14,23 @@ export function Footer({ variant = "default" }: FooterProps) {
   if (variant === "accueil") {
     return (
       <footer className={styles.footer}>
-        <div className="flex flex-wrap justify-center gap-7 text-sm text-ink-3 min-[1000px]:ml-auto min-[1000px]:justify-start">
+        <span className="text-[13px] text-ink-3/70">© {new Date().getFullYear()} Linktrip</span>
+        <div className="flex flex-wrap justify-center gap-x-7 gap-y-2 text-sm text-ink-3 min-[1000px]:ml-auto min-[1000px]:justify-start">
           <Link href="/fonctionnement" className={linkClass}>
             Fonctionnement
           </Link>
           {/* Masqué en desktop : déjà dans la nav du header là où elle reste visible (§ header). */}
           <Link href="/simulation" className={cx(linkClass, "min-[1000px]:hidden")}>
             Simulation
+          </Link>
+          <Link href="/mentions-legales" className={linkClass}>
+            Mentions légales
+          </Link>
+          <Link href="/cgu" className={linkClass}>
+            CGU
+          </Link>
+          <Link href="/cgv" className={linkClass}>
+            CGV
           </Link>
           <Link href="/confidentialite" className={linkClass}>
             Confidentialité
