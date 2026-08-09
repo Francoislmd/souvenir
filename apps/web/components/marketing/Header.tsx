@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
@@ -12,42 +15,79 @@ interface HeaderProps {
   current?: MarketingRoute;
 }
 
+const NAV_LINKS: { href: string; label: string; route: MarketingRoute }[] = [
+  { href: "/fonctionnement", label: "Fonctionnement", route: "fonctionnement" },
+  { href: "/simulation", label: "Simulation", route: "simulation" },
+];
+
 export function Header({ current }: HeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className={styles.header}>
+    <header className={cx(styles.header, scrolled && styles.headerScrolled)}>
       <Link href="/" aria-label="Linktrip — accueil" className="flex items-center">
         <Logo variant="lockup" height={36} />
       </Link>
       <nav className={styles.headerLinks}>
-        <Link
-          href="/fonctionnement"
-          className={cx(
-            "text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink",
-            current === "fonctionnement" && "font-semibold text-ink",
-          )}
+        {NAV_LINKS.map(({ href, label, route }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cx(
+              "text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink",
+              current === route && "font-semibold text-ink",
+            )}
+          >
+            {label}
+          </Link>
+        ))}
+        <button
+          type="button"
+          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-nav-menu"
+          onClick={() => setMenuOpen((open) => !open)}
+          className={styles.menuToggle}
         >
-          Fonctionnement
-        </Link>
-        <Link
-          href="/simulation"
-          className={cx(
-            "text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink",
-            current === "simulation" && "font-semibold text-ink",
-          )}
-        >
-          Simulation
-        </Link>
-        <ButtonLink
-          href="/liste-attente"
-          variant="sunset"
-          size="md"
-          className={cx(styles.headerCta, "max-[420px]:h-10 max-[420px]:px-3 max-[420px]:text-xs")}
-        >
-          <span className="max-[699px]:hidden">Rejoindre la liste d&apos;attente</span>
-          <span className="hidden max-[699px]:inline">Rejoindre</span>
-          <span aria-hidden="true">→</span>
+          <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+        </button>
+        <ButtonLink href="/liste-attente" variant="sunset" size="md" className={styles.headerCta}>
+          Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
         </ButtonLink>
       </nav>
+
+      {menuOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Fermer le menu"
+            className={styles.menuBackdrop}
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav id="mobile-nav-menu" className={styles.menuPanel}>
+            {NAV_LINKS.map(({ href, label, route }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className={cx(current === route && "font-semibold text-ink")}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </>
+      )}
     </header>
   );
 }

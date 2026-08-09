@@ -78,14 +78,14 @@ export function Logo({
       ) : variant === "stacked" ? (
         <>
           <g transform="translate(43.5 0)">
-            <path d={FRAME} fill="none" stroke={ink} strokeWidth={8} strokeLinecap="round" />
+            <path d={FRAME} fill="none" stroke={dot} strokeWidth={8} strokeLinecap="round" />
             <circle cx={73} cy={27} r={11} fill={dot} />
           </g>
           <path d={WORD_V} fill={ink} />
         </>
       ) : (
         <>
-          <path d={FRAME} fill="none" stroke={ink} strokeWidth={8} strokeLinecap="round" />
+          <path d={FRAME} fill="none" stroke={dot} strokeWidth={8} strokeLinecap="round" />
           <circle cx={73} cy={27} r={11} fill={dot} />
           {variant === "lockup" && <path d={WORD_H} fill={ink} />}
         </>
