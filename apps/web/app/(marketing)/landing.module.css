@@ -28,7 +28,13 @@
   position: relative;
   z-index: 2;
   flex: 1;
-  min-height: 0;
+  /* Plancher explicite, pas seulement flex:1 : .page n'a qu'un min-height
+     (pas une hauteur fixe), donc flex-grow ne distribue de l'espace que si
+     le contenu naturel (rail + pied) est plus court que ce plancher — or le
+     pied à 4 colonnes (SPEC) est à lui seul assez haut pour que ce ne soit
+     quasiment jamais le cas, et le pied "remontait" dans le premier écran.
+     .rail garantit donc lui-même ses 100svh, indépendamment du pied. */
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -38,11 +44,29 @@
 }
 
 .header {
+  /* Collant à toutes les tailles désormais : les pages défilent sur toutes
+     les largeurs (cf. .page/.rail ci-dessus), pas seulement en mobile — le
+     header doit donc rester visible pendant qu'on défile jusqu'au pied.
+     Débord pleine largeur (marge négative + padding = gutter) pour que le
+     fond, une fois opaque au défilement, ne laisse pas de bande transparente
+     dans les gouttières. */
+  position: sticky;
+  top: 0;
+  z-index: 20;
   flex-shrink: 0;
-  padding: clamp(18px, 3vh, 30px) 0 0;
+  padding: clamp(14px, 2.4vh, 22px) 0;
+  margin: 0 calc(-1 * var(--gutter));
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
   display: flex;
   align-items: center;
   gap: 28px;
+  background: transparent;
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+.headerScrolled {
+  background: var(--canvas);
+  box-shadow: 0 1px 0 var(--line);
 }
 .headerLinks {
   display: flex;
@@ -74,28 +98,17 @@
   /* CTA "Rejoindre" retiré du header sur mobile — le formulaire e-mail du
      hero (et le menu déroulant pour la nav) suffisent, header allégé. */
   .headerCta { display: none; }
-  /* Header collant, transparent tant qu'on est en haut de page (le halo/hero
-     se lit à travers), puis fond opaque dès qu'on défile — .headerScrolled
-     est piloté en JS (scrollY, cf. Header.tsx) et doit être déclaré APRÈS
-     .header : même sélecteur visé simultanément, même spécificité, l'ordre
-     de déclaration tranche. Jamais de backdrop-filter (coûteux et instable
-     au scroll sur Safari iOS) : le fond doit rester une couleur pleine une
-     fois opaque, pour rester lisible en toute circonstance. */
+  /* Barre compacte en mobile seulement (60px fixe) ; le collant + le fond au
+     défilement sont déjà portés par .header/.headerScrolled à toutes les
+     tailles ci-dessus — .headerScrolled est piloté en JS (scrollY, cf.
+     Header.tsx), jamais de backdrop-filter (coûteux et instable au scroll
+     sur Safari iOS) : le fond doit rester une couleur pleine une fois
+     opaque, pour rester lisible en toute circonstance. */
   .header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
     height: 60px;
     padding: 0;
-    margin: 0 calc(-1 * var(--gutter));
     padding-left: var(--gutter);
     padding-right: var(--gutter);
-    background: transparent;
-    transition: background-color 200ms ease, box-shadow 200ms ease;
-  }
-  .headerScrolled {
-    background: var(--canvas);
-    box-shadow: 0 1px 0 var(--line);
   }
   .menuToggle { display: inline-flex; }
   /* Panneau ancré au header (position:sticky = contexte de positionnement) :
