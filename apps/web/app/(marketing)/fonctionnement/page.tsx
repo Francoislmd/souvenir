@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
 import { ArcadeEmbed } from "@/components/marketing/ArcadeEmbed";
+import { ButtonLink } from "@/components/ui/Button";
 import styles from "../landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -22,8 +23,8 @@ export default function FonctionnementPage() {
       <div className={styles.rail}>
         <Header current="fonctionnement" />
 
-        <main className={cx(styles.main, "flex flex-col justify-center py-4")}>
-          <div className="mx-auto max-w-[760px] pt-[clamp(8px,2vh,22px)] text-center">
+        <main className={cx(styles.main, "flex flex-col justify-center py-4 max-[999px]:justify-start max-[999px]:pt-[52px]")}>
+          <div className="mx-auto max-w-[760px] pt-[clamp(8px,2vh,22px)] text-center max-[999px]:pt-0">
             <h1 className={cx(styles.h1Video, styles.reveal, "font-display font-bold text-ink")}>
               De la fin de la sortie <span className={styles.gradText}>au premier encaissement.</span>
             </h1>
@@ -33,6 +34,15 @@ export default function FonctionnementPage() {
           </div>
 
           <ArcadeEmbed />
+
+          {/* CTA repris du header (masqué sur mobile, cf. .headerCta) : sans lui,
+              un visiteur mobile n'a aucun accès direct à la liste d'attente
+              depuis cette page hors menu déroulant. */}
+          <div className={cx(styles.reveal, "hidden text-center max-[999px]:mt-7 max-[999px]:block")}>
+            <ButtonLink href="/liste-attente" variant="sunset" size="lg">
+              Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
+            </ButtonLink>
+          </div>
         </main>
       </div>
 

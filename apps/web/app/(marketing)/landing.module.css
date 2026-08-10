@@ -44,14 +44,12 @@
 }
 
 .header {
-  /* Collant à toutes les tailles désormais : les pages défilent sur toutes
-     les largeurs (cf. .page/.rail ci-dessus), pas seulement en mobile — le
-     header doit donc rester visible pendant qu'on défile jusqu'au pied.
+  /* Collant seulement en mobile (cf. media query 1000px ci-dessous) : sur
+     desktop le header défile avec la page, pas de position:sticky.
      Débord pleine largeur (marge négative + padding = gutter) pour que le
      fond, une fois opaque au défilement, ne laisse pas de bande transparente
      dans les gouttières. */
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 20;
   flex-shrink: 0;
   padding: clamp(14px, 2.4vh, 22px) 0;
@@ -63,10 +61,6 @@
   gap: 28px;
   background: transparent;
   transition: background-color 200ms ease, box-shadow 200ms ease;
-}
-.headerScrolled {
-  background: var(--canvas);
-  box-shadow: 0 1px 0 var(--line);
 }
 .headerLinks {
   display: flex;
@@ -98,17 +92,26 @@
   /* CTA "Rejoindre" retiré du header sur mobile — le formulaire e-mail du
      hero (et le menu déroulant pour la nav) suffisent, header allégé. */
   .headerCta { display: none; }
-  /* Barre compacte en mobile seulement (60px fixe) ; le collant + le fond au
-     défilement sont déjà portés par .header/.headerScrolled à toutes les
-     tailles ci-dessus — .headerScrolled est piloté en JS (scrollY, cf.
-     Header.tsx), jamais de backdrop-filter (coûteux et instable au scroll
-     sur Safari iOS) : le fond doit rester une couleur pleine une fois
-     opaque, pour rester lisible en toute circonstance. */
+  /* Barre compacte en mobile seulement (60px fixe), collante — le fond
+     opaque au défilement n'a donc de sens qu'ici : sur desktop le header
+     est position:static (défile avec la page, cf. .header ci-dessus) et
+     doit rester transparent même une fois scrollé, sinon une bande blanche
+     apparaît alors que le header n'est pas fixé à l'écran. .headerScrolled
+     est piloté en JS (scrollY, cf. Header.tsx), jamais de backdrop-filter
+     (coûteux et instable au scroll sur Safari iOS) : le fond doit rester
+     une couleur pleine une fois opaque, pour rester lisible en toute
+     circonstance. */
   .header {
+    position: sticky;
+    top: 0;
     height: 60px;
     padding: 0;
     padding-left: var(--gutter);
     padding-right: var(--gutter);
+  }
+  .headerScrolled {
+    background: var(--canvas);
+    box-shadow: 0 1px 0 var(--line);
   }
   .menuToggle { display: inline-flex; }
   /* Panneau ancré au header (position:sticky = contexte de positionnement) :
@@ -437,7 +440,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: 530px;
+  max-width: 500px;
   background: #fff;
   border: 1.5px solid var(--ink);
   border-radius: 99px;
@@ -451,7 +454,7 @@
   background: transparent;
   border: 0;
   outline: none;
-  padding: clamp(11px, 1.6vh, 14px) 16px;
+  padding: clamp(11px, 1.6vh, 14px) 12px;
 }
 .field input::placeholder { color: var(--ink-3); }
 @media (max-width: 1000px) {
