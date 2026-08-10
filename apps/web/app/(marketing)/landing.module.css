@@ -557,8 +557,13 @@
 }
 @media (max-width: 1000px) {
   /* Pleine largeur sur mobile : marges latérales à 0 (débord via --gutter
-     négatif, cf. .rail), coins conservés à 14px fixe (pas de clamp). */
+     négatif, cf. .rail), coins conservés à 14px fixe (pas de clamp).
+     width doit passer à auto : la valeur de base (100%) se résout à la
+     largeur du contenu déjà réduite par le padding de .rail, donc les
+     marges négatives ne faisaient alors que décaler le cadre vers la
+     gauche sans l'étendre — bord droit en retrait de 2×gutter, cadre visuellement décentré. */
   .arcadeFrame {
+    width: auto;
     max-width: none;
     margin-left: calc(-1 * var(--gutter));
     margin-right: calc(-1 * var(--gutter));
