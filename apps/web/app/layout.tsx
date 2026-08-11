@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight } from "next/font/google";
 import { env } from "@/lib/env";
+import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/GoogleTagManager";
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
+import { CookieBanner } from "@/components/analytics/CookieBanner";
 import "./globals.css";
 import "@/styles/tokens.css";
 
@@ -55,7 +58,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${interTight.variable} ${inter.variable}`}>
-      <body className="antialiased">{children}</body>
+      <head>
+        <GoogleTagManager />
+      </head>
+      <body className="antialiased">
+        <GoogleTagManagerNoScript />
+        {children}
+        <PageViewTracker />
+        <CookieBanner />
+      </body>
     </html>
   );
 }

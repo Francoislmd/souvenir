@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
+import { gtmEvent } from "@/lib/gtm";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
 import { inputClass } from "@/components/ui/Input";
@@ -106,6 +107,20 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   }, [activities, company, exp, brand, pricing]);
 
   const currentStep: WizardStep = STEP_ORDER[step];
+
+  // Une étape = un événement, avec son rang : c'est ce qui permet de tracer
+  // l'entonnoir d'inscription dans GA4 (exploration « Entonnoir » sur
+  // onboarding_step, décomposée par step_name).
+  useEffect(() => {
+    gtmEvent("onboarding_step", {
+      step_index: step + 1,
+      step_name: currentStep,
+      step_total: STEP_ORDER.length,
+    });
+    if (step === 0) gtmEvent("sign_up_start", { method: "email" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const stepperIndex = STEPPER_STEPS.indexOf(currentStep);
   const showStepper = stepperIndex >= 0;
 
@@ -166,6 +181,8 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
       );
       return;
     }
+    gtmEvent("sign_up", { method: "email", verification_pending: !data.session });
+
     if (!data.session) {
       setEmailSent(true);
       return;
@@ -220,6 +237,17 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
         }
       }
 
+      // Compte opérateur réellement créé : c'est LA conversion côté acquisition
+      // B2B (bien plus fiable que le sign_up, qui inclut les emails non validés).
+      gtmEvent("onboarding_complete", {
+        activities: Array.from(activities).join(","),
+        activities_count: activities.size,
+        city: company.city || undefined,
+        price_photo_euros: pricePhotoCents / 100,
+        price_all_euros: Math.round(Number(pricing.allEuros) * 100) / 100 || 0,
+        has_logo: !!logoFile,
+      });
+
       window.localStorage.removeItem(STORAGE_KEY);
       setLoading(false);
       goForward(); // -> paiements
@@ -231,6 +259,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
 
   function handlePaymentsDone(onboarded: boolean) {
     setStripeOnboarded(onboarded);
+    gtmEvent(onboarded ? "stripe_onboarding_done" : "stripe_onboarding_start", { skipped: !onboarded });
     goForward(); // -> activation
   }
 

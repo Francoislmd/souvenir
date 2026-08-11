@@ -55,6 +55,8 @@ export default async function GalleryPage({ params }: { params: { token: string 
         purchasedIds={purchasedIds}
         googleReviewUrl={operator.googleReviewUrl}
         reducedOfferActive={reducedOfferActive}
+        operatorId={participant.sortie.operatorId}
+        sortieId={participant.sortieId}
       />
     </div>
   );

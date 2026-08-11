@@ -2,29 +2,13 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
+import { ManageCookiesLink } from "@/components/analytics/ManageCookiesLink";
 
 const PRODUIT = [
   { href: "/fonctionnement", label: "Fonctionnement" },
   { href: "/simulation", label: "Simuler mes revenus" },
   { href: "/simulation", label: "Tarif" },
   { href: "/liste-attente", label: "Liste d'attente" },
-];
-
-const ACTIVITES = [
-  { href: "/activites/parapente", label: "Parapente" },
-  { href: "/activites/canyoning", label: "Canyoning" },
-  { href: "/activites/rafting", label: "Rafting" },
-  { href: "/activites/surf", label: "Surf" },
-  { href: "/activites/plongee", label: "Plongée" },
-  { href: "/activites/parc-aventure", label: "Parc aventure" },
-];
-
-const LINKTRIP = [
-  { href: "mailto:hello@linktrip.co", label: "Nous écrire" },
-  { href: "/mentions-legales", label: "Mentions légales" },
-  { href: "/cgu", label: "CGU" },
-  { href: "/cgv", label: "CGV" },
-  { href: "/confidentialite", label: "Confidentialité" },
 ];
 
 function FooterColumn({ title, links }: { title: string; links: typeof PRODUIT }) {
@@ -92,7 +76,7 @@ export function Footer() {
   return (
     <footer className="relative z-[3] mt-[clamp(40px,6vh,80px)] rounded-t-[clamp(20px,2vw,30px)] bg-ink text-white">
       <div className="mx-auto max-w-[1320px] px-[var(--gutter)] pb-[clamp(20px,3vh,28px)] pt-[clamp(40px,6vh,66px)]">
-        <div className="grid grid-cols-1 gap-7 pb-[clamp(28px,4vh,44px)] min-[561px]:grid-cols-2 min-[561px]:gap-8 min-[981px]:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))] min-[981px]:gap-[clamp(24px,3vw,54px)]">
+        <div className="grid grid-cols-1 gap-7 pb-[clamp(28px,4vh,44px)] min-[561px]:grid-cols-2 min-[561px]:gap-8 min-[981px]:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] min-[981px]:gap-[clamp(24px,3vw,54px)]">
           <div>
             <div className="mb-[14px] flex items-center gap-[9px]">
               <Logo variant="lockup" tone="white" height={26} />
@@ -118,12 +102,13 @@ export function Footer() {
           </div>
 
           <FooterColumn title="Produit" links={PRODUIT} />
-          <FooterColumn title="Activités" links={ACTIVITES} />
-          <FooterColumn title="Linktrip" links={LINKTRIP} />
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-[18px] border-t border-white/10 pt-[clamp(16px,2.4vh,22px)] text-[12.5px] text-white/40 min-[561px]:justify-between">
-          <span>© {new Date().getFullYear()} Linktrip · Fait en France</span>
+          <span className="flex flex-wrap items-center gap-x-[10px] gap-y-1">
+            <span>© {new Date().getFullYear()} Linktrip · Fait en France</span>
+            <ManageCookiesLink className="underline underline-offset-2 transition hover:text-white/70" />
+          </span>
           <div className="flex gap-[10px]">
             <Social href="https://instagram.com/linktrip.co" label="Instagram">
               <InstagramIcon />
