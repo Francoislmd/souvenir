@@ -277,162 +277,117 @@
   .reveal { animation: none; }
 }
 
-/* ─── Mosaïque photo (page d'accueil) ─── */
-.scene {
+/* ─── Pile de photos (page d'accueil) ───
+   4 tirages empilés en éventail, décrits du fond vers l'avant : l'ordre des
+   enfants dans le DOM pilote à la fois le z-index et la rotation/échelle via
+   nth-child, donc le composant se contente de rendre les cartes dans cet
+   ordre (cf. PhotoStack.tsx, tableau CARDS). */
+.stack {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  aspect-ratio: 4 / 5;
+  margin: 0 auto;
+}
+.stackCard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 66%;
+  aspect-ratio: 4 / 5;
+  background: #fff;
+  padding: 10px;
+  border-radius: 22px;
+  box-shadow: 0 18px 45px -12px rgba(60, 30, 15, 0.28);
+  transform-origin: 50% 100%;
+  transition: transform 600ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 600ms cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+.stackCard:nth-child(1) { z-index: 1; transform: translate(-50%, -52%) rotate(-13deg) scale(0.9); }
+.stackCard:nth-child(2) { z-index: 2; transform: translate(-50%, -52%) rotate(9deg) scale(0.94); }
+.stackCard:nth-child(3) { z-index: 3; transform: translate(-50%, -52%) rotate(-5deg) scale(0.97); }
+.stackCard:nth-child(4) { z-index: 4; transform: translate(-50%, -52%) rotate(2deg) scale(1); }
+@media (hover: hover) {
+  /* Écartement au survol de la pile entière (pas carte par carte), pour que
+     les 4 tirages s'éventent ensemble. */
+  .stack:hover .stackCard:nth-child(1) { transform: translate(-118%, -66%) rotate(-19deg) scale(0.9); }
+  .stack:hover .stackCard:nth-child(2) { transform: translate(58%, -52%) rotate(15deg) scale(0.94); }
+  .stack:hover .stackCard:nth-child(3) { transform: translate(-38%, -52%) rotate(-8deg) scale(0.97); }
+  .stack:hover .stackCard:nth-child(4) {
+    transform: translate(-50%, -52%) rotate(2deg) scale(1.02);
+    box-shadow: 0 26px 55px -10px rgba(60, 30, 15, 0.38);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stackCard { transition: none; }
+}
+@media (max-width: 900px) {
+  .stack { max-width: 380px; }
+}
+
+.stackCardInner {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 0;
+  border-radius: 14px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, #000 5%, #000 95%, rgba(0, 0, 0, 0.55) 100%);
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, #000 5%, #000 95%, rgba(0, 0, 0, 0.55) 100%);
 }
-.mos {
+.stackImg { object-fit: cover; }
+
+/* Carte verrouillée : le flou est un backdrop-filter posé par-dessus l'image
+   (pas un filter direct sur l'image) — cf. piège §15 déjà noté plus haut dans
+   ce fichier pour l'ancienne mosaïque : une vraie photo HD de client ne doit
+   jamais être floutée côté client, seulement ce placeholder de marque. */
+.stackLockedVeil {
   position: absolute;
   inset: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.18);
 }
-.mcol {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.mcolOffset {
-  margin-top: 64px;
-}
-.tile {
-  position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  flex-shrink: 0;
-  box-shadow: 0 16px 34px -20px rgba(22, 19, 32, 0.34), 0 0 0 1px rgba(22, 19, 32, 0.04);
-  transition: transform 500ms ease;
-}
-@media (hover: hover) {
-  .tile:hover { transform: scale(1.05); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tile { transition: none; }
-  .tile:hover { transform: none; }
-}
-.r34 { aspect-ratio: 3 / 4; }
-.r11 { aspect-ratio: 1 / 1; }
-.r45 { aspect-ratio: 4 / 5; }
-
-@media (max-width: 1000px) {
-  /* Sur mobile la mosaïque devient un rail horizontal à défilement (snap),
-     plein écran (débord via --gutter négatif, cf. .rail). Doit être déclaré
-     APRÈS .r34/.r11/.r45 ci-dessus : même sélecteur .tile, même spécificité,
-     l'ordre de déclaration tranche — sinon le ratio par tuile regagne. */
-  .scene {
-    height: auto;
-    max-width: none;
-    overflow: visible;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-  .mos {
-    position: static;
-    inset: auto;
-    display: flex;
-    grid-template-columns: none;
-    overflow-x: auto;
-    overflow-y: visible;
-    gap: 12px;
-    scroll-snap-type: x mandatory;
-    /* padding-bottom réel (pas compensé par la margin négative, contrairement
-       au top) : la barre d'adresse Safari iOS recouvre sinon la dernière
-       ligne (légende) des tuiles. Plus de débord horizontal (pas de marge
-       négative sur les côtés) : le rail respecte le gutter de .rail, comme
-       le reste du contenu — marge visible à gauche/droite des photos. */
-    padding: 4px 0 24px;
-    margin: -4px 0 0;
-    scrollbar-width: none;
-    /* Fondu horizontal à droite : signale qu'on peut faire défiler (remplace
-       le fondu vertical desktop, inutile ici puisque rien n'est rogné). */
-    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
-    mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
-  }
-  .mos::-webkit-scrollbar { display: none; }
-  .mcol { display: contents; }
-  .mcolOffset { margin-top: 0; }
-  .tile {
-    flex: 0 0 58vw;
-    aspect-ratio: 3 / 4;
-    max-height: 300px;
-    scroll-snap-align: start;
-  }
-  /* Doublons desktop (remplissage du fondu haut/bas) : inutiles ici, le rail
-     n'affiche qu'un exemplaire de chaque photo. */
-  .hideMobile { display: none; }
-}
-
-.tileArt { position: absolute; inset: 0; }
-.tileVeil {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(22, 19, 32, 0) 52%, rgba(22, 19, 32, 0.8));
-}
-.tileTag {
-  position: absolute;
-  left: 12px;
-  bottom: 11px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-@media (max-width: 1000px) {
-  /* Légende toujours entièrement visible dans la tuile (jamais coupée par le
-     bas de l'écran) — doit être déclaré après la règle de base ci-dessus :
-     même sélecteur, même spécificité, l'ordre de déclaration tranche. */
-  .tileTag { bottom: 14px; }
-}
-.tileTag span {
-  display: block;
-  font-weight: 400;
-  font-size: 10.5px;
-  opacity: 0.82;
-  margin-top: 1px;
-}
-
-/* Tuile verrouillée : le modèle économique reste visible dans le mur d'images.
-   ATTENTION : ceci ne floute qu'un placeholder. Une vraie photo HD ne doit
-   JAMAIS être floutée côté client (filter: blur() s'annule en 3s dans
-   l'inspecteur) — générer une variante floutée côté serveur, comme le fait
-   déjà le worker pour les galeries (apps/worker/src/jobs/preview.ts, blurKey). */
-.tileLockedArt {
-  filter: blur(8px);
-  transform: scale(1.12);
-}
-.tileLock {
+.stackLockBadge {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.96);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 10px 24px rgba(22, 19, 32, 0.26);
 }
-.tilePrice {
+.stackPrice {
   position: absolute;
-  right: 11px;
   top: 11px;
+  right: 11px;
   background: var(--sunset);
   color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 7px 13px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
   border-radius: 99px;
   box-shadow: 0 6px 16px -5px rgba(255, 90, 31, 0.7);
+}
+
+.stackCaption {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+.stackCaptionTitle {
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+.stackCaptionSubtitle {
+  font-size: 14px;
+  margin-top: 2px;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* ─── Champ e-mail (pilule, bouton intégré) ─── */

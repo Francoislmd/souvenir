@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
 import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
-import { PhotoMosaic } from "@/components/marketing/PhotoMosaic";
+import { PhotoStack } from "@/components/marketing/PhotoStack";
 import styles from "./landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -75,8 +75,8 @@ export default function AccueilPage() {
             </p>
           </div>
 
-          <div className="min-h-0 min-w-0">
-            <PhotoMosaic />
+          <div className="min-h-0 min-w-0 flex items-center justify-center">
+            <PhotoStack />
           </div>
         </main>
       </div>
