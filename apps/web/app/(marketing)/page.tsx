@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
 import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
@@ -18,7 +17,6 @@ export default function AccueilPage() {
   return (
     <div className={styles.page}>
       <div className={styles.haloClip}>
-        <span className={styles.auraWarm} />
         <span className={styles.auraCool} />
       </div>
 
@@ -33,7 +31,7 @@ export default function AccueilPage() {
         >
           <div className="min-w-0 flex flex-col justify-center">
             <h1 className={cx(styles.h1Accueil, styles.reveal, "font-display font-bold text-ink")}>
-              Transformez les <span className={styles.gradText}>photos</span> de vos sorties en{" "}
+              Transformez les photos de vos sorties en{" "}
               <span className={styles.gradText}>revenus.</span>
             </h1>
             <div className={cx(styles.reveal, "mt-[14px] max-w-[470px] min-[1000px]:mt-[clamp(14px,2vh,24px)]")}>
@@ -60,19 +58,6 @@ export default function AccueilPage() {
               Sans abonnement · Sans engagement
             </p>
 
-            <p
-              className={cx(
-                styles.reveal,
-                "ml-0 mt-[14px] mb-[20px] text-center min-[1000px]:ml-[9px] min-[1000px]:mt-[14px] min-[1000px]:mb-0 min-[1000px]:text-left",
-              )}
-            >
-              <Link
-                href="/fonctionnement"
-                className="border-b-[1.5px] border-transparent text-[13px] text-ink-2 transition min-[1000px]:text-[12.5px] [@media(hover:hover)]:hover:border-line [@media(hover:hover)]:hover:text-ink"
-              >
-                Voir le produit en vidéo <span aria-hidden="true">→</span>
-              </Link>
-            </p>
           </div>
 
           <div className="min-h-0 min-w-0 flex items-center justify-center">

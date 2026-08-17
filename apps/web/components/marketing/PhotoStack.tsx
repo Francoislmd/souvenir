@@ -16,17 +16,21 @@ function resolveImage(base: string): string | null {
 interface Card {
   base: string;
   alt: string;
-  locked?: boolean;
   caption?: { title: string; subtitle: string };
   priority?: boolean;
 }
 
 // Ordre du fond vers l'avant (détermine l'empilement via nth-child en CSS).
 const CARDS: Card[] = [
-  { base: "parachute-ascensionnel", alt: "", locked: true },
-  { base: "tyrolienne", alt: "Tyrolienne à Istanbul" },
+  { base: "pexels-hilmiisilak-11183386", alt: "Rafting en eaux vives" },
   { base: "bouee-tractee", alt: "Bouée tractée à Dubaï" },
-  { base: "jetski", alt: "Jet ski à Cangas", caption: { title: "Jet ski", subtitle: "Cangas · 24 photos" }, priority: true },
+  { base: "pexels-bita-kahshidi-1155551613-24963091", alt: "Parachute ascensionnel" },
+  {
+    base: "pexels-mike-art-visual-creator-photography-and-video-2159421235-36621111",
+    alt: "Jet ski à Cangas",
+    caption: { title: "Jet ski", subtitle: "Cangas · 24 photos" },
+    priority: true,
+  },
 ];
 
 export function PhotoStack() {
@@ -47,18 +51,7 @@ export function PhotoStack() {
                   className={`object-cover ${styles.stackImg}`}
                 />
               )}
-              {card.locked && <div className={styles.stackLockedVeil} />}
-              {card.locked && (
-                <>
-                  <div className={styles.stackLockBadge} aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="#E8460C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="4.5" y="10.5" width="15" height="10" rx="2.6" />
-                      <path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9" />
-                    </svg>
-                  </div>
-                  <div className={styles.stackPrice}>20 €</div>
-                </>
-              )}
+              {card.caption && <div className={styles.stackCaptionVeil} />}
               {card.caption && (
                 <div className={styles.stackCaption}>
                   <span className={styles.stackCaptionTitle}>{card.caption.title}</span>
