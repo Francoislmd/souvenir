@@ -22,7 +22,9 @@ export default function AccueilPage() {
         <span className={styles.auraCool} />
       </div>
 
-      <div className={styles.rail}>
+      {/* railWide : sur l'accueil la carte du hero doit respirer sur les grands
+          écrans, la largeur de lecture de 1320px ne s'y applique pas. */}
+      <div className={cx(styles.rail, styles.railWide)}>
         <Header />
 
         {/* Hero : une seule carte photo plein cadre (cf. docs/maquette-hero-linktrip.html).

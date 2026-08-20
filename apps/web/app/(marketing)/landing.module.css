@@ -662,3 +662,23 @@
     color: #fff;
   }
 }
+
+/* Accueil uniquement : le rail passe de 1320px à 1920px pour que la carte du
+   hero aille quasiment au bord de l'écran sur les grands moniteurs (la maquette
+   validée n'avait que la gouttière de chaque côté). Plafond volontaire plutôt
+   que `none` : au-delà, logo et navigation finiraient à deux mètres l'un de
+   l'autre sur un ultra-wide. Pas de calcul en 100vw ici — il compte la barre de
+   défilement et déclencherait un défilement horizontal sur Windows. */
+.railWide {
+  max-width: 1920px;
+}
+/* Plus large que les 500px par défaut : sur la photo, le bouton mangeait assez
+   de place pour tronquer le placeholder du champ. Sous media query (et non en
+   règle nue) : à specificité égale, une déclaration placée plus bas dans le
+   fichier l'emporte même sur une règle mobile — celle-ci écraserait sinon le
+   `max-width: 420px` du bloc `max-width: 1000px` ci-dessus. */
+@media (min-width: 1001px) {
+  .heroField .field {
+    max-width: 560px;
+  }
+}
