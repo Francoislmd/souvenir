@@ -1,0 +1,182 @@
+/* Section immersive « scroll storytelling » — cf. docs/SPEC-section-immersive-linktrip.md.
+   Le module ne porte que ce que Tailwind ne sait pas faire : le pin (position:sticky),
+   le clip du cadre, les couloirs d'ascension et le repli reduced-motion. Les valeurs
+   animées (translate/rotate) sont posées en style inline par le rAF du composant :
+   elles changent à chaque frame, une classe ne peut pas les exprimer. */
+
+.wrapper {
+  position: relative;
+  /* Course de scroll consommée par l'ascension. 380vh - 100vh de sticky = 280vh
+     de progression réelle pour 18 photos, soit ~1,9x la vitesse du scroll. */
+  height: 380svh;
+}
+@media (max-width: 760px) {
+  .wrapper { height: 320svh; }
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  /* C'est ce clip qui coupe les photos en haut et en bas : elles ne disparaissent
+     pas en fondu, elles sortent du cadre comme une bande qui défile. */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Fond blanc franc, volontairement distinct du --paper du reste de la page :
+     la section doit se lire comme une respiration, pas comme un bloc de plus. */
+  background: #fff;
+  isolation: isolate;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Photos ───
+   Chaque carte monte du bas vers le haut sur son propre couloir latéral. Les
+   couloirs laissent un corridor central libre : les photos encadrent le CTA au
+   lieu de lui passer dessus, seule façon de garder le titre lisible sur blanc. */
+/* Format unique : toutes les photos ont exactement la même largeur et le même
+   ratio (900x1200, 3:4). Le rythme vient des couloirs, des rotations et du
+   décalage temporel — pas d'une variation de taille. */
+.card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: clamp(230px, 24vw, 370px);
+  will-change: transform;
+}
+@media (max-width: 760px) {
+  .card { width: clamp(190px, 52vw, 250px); }
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--line-2);
+  aspect-ratio: 3 / 4;
+  box-shadow:
+    0 30px 60px -26px rgba(22, 19, 32, 0.34),
+    0 2px 10px -4px rgba(22, 19, 32, 0.1),
+    0 0 0 1px rgba(22, 19, 32, 0.05);
+}
+
+/* Vignette discrète : sans elle, une photo à bord clair (neige, ciel blanc) perd
+   son contour sur le fond blanc et se lit comme une tache. */
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(130% 120% at 50% 26%, transparent 56%, rgba(28, 18, 10, 0.14) 100%);
+  pointer-events: none;
+}
+
+.img { object-fit: cover; }
+
+.label {
+  position: absolute;
+  left: 13px;
+  bottom: 11px;
+  z-index: 3;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* ─── CTA central ─── */
+.cta {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 20;
+  width: min(470px, 86vw);
+  text-align: center;
+}
+/* Voile blanc diffus : invisible sur le fond, mais détache le texte des photos
+   qui frôlent le corridor. Sous 760px le corridor n'existe plus (écran trop
+   étroit), le voile devient donc franc — sinon le titre passe sur une photo. */
+.ctaVeil {
+  position: absolute;
+  inset: -46% -26%;
+  z-index: -1;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(255, 255, 255, 0.88) 46%,
+    rgba(255, 255, 255, 0) 78%
+  );
+}
+@media (max-width: 760px) {
+  .ctaVeil {
+    inset: -30% -26%;
+    background: radial-gradient(closest-side, #fff 0%, #fff 54%, rgba(255, 255, 255, 0) 92%);
+  }
+}
+
+.progress {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(18px, 4vh, 34px);
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(200px, 38vw);
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(22, 19, 32, 0.07);
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--sunset);
+}
+
+/* ─── Repli sans animation ───
+   Pas de pin, pas de rAF : la section devient une bande de photos statique
+   au-dessus du CTA. Le composant coupe aussi son rAF (cf. ScrollStory.tsx). */
+.wrapper.isStatic { height: auto; }
+.wrapper.isStatic .sticky {
+  position: relative;
+  height: auto;
+  min-height: 0;
+  padding: clamp(56px, 8vh, 96px) var(--gutter, 20px);
+}
+.wrapper.isStatic .stage {
+  height: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.wrapper.isStatic .card {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none !important;
+  width: clamp(140px, 22vw, 200px);
+}
+.wrapper.isStatic .cta {
+  position: relative;
+  left: auto;
+  top: auto;
+  order: 99;
+  width: 100%;
+  max-width: 470px;
+  margin: 14px 0 0;
+  transform: none !important;
+  opacity: 1 !important;
+}
+.wrapper.isStatic .progress { display: none; }

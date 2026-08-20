@@ -16,6 +16,11 @@
      débord pleine largeur — une variable CSS ne franchit pas les frères,
      seulement les descendants d'un ancêtre commun. */
   --gutter: 46px;
+  /* Landing en blanc pur, indépendant du --canvas crème du reste de l'app
+     (body en hérite globalement) — réécrit ici pour que les descendants
+     qui lisent var(--canvas) (ex: .headerScrolled) restent cohérents. */
+  --canvas: #ffffff;
+  background: #ffffff;
 }
 @media (max-width: 1280px) {
   .page { --gutter: 34px; }

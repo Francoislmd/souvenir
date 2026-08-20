@@ -3,6 +3,8 @@ import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
 import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
 import { PhotoStack } from "@/components/marketing/PhotoStack";
+import { ActivityMarquee } from "@/components/marketing/ActivityMarquee";
+import { ScrollStory } from "@/components/marketing/ScrollStory";
 import styles from "./landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -65,6 +67,18 @@ export default function AccueilPage() {
           </div>
         </main>
       </div>
+
+      {/* Frère de .rail, pas enfant : .rail garantit ses 100svh (cf. landing.module.css
+          §0) et le hero doit garder cet écran entier pour lui. Le bandeau vit donc sous
+          la ligne de flottaison, avec le pied de page. Il est déjà pleine largeur ici,
+          d'où l'absence de `bleed`. */}
+      <ActivityMarquee />
+
+      {/* Frère de .rail lui aussi : la section porte son propre pin (position:sticky
+          sur 380svh, cf. ScrollStory.module.css) et doit occuper toute la largeur.
+          Placée après le bandeau : on montre d'abord les activités couvertes, la
+          section immersive sert ensuite de bascule émotionnelle vers le CTA. */}
+      <ScrollStory />
 
       <Footer />
     </div>

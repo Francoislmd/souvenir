@@ -1,0 +1,81 @@
+/* Bandeau d'activités — ne porte que ce que Tailwind ne sait pas faire :
+   le keyframe de défilement, le mask-image de fondu latéral, le débord
+   pleine largeur hors des gouttières de .rail, et le repli reduced-motion.
+   Tout le reste (couleurs, tailles, espacements) vit en Tailwind dans le TSX. */
+
+.viewport {
+  overflow: hidden;
+  /* Évite la coupure nette des items en entrée / sortie de cadre. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+}
+
+/* Uniquement si la section est montée DANS un conteneur à gouttières (.rail) :
+   le bandeau doit toucher les bords de l'écran, sinon il se lit comme un bloc de
+   contenu et plus comme une bande de logos. Monté en frère de .rail (cas de la
+   page d'accueil), il est déjà pleine largeur — appliquer ce débord y créerait
+   un défilement horizontal. D'où le prop `bleed`, faux par défaut. */
+.bleed {
+  margin-left: calc(-1 * var(--gutter, 0px));
+  margin-right: calc(-1 * var(--gutter, 0px));
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 46s) linear infinite;
+  will-change: transform;
+}
+
+/* -50% = exactement une copie de la liste (REPEAT = 2 dans ActivityMarquee.tsx).
+   Si REPEAT change, cette valeur doit changer avec (3 → -33.333%). */
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Pause au survol : laisse le temps de lire un nom d'activité. Conditionnée à
+   (hover: hover) pour ne pas créer d'état figé après un tap sur mobile. */
+@media (hover: hover) {
+  .viewport:hover .track {
+    animation-play-state: paused;
+  }
+}
+
+/* Repli statique : grille centrée multi-lignes, sans masque (il abaisse le
+   contraste des items de bord) et sans la copie fantôme. */
+@media (prefers-reduced-motion: reduce) {
+  .viewport {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .bleed {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .track {
+    width: 100%;
+    animation: none;
+    will-change: auto;
+  }
+
+  .row {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 18px;
+  }
+
+  .row[aria-hidden="true"] {
+    display: none;
+  }
+
+  .row > li:last-child .dot {
+    display: none;
+  }
+}
