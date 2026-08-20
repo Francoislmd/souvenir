@@ -325,8 +325,34 @@
 @media (prefers-reduced-motion: reduce) {
   .stackCard { transition: none; }
 }
-@media (max-width: 900px) {
+/* Aligné sur le point de bascule de la mise en page (1000px, cf. page.tsx) et
+   non sur 900px : entre 901 et 1000px le hero passe déjà en une seule colonne,
+   la pile gardait pourtant sa taille desktop (560px) et repoussait le
+   formulaire bien en dessous de la ligne de flottaison. */
+@media (max-width: 1000px) {
   .stack { max-width: 380px; }
+}
+
+/* Sur desktop, la pile n'était bornée que par la largeur de sa colonne : à
+   560px de large, son aspect-ratio 4/5 impose 700px de haut. Sur un écran
+   large mais court (portable 1280x610 après mise à l'échelle Windows, ou
+   1366x640), la rangée du hero dépassait donc 100svh — le hero débordait sous
+   la ligne de flottaison (§0) et le texte, centré verticalement dans une
+   rangée trop haute, se retrouvait poussé vers le bas de l'écran. On borne
+   donc aussi par la hauteur réellement disponible (100svh moins le header et
+   les marges verticales de .main) : max-height écrase l'aspect-ratio (le
+   conteneur devient plus carré, il n'a que du vide vertical autour des
+   tirages), et le plafond de largeur garantit que les cartes elles-mêmes
+   (66% de la largeur, ratio 4/5, soit ~0,86x la largeur du conteneur une fois
+   pivotées) tiennent dans cette hauteur. */
+@media (min-width: 1001px) {
+  .stack {
+    /* 44px = hauteur du CTA du header (h-11, plus haut que le logo) ;
+       clamp() = son padding vertical (cf. .header) ; 32px = py-4 de .main. */
+    --stack-avail: calc(100svh - 44px - 2 * clamp(14px, 2.4vh, 22px) - 32px);
+    max-width: min(560px, var(--stack-avail));
+    max-height: var(--stack-avail);
+  }
 }
 
 .stackCardInner {
