@@ -557,3 +557,108 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
+/* ─── Hero d'accueil : carte photo plein cadre ───
+   Direction validée le 20/08/2026 (maquette : docs/maquette-hero-linktrip.html).
+   Le hero n'est plus une grille texte + PhotoStack mais une seule carte photo
+   arrondie qui occupe l'écran sous le header, texte centré en surimpression. */
+.heroMain {
+  display: flex;
+  padding-bottom: var(--gutter);
+}
+.heroCard {
+  position: relative;
+  flex: 1;
+  /* min-height:0 : maillon de la chaîne flex (cf. .main) — sans lui la carte
+     refuse de descendre sous la hauteur naturelle de son contenu et le hero
+     déborde des 100svh sur les écrans courts. */
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 30px;
+  background: var(--ink);
+  /* isolation : le z-index des enfants (photo 0, voile 1, texte 2) reste
+     confiné à la carte et ne peut pas passer devant le header. */
+  isolation: isolate;
+}
+.heroPhoto {
+  object-fit: cover;
+  object-position: center 38%;
+  /* Les photos de public/landing/immersive sont en portrait 900x1200 : le
+     léger sur-cadrage masque les bords lors du recadrage en paysage. */
+  transform: scale(1.02);
+  z-index: 0;
+}
+.heroVeil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(58% 46% at 50% 46%, rgba(22, 19, 32, 0.62), rgba(22, 19, 32, 0) 100%),
+    linear-gradient(180deg, rgba(22, 19, 32, 0.58) 0%, rgba(22, 19, 32, 0.18) 34%, rgba(22, 19, 32, 0.22) 62%, rgba(22, 19, 32, 0.72) 100%);
+}
+.heroContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 760px;
+  padding: clamp(24px, 5vh, 70px) var(--gutter) clamp(34px, 7vh, 84px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.h1Hero {
+  font-size: clamp(38px, 3.1vw + 1.5vh, 74px);
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  max-width: 16ch;
+  text-shadow: 0 2px 40px rgba(22, 19, 32, 0.35);
+}
+.heroSub {
+  margin-top: clamp(14px, 2vh, 22px);
+  max-width: 44ch;
+  font-size: clamp(16px, 0.5vw + 0.7vh, 19px);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.84);
+}
+.heroField {
+  margin-top: clamp(22px, 3.4vh, 38px);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+/* La pilule blanche a besoin d'une ombre pour décoller de la photo. */
+.heroField .field {
+  text-align: left;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.65);
+}
+.heroMicro {
+  margin-top: 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 1000px) {
+  .heroCard { border-radius: 22px; }
+  .heroContent { padding-top: clamp(20px, 4vh, 40px); }
+  .h1Hero { font-size: clamp(32px, 8vw, 44px); max-width: 18ch; }
+  .heroField .field { max-width: 420px; }
+  /* 56px (et non les 52px par defaut) : champ trop bas sur mobile par-dessus
+     la photo. Portee limitee au hero, les autres ecrans gardent 52. */
+  .heroField .field input,
+  .heroField .field button { height: 56px; }
+
+  /* CTA "Rejoindre" deplace dans le menu deroulant : il reste masque dans la
+     barre (cf. .headerCta ci-dessus) mais la conversion reste accessible. */
+  .menuPanel .menuCta {
+    margin-top: 12px;
+    height: 52px;
+    padding: 0 20px;
+    border-bottom: 0;
+    color: #fff;
+  }
+}

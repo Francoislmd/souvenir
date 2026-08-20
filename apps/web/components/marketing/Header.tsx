@@ -85,6 +85,17 @@ export function Header({ current }: HeaderProps) {
                 {label}
               </Link>
             ))}
+            {/* CTA repris ici : masqué dans la barre sous 1000px (cf. .headerCta),
+                il reste accessible depuis le menu déroulant. */}
+            <ButtonLink
+              href="/liste-attente"
+              variant="sunset"
+              size="md"
+              className={styles.menuCta}
+              onClick={() => setMenuOpen(false)}
+            >
+              Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
+            </ButtonLink>
           </nav>
         </>
       )}
