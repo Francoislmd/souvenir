@@ -38,7 +38,7 @@ avec le hero pour le même écran (cf. SPEC bandeau d'activités §1).
 Le scroll n'est **jamais** intercepté (`preventDefault` sur `wheel` casse le
 trackpad, le clavier et l'accessibilité). On utilise le pin classique :
 
-- `.wrapper` haute de `380svh` ;
+- `.wrapper` haute de `600svh` ;
 - `.sticky` en `position: sticky; top: 0; height: 100svh; overflow: hidden`.
 
 Tant que le wrapper défile, le sticky reste collé : le scroll paraît « capturé »
@@ -52,14 +52,31 @@ déclenche pas ici parce qu'aucun ancêtre de la section ne porte d'`overflow`.
 
 ### Course d'une photo
 
-Chaque photo traverse l'écran de `+80vh` à `-80vh`, **en linéaire** : toute
-courbe d'easing la ferait « flotter » au lieu de monter. Elle n'apparaît ni ne
-disparaît en fondu — c'est le `overflow: hidden` du cadre qui la coupe, comme une
-bande qui défile.
+Chaque photo traverse l'écran de bas en haut, **en linéaire** : toute courbe
+d'easing la ferait « flotter » au lieu de monter. Elle n'apparaît ni ne disparaît
+en fondu — c'est le `overflow: hidden` du cadre qui la coupe, comme une bande qui
+défile.
+
+**Vitesse 1:1, non négociable.** Une photo monte d'exactement **un pixel par
+pixel de scroll**, comme tout le reste de la page. Une première version faisait
+1,90× (mesuré) : en entrant dans la section, tout se mettait à défiler deux fois
+plus vite et le scroll paraissait s'emballer. C'est le défaut le plus visible que
+cette section puisse avoir.
+
+Conséquence directe : **la durée d'une traversée n'est pas un réglage libre**.
+Elle est déduite au montage de la course réellement disponible, dans `measure()` :
+
+```
+travelPx = innerHeight + hauteurRéelleDUneCarte + 16
+duration = travelPx / (wrapper.offsetHeight - innerHeight)
+```
+
+La hauteur d'une carte est **mesurée** (`offsetHeight`), pas écrite en vh : elle
+vient d'un `clamp()` CSS. Une constante en vh laisserait, sur un écran court, la
+carte encore visible en fin de course — elle disparaîtrait alors d'un coup.
 
 | Constante | Valeur | Rôle |
 |---|---|---|
-| `DURATION` | `0.3` | part de la course consommée par une traversée |
 | `FIRST_START` | `-0.16` | la 1re photo est déjà engagée à l'entrée (jamais d'écran vide) |
 | `LAST_TRAVEL_AT_END` | `0.72` | la dernière photo est **encore en vol** au relâchement |
 
@@ -68,8 +85,14 @@ fin, le dernier tiers de la section serait un écran blanc à scroller pour rien
 Deux à trois photos sont encore à l'écran quand le sticky se libère, et s'en vont
 naturellement avec la page.
 
-Densité obtenue : ~5,4 photos en vol simultanément (`DURATION / step`). En
-dessous de 4 la section paraît vide, au-dessus de 7 elle devient illisible.
+**La hauteur de `.wrapper` est donc le seul réglage du rythme.** La vitesse
+étant verrouillée à 1:1, cette hauteur ne pilote plus que le nombre de photos
+simultanément à l'écran : la raccourcir ne rend pas le défilement plus rapide,
+elle **entasse** les photos ; l'allonger les espace.
+
+Densité mesurée : 5,5 photos en vol en 1440×900, 6,2 en 1440×700, 4,7 en 390×844
+— pour un ratio de 1,000× dans les trois cas. En dessous de 4 la section paraît
+vide, au-dessus de 7 elle devient illisible.
 
 ## 3. Le corridor central
 
@@ -122,6 +145,10 @@ Vérifié : `tsc --noEmit` sur tout `apps/web` et `next lint` sur `ScrollStory.t
 et `page.tsx` — aucune erreur, aucun avertissement. Mécanique du pin, absence de
 débordement horizontal et lisibilité du CTA contrôlées au navigateur en 1440×900
 et 390×844 sur une réplique reprenant le CSS module réel et les vraies photos.
+
+Vitesse mesurée au navigateur, déplacement réel d'une photo par pixel de scroll :
+**1,000× en 1440×900, 1,000× en 1440×700, 1,000× en 390×844**, contre 1,00× pour
+un élément ordinaire hors section. Aucun débordement horizontal, aucune erreur JS.
 
 Non vérifié — à contrôler en local avec `pnpm dev` :
 

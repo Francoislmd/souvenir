@@ -7,6 +7,7 @@ import { ActivityMarquee } from "@/components/marketing/ActivityMarquee";
 import { ScrollStory } from "@/components/marketing/ScrollStory";
 import { WhyLinktrip } from "@/components/marketing/WhyLinktrip";
 import { DemoArcade } from "@/components/marketing/DemoArcade";
+import { Faq } from "@/components/marketing/Faq";
 import styles from "./landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -80,11 +81,18 @@ export default function AccueilPage() {
           ses propres gouttières via --gutter. */}
       <WhyLinktrip />
 
-      {/* Dernier bloc avant le pied de page : la démo Arcade, ouverte en
+      {/* Avant-dernier bloc : la démo Arcade, ouverte en
           surimpression plein écran depuis le trio de vignettes. Elle vient
           après les quatre bénéfices — on montre le produit une fois la
           promesse posée. Frère de .rail, gouttières via --gutter. */}
       <DemoArcade />
+
+      {/* Dernière section avant le pied de page : la FAQ opérateur. Elle vient
+          après la démo, une fois la promesse posée et le produit montré, pour
+          lever les dernières objections (prix, versement des fonds, droit à
+          l'image) au moment où le visiteur décide. Frère de .rail, gouttières
+          via --gutter. */}
+      <Faq />
 
       <Footer />
     </div>

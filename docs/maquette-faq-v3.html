@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maquette — bloc FAQ opérateur, v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Maquette autonome — bloc « FAQ » de la landing, v3.
+   Public : opérateurs uniquement (les participants ont leurs réponses dans la
+   galerie). Bloc à placer après la démo Arcade (DemoArcade), avant le pied de
+   page : dernière levée d'objection avant l'inscription.
+
+   Trois mises en page à départager :
+     A · Chapeau sticky à gauche, accordéon à droite (deux colonnes).
+     B · Chapeau centré, accordéon en une colonne étroite.
+     C · Chapeau centré, grille de cartes ouvertes (aucun clic).
+
+   v2 : copy repris en registre professionnel (vouvoiement, vocabulaire de
+   plateforme, réponses factuelles), trois titres à départager.
+   v3 : ajout de l'objection « je donne déjà mes photos », en 2e position.
+   Elle s'appuie sur `Operator.freeCount` (2 photos offertes par participant par
+   défaut, packages/db/prisma/schema.prisma) et sur l'automation `reviewRequest`
+   + `googleReviewUrl`. Attention : il n'existe PAS de « mode marketing » nommé
+   dans le produit, seulement ce compteur de photos offertes. Deux formulations
+   de la réponse à départager (chip « Objection »).
+
+   Tokens réels : apps/web/styles/tokens.css. Polices réelles : Inter + Inter Tight.
+   Aucun tiret cadratin dans les textes visibles. */
+:root{
+  --ink:#161320; --ink-2:#413c4e; --ink-3:#726c80; --ink-4:#a6a0b2;
+  --line:#ece9ef; --line-2:#f4f2f6; --soft:#fff1eb; --paper:#fbfaf9;
+  --brand:#ff5a1f; --brand-ink:#e8460c; --rose:#ff3d6e; --amber:#ffb443; --aqua:#0fbeb6;
+  --sunset:linear-gradient(120deg,#ff3d6e,#ff5a1f 52%,#ffb443);
+  --gutter:46px;
+}
+@media (max-width:1280px){ :root{--gutter:34px;} }
+@media (max-width:700px){ :root{--gutter:20px;} }
+
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{background:var(--line-2);color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+h2,h3{font-family:"Inter Tight","Inter",system-ui,sans-serif;font-weight:700;margin:0;letter-spacing:-.03em;}
+p{margin:0;}
+button,summary{font-family:inherit;}
+
+/* ── Barre de contrôle (hors maquette) ─────────────────────────────────── */
+.bar{position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;
+  padding:11px 16px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);font-size:13px;}
+.bar .grp{display:flex;align-items:center;gap:7px;}
+.bar .lab{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);}
+.chip{border:1px solid var(--line);background:#fff;color:var(--ink-2);font-size:12.5px;font-weight:600;
+  padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s;}
+.chip:hover{border-color:var(--ink-4);}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;}
+.note{max-width:1100px;margin:0 auto;padding:16px 16px 0;font-size:13.5px;line-height:1.6;color:var(--ink-3);}
+.note b{color:var(--ink-2);}
+.note code{font-size:12.5px;background:var(--line-2);padding:1px 5px;border-radius:5px;}
+
+/* ── Cadre de prévisualisation ─────────────────────────────────────────── */
+.board{padding:16px;display:flex;justify-content:center;}
+.viewport{width:100%;max-width:1500px;background:#fff;border-radius:18px;overflow:hidden;
+  box-shadow:0 18px 50px -34px rgba(22,19,32,.5);}
+body[data-view="phone"] .viewport{width:390px;--gutter:20px;border-radius:34px;border:8px solid #12101a;
+  box-shadow:0 26px 60px -30px rgba(22,19,32,.6);}
+
+/* Contexte : bas du bloc démo (blanc) et haut du pied de page (encre). */
+.ctxTop{padding:34px var(--gutter) 0;text-align:center;color:var(--ink-4);font-size:12.5px;}
+.ctxFoot{margin:0 var(--gutter);border-radius:clamp(20px,2vw,30px) clamp(20px,2vw,30px) 0 0;background:var(--ink);
+  color:rgba(255,255,255,.45);font-size:12.5px;padding:30px var(--gutter);text-align:center;}
+
+/* ── La section ────────────────────────────────────────────────────────── */
+.sec{padding:clamp(52px,8vh,110px) var(--gutter) clamp(44px,7vh,92px);}
+body[data-bg="blanc"] .sec{background:#fff;}
+body[data-bg="papier"] .sec{background:var(--paper);}
+.wrap{max-width:1180px;margin:0 auto;}
+
+/* ── Chapeau ───────────────────────────────────────────────────────────── */
+.eyebrow{display:inline-block;padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--brand-ink);
+  font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;}
+.h2{margin:18px 0 0;font-size:clamp(29px, 2.1vw + 1vh, 44px);line-height:1.06;text-wrap:balance;color:var(--ink);}
+.sub{margin:14px 0 0;max-width:42ch;font-size:clamp(15px, 0.5vw + 0.6vh, 17px);line-height:1.55;color:var(--ink-2);}
+/* Deux formulations de la réponse à l'objection, une seule affichée. */
+body[data-obj="1"] .a2, body[data-obj="2"] .a1{display:none;}
+/* Trois titres candidats, un seul affiché. */
+body[data-title="1"] .t2, body[data-title="1"] .t3,
+body[data-title="2"] .t1, body[data-title="2"] .t3,
+body[data-title="3"] .t1, body[data-title="3"] .t2{display:none;}
+.grad{background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;}
+
+/* ── Accordéon (options A et B) ────────────────────────────────────────── */
+.qa{border-top:1px solid var(--line);}
+.qa:last-of-type{border-bottom:1px solid var(--line);}
+.qa summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;gap:16px;
+  padding:clamp(17px,2.2vh,23px) 0;font-family:"Inter Tight","Inter",system-ui,sans-serif;font-weight:700;
+  letter-spacing:-.018em;font-size:clamp(16.5px,0.5vw + 0.5vh,19px);line-height:1.35;color:var(--ink);
+  transition:color .15s;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary:hover{color:var(--brand-ink);}
+.qa summary:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:6px;}
+.qa .sign{flex:none;margin-left:auto;position:relative;width:22px;height:22px;border-radius:50%;
+  border:1px solid var(--line);transition:.22s ease;}
+.qa .sign::before,.qa .sign::after{content:"";position:absolute;top:50%;left:50%;background:var(--ink-3);
+  transform:translate(-50%,-50%);transition:.22s ease;}
+.qa .sign::before{width:9px;height:1.5px;}
+.qa .sign::after{width:1.5px;height:9px;}
+.qa[open] .sign{border-color:transparent;background:var(--sunset);}
+.qa[open] .sign::before,.qa[open] .sign::after{background:#fff;}
+.qa[open] .sign::after{transform:translate(-50%,-50%) rotate(90deg);}
+.qa .ans{padding:0 44px clamp(20px,2.6vh,26px) 0;max-width:62ch;
+  font-size:clamp(14.5px,0.42vw + 0.5vh,16px);line-height:1.62;color:var(--ink-2);
+  animation:fade .28s ease both;}
+.qa .ans a{color:var(--brand-ink);text-underline-offset:3px;}
+@keyframes fade{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* ── Option A : deux colonnes ──────────────────────────────────────────── */
+body[data-layout="A"] .wrap{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+  gap:clamp(30px,5vw,90px);align-items:start;}
+body[data-layout="A"] .head{position:sticky;top:34px;}
+body[data-layout="B"] .head,body[data-layout="C"] .head{max-width:620px;margin:0 auto;text-align:center;}
+body[data-layout="B"] .sub,body[data-layout="C"] .sub{margin-left:auto;margin-right:auto;}
+body[data-layout="B"] .list{max-width:760px;margin:clamp(28px,4vh,48px) auto 0;}
+body[data-layout="C"] .list{margin-top:clamp(28px,4vh,48px);}
+
+/* ── Option C : cartes ouvertes ────────────────────────────────────────── */
+body[data-layout="C"] .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,1.4vw,20px);}
+body[data-layout="C"] .qa{border:1px solid var(--line);border-radius:clamp(14px,1.2vw,20px);background:#fff;
+  padding:clamp(20px,2.4vh,26px) clamp(20px,1.8vw,28px);}
+body[data-layout="C"] .qa summary{padding:0;pointer-events:none;}
+body[data-layout="C"] .qa .sign{display:none;}
+body[data-layout="C"] .qa .ans{padding:10px 0 0;animation:none;}
+/* Douze questions, donc six rangées pleines : plus besoin de faire déborder la
+   dernière carte sur toute la largeur. À rétablir si le compte redevient impair. */
+@media (max-width:900px){
+  body[data-layout="A"] .wrap{grid-template-columns:minmax(0,1fr);gap:clamp(24px,4vh,36px);}
+  body[data-layout="A"] .head{position:static;}
+  body[data-layout="C"] .list{grid-template-columns:minmax(0,1fr);}
+}
+body[data-view="phone"] [data-layout] , body[data-view="phone"] .wrap{}
+body[data-view="phone"] .viewport .wrap{grid-template-columns:minmax(0,1fr) !important;}
+body[data-view="phone"] .viewport .head{position:static !important;text-align:left;}
+body[data-view="phone"] .viewport .list{grid-template-columns:minmax(0,1fr) !important;}
+body[data-view="phone"] .viewport .tailIn{display:none !important;}
+body[data-view="phone"] .viewport .tailOut{display:flex !important;}
+body[data-view="phone"] .viewport .tail{justify-content:flex-start;}
+
+/* ── Pied de section ───────────────────────────────────────────────────── */
+.tail{margin-top:clamp(28px,4vh,44px);display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;}
+/* Deux emplacements, un seul visible : dans la colonne sticky en A, sous la
+   liste en B et C. Le CTA doit rester à hauteur de lecture, jamais seul en bas
+   d'une colonne vide. */
+body[data-layout="A"] .tailOut{display:none;}
+body[data-layout="B"] .tailIn,body[data-layout="C"] .tailIn{display:none;}
+body[data-layout="B"] .tail,body[data-layout="C"] .tail{justify-content:center;}
+@media (max-width:900px){ body[data-layout="A"] .tailIn{display:none;} body[data-layout="A"] .tailOut{display:flex;} }
+.tailTxt{font-size:14.5px;color:var(--ink-3);}
+.tailTxt a{color:var(--ink);font-weight:600;text-underline-offset:3px;}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:999px;border:0;cursor:pointer;
+  background:var(--sunset);color:#fff;font-size:14.5px;font-weight:800;letter-spacing:-.008em;
+  box-shadow:0 16px 30px -18px rgba(255,90,31,.9);transition:transform .18s ease;}
+.cta:hover{transform:translateY(-1px);}
+</style>
+</head>
+<body data-layout="A" data-title="1" data-obj="1" data-bg="blanc" data-view="desk">
+
+<div class="bar">
+  <span class="lab">Mise en page</span>
+  <div class="grp" id="gLayout">
+    <button class="chip" data-set="layout" data-val="A" aria-pressed="true">A · Deux colonnes</button>
+    <button class="chip" data-set="layout" data-val="B" aria-pressed="false">B · Centrée</button>
+    <button class="chip" data-set="layout" data-val="C" aria-pressed="false">C · Cartes ouvertes</button>
+  </div>
+  <span class="lab">Titre</span>
+  <div class="grp" id="gTitle">
+    <button class="chip" data-set="title" data-val="1" aria-pressed="true">1</button>
+    <button class="chip" data-set="title" data-val="2" aria-pressed="false">2</button>
+    <button class="chip" data-set="title" data-val="3" aria-pressed="false">3</button>
+  </div>
+  <span class="lab">Objection</span>
+  <div class="grp" id="gObj">
+    <button class="chip" data-set="obj" data-val="1" aria-pressed="true">Réponse 1</button>
+    <button class="chip" data-set="obj" data-val="2" aria-pressed="false">Réponse 2</button>
+  </div>
+  <span class="lab">Fond</span>
+  <div class="grp" id="gBg">
+    <button class="chip" data-set="bg" data-val="blanc" aria-pressed="true">Blanc</button>
+    <button class="chip" data-set="bg" data-val="papier" aria-pressed="false">Papier</button>
+  </div>
+  <span class="lab">Écran</span>
+  <div class="grp" id="gView">
+    <button class="chip" data-set="view" data-val="desk" aria-pressed="true">Bureau</button>
+    <button class="chip" data-set="view" data-val="phone" aria-pressed="false">390 px</button>
+  </div>
+</div>
+
+<p class="note">
+  Bloc <b>FAQ opérateur</b>, à monter dans <code>app/(marketing)/page.tsx</code> après <code>&lt;DemoArcade /&gt;</code>,
+  avant <code>&lt;Footer /&gt;</code>. <b>v3</b> : objection « je donne déjà mes photos » en 2e position, deux formulations à départager. En A et B, une seule réponse
+  reste ouverte à la fois. En C, tout est lisible sans clic, mais le bloc est deux fois plus haut.
+</p>
+
+<div class="board">
+<div class="viewport">
+
+  <p class="ctxTop">↑ fin du bloc démo</p>
+
+  <section class="sec">
+    <div class="wrap">
+
+      <div class="head">
+        <p class="eyebrow">Questions fréquentes</p>
+        <h2 class="h2 t1">Les questions que posent <span class="grad">les professionnels.</span></h2>
+        <h2 class="h2 t2">Tout ce qu&rsquo;il faut savoir <span class="grad">avant de commencer.</span></h2>
+        <h2 class="h2 t3">Les réponses aux questions <span class="grad">les plus fréquentes.</span></h2>
+        <p class="sub">Commission, versement des fonds, droit à l&rsquo;image, protection des fichiers. Douze réponses avant de vous décider.</p>
+
+        <div class="tail tailIn">
+          <button class="cta" type="button">Rejoindre la liste d&rsquo;attente <span aria-hidden="true">→</span></button>
+          <p class="tailTxt">Une question qui n&rsquo;est pas traitée ici&nbsp;? <a href="mailto:hello@linktrip.co">hello@linktrip.co</a></p>
+        </div>
+      </div>
+
+      <div class="list">
+
+        <details class="qa" open>
+          <summary>Combien coûte Linktrip ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">L&rsquo;inscription et l&rsquo;usage de la plateforme sont gratuits. Linktrip prélève une commission de 20&nbsp;% sur chaque vente, sans abonnement ni engagement de durée.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Je donne déjà mes photos à mes clients, quel intérêt&nbsp;?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans a1">Vous pouvez continuer&nbsp;: fixez le nombre de photos offertes à chaque participant, les suivantes sont proposées à la vente. La galerie vous rapporte en plus des adresses clients, des avis Google et des partages en story, ce qu&rsquo;un envoi WhatsApp ne laisse pas.</p>
+          <p class="ans a2">Continuez de les offrir. Vous choisissez combien de photos chaque participant reçoit gratuitement, et les autres deviennent une source de revenu. Le geste commercial reste, la galerie vous rend en plus des avis Google et de la visibilité.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Quand les fonds me sont-ils versés ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Les paiements sont encaissés par Stripe sur votre compte, puis virés selon votre calendrier de versement. Linktrip ne détient vos fonds à aucun moment.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Que reste-t-il à ma charge après une sortie ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Le dépôt des photos. La création de la galerie, l&rsquo;envoi du lien, les relances et la livraison des fichiers sont automatisés.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Faut-il investir dans du matériel ou installer une application ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Ni l&rsquo;un ni l&rsquo;autre. L&rsquo;appareil photo ou le téléphone que vous utilisez déjà suffit, et la plateforme fonctionne depuis un navigateur.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Comment mes clients accèdent-ils à leurs photos ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Ils reçoivent un lien privé par e-mail ou WhatsApp à l&rsquo;issue de la sortie. Aucun compte n&rsquo;est requis&nbsp;: ils consultent, sélectionnent, paient et téléchargent.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Qui définit les tarifs ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Vous. Le prix à l&rsquo;unité et celui du pack complet se paramètrent dans votre espace et restent modifiables à tout moment.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Mes photos peuvent-elles être récupérées sans paiement ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Non. Seuls des aperçus floutés et filigranés circulent avant l&rsquo;achat. Le fichier haute définition n&rsquo;est délivré qu&rsquo;après confirmation du paiement.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Comment le droit à l&rsquo;image est-il géré ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Chaque participant donne son consentement avant de recevoir ses photos et peut en demander la suppression depuis sa galerie, sans intervention de votre part.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Où sont hébergées les photos, et pendant combien de temps ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Sur des serveurs situés en Europe, conformément au RGPD. Les fichiers sont supprimés automatiquement 90 jours après la sortie.</p>
+        </details>
+
+        <details class="qa">
+          <summary>La plateforme convient-elle aux sorties en groupe ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Oui. Les photos sont classées par créneau et un lien unique couvre la sortie&nbsp;: chaque participant y retrouve les siennes.</p>
+        </details>
+
+        <details class="qa">
+          <summary>Quels revenus puis-je espérer ?<span class="sign" aria-hidden="true"></span></summary>
+          <p class="ans">Ils dépendent de votre tarif et de la part de clients qui achètent. <a href="/simulation">Le simulateur</a> en donne une estimation en quelques secondes.</p>
+        </details>
+
+      </div>
+
+      <div class="tail tailOut">
+        <button class="cta" type="button">Rejoindre la liste d&rsquo;attente <span aria-hidden="true">→</span></button>
+        <p class="tailTxt">Une question qui n&rsquo;est pas traitée ici&nbsp;? <a href="mailto:hello@linktrip.co">hello@linktrip.co</a></p>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="ctxFoot">↓ pied de page</div>
+
+</div>
+</div>
+
+<script>
+/* Chips de la barre de contrôle. */
+document.querySelectorAll(".chip").forEach(function (chip) {
+  chip.addEventListener("click", function () {
+    var key = chip.dataset.set;
+    document.body.dataset[key] = chip.dataset.val;
+    chip.parentElement.querySelectorAll(".chip").forEach(function (c) {
+      c.setAttribute("aria-pressed", String(c === chip));
+    });
+  });
+});
+
+/* Accordéon exclusif : ouvrir une question referme la précédente. Neutralisé en
+   option C, où toutes les cartes restent ouvertes. */
+var items = Array.prototype.slice.call(document.querySelectorAll(".qa"));
+items.forEach(function (item) {
+  item.addEventListener("toggle", function () {
+    if (!item.open || document.body.dataset.layout === "C") return;
+    items.forEach(function (other) { if (other !== item) other.open = false; });
+  });
+});
+
+/* Bascule d'option : C ouvre tout, A et B ne laissent que la première. */
+document.querySelectorAll('[data-set="layout"]').forEach(function (chip) {
+  chip.addEventListener("click", function () {
+    var toC = chip.dataset.val === "C";
+    items.forEach(function (item, i) { item.open = toC || i === 0; });
+  });
+});
+</script>
+</body>
+</html>

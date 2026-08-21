@@ -43,11 +43,6 @@ const PHOTOS: Photo[] = [
   { src: "escalade-duo",       alt: "Deux grimpeuses casquées avant le départ",                 label: "Escalade",   lane:  31.5, drift: -4, rot: [ 2.0, -1.0] },
 ];
 
-/** Course verticale, en vh de part et d'autre du centre : au-delà, la photo est hors cadre. */
-const TRAVEL_FROM = 80;
-const TRAVEL_TO = -80;
-/** Part de la progression consommée par une traversée complète. */
-const DURATION = 0.3;
 /** Départ de la première photo — négatif : elle est déjà engagée quand la section se cale. */
 const FIRST_START = -0.16;
 /** Part de sa course que la dernière photo a parcourue quand la section se libère.
@@ -84,20 +79,50 @@ export function ScrollStory() {
 
     const cards = cardsRef.current.filter((el): el is HTMLDivElement => el !== null);
 
-    // Plages échelonnées sur la course de la section (cf. LAST_TRAVEL_AT_END).
-    const lastStart = 1 - DURATION * LAST_TRAVEL_AT_END;
-    const step = (lastStart - FIRST_START) / (PHOTOS.length - 1);
-
-    let vh = window.innerHeight / 100;
-    let vw = window.innerWidth / 100;
-    // Sous 760px le corridor central ne tient plus : on resserre les couloirs
-    // pour que les photos restent dans l'écran plutôt que de le déborder.
-    let laneScale = window.innerWidth < 760 ? 0.5 : 1;
-    const onResize = () => {
-      vh = window.innerHeight / 100;
-      vw = window.innerWidth / 100;
-      laneScale = window.innerWidth < 760 ? 0.5 : 1;
+    const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const easeOutBack = (t: number) => {
+      const c1 = 1.35;
+      return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     };
+
+    // Grandeurs dépendant du viewport. Recalculées au redimensionnement, et
+    // mesurées plutôt que codées en vh : la taille d'une carte vient d'un
+    // clamp() CSS, elle n'est connue qu'ici.
+    let vw = 0;
+    let laneScale = 1;
+    let total = 1;
+    let travelPx = 0;
+    let duration = 0.3;
+    let step = 0.05;
+
+    const measure = () => {
+      vw = window.innerWidth / 100;
+      // Sous 760px le corridor central ne tient plus : on resserre les couloirs
+      // pour que les photos restent dans l'écran plutôt que de le déborder.
+      laneScale = window.innerWidth < 760 ? 0.5 : 1;
+      total = Math.max(1, wrapper.offsetHeight - window.innerHeight);
+
+      // Course d'une photo : de « juste sous le bas de l'écran » à « juste
+      // au-dessus du haut ». Déduite de la hauteur réelle d'une carte et non
+      // d'une constante en vh — sur un écran court, une valeur fixe laisserait
+      // la carte encore visible en fin de course, et elle disparaîtrait d'un coup.
+      const cardHeight = cards[0]?.offsetHeight ?? window.innerHeight * 0.5;
+      travelPx = window.innerHeight + cardHeight + 16;
+
+      // Le réglage qui compte. Une photo monte d'exactement un pixel par pixel
+      // de scroll : sans ça, en entrant dans la section, tout défile plus vite
+      // que le reste de la page et le scroll paraît s'emballer (mesuré à 1,90x
+      // avant correction, contre 1,00x partout ailleurs). La durée d'une
+      // traversée n'est donc pas un réglage libre — elle se déduit de la course
+      // disponible. C'est la hauteur de `.wrapper` en CSS qui pilote le nombre
+      // de photos simultanément à l'écran : la raccourcir les entasse.
+      duration = clamp(travelPx / total, 0.12, 0.6);
+      step = (1 - duration * LAST_TRAVEL_AT_END - FIRST_START) / (PHOTOS.length - 1);
+    };
+    measure();
+
+    const onResize = () => measure();
     window.addEventListener("resize", onResize, { passive: true });
 
     const hoverCapable = window.matchMedia("(hover: hover)").matches;
@@ -109,17 +134,8 @@ export function ScrollStory() {
     };
     if (hoverCapable) sticky.addEventListener("mousemove", onMouseMove, { passive: true });
 
-    const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-    const easeOutBack = (t: number) => {
-      const c1 = 1.35;
-      return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-    };
-
     const rawProgress = () => {
       const rect = wrapper.getBoundingClientRect();
-      const total = wrapper.offsetHeight - window.innerHeight;
-      if (total <= 0) return 1;
       return clamp(-rect.top / total, 0, 1);
     };
 
@@ -130,11 +146,11 @@ export function ScrollStory() {
       cards.forEach((card, i) => {
         const cfg = PHOTOS[i];
         const start = FIRST_START + i * step;
-        const u = clamp((p - start) / DURATION, 0, 1);
+        const u = clamp((p - start) / duration, 0, 1);
 
         // Course linéaire : c'est elle qui donne la sensation de défilement continu.
         // Une courbe d'easing ici ferait « flotter » les photos au lieu de les faire monter.
-        const y = lerp(TRAVEL_FROM, TRAVEL_TO, u) * vh;
+        const y = lerp(travelPx / 2, -travelPx / 2, u);
         const x = (cfg.lane * laneScale + cfg.drift * u) * vw + mouseSmoothX * PARALLAX;
         const rot = lerp(cfg.rot[0], cfg.rot[1], u);
 

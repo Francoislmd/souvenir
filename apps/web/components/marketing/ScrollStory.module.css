@@ -6,12 +6,14 @@
 
 .wrapper {
   position: relative;
-  /* Course de scroll consommée par l'ascension. 380vh - 100vh de sticky = 280vh
-     de progression réelle pour 18 photos, soit ~1,9x la vitesse du scroll. */
-  height: 380svh;
-}
-@media (max-width: 760px) {
-  .wrapper { height: 320svh; }
+  /* Cette hauteur est le seul réglage du rythme de la section.
+     600svh - 100svh de sticky = 500vh de course réelle. Le composant en déduit
+     la durée d'une traversée pour que les photos montent exactement à la vitesse
+     du scroll (1:1) ; cette hauteur fixe donc le nombre de photos visibles
+     simultanément — ici ~5,5 sur 18.
+     La raccourcir n'accélère pas le défilement, elle entasse les photos ;
+     l'allonger les espace. Ne pas la changer sans revérifier les deux. */
+  height: 600svh;
 }
 
 .sticky {
