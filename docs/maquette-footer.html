@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maquette · Footer Linktrip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Tokens réels de apps/web/styles/tokens.css. Trois directions de footer pour
+   la landing Linktrip, à départager. Contenu commun aux trois : liens légaux
+   (obligatoires, aujourd'hui absents), pages activités (maillage interne),
+   connexion opérateur et contact. */
+:root{
+  --ink:#161320; --ink-2:#413c4e; --ink-3:#726c80; --ink-4:#a6a0b2;
+  --line:#ece9ef; --line-2:#f4f2f6; --soft:#fff1eb; --paper:#fbfaf9;
+  --brand:#ff5a1f; --rose:#ff3d6e; --amber:#ffb443; --aqua:#0fbeb6;
+  --sunset:linear-gradient(120deg,#ff3d6e,#ff5a1f 52%,#ffb443);
+  --gutter:46px;
+}
+@media (max-width:1280px){ :root{ --gutter:34px; } }
+@media (max-width:700px){ :root{ --gutter:20px; } }
+
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{background:#fff;color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:"Inter Tight","Inter",system-ui,sans-serif;font-weight:700;margin:0;}
+p{margin:0;}
+a{text-decoration:none;color:inherit;}
+svg{display:block;}
+
+/* ── Barre de maquette (n'existe pas sur la landing) ───────────────────── */
+.mockbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+.mockbar__in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px var(--gutter);max-width:1400px;margin:0 auto;}
+.mockbar__label{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);}
+.tabs{display:flex;gap:4px;background:var(--line-2);padding:4px;border-radius:99px;}
+.tab{border:0;background:transparent;cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;color:var(--ink-3);padding:8px 14px;border-radius:99px;}
+.tab[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,19,32,.12);}
+.mockbar__hint{font-size:12.5px;color:var(--ink-3);margin-left:auto;}
+
+/* ── Fin de page factice, pour juger le raccord ────────────────────────── */
+.tail{max-width:1320px;margin:0 auto;padding:clamp(40px,7vh,88px) var(--gutter) 0;text-align:center;}
+.tail small{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);}
+.tail h3{margin-top:10px;font-size:clamp(21px,2.2vw,29px);letter-spacing:-.02em;color:var(--ink);}
+.tail p{margin-top:8px;font-size:15px;color:var(--ink-3);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Base commune aux trois footers
+   ══════════════════════════════════════════════════════════════════════ */
+.footer{
+  position:relative;z-index:3;overflow:hidden;
+  margin-top:clamp(40px,6vh,80px);
+  border-radius:clamp(20px,2vw,30px) clamp(20px,2vw,30px) 0 0;
+  background:var(--ink);color:#fff;
+}
+/* Encre pleine, sans halo. */
+.footer__in{position:relative;max-width:1320px;margin:0 auto;padding:clamp(40px,6vh,66px) var(--gutter) clamp(20px,3vh,28px);}
+
+.f-title{font-family:"Inter Tight","Inter",sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:15px;}
+.f-links{display:flex;flex-direction:column;gap:11px;align-items:flex-start;}
+.f-link{font-size:14.5px;color:rgba(255,255,255,.7);transition:color .18s;}
+@media (hover:hover){ .f-link:hover{color:#fff;} }
+.f-link--icon{display:flex;align-items:center;gap:9px;}
+.f-link--icon svg{width:16px;height:16px;color:rgba(255,255,255,.42);transition:color .18s;flex:none;}
+@media (hover:hover){ .f-link--icon:hover svg{color:var(--amber);} }
+
+.f-blurb{max-width:340px;font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.6);}
+
+/* Bouton sunset (repris de components/ui/Button) */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:"Inter Tight","Inter",sans-serif;font-weight:800;font-size:15px;letter-spacing:-.008em;
+  color:#fff;background:var(--sunset);border-radius:99px;padding:12px 20px;
+  box-shadow:0 8px 22px rgba(255,90,31,.28);transition:transform .18s, box-shadow .18s;
+}
+@media (hover:hover){ .btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(255,90,31,.34);} }
+.btn span{transition:transform .18s;}
+@media (hover:hover){ .btn:hover span{transform:translateX(3px);} }
+.btn--ghost{background:transparent;box-shadow:none;border:1px solid rgba(255,255,255,.22);color:#fff;}
+@media (hover:hover){ .btn--ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.35);transform:translateY(-1px);box-shadow:none;} }
+
+/* Mention de confiance */
+.trust{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.45);}
+.trust svg{width:15px;height:15px;color:rgba(255,255,255,.45);flex:none;}
+
+/* Barre basse */
+.f-bottom{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 18px;
+  border-top:1px solid rgba(255,255,255,.10);
+  padding-top:clamp(16px,2.4vh,22px);
+  font-size:12.5px;color:rgba(255,255,255,.4);
+}
+@media (min-width:561px){ .f-bottom{justify-content:space-between;} }
+.f-legal{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;justify-content:center;}
+.f-legal a{color:rgba(255,255,255,.45);transition:color .18s;}
+@media (hover:hover){ .f-legal a:hover{color:rgba(255,255,255,.85);} }
+.f-dot{color:rgba(255,255,255,.2);}
+
+.socials{display:flex;gap:10px;}
+.social{display:flex;height:32px;width:32px;align-items:center;justify-content:center;border-radius:99px;border:1px solid rgba(255,255,255,.15);transition:border-color .18s,background .18s;}
+.social svg{width:15px;height:15px;}
+@media (hover:hover){ .social:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.1);} }
+
+/* ══════════════════════════════════════════════════════════════════════
+   A · Colonnes
+   ══════════════════════════════════════════════════════════════════════ */
+.a-grid{
+  display:grid;grid-template-columns:1fr;gap:34px;
+  padding-bottom:clamp(28px,4vh,44px);
+}
+@media (min-width:561px){ .a-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 32px;} }
+@media (min-width:1000px){ .a-grid{grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr));gap:clamp(24px,3vw,48px);} }
+.a-brand .btn{margin-top:20px;}
+.a-brand .trust{margin-top:22px;}
+.a-brand .socials{margin-top:16px;}
+.a-logo{margin-bottom:15px;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   B · Bandeau CTA + grand mot
+   ══════════════════════════════════════════════════════════════════════ */
+.b-cta{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:22px;
+  padding-bottom:clamp(30px,4.4vh,46px);
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.b-cta h3{font-size:clamp(23px,2.7vw,36px);line-height:1.1;letter-spacing:-.022em;max-width:15ch;}
+.b-cta p{margin-top:10px;font-size:14.5px;color:rgba(255,255,255,.55);}
+.b-cta__act{display:flex;flex-direction:column;align-items:stretch;gap:12px;flex:1 1 420px;max-width:560px;}
+.b-grid{
+  display:grid;grid-template-columns:1fr;gap:32px;
+  padding:clamp(30px,4.4vh,46px) 0 clamp(30px,4.6vh,52px);
+}
+@media (min-width:561px){ .b-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:34px 30px;} }
+@media (min-width:1000px){ .b-grid{grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr));gap:clamp(24px,3vw,48px);} }
+/* Symbole géant en filigrane, débordant du coin bas droit : donne son caractère
+   au bloc sans la zone morte d'un mot pleine largeur. */
+.b-mark{position:absolute;right:calc(var(--gutter) * -2.2);bottom:calc(var(--gutter) * -1.8);
+  width:clamp(170px,22vw,290px);pointer-events:none;opacity:.05;}
+.b-mark svg{width:100%;height:auto;}
+.b-bottomwrap{position:relative;}
+
+/* Champ e-mail en ligne, variante sombre de components/marketing/EmailCaptureField */
+.field{display:flex;align-items:center;gap:8px;width:min(560px,100%);
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+  border-radius:99px;padding:6px 6px 6px 14px;transition:border-color .18s,background .18s;}
+.field:focus-within{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.09);}
+.field input{flex:1;min-width:0;border:0;background:transparent;color:#fff;font-family:inherit;font-size:15.5px;padding:14px 6px;outline:none;text-overflow:ellipsis;}
+.field input::placeholder{color:rgba(255,255,255,.42);}
+.field button{border:0;cursor:pointer;font-family:"Inter Tight","Inter",sans-serif;font-weight:800;font-size:15px;
+  color:#fff;background:var(--sunset);border-radius:99px;padding:14px 24px;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:7px;box-shadow:0 8px 20px rgba(255,90,31,.26);transition:transform .18s;}
+@media (hover:hover){ .field button:hover{transform:translateY(-1px);} }
+
+/* ══════════════════════════════════════════════════════════════════════
+   C · Carte verre + pastilles activités
+   ══════════════════════════════════════════════════════════════════════ */
+.c-card{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;
+  border-radius:clamp(18px,1.8vw,26px);
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(140deg,rgba(255,138,90,.13),rgba(255,255,255,.04) 55%,rgba(255,255,255,.03));
+  backdrop-filter:blur(14px);
+  padding:clamp(22px,3vh,32px) clamp(20px,2.6vw,36px);
+  box-shadow:0 18px 44px rgba(0,0,0,.22);
+}
+.c-card h3{font-size:clamp(20px,2.1vw,27px);line-height:1.15;letter-spacing:-.02em;max-width:18ch;}
+.c-card p{margin-top:8px;font-size:14px;color:rgba(255,255,255,.55);}
+.c-mid{
+  display:grid;grid-template-columns:1fr;gap:32px;
+  padding:clamp(30px,4.4vh,48px) 0 clamp(24px,3vh,34px);
+}
+@media (min-width:561px){ .c-mid{grid-template-columns:repeat(2,minmax(0,1fr));gap:34px 30px;} }
+@media (min-width:1000px){ .c-mid{grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:clamp(24px,3vw,48px);} }
+.c-pills{
+  display:flex;flex-wrap:wrap;gap:8px;
+  padding-bottom:clamp(24px,3.4vh,36px);
+}
+.c-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  border-radius:99px;border:1px solid rgba(255,255,255,.13);
+  padding:7px 14px 7px 11px;font-size:13.5px;color:rgba(255,255,255,.72);
+  transition:border-color .18s,background .18s,color .18s;
+}
+.c-pill svg{width:16px;height:16px;color:rgba(255,255,255,.45);transition:color .18s;}
+@media (hover:hover){ .c-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28);color:#fff;} .c-pill:hover svg{color:var(--amber);} }
+.c-pills__label{width:100%;margin-bottom:2px;}
+
+.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<div class="mockbar">
+  <div class="mockbar__in">
+    <span class="mockbar__label">Footer</span>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-opt="a">A · Colonnes</button>
+      <button class="tab" role="tab" aria-selected="false" data-opt="b">B · Bandeau e-mail</button>
+      <button class="tab" role="tab" aria-selected="false" data-opt="c">C · Carte verre</button>
+    </div>
+    <span class="mockbar__hint">Les trois ajoutent les liens légaux, les pages activités, la connexion et le contact.</span>
+  </div>
+</div>
+
+<div class="tail">
+  <small>Fin de page</small>
+  <h3>Bloc précédent (FAQ)</h3>
+  <p>Présent uniquement pour juger le raccord avec le footer.</p>
+</div>
+
+<!-- ══════════════ A ══════════════ -->
+<footer class="footer" id="opt-a">
+  <div class="footer__in">
+    <div class="a-grid">
+      <div class="a-brand">
+        <div class="a-logo"><svg viewBox="0 0 277 100" height="26" width="72.0" role="img" aria-label="Linktrip"><defs><linearGradient id="lg1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF3D6E"/><stop offset="0.52" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFB443"/></linearGradient></defs><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" fill="none" stroke="url(#lg1)" stroke-width="8" stroke-linecap="round"/><circle cx="73" cy="27" r="11" fill="url(#lg1)"/><path d="M115.23375 26.513593750000005V65.16046875H106.0V26.513593750000005Z M117.02683620689655 65.16046875V36.162343750000005H126.26058620689655V65.16046875ZM121.61777370689656 32.842343750000005Q119.67246120689656 32.842343750000005 118.27183620689655 31.54546875000001Q116.87121120689656 30.248593750000012 116.87121120689656 28.40703125000001Q116.87121120689656 26.565468750000008 118.27183620689655 25.281562500000007Q119.67246120689656 23.997656250000006 121.61777370689656 23.997656250000006Q123.58902370689655 23.997656250000006 124.97667995689656 25.281562500000007Q126.36433620689655 26.565468750000008 126.36433620689655 28.40703125000001Q126.36433620689655 30.248593750000012 124.97667995689656 31.54546875000001Q123.58902370689655 32.842343750000005 121.61777370689656 32.842343750000005Z M137.2874224137931 48.638281250000006V65.16046875H128.0536724137931V36.162343750000005H137.1836724137931V41.505468750000006H137.4171099137931Q138.4027349137931 38.85984375000001 140.5685161637931 37.32953125000001Q142.73429741379312 35.79921875000001 145.9505474137931 35.79921875000001Q149.0111724137931 35.79921875000001 151.2677349137931 37.16093750000001Q153.5242974137931 38.52265625000001 154.76929741379308 40.97375000000001Q156.0142974137931 43.42484375000001 156.0142974137931 46.692968750000006V65.16046875H146.7805474137931V48.50859375Q146.7805474137931 46.09640625000001 145.5614849137931 44.73468750000001Q144.3424224137931 43.37296875000001 142.1377349137931 43.37296875000001Q140.6852349137931 43.37296875000001 139.5958599137931 43.99546875000001Q138.5064849137931 44.61796875 137.8969536637931 45.798125000000006Q137.2874224137931 46.97828125000001 137.2874224137931 48.638281250000006Z M166.10738362068963 57.560781250000005 166.18519612068965 46.537343750000005H167.45613362068963L175.57457112068965 36.162343750000005H186.05332112068965L173.94050862068963 51.05046875000001H171.50238362068964ZM157.80738362068965 65.16046875V26.513593750000005H167.04113362068964V65.16046875ZM175.80800862068963 65.16046875 168.23425862068964 53.12546875000001 174.30363362068965 46.56328125 186.44238362068964 65.16046875Z M201.6451573275862 36.162343750000005V42.983906250000004H183.3851573275862V36.162343750000005ZM187.1979698275862 29.262968750000006H196.4057823275862V56.03046875000001Q196.4057823275862 57.19765625000001 196.97640732758617 57.78125000000001Q197.54703232758618 58.364843750000006 198.7660948275862 58.364843750000006Q199.2329698275862 58.364843750000006 199.84250107758618 58.26109375000001Q200.45203232758618 58.15734375000001 200.78921982758618 58.053593750000005L202.1639073275862 64.74546875Q200.6076573275862 65.18640625 199.2718760775862 65.38093750000002Q197.9360948275862 65.57546875000001 196.6392198275862 65.57546875000001Q192.02234482758618 65.57546875000001 189.6101573275862 63.383750000000006Q187.1979698275862 61.19203125000001 187.1979698275862 57.067968750000006Z M202.32293103448276 65.16046875V36.162343750000005H211.27136853448275V41.47953125000001H211.58261853448275Q212.36074353448276 38.57453125000001 214.16339978448275 37.18687500000001Q215.96605603448276 35.79921875000001 218.32636853448275 35.79921875000001Q218.97480603448275 35.79921875000001 219.66214978448275 35.87703125000001Q220.34949353448275 35.95484375000001 220.92011853448275 36.13640625000001V44.12515625Q220.24574353448276 43.89171875000001 219.18230603448274 43.775000000000006Q218.11886853448274 43.65828125000001 217.28886853448276 43.65828125000001Q215.65480603448276 43.65828125000001 214.34496228448276 44.38453125000001Q213.03511853448276 45.11078125000001 212.29589978448274 46.40765625000001Q211.55668103448275 47.70453125000001 211.55668103448275 49.41640625000001V65.16046875Z M220.63820474137933 65.16046875V36.162343750000005H229.8719547413793V65.16046875ZM225.22914224137932 32.842343750000005Q223.28382974137932 32.842343750000005 221.8832047413793 31.54546875000001Q220.4825797413793 30.248593750000012 220.4825797413793 28.40703125000001Q220.4825797413793 26.565468750000008 221.8832047413793 25.281562500000007Q223.28382974137932 23.997656250000006 225.22914224137932 23.997656250000006Q227.20039224137932 23.997656250000006 228.5880484913793 25.281562500000007Q229.97570474137933 26.565468750000008 229.97570474137933 28.40703125000001Q229.97570474137933 30.248593750000012 228.5880484913793 31.54546875000001Q227.20039224137932 32.842343750000005 225.22914224137932 32.842343750000005Z M231.66504094827587 76.00234375000001V36.162343750000005H240.79504094827587V41.14234375000001H241.10629094827587Q241.65097844827585 39.81953125000001 242.70144719827584 38.587500000000006Q243.75191594827587 37.35546875000001 245.37300969827587 36.57734375000001Q246.99410344827587 35.79921875000001 249.30254094827586 35.79921875000001Q252.33722844827588 35.79921875000001 254.95691594827588 37.39437500000001Q257.5766034482759 38.98953125000001 259.1976971982759 42.28359375000001Q260.8187909482759 45.577656250000004 260.8187909482759 50.68734375000001Q260.8187909482759 55.615468750000005 259.26254094827584 58.935468750000005Q257.70629094827586 62.255468750000006 255.07363469827587 63.91546875000001Q252.44097844827587 65.57546875000001 249.22472844827587 65.57546875000001Q247.04597844827586 65.57546875000001 245.43785344827586 64.84921875Q243.82972844827586 64.12296875000001 242.75332219827587 62.95578125000001Q241.67691594827588 61.788593750000004 241.10629094827587 60.43984375000001H240.89879094827586V76.00234375000001ZM246.03441594827586 58.39078125Q247.74629094827586 58.39078125 248.92644719827587 57.43109375Q250.10660344827588 56.47140625000001 250.71613469827588 54.73359375000001Q251.32566594827586 52.99578125000001 251.32566594827586 50.68734375000001Q251.32566594827586 48.35296875000001 250.71613469827588 46.62812500000001Q250.10660344827588 44.903281250000006 248.93941594827587 43.943593750000005Q247.77222844827585 42.983906250000004 246.03441594827586 42.983906250000004Q244.34847844827587 42.983906250000004 243.15535344827586 43.91765625000001Q241.96222844827585 44.85140625000001 241.32675969827585 46.57625000000001Q240.69129094827588 48.30109375000001 240.69129094827588 50.68734375000001Q240.69129094827588 53.021718750000005 241.32675969827585 54.74656250000001Q241.96222844827585 56.47140625000001 243.15535344827586 57.43109375Q244.34847844827587 58.39078125 246.03441594827586 58.39078125Z" fill="#FFFFFF"/></svg></div>
+        <p class="f-blurb">La boutique photo des professionnels de l'outdoor. Chaque sortie devient une source de revenu.</p>
+        <a class="btn" href="/liste-attente">Rejoindre la liste d'attente <span aria-hidden="true">→</span></a>
+        <div class="trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8 4.8 5.6v6.1c0 4.4 3 8 7.2 9.5 4.2-1.5 7.2-5.1 7.2-9.5V5.6L12 2.8Z"/><path d="m8.9 12.1 2.1 2.1 4.1-4.2"/></svg> Données hébergées en Europe, conforme RGPD</div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Produit</h4>
+        <div class="f-links">
+          <a class="f-link" href="/fonctionnement">Fonctionnement</a>
+          <a class="f-link" href="/simulation">Simuler mes revenus</a>
+          <a class="f-link" href="/liste-attente">Liste d'attente</a>
+          <a class="f-link" href="/connexion">Connexion opérateur</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Activités</h4>
+        <div class="f-links"><a class="f-link f-link--icon" href="/activites/surf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6c4.6 3.4 6.6 8.6 4.4 13-1.4 2.8-3.2 4.4-4.4 5.4-1.2-1-3-2.6-4.4-5.4-2.2-4.4-.2-9.6 4.4-13Z"/><path d="M12 6.6v11"/></svg>Surf</a>
+<a class="f-link f-link--icon" href="/activites/parapente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 10.4a8.8 8.8 0 0 1 17.6 0"/><path d="M3.2 10.4c2.9 0 4.4 1.6 4.4 1.6M20.8 10.4c-2.9 0-4.4 1.6-4.4 1.6M12 10.4v1.6"/><path d="m4.6 11.2 6.6 4.6M19.4 11.2l-6.6 4.6"/><circle cx="12" cy="17" r="1.4"/><path d="M2.5 21c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Parapente</a>
+<a class="f-link f-link--icon" href="/activites/canyoning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v10.5"/><path d="M20 3v10.5"/><path d="M12 3.5v7"/><path d="M12 10.5c0 2.2 1.4 2.6 1.4 4.4"/><path d="M10.4 3.5a1.6 1.6 0 1 1 3.2 0"/><path d="M4 13.5h3M17 13.5h3"/><path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Canyoning</a>
+<a class="f-link f-link--icon" href="/activites/rafting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 12.6h19.2l-2.3 4.6H4.7L2.4 12.6Z"/><path d="M8.6 12.6 15 4.4"/><path d="m13.6 3.1 2.9 2.2-1.7 2.3-2.9-2.2 1.7-2.3Z"/><path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Rafting</a>
+<a class="f-link f-link--icon" href="/activites/plongee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 8.2a3.2 3.2 0 0 1 6.4 0v1.4H8.6V8.2Z"/><path d="M8.6 9.6c-1.4.8-2.2 2.2-2.2 3.8v5.8h11.2v-5.8c0-1.6-.8-3-2.2-3.8"/><path d="M11.8 4.6V3M15.6 5.4l1-1.2M8 5.4 7 4.2"/><path d="M9.8 13.4h4.4"/></svg>Plongée</a>
+<a class="f-link f-link--icon" href="/activites/parc-aventure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 4.6v15"/><path d="M19.6 4.6v15"/><path d="M4.4 8.6c3.6 2.4 7.6 2.4 11.2 0"/><path d="M8.8 12.6c3.6 2.4 7.2 2.4 10.8 0"/><path d="M2.6 19.6h18.8"/><path d="M13.2 8.6v1.6M9.6 12.6v1.6"/></svg>Parc aventure</a></div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Ressources</h4>
+        <div class="f-links">
+          <a class="f-link" href="/#faq">Questions fréquentes</a>
+          <a class="f-link" href="mailto:hello@linktrip.co">Nous écrire</a>
+          <a class="f-link" href="/mentions-legales">Mentions légales</a>
+          <a class="f-link" href="/cgu">CGU</a>
+          <a class="f-link" href="/cgv">CGV</a>
+          <a class="f-link" href="/confidentialite">Confidentialité</a>
+          <a class="f-link" href="#cookies">Gérer les cookies</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="f-bottom">
+      <span>© 2026 Linktrip · Fait en France</span>
+      <div class="socials">
+<a class="social" href="https://instagram.com/linktrip.co" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="rgba(255,255,255,.7)" stroke="none"/></svg>
+</a>
+<a class="social" href="https://linkedin.com/company/linktrip" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 10.5v6.2M8 7.4v.1M12 16.7v-3.6a2.2 2.2 0 0 1 4.4 0v3.6"/></svg>
+</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════ B ══════════════ -->
+<footer class="footer hidden" id="opt-b">
+  <div class="b-mark"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><circle cx="73" cy="27" r="11" fill="#fff"/></svg></div>
+  <div class="footer__in">
+    <div class="b-cta">
+      <div>
+        <h3>La boutique photo des professionnels de l'outdoor.</h3>
+        <p>Chaque sortie devient une source de revenu.</p>
+      </div>
+      <div class="b-cta__act">
+        <form class="field" onsubmit="return false">
+          <input type="email" placeholder="Votre e-mail professionnel" aria-label="E-mail professionnel" />
+          <button type="submit">Rejoindre <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8 4.8 5.6v6.1c0 4.4 3 8 7.2 9.5 4.2-1.5 7.2-5.1 7.2-9.5V5.6L12 2.8Z"/><path d="m8.9 12.1 2.1 2.1 4.1-4.2"/></svg> Sans engagement, 2 minutes</div>
+      </div>
+    </div>
+
+    <div class="b-grid">
+      <div class="a-brand">
+        <div class="a-logo"><svg viewBox="0 0 277 100" height="26" width="72.0" role="img" aria-label="Linktrip"><defs><linearGradient id="lg2" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF3D6E"/><stop offset="0.52" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFB443"/></linearGradient></defs><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" fill="none" stroke="url(#lg2)" stroke-width="8" stroke-linecap="round"/><circle cx="73" cy="27" r="11" fill="url(#lg2)"/><path d="M115.23375 26.513593750000005V65.16046875H106.0V26.513593750000005Z M117.02683620689655 65.16046875V36.162343750000005H126.26058620689655V65.16046875ZM121.61777370689656 32.842343750000005Q119.67246120689656 32.842343750000005 118.27183620689655 31.54546875000001Q116.87121120689656 30.248593750000012 116.87121120689656 28.40703125000001Q116.87121120689656 26.565468750000008 118.27183620689655 25.281562500000007Q119.67246120689656 23.997656250000006 121.61777370689656 23.997656250000006Q123.58902370689655 23.997656250000006 124.97667995689656 25.281562500000007Q126.36433620689655 26.565468750000008 126.36433620689655 28.40703125000001Q126.36433620689655 30.248593750000012 124.97667995689656 31.54546875000001Q123.58902370689655 32.842343750000005 121.61777370689656 32.842343750000005Z M137.2874224137931 48.638281250000006V65.16046875H128.0536724137931V36.162343750000005H137.1836724137931V41.505468750000006H137.4171099137931Q138.4027349137931 38.85984375000001 140.5685161637931 37.32953125000001Q142.73429741379312 35.79921875000001 145.9505474137931 35.79921875000001Q149.0111724137931 35.79921875000001 151.2677349137931 37.16093750000001Q153.5242974137931 38.52265625000001 154.76929741379308 40.97375000000001Q156.0142974137931 43.42484375000001 156.0142974137931 46.692968750000006V65.16046875H146.7805474137931V48.50859375Q146.7805474137931 46.09640625000001 145.5614849137931 44.73468750000001Q144.3424224137931 43.37296875000001 142.1377349137931 43.37296875000001Q140.6852349137931 43.37296875000001 139.5958599137931 43.99546875000001Q138.5064849137931 44.61796875 137.8969536637931 45.798125000000006Q137.2874224137931 46.97828125000001 137.2874224137931 48.638281250000006Z M166.10738362068963 57.560781250000005 166.18519612068965 46.537343750000005H167.45613362068963L175.57457112068965 36.162343750000005H186.05332112068965L173.94050862068963 51.05046875000001H171.50238362068964ZM157.80738362068965 65.16046875V26.513593750000005H167.04113362068964V65.16046875ZM175.80800862068963 65.16046875 168.23425862068964 53.12546875000001 174.30363362068965 46.56328125 186.44238362068964 65.16046875Z M201.6451573275862 36.162343750000005V42.983906250000004H183.3851573275862V36.162343750000005ZM187.1979698275862 29.262968750000006H196.4057823275862V56.03046875000001Q196.4057823275862 57.19765625000001 196.97640732758617 57.78125000000001Q197.54703232758618 58.364843750000006 198.7660948275862 58.364843750000006Q199.2329698275862 58.364843750000006 199.84250107758618 58.26109375000001Q200.45203232758618 58.15734375000001 200.78921982758618 58.053593750000005L202.1639073275862 64.74546875Q200.6076573275862 65.18640625 199.2718760775862 65.38093750000002Q197.9360948275862 65.57546875000001 196.6392198275862 65.57546875000001Q192.02234482758618 65.57546875000001 189.6101573275862 63.383750000000006Q187.1979698275862 61.19203125000001 187.1979698275862 57.067968750000006Z M202.32293103448276 65.16046875V36.162343750000005H211.27136853448275V41.47953125000001H211.58261853448275Q212.36074353448276 38.57453125000001 214.16339978448275 37.18687500000001Q215.96605603448276 35.79921875000001 218.32636853448275 35.79921875000001Q218.97480603448275 35.79921875000001 219.66214978448275 35.87703125000001Q220.34949353448275 35.95484375000001 220.92011853448275 36.13640625000001V44.12515625Q220.24574353448276 43.89171875000001 219.18230603448274 43.775000000000006Q218.11886853448274 43.65828125000001 217.28886853448276 43.65828125000001Q215.65480603448276 43.65828125000001 214.34496228448276 44.38453125000001Q213.03511853448276 45.11078125000001 212.29589978448274 46.40765625000001Q211.55668103448275 47.70453125000001 211.55668103448275 49.41640625000001V65.16046875Z M220.63820474137933 65.16046875V36.162343750000005H229.8719547413793V65.16046875ZM225.22914224137932 32.842343750000005Q223.28382974137932 32.842343750000005 221.8832047413793 31.54546875000001Q220.4825797413793 30.248593750000012 220.4825797413793 28.40703125000001Q220.4825797413793 26.565468750000008 221.8832047413793 25.281562500000007Q223.28382974137932 23.997656250000006 225.22914224137932 23.997656250000006Q227.20039224137932 23.997656250000006 228.5880484913793 25.281562500000007Q229.97570474137933 26.565468750000008 229.97570474137933 28.40703125000001Q229.97570474137933 30.248593750000012 228.5880484913793 31.54546875000001Q227.20039224137932 32.842343750000005 225.22914224137932 32.842343750000005Z M231.66504094827587 76.00234375000001V36.162343750000005H240.79504094827587V41.14234375000001H241.10629094827587Q241.65097844827585 39.81953125000001 242.70144719827584 38.587500000000006Q243.75191594827587 37.35546875000001 245.37300969827587 36.57734375000001Q246.99410344827587 35.79921875000001 249.30254094827586 35.79921875000001Q252.33722844827588 35.79921875000001 254.95691594827588 37.39437500000001Q257.5766034482759 38.98953125000001 259.1976971982759 42.28359375000001Q260.8187909482759 45.577656250000004 260.8187909482759 50.68734375000001Q260.8187909482759 55.615468750000005 259.26254094827584 58.935468750000005Q257.70629094827586 62.255468750000006 255.07363469827587 63.91546875000001Q252.44097844827587 65.57546875000001 249.22472844827587 65.57546875000001Q247.04597844827586 65.57546875000001 245.43785344827586 64.84921875Q243.82972844827586 64.12296875000001 242.75332219827587 62.95578125000001Q241.67691594827588 61.788593750000004 241.10629094827587 60.43984375000001H240.89879094827586V76.00234375000001ZM246.03441594827586 58.39078125Q247.74629094827586 58.39078125 248.92644719827587 57.43109375Q250.10660344827588 56.47140625000001 250.71613469827588 54.73359375000001Q251.32566594827586 52.99578125000001 251.32566594827586 50.68734375000001Q251.32566594827586 48.35296875000001 250.71613469827588 46.62812500000001Q250.10660344827588 44.903281250000006 248.93941594827587 43.943593750000005Q247.77222844827585 42.983906250000004 246.03441594827586 42.983906250000004Q244.34847844827587 42.983906250000004 243.15535344827586 43.91765625000001Q241.96222844827585 44.85140625000001 241.32675969827585 46.57625000000001Q240.69129094827588 48.30109375000001 240.69129094827588 50.68734375000001Q240.69129094827588 53.021718750000005 241.32675969827585 54.74656250000001Q241.96222844827585 56.47140625000001 243.15535344827586 57.43109375Q244.34847844827587 58.39078125 246.03441594827586 58.39078125Z" fill="#FFFFFF"/></svg></div>
+        <div class="trust" style="margin-top:16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8 4.8 5.6v6.1c0 4.4 3 8 7.2 9.5 4.2-1.5 7.2-5.1 7.2-9.5V5.6L12 2.8Z"/><path d="m8.9 12.1 2.1 2.1 4.1-4.2"/></svg> Hébergé en Europe, conforme RGPD</div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Produit</h4>
+        <div class="f-links">
+          <a class="f-link" href="/fonctionnement">Fonctionnement</a>
+          <a class="f-link" href="/simulation">Simuler mes revenus</a>
+          <a class="f-link" href="/liste-attente">Liste d'attente</a>
+          <a class="f-link" href="/connexion">Connexion opérateur</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Activités</h4>
+        <div class="f-links"><a class="f-link f-link--icon" href="/activites/surf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6c4.6 3.4 6.6 8.6 4.4 13-1.4 2.8-3.2 4.4-4.4 5.4-1.2-1-3-2.6-4.4-5.4-2.2-4.4-.2-9.6 4.4-13Z"/><path d="M12 6.6v11"/></svg>Surf</a>
+<a class="f-link f-link--icon" href="/activites/parapente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 10.4a8.8 8.8 0 0 1 17.6 0"/><path d="M3.2 10.4c2.9 0 4.4 1.6 4.4 1.6M20.8 10.4c-2.9 0-4.4 1.6-4.4 1.6M12 10.4v1.6"/><path d="m4.6 11.2 6.6 4.6M19.4 11.2l-6.6 4.6"/><circle cx="12" cy="17" r="1.4"/><path d="M2.5 21c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Parapente</a>
+<a class="f-link f-link--icon" href="/activites/canyoning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v10.5"/><path d="M20 3v10.5"/><path d="M12 3.5v7"/><path d="M12 10.5c0 2.2 1.4 2.6 1.4 4.4"/><path d="M10.4 3.5a1.6 1.6 0 1 1 3.2 0"/><path d="M4 13.5h3M17 13.5h3"/><path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Canyoning</a>
+<a class="f-link f-link--icon" href="/activites/rafting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 12.6h19.2l-2.3 4.6H4.7L2.4 12.6Z"/><path d="M8.6 12.6 15 4.4"/><path d="m13.6 3.1 2.9 2.2-1.7 2.3-2.9-2.2 1.7-2.3Z"/><path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Rafting</a>
+<a class="f-link f-link--icon" href="/activites/plongee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 8.2a3.2 3.2 0 0 1 6.4 0v1.4H8.6V8.2Z"/><path d="M8.6 9.6c-1.4.8-2.2 2.2-2.2 3.8v5.8h11.2v-5.8c0-1.6-.8-3-2.2-3.8"/><path d="M11.8 4.6V3M15.6 5.4l1-1.2M8 5.4 7 4.2"/><path d="M9.8 13.4h4.4"/></svg>Plongée</a>
+<a class="f-link f-link--icon" href="/activites/parc-aventure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 4.6v15"/><path d="M19.6 4.6v15"/><path d="M4.4 8.6c3.6 2.4 7.6 2.4 11.2 0"/><path d="M8.8 12.6c3.6 2.4 7.2 2.4 10.8 0"/><path d="M2.6 19.6h18.8"/><path d="M13.2 8.6v1.6M9.6 12.6v1.6"/></svg>Parc aventure</a></div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Ressources</h4>
+        <div class="f-links">
+          <a class="f-link" href="/#faq">Questions fréquentes</a>
+          <a class="f-link" href="mailto:hello@linktrip.co">Nous écrire</a>
+          <a class="f-link" href="/mentions-legales">Mentions légales</a>
+          <a class="f-link" href="/cgu">CGU</a>
+          <a class="f-link" href="/cgv">CGV</a>
+          <a class="f-link" href="/confidentialite">Confidentialité</a>
+          <a class="f-link" href="#cookies">Gérer les cookies</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="f-bottom b-bottomwrap">
+      <span>© 2026 Linktrip · Fait en France</span>
+      <div class="socials">
+<a class="social" href="https://instagram.com/linktrip.co" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="rgba(255,255,255,.7)" stroke="none"/></svg>
+</a>
+<a class="social" href="https://linkedin.com/company/linktrip" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 10.5v6.2M8 7.4v.1M12 16.7v-3.6a2.2 2.2 0 0 1 4.4 0v3.6"/></svg>
+</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════ C ══════════════ -->
+<footer class="footer hidden" id="opt-c">
+  <div class="footer__in">
+    <div class="c-card">
+      <div>
+        <h3>Prêt à faire payer vos photos ?</h3>
+        <p>Chaque sortie devient une source de revenu.</p>
+      </div>
+      <a class="btn" href="/liste-attente">Rejoindre la liste d'attente <span aria-hidden="true">→</span></a>
+    </div>
+
+    <div class="c-mid">
+      <div class="a-brand">
+        <div class="a-logo"><svg viewBox="0 0 277 100" height="26" width="72.0" role="img" aria-label="Linktrip"><defs><linearGradient id="lg3" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF3D6E"/><stop offset="0.52" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFB443"/></linearGradient></defs><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" fill="none" stroke="url(#lg3)" stroke-width="8" stroke-linecap="round"/><circle cx="73" cy="27" r="11" fill="url(#lg3)"/><path d="M115.23375 26.513593750000005V65.16046875H106.0V26.513593750000005Z M117.02683620689655 65.16046875V36.162343750000005H126.26058620689655V65.16046875ZM121.61777370689656 32.842343750000005Q119.67246120689656 32.842343750000005 118.27183620689655 31.54546875000001Q116.87121120689656 30.248593750000012 116.87121120689656 28.40703125000001Q116.87121120689656 26.565468750000008 118.27183620689655 25.281562500000007Q119.67246120689656 23.997656250000006 121.61777370689656 23.997656250000006Q123.58902370689655 23.997656250000006 124.97667995689656 25.281562500000007Q126.36433620689655 26.565468750000008 126.36433620689655 28.40703125000001Q126.36433620689655 30.248593750000012 124.97667995689656 31.54546875000001Q123.58902370689655 32.842343750000005 121.61777370689656 32.842343750000005Z M137.2874224137931 48.638281250000006V65.16046875H128.0536724137931V36.162343750000005H137.1836724137931V41.505468750000006H137.4171099137931Q138.4027349137931 38.85984375000001 140.5685161637931 37.32953125000001Q142.73429741379312 35.79921875000001 145.9505474137931 35.79921875000001Q149.0111724137931 35.79921875000001 151.2677349137931 37.16093750000001Q153.5242974137931 38.52265625000001 154.76929741379308 40.97375000000001Q156.0142974137931 43.42484375000001 156.0142974137931 46.692968750000006V65.16046875H146.7805474137931V48.50859375Q146.7805474137931 46.09640625000001 145.5614849137931 44.73468750000001Q144.3424224137931 43.37296875000001 142.1377349137931 43.37296875000001Q140.6852349137931 43.37296875000001 139.5958599137931 43.99546875000001Q138.5064849137931 44.61796875 137.8969536637931 45.798125000000006Q137.2874224137931 46.97828125000001 137.2874224137931 48.638281250000006Z M166.10738362068963 57.560781250000005 166.18519612068965 46.537343750000005H167.45613362068963L175.57457112068965 36.162343750000005H186.05332112068965L173.94050862068963 51.05046875000001H171.50238362068964ZM157.80738362068965 65.16046875V26.513593750000005H167.04113362068964V65.16046875ZM175.80800862068963 65.16046875 168.23425862068964 53.12546875000001 174.30363362068965 46.56328125 186.44238362068964 65.16046875Z M201.6451573275862 36.162343750000005V42.983906250000004H183.3851573275862V36.162343750000005ZM187.1979698275862 29.262968750000006H196.4057823275862V56.03046875000001Q196.4057823275862 57.19765625000001 196.97640732758617 57.78125000000001Q197.54703232758618 58.364843750000006 198.7660948275862 58.364843750000006Q199.2329698275862 58.364843750000006 199.84250107758618 58.26109375000001Q200.45203232758618 58.15734375000001 200.78921982758618 58.053593750000005L202.1639073275862 64.74546875Q200.6076573275862 65.18640625 199.2718760775862 65.38093750000002Q197.9360948275862 65.57546875000001 196.6392198275862 65.57546875000001Q192.02234482758618 65.57546875000001 189.6101573275862 63.383750000000006Q187.1979698275862 61.19203125000001 187.1979698275862 57.067968750000006Z M202.32293103448276 65.16046875V36.162343750000005H211.27136853448275V41.47953125000001H211.58261853448275Q212.36074353448276 38.57453125000001 214.16339978448275 37.18687500000001Q215.96605603448276 35.79921875000001 218.32636853448275 35.79921875000001Q218.97480603448275 35.79921875000001 219.66214978448275 35.87703125000001Q220.34949353448275 35.95484375000001 220.92011853448275 36.13640625000001V44.12515625Q220.24574353448276 43.89171875000001 219.18230603448274 43.775000000000006Q218.11886853448274 43.65828125000001 217.28886853448276 43.65828125000001Q215.65480603448276 43.65828125000001 214.34496228448276 44.38453125000001Q213.03511853448276 45.11078125000001 212.29589978448274 46.40765625000001Q211.55668103448275 47.70453125000001 211.55668103448275 49.41640625000001V65.16046875Z M220.63820474137933 65.16046875V36.162343750000005H229.8719547413793V65.16046875ZM225.22914224137932 32.842343750000005Q223.28382974137932 32.842343750000005 221.8832047413793 31.54546875000001Q220.4825797413793 30.248593750000012 220.4825797413793 28.40703125000001Q220.4825797413793 26.565468750000008 221.8832047413793 25.281562500000007Q223.28382974137932 23.997656250000006 225.22914224137932 23.997656250000006Q227.20039224137932 23.997656250000006 228.5880484913793 25.281562500000007Q229.97570474137933 26.565468750000008 229.97570474137933 28.40703125000001Q229.97570474137933 30.248593750000012 228.5880484913793 31.54546875000001Q227.20039224137932 32.842343750000005 225.22914224137932 32.842343750000005Z M231.66504094827587 76.00234375000001V36.162343750000005H240.79504094827587V41.14234375000001H241.10629094827587Q241.65097844827585 39.81953125000001 242.70144719827584 38.587500000000006Q243.75191594827587 37.35546875000001 245.37300969827587 36.57734375000001Q246.99410344827587 35.79921875000001 249.30254094827586 35.79921875000001Q252.33722844827588 35.79921875000001 254.95691594827588 37.39437500000001Q257.5766034482759 38.98953125000001 259.1976971982759 42.28359375000001Q260.8187909482759 45.577656250000004 260.8187909482759 50.68734375000001Q260.8187909482759 55.615468750000005 259.26254094827584 58.935468750000005Q257.70629094827586 62.255468750000006 255.07363469827587 63.91546875000001Q252.44097844827587 65.57546875000001 249.22472844827587 65.57546875000001Q247.04597844827586 65.57546875000001 245.43785344827586 64.84921875Q243.82972844827586 64.12296875000001 242.75332219827587 62.95578125000001Q241.67691594827588 61.788593750000004 241.10629094827587 60.43984375000001H240.89879094827586V76.00234375000001ZM246.03441594827586 58.39078125Q247.74629094827586 58.39078125 248.92644719827587 57.43109375Q250.10660344827588 56.47140625000001 250.71613469827588 54.73359375000001Q251.32566594827586 52.99578125000001 251.32566594827586 50.68734375000001Q251.32566594827586 48.35296875000001 250.71613469827588 46.62812500000001Q250.10660344827588 44.903281250000006 248.93941594827587 43.943593750000005Q247.77222844827585 42.983906250000004 246.03441594827586 42.983906250000004Q244.34847844827587 42.983906250000004 243.15535344827586 43.91765625000001Q241.96222844827585 44.85140625000001 241.32675969827585 46.57625000000001Q240.69129094827588 48.30109375000001 240.69129094827588 50.68734375000001Q240.69129094827588 53.021718750000005 241.32675969827585 54.74656250000001Q241.96222844827585 56.47140625000001 243.15535344827586 57.43109375Q244.34847844827587 58.39078125 246.03441594827586 58.39078125Z" fill="#FFFFFF"/></svg></div>
+        <p class="f-blurb">La boutique photo des professionnels de l'outdoor. Chaque sortie devient une source de revenu.</p>
+        <div class="trust" style="margin-top:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8 4.8 5.6v6.1c0 4.4 3 8 7.2 9.5 4.2-1.5 7.2-5.1 7.2-9.5V5.6L12 2.8Z"/><path d="m8.9 12.1 2.1 2.1 4.1-4.2"/></svg> Données hébergées en Europe, conforme RGPD</div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Produit</h4>
+        <div class="f-links">
+          <a class="f-link" href="/fonctionnement">Fonctionnement</a>
+          <a class="f-link" href="/simulation">Simuler mes revenus</a>
+          <a class="f-link" href="/liste-attente">Liste d'attente</a>
+          <a class="f-link" href="/connexion">Connexion opérateur</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Aide</h4>
+        <div class="f-links">
+          <a class="f-link" href="/#faq">Questions fréquentes</a>
+          <a class="f-link" href="mailto:hello@linktrip.co">Nous écrire</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="f-title">Légal</h4>
+        <div class="f-links">
+          <a class="f-link" href="/mentions-legales">Mentions légales</a>
+          <a class="f-link" href="/cgu">CGU</a>
+          <a class="f-link" href="/cgv">CGV</a>
+          <a class="f-link" href="/confidentialite">Confidentialité</a>
+          <a class="f-link" href="#cookies">Gérer les cookies</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="c-pills">
+      <h4 class="f-title c-pills__label">Activités</h4>
+      <a class="c-pill" href="/activites/surf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6c4.6 3.4 6.6 8.6 4.4 13-1.4 2.8-3.2 4.4-4.4 5.4-1.2-1-3-2.6-4.4-5.4-2.2-4.4-.2-9.6 4.4-13Z"/><path d="M12 6.6v11"/></svg>Surf</a>
+<a class="c-pill" href="/activites/parapente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 10.4a8.8 8.8 0 0 1 17.6 0"/><path d="M3.2 10.4c2.9 0 4.4 1.6 4.4 1.6M20.8 10.4c-2.9 0-4.4 1.6-4.4 1.6M12 10.4v1.6"/><path d="m4.6 11.2 6.6 4.6M19.4 11.2l-6.6 4.6"/><circle cx="12" cy="17" r="1.4"/><path d="M2.5 21c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Parapente</a>
+<a class="c-pill" href="/activites/canyoning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v10.5"/><path d="M20 3v10.5"/><path d="M12 3.5v7"/><path d="M12 10.5c0 2.2 1.4 2.6 1.4 4.4"/><path d="M10.4 3.5a1.6 1.6 0 1 1 3.2 0"/><path d="M4 13.5h3M17 13.5h3"/><path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Canyoning</a>
+<a class="c-pill" href="/activites/rafting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 12.6h19.2l-2.3 4.6H4.7L2.4 12.6Z"/><path d="M8.6 12.6 15 4.4"/><path d="m13.6 3.1 2.9 2.2-1.7 2.3-2.9-2.2 1.7-2.3Z"/><path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0"/></svg>Rafting</a>
+<a class="c-pill" href="/activites/plongee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 8.2a3.2 3.2 0 0 1 6.4 0v1.4H8.6V8.2Z"/><path d="M8.6 9.6c-1.4.8-2.2 2.2-2.2 3.8v5.8h11.2v-5.8c0-1.6-.8-3-2.2-3.8"/><path d="M11.8 4.6V3M15.6 5.4l1-1.2M8 5.4 7 4.2"/><path d="M9.8 13.4h4.4"/></svg>Plongée</a>
+<a class="c-pill" href="/activites/parc-aventure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 4.6v15"/><path d="M19.6 4.6v15"/><path d="M4.4 8.6c3.6 2.4 7.6 2.4 11.2 0"/><path d="M8.8 12.6c3.6 2.4 7.2 2.4 10.8 0"/><path d="M2.6 19.6h18.8"/><path d="M13.2 8.6v1.6M9.6 12.6v1.6"/></svg>Parc aventure</a>
+    </div>
+
+    <div class="f-bottom">
+      <span>© 2026 Linktrip · Fait en France</span>
+      <div class="socials">
+<a class="social" href="https://instagram.com/linktrip.co" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="rgba(255,255,255,.7)" stroke="none"/></svg>
+</a>
+<a class="social" href="https://linkedin.com/company/linktrip" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 10.5v6.2M8 7.4v.1M12 16.7v-3.6a2.2 2.2 0 0 1 4.4 0v3.6"/></svg>
+</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const tabs = document.querySelectorAll(".tab");
+const panes = { a: document.getElementById("opt-a"), b: document.getElementById("opt-b"), c: document.getElementById("opt-c") };
+tabs.forEach((t) => t.addEventListener("click", () => {
+  tabs.forEach((o) => o.setAttribute("aria-selected", String(o === t)));
+  Object.entries(panes).forEach(([k, el]) => el.classList.toggle("hidden", k !== t.dataset.opt));
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+}));
+</script>
+</body>
+</html>

@@ -31,6 +31,7 @@ export type GtmEventName =
   | "cta_click"
   | "generate_lead"
   | "hero_email_submit"
+  | "footer_email_submit"
   | "waitlist_submit"
   | "simulator_interact"
   | "simulator_values"

@@ -1,0 +1,100 @@
+/* Champ e-mail du footer : c'est le même composant que le hero
+   (EmailCaptureField), simplement rhabillé pour le fond encre. La règle
+   transverse de la landing s'applique ici aussi : sous 1000px, plus de pilule
+   commune, mais deux éléments distincts empilés (cf. .field dans
+   app/(marketing)/landing.module.css). */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(560px, 100%);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 99px;
+  padding: 6px 6px 6px 14px;
+  transition: background 0.18s, border-color 0.18s;
+}
+.field:focus-within {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.field input {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px; /* >=16px : évite le zoom auto de Safari iOS (piège §15.8) */
+  color: #fff;
+  background: transparent;
+  border: 0;
+  outline: none;
+  padding: clamp(12px, 1.7vh, 15px) 8px;
+}
+.field input::placeholder { color: rgba(255, 255, 255, 0.42); }
+
+.submit {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  border-radius: 99px;
+  padding: clamp(13px, 1.8vh, 16px) 24px;
+  font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.008em;
+  color: #fff;
+  background: var(--sunset);
+  box-shadow: 0 10px 26px -9px rgba(255, 90, 31, 0.6);
+  transition: transform 0.18s, filter 0.18s;
+}
+.submit:disabled { opacity: 0.6; }
+@media (hover: hover) {
+  .submit:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
+}
+
+@media (max-width: 1000px) {
+  .field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+  .field input {
+    flex: none; /* la déclaration desktop (flex:1 → flex-basis:0%) ignorerait sinon height */
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .field input:focus {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.18);
+  }
+  .submit {
+    width: 100%;
+    height: 52px;
+    justify-content: center;
+    padding: 0 20px;
+    border-radius: 14px;
+    font-size: 16px;
+  }
+}
+
+/* Symbole du logo en filigrane, débordant du coin bas droit : donne son
+   caractère au bloc sans la zone morte d'un mot pleine largeur. */
+.mark {
+  position: absolute;
+  right: calc(var(--gutter) * -2.2);
+  bottom: calc(var(--gutter) * -1.8);
+  width: clamp(170px, 22vw, 290px);
+  opacity: 0.05;
+  pointer-events: none;
+}
+.mark svg { width: 100%; height: auto; }
+@media (max-width: 780px) { .mark { display: none; } }

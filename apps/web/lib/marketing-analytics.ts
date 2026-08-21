@@ -12,7 +12,12 @@
  */
 import { gtmEvent, type DataLayerObject, type GtmEventName } from "@/lib/gtm";
 
-export type MarketingEventName = "hero_email_submit" | "waitlist_submit" | "sim_interact" | "sim_values";
+export type MarketingEventName =
+  | "hero_email_submit"
+  | "footer_email_submit"
+  | "waitlist_submit"
+  | "sim_interact"
+  | "sim_values";
 
 declare global {
   interface Window {
@@ -23,6 +28,7 @@ declare global {
 /** Nos noms historiques → noms poussés dans le dataLayer. */
 const GTM_NAME: Record<MarketingEventName, GtmEventName> = {
   hero_email_submit: "hero_email_submit",
+  footer_email_submit: "footer_email_submit",
   waitlist_submit: "waitlist_submit",
   sim_interact: "simulator_interact",
   sim_values: "simulator_values",
@@ -35,6 +41,7 @@ const GTM_NAME: Record<MarketingEventName, GtmEventName> = {
  */
 const LEAD_METHOD: Partial<Record<MarketingEventName, string>> = {
   hero_email_submit: "hero",
+  footer_email_submit: "footer",
   waitlist_submit: "waitlist",
 };
 
