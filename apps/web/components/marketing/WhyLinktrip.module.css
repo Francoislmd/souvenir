@@ -474,14 +474,14 @@
 
 /* ─── 4 · Galerie client (calque de la barre d'achat de BoutiqueGallery) ─── */
 .phone {
-  width: 250px;
-  padding: 7px;
-  border-radius: 34px;
-  background: var(--ink);
-  box-shadow: 0 40px 70px -30px rgba(22, 19, 32, 0.75);
+  width: 252px;
+  padding: 9px;
+  border-radius: 38px;
+  background: #fff;
+  box-shadow: 0 40px 74px -28px rgba(22, 19, 32, 0.75);
 }
 .phoneScreen {
-  border-radius: 28px;
+  border-radius: 30px;
   overflow: hidden;
   background: #fff;
   /* La dalle impose color:#fff : sans ce retour à l'encre, le total de la barre
@@ -514,38 +514,39 @@
 .shotImg {
   object-fit: cover;
 }
-/* Filigrane répété. Le worker, lui, ne pose qu'un logo en bas à droite
-   (watermarkBuffer dans apps/worker/src/jobs/preview.ts : gravity "southeast",
-   18 % de la largeur, opacité 0,6). Si cette mosaïque est retenue, elle doit y
-   être répercutée, sinon la landing promet un filigrane que les vraies galeries
-   n'ont pas. */
+/* Filigrane répété, en trame fine plutôt qu'en gros lettrage : il doit se lire
+   comme une protection, pas comme un habillage. Le worker, lui, ne pose qu'un
+   logo en bas à droite (watermarkBuffer dans apps/worker/src/jobs/preview.ts :
+   gravity "southeast", 18 % de la largeur, opacité 0,6). Si cette mosaïque est
+   retenue, elle doit y être répercutée, sinon la landing promet un filigrane que
+   les vraies galeries n'ont pas. */
 .wm {
   position: absolute;
-  inset: -25%;
+  inset: -32%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   align-content: center;
   justify-items: center;
-  gap: 30px 12px;
-  transform: rotate(-22deg);
+  gap: 32px 12px;
+  transform: rotate(-20deg);
   pointer-events: none;
 }
-.wm span {
-  font-family: var(--font-bricolage);
-  font-weight: 800;
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.78);
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+/* Quinconce : une rangée sur deux décalée d'un demi-pas, sinon la trame se lit
+   comme un tableau plutôt que comme un filigrane. */
+.wm span:nth-child(4n + 3),
+.wm span:nth-child(4n + 4) {
+  transform: translateX(46%);
 }
-.wm em {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.1em;
+.wm span {
+  white-space: nowrap;
+  font-family: var(--font-bricolage);
+  font-weight: 700;
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 .thumbs {
   display: grid;

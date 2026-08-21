@@ -53,8 +53,8 @@ const HEARTS = [
 
 const HEART_PATH = "M12 20.6s-7.6-4.7-7.6-10.1a4.3 4.3 0 0 1 7.6-2.7 4.3 4.3 0 0 1 7.6 2.7c0 5.4-7.6 10.1-7.6 10.1Z";
 
-/* 18 occurrences suffisent à couvrir le cadre une fois la grille pivotée (.wm). */
-const WATERMARKS = Array.from({ length: 18 });
+/* 16 marques suffisent à couvrir le cadre une fois la trame pivotée (.wm). */
+const WATERMARKS = Array.from({ length: 16 });
 
 const GALLERY_THUMBS = ["parapente-biplace", "escalade-falaise", "tyrolienne-foret"];
 
@@ -281,9 +281,7 @@ export function WhyLinktrip() {
                     />
                     <div className={styles.wm} aria-hidden="true">
                       {WATERMARKS.map((_, i) => (
-                        <span key={i}>
-                          aventure <em>ardèche</em>
-                        </span>
+                        <span key={i}>aventure ardèche</span>
                       ))}
                     </div>
                   </div>
