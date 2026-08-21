@@ -175,17 +175,6 @@
   gap: 14px 22px;
   margin-top: clamp(28px, 4vh, 44px);
 }
-.tailTxt {
-  margin: 0;
-  font-size: 14.5px;
-  color: var(--ink-3);
-}
-.tailTxt a {
-  color: var(--ink);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 .tailMobile {
   display: none;
 }

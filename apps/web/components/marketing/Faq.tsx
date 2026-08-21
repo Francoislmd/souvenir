@@ -180,10 +180,6 @@ function Tail({ className }: { className: string }) {
   return (
     <div className={className}>
       <FaqCta />
-      <p className={styles.tailTxt}>
-        Une question qui n&rsquo;est pas traitée ici&nbsp;?{" "}
-        <a href="mailto:hello@linktrip.co">hello@linktrip.co</a>
-      </p>
     </div>
   );
 }

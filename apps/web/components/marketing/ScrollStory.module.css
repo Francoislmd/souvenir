@@ -100,27 +100,57 @@
   left: 50%;
   top: 50%;
   z-index: 20;
-  width: min(470px, 86vw);
+  /* 560 et pas 470 : en dessous, « Chaque sortie mérite » casse en trois lignes
+     au-delà de ~1400px, où le titre est déjà à sa taille maximale (46px). */
+  width: min(560px, 86vw);
   text-align: center;
+  /* Marge intérieure du panneau de verre : c'est elle qui dessine sa taille,
+     le panneau étant posé en négatif autour du contenu. */
+  --panel-x: clamp(22px, 3vw, 40px);
+  --panel-y: clamp(26px, 3vw, 38px);
 }
-/* Voile blanc diffus : invisible sur le fond, mais détache le texte des photos
-   qui frôlent le corridor. Sous 760px le corridor n'existe plus (écran trop
-   étroit), le voile devient donc franc — sinon le titre passe sur une photo. */
-.ctaVeil {
+
+/* Panneau de verre : le contenu est posé sur une carte translucide qui floute
+   les photos passant derrière (validé le 20/08/2026 — cf. la maquette
+   docs/maquette-voile-scrollstory.html, option « A · carte verre »). Il
+   remplace l'ancien voile radial blanc, qui se lisait comme une tache ronde
+   sur le fond blanc, surtout sous 760px où le corridor central n'existe plus.
+   Le filet blanc et l'ombre portée sont ce qui donne l'épaisseur : sans eux,
+   sur les zones où aucune photo ne passe, la carte disparaît. */
+.ctaPanel {
   position: absolute;
-  inset: -46% -26%;
+  inset: calc(-1 * var(--panel-y)) calc(-1 * var(--panel-x));
   z-index: -1;
-  background: radial-gradient(
-    closest-side,
-    rgba(255, 255, 255, 0.96) 0%,
-    rgba(255, 255, 255, 0.88) 46%,
-    rgba(255, 255, 255, 0) 78%
-  );
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 40px 80px -50px rgba(22, 19, 32, 0.55),
+    0 2px 12px -6px rgba(22, 19, 32, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
+
+/* Sans backdrop-filter (Firefox sans le flag, vieux WebKit), la carte devient
+   un aplat quasi opaque : le texte reste lisible, on perd seulement le flou. */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .ctaPanel {
+    background: rgba(255, 255, 255, 0.94);
+  }
+}
+
+/* Sous 760px, le bloc central est retiré : l'écran est trop étroit pour que les
+   couloirs laissent un corridor libre, la carte de verre couvrait la moitié de
+   la scène et les photos passaient dessous en permanence. La section devient
+   une bande de photos qui défile ; le titre reste dans le DOM (masqué) pour
+   continuer à nommer la section via aria-labelledby, et le CTA « liste
+   d'attente » est déjà présent ailleurs sur la page.
+   Le rAF continue d'écrire opacity/transform sur un élément en display:none :
+   sans effet, et sans coût de layout. */
 @media (max-width: 760px) {
-  .ctaVeil {
-    inset: -30% -26%;
-    background: radial-gradient(closest-side, #fff 0%, #fff 54%, rgba(255, 255, 255, 0) 92%);
+  .cta {
+    display: none;
   }
 }
 
@@ -176,7 +206,7 @@
   top: auto;
   order: 99;
   width: 100%;
-  max-width: 470px;
+  max-width: 560px;
   margin: 14px 0 0;
   transform: none !important;
   opacity: 1 !important;

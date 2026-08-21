@@ -236,7 +236,7 @@ export function ScrollStory() {
           ))}
 
           <div ref={ctaRef} className={styles.cta}>
-            <span className={styles.ctaVeil} />
+            <span className={styles.ctaPanel} />
             <span className="mb-[14px] block text-[12.5px] font-bold uppercase tracking-[.14em] text-ink-3">
               L&apos;aventure, capturée
             </span>
