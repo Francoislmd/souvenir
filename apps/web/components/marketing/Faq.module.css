@@ -40,6 +40,8 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+/* Titre entièrement en encre, sans dégradé : le seul aplat de marque du bloc
+   reste le CTA. */
 .h2 {
   margin: 18px 0 0;
   font-size: clamp(29px, 2.1vw + 1vh, 44px);
@@ -47,13 +49,6 @@
   letter-spacing: -0.038em;
   text-wrap: balance;
   color: var(--ink);
-}
-.grad {
-  background: var(--sunset);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
 }
 .sub {
   margin: 14px 0 0;

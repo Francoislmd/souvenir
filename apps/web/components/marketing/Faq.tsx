@@ -205,7 +205,7 @@ export function Faq() {
         <div className={styles.aside}>
           <p className={`${styles.eyebrow} reveal`}>Questions fréquentes</p>
           <h2 id="faq" className={`${styles.h2} reveal reveal-d1`}>
-            Tout ce qu&rsquo;il faut savoir <span className={styles.grad}>avant de commencer.</span>
+            Tout ce qu&rsquo;il faut savoir avant de commencer.
           </h2>
           <p className={`${styles.sub} reveal reveal-d2`}>
             Commission, versement des fonds, droit à l&rsquo;image, protection des fichiers. Douze réponses avant de
