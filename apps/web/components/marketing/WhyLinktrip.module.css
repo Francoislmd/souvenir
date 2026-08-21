@@ -1,0 +1,627 @@
+/* Section « Pourquoi Linktrip ? » : dalle encre pleine, encastrée dans la page
+   blanche, avec quatre rangées alternées (une carte produit d'un côté, le texte
+   de l'autre). Le module porte tout le décor — dalle, halos, maquettes d'écrans :
+   ces briques sont trop nombreuses et trop imbriquées pour tenir en classes
+   utilitaires sans rendre le TSX illisible (même parti pris que ScrollStory).
+
+   Règle de fond : les écrans reproduits ici sont des CALQUES du produit réel
+   (app/(operator)/revenus, components/reglages/ReglagesForm, la barre d'achat de
+   BoutiqueGallery). Si l'un de ces écrans change, cette section doit suivre,
+   sinon la landing promet une interface qui n'existe plus. */
+
+.section {
+  /* Dalle pleine largeur (montée en frère de .rail) mais avec une marge blanche :
+     c'est ce liseré qui la fait lire comme une dalle posée sur la page. */
+  padding: clamp(16px, 3vh, 34px) var(--gutter, 20px) clamp(28px, 5vh, 60px);
+}
+
+.panel {
+  position: relative;
+  /* overflow:hidden possible ici : la section ne contient aucun position:sticky
+     (cf. le commentaire de .haloClip dans landing.module.css, même piège). */
+  overflow: hidden;
+  /* Les bords de la dalle tombent exactement sur ceux de la carte du hero.
+     L'accueil monte son .rail en variante .railWide (max-width 1920px, cf.
+     landing.module.css) : la carte photo s'arrête donc à 1920px moins les deux
+     gouttières. La section porte déjà ces gouttières en padding, il reste à
+     borner la dalle à cette largeur utile. À garder synchronisé avec .railWide. */
+  max-width: calc(1920px - 2 * var(--gutter, 20px));
+  margin: 0 auto;
+  border-radius: clamp(22px, 2.4vw, 40px);
+  padding: clamp(48px, 7vh, 104px) clamp(20px, 3.4vw, 64px) clamp(44px, 6vh, 88px);
+  background: var(--ink);
+  color: #fff;
+}
+.panel::before {
+  /* Halo de marque : évite l'aplat mort en haut de dalle. */
+  content: "";
+  position: absolute;
+  top: -38%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, 120%);
+  height: 900px;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 90, 31, 0.32), rgba(255, 61, 110, 0.11) 55%, transparent 78%);
+}
+.panel > * {
+  position: relative;
+}
+
+/* ─── Chapeau ─── */
+.head {
+  max-width: 660px;
+  margin: 0 auto;
+  text-align: center;
+}
+.eyebrow {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.h2 {
+  margin: 18px auto 0;
+  max-width: 17ch;
+  font-size: clamp(30px, 2.2vw + 1vh, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+  color: #fff;
+}
+.grad {
+  background: var(--sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.sub {
+  margin: 14px auto 0;
+  max-width: 46ch;
+  font-size: clamp(15px, 0.5vw + 0.6vh, 17px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* ─── Les quatre rangées ─── */
+.rows {
+  margin-top: clamp(40px, 5.5vh, 72px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(44px, 6.5vh, 88px);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: clamp(32px, 5vw, 88px);
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+/* Toute l'alternance tient dans cette règle : le DOM garde l'ordre de lecture
+   (visuel puis texte), une rangée sur deux inverse seulement l'ordre visuel. */
+.row:nth-child(even) {
+  flex-direction: row-reverse;
+}
+.row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .rows {
+    gap: 48px;
+  }
+  .row,
+  .row:nth-child(even) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 22px;
+  }
+}
+
+.kicker {
+  display: inline-block;
+  padding: 7px 13px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.copy h3 {
+  margin-top: 16px;
+  max-width: 19ch;
+  font-size: clamp(23px, 1.1vw + 0.9vh, 32px);
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: #fff;
+}
+.copy p {
+  margin-top: 12px;
+  max-width: 38ch;
+  font-size: clamp(15px, 0.5vw + 0.6vh, 17px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.8);
+}
+@media (max-width: 900px) {
+  .copy h3,
+  .copy p {
+    max-width: none;
+  }
+}
+
+/* ─── Colonne visuelle ─── */
+.visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.visual::before {
+  /* Halo à la couleur de la rangée : détache la carte blanche du fond encre
+     sans lui ajouter de bordure. */
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(460px, 96%);
+  height: 84%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: var(--glow);
+  filter: blur(58px);
+}
+.visual > * {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+@media (hover: hover) {
+  .row:hover .visual > * {
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .visual > * {
+    transition: none;
+  }
+}
+
+/* ─── Cadre commun des écrans « bureau » (rangées 1 et 3) ─── */
+.ui {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 40px 70px -34px rgba(22, 19, 32, 0.55);
+}
+.uiBar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.uiBar b {
+  font-family: var(--font-bricolage);
+  font-size: 14px;
+}
+.uiBody {
+  padding: 18px 16px 20px;
+}
+
+/* ─── 1 · Revenus (calque de app/(operator)/revenus) ─── */
+.total {
+  margin-bottom: 18px;
+  font-family: var(--font-bricolage);
+  font-weight: 800;
+  font-size: clamp(31px, 1.5vw + 0.9vh, 37px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.sales {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sale {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.av {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--line-2);
+}
+.who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.who b {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.who small {
+  font-size: 12px;
+  color: var(--ink-4);
+}
+.amt {
+  font-family: var(--font-bricolage);
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── 2 · Story ───
+   Aucune marque tierce n'est reproduite : seulement les codes génériques d'une
+   story (barres de progression, en-tête auteur, barre de réponse). */
+.story {
+  width: 262px;
+  padding: 9px;
+  border-radius: 38px;
+  background: #fff;
+  box-shadow: 0 40px 74px -28px rgba(22, 19, 32, 0.75);
+}
+.storyScreen {
+  position: relative;
+  aspect-ratio: 9 / 18.6;
+  border-radius: 30px;
+  overflow: hidden;
+  background: #000;
+}
+.storyImg {
+  object-fit: cover;
+}
+.storyVeil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 24%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, 0.55));
+}
+.storyBars {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  right: 11px;
+  display: flex;
+  gap: 4px;
+}
+.storyBars i {
+  flex: 1;
+  height: 2.5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.38);
+}
+/* Segment déjà vu. Classe autonome : elle est appliquée depuis le TSX via
+   styles.on, donc elle doit exister comme classe locale exportée. */
+.on {
+  background: #fff;
+}
+.storyTop {
+  position: absolute;
+  top: 22px;
+  left: 11px;
+  right: 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #fff;
+}
+.storyAv {
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  object-fit: cover;
+  /* Double anneau en box-shadow plutôt qu'une bordure : la photo garde sa taille
+     utile, l'anneau vit à l'extérieur. */
+  box-shadow: 0 0 0 1.5px #fff, 0 0 0 3.5px rgba(255, 90, 31, 0.85);
+}
+.storyTop b {
+  font-weight: 700;
+}
+.storyTop span {
+  opacity: 0.7;
+}
+.mention {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  font-family: var(--font-bricolage);
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+.hearts svg {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  color: var(--rose);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+  animation: floatUp var(--t, 4.8s) ease-in-out var(--d) infinite;
+}
+@keyframes floatUp {
+  0% {
+    transform: translateY(10px) scale(0.85);
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-190px) translateX(-14px) scale(1.08) rotate(8deg);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hearts svg {
+    animation: none;
+    opacity: 0.9;
+  }
+}
+.storyReply {
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+.rep {
+  flex: 1;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 99px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ─── 3 · Automatisations (calque de components/reglages/ReglagesForm) ─── */
+.lbl {
+  margin: 0 0 10px;
+  font-family: var(--font-bricolage);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.auto {
+  display: grid;
+  gap: 10px;
+}
+.autoLine {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.rel {
+  flex: 1;
+  min-width: 0;
+}
+.rel b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.rel small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-4);
+}
+.sw {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 99px;
+  background: var(--aqua);
+}
+.sw::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 99px;
+  background: #fff;
+}
+
+/* ─── 4 · Galerie client (calque de la barre d'achat de BoutiqueGallery) ─── */
+.phone {
+  width: 250px;
+  padding: 7px;
+  border-radius: 34px;
+  background: var(--ink);
+  box-shadow: 0 40px 70px -30px rgba(22, 19, 32, 0.75);
+}
+.phoneScreen {
+  border-radius: 28px;
+  overflow: hidden;
+  background: #fff;
+  /* La dalle impose color:#fff : sans ce retour à l'encre, le total de la barre
+     d'achat serait blanc sur blanc. */
+  color: var(--ink);
+}
+.phoneBar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 13px 10px;
+}
+.phoneBar b {
+  font-family: var(--font-bricolage);
+  font-size: 12.5px;
+}
+.phoneBar small {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--ink-4);
+}
+.shot {
+  position: relative;
+  margin: 0 10px;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--line-2);
+}
+.shotImg {
+  object-fit: cover;
+}
+/* Filigrane répété. Le worker, lui, ne pose qu'un logo en bas à droite
+   (watermarkBuffer dans apps/worker/src/jobs/preview.ts : gravity "southeast",
+   18 % de la largeur, opacité 0,6). Si cette mosaïque est retenue, elle doit y
+   être répercutée, sinon la landing promet un filigrane que les vraies galeries
+   n'ont pas. */
+.wm {
+  position: absolute;
+  inset: -25%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: center;
+  justify-items: center;
+  gap: 30px 12px;
+  transform: rotate(-22deg);
+  pointer-events: none;
+}
+.wm span {
+  font-family: var(--font-bricolage);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+}
+.wm em {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 8px 10px 0;
+}
+.thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--line-2);
+}
+.thumb img {
+  object-fit: cover;
+}
+.buybar {
+  margin-top: 10px;
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.96);
+}
+.buybarTop {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.n {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.tot {
+  margin-left: auto;
+  font-family: var(--font-bricolage);
+  font-weight: 800;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.pay {
+  padding: 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  text-align: center;
+  font-family: var(--font-bricolage);
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: -0.008em;
+}
+.trust {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 9.5px;
+  line-height: 1.3;
+  color: var(--ink-4);
+}
+
+/* ─── Pied de section ─── */
+.cta {
+  margin-top: clamp(42px, 6vh, 72px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.ctaNote {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.72);
+}
+@media (max-width: 480px) {
+  /* Le libellé du CTA doit tenir sur une ligne dans la largeur de la dalle. */
+  .cta a {
+    width: 100%;
+  }
+}

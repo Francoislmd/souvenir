@@ -5,6 +5,7 @@ import { Footer } from "@/components/marketing/Footer";
 import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
 import { ActivityMarquee } from "@/components/marketing/ActivityMarquee";
 import { ScrollStory } from "@/components/marketing/ScrollStory";
+import { WhyLinktrip } from "@/components/marketing/WhyLinktrip";
 import styles from "./landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -70,6 +71,13 @@ export default function AccueilPage() {
           Placée après le bandeau : on montre d'abord les activités couvertes, la
           section immersive sert ensuite de bascule émotionnelle vers le CTA. */}
       <ScrollStory />
+
+      {/* Dernière section avant le pied de page. Elle vient APRÈS la section
+          immersive : les photos et l'émotion d'abord, la démonstration par les
+          écrans du produit ensuite, juste avant le CTA final. Frère de .rail
+          comme les deux précédentes — la dalle prend toute la largeur et porte
+          ses propres gouttières via --gutter. */}
+      <WhyLinktrip />
 
       <Footer />
     </div>
