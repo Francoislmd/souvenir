@@ -1,0 +1,155 @@
+/* Bloc « démo produit » (cf. DemoArcade.tsx et docs/maquette-demo-produit-v3.html).
+
+   Frère de .rail comme les autres sections de l'accueil : il porte lui-même ses
+   gouttières via --gutter (posé sur .page dans landing.module.css).
+
+   Aucun halo de marque ici, contrairement à WhyLinktrip : le bloc arrive juste
+   après la dalle encre, le seul aplat coloré est le dégradé du titre. */
+
+.section {
+  background: #fff;
+  padding: clamp(52px, 8vh, 108px) var(--gutter, 20px) clamp(48px, 7vh, 96px);
+}
+
+/* ─── Chapeau ─── */
+.head {
+  max-width: 660px;
+  margin: 0 auto;
+  text-align: center;
+}
+.eyebrow {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 99px;
+  background: var(--soft);
+  color: var(--brand-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.h2 {
+  margin: 18px auto 0;
+  max-width: 19ch;
+  font-size: clamp(30px, 2.2vw + 1vh, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.grad {
+  background: var(--sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.sub {
+  margin: 14px auto 0;
+  max-width: 46ch;
+  font-size: clamp(15px, 0.5vw + 0.6vh, 17px);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* ─── Déclencheur : trois vignettes ─── */
+.trigger {
+  margin: clamp(28px, 4.2vh, 52px) auto 0;
+  max-width: 1040px;
+  text-align: center;
+}
+.trio {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.4vw, 22px);
+  width: 100%;
+  padding: clamp(10px, 1.6vh, 22px) 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+/* Plancher à 96px (et non 132px) : à 390px de large, trois vignettes plus
+   larges + les gouttières dépassent la ligne et la section défile en travers. */
+.vignette {
+  width: clamp(96px, 15vw, 224px);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: clamp(12px, 1.1vw, 20px);
+  box-shadow: 0 30px 56px -28px rgba(22, 19, 32, 0.6);
+  transition: transform 0.35s ease;
+}
+.vLeft {
+  transform: rotate(-5deg);
+}
+/* La vignette centrale passe devant : c'est elle qui porte le bouton de lecture. */
+.vMid {
+  position: relative;
+  z-index: 2;
+  transform: scale(1.1);
+}
+.vRight {
+  transform: rotate(5deg);
+}
+.trio:hover .vLeft {
+  transform: rotate(-7deg) translateX(-8px);
+}
+.trio:hover .vRight {
+  transform: rotate(7deg) translateX(8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vignette {
+    transition: none;
+  }
+  .trio:hover .vLeft,
+  .trio:hover .vRight {
+    transform: rotate(0deg);
+  }
+}
+
+.play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 5vw, 86px);
+  height: clamp(64px, 5vw, 86px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  box-shadow: 0 16px 34px -14px rgba(22, 19, 32, 0.65);
+  transition: transform 0.22s ease;
+}
+.trio:hover .play {
+  transform: translate(-50%, -50%) scale(1.07);
+}
+.trio:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+.micro {
+  margin-top: clamp(16px, 2vh, 24px);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ─── L'iframe Arcade ───
+   Au repos : plein largeur, hauteur nulle, invisible et inerte. Seuls les
+   événements arcade-popout-open / -close touchent height et z-index (cf.
+   DemoArcade.tsx) — ne rien piloter d'autre d'ici, sous peine de désaccorder
+   les deux. */
+.popout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  border: 0;
+  color-scheme: light;
+}

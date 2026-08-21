@@ -6,6 +6,7 @@ import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
 import { ActivityMarquee } from "@/components/marketing/ActivityMarquee";
 import { ScrollStory } from "@/components/marketing/ScrollStory";
 import { WhyLinktrip } from "@/components/marketing/WhyLinktrip";
+import { DemoArcade } from "@/components/marketing/DemoArcade";
 import styles from "./landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -78,6 +79,12 @@ export default function AccueilPage() {
           comme les deux précédentes — la dalle prend toute la largeur et porte
           ses propres gouttières via --gutter. */}
       <WhyLinktrip />
+
+      {/* Dernier bloc avant le pied de page : la démo Arcade, ouverte en
+          surimpression plein écran depuis le trio de vignettes. Elle vient
+          après les quatre bénéfices — on montre le produit une fois la
+          promesse posée. Frère de .rail, gouttières via --gutter. */}
+      <DemoArcade />
 
       <Footer />
     </div>
