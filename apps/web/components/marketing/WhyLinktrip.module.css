@@ -474,18 +474,24 @@
 
 /* ─── 4 · Galerie client (calque de la barre d'achat de BoutiqueGallery) ─── */
 .phone {
-  width: 252px;
+  width: 262px;
   padding: 9px;
   border-radius: 38px;
   background: #fff;
   box-shadow: 0 40px 74px -28px rgba(22, 19, 32, 0.75);
 }
 .phoneScreen {
-  /* Liseré encre entre le cadre blanc et l'écran : sans lui, l'écran (blanc)
-     et le cadre (blanc) se confondent, contrairement au téléphone de la story
-     dont la photo sombre fait naturellement la séparation. */
-  border: 2px solid var(--ink);
+  /* Liseré gris entre le cadre blanc et l'écran : sans lui, l'écran (blanc) et
+     le cadre (blanc) se confondent, contrairement au téléphone de la story dont
+     la photo sombre fait naturellement la séparation. */
+  border: 2px solid var(--ink-4);
   border-radius: 30px;
+  /* Même gabarit que le téléphone de la story (262 x 522) : l'écran porte le
+     ratio et la photo occupe la place restante, plutôt qu'une hauteur dictée par
+     le contenu — deux téléphones côte à côte doivent avoir la même taille. */
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 9 / 18.6;
   overflow: hidden;
   background: #fff;
   /* La dalle impose color:#fff : sans ce retour à l'encre, le total de la barre
@@ -509,8 +515,10 @@
 }
 .shot {
   position: relative;
+  /* La photo absorbe la hauteur restante de l'écran (cf. .phoneScreen). */
+  flex: 1;
+  min-height: 0;
   margin: 0 10px;
-  aspect-ratio: 4 / 5;
   border-radius: 12px;
   overflow: hidden;
   background: var(--line-2);

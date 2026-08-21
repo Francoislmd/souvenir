@@ -162,13 +162,13 @@ img{display:block;}
 
 /* 4 — Galerie client : téléphone, aperçu filigrané et barre d'achat reprise
    de app/g/[token]/boutique.module.css (.buybar / .pay). */
-.phone{width:252px;background:#fff;border-radius:38px;padding:9px;box-shadow:0 40px 74px -28px rgba(22,19,32,.75);}
+.phone{width:262px;background:#fff;border-radius:38px;padding:9px;box-shadow:0 40px 74px -28px rgba(22,19,32,.75);}
 
-.phone__screen{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:30px;overflow:hidden;}
+.phone__screen{display:flex;flex-direction:column;aspect-ratio:9/18.6;background:#fff;color:var(--ink);border:2px solid var(--ink-4);border-radius:30px;overflow:hidden;}
 .phone__bar{display:flex;align-items:center;gap:7px;padding:14px 13px 10px;color:var(--ink);}
 .phone__bar b{font-size:12.5px;font-family:"Inter Tight",sans-serif;}
 .phone__bar small{margin-left:auto;font-size:10px;color:var(--ink-4);}
-.shot{position:relative;margin:0 10px;border-radius:12px;overflow:hidden;aspect-ratio:4/5;background:var(--line-2);}
+.shot{position:relative;flex:1;min-height:0;margin:0 10px;border-radius:12px;overflow:hidden;background:var(--line-2);}
 .shot img{width:100%;height:100%;object-fit:cover;}
 /* Filigrane répété sur toute la photo. Le worker, lui, ne pose qu'un logo en
    bas à droite (watermarkBuffer, gravity southeast) : cette mosaïque est un
