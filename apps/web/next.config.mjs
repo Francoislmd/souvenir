@@ -24,6 +24,15 @@ const nextConfig = {
       ],
     },
   },
+  /* /produit est devenue la page pilier : elle a absorbé la démo de
+     /fonctionnement et le simulateur de /simulation. Redirections permanentes
+     vers les ancres correspondantes — les deux URL ont pu être partagées. */
+  async redirects() {
+    return [
+      { source: "/fonctionnement", destination: "/produit#demo", permanent: true },
+      { source: "/simulation", destination: "/produit#simulateur", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

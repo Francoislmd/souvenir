@@ -37,6 +37,11 @@
   text-wrap: balance;
   color: var(--ink);
 }
+/* Le titre de la section est passé en prop (l'accueil et /produit n'ont pas le
+   même) : le mot accentué est simplement le <span> qu'il contient. Le dégradé
+   s'applique donc par sélecteur descendant, et non par une classe que
+   l'appelant devrait connaître. .grad reste pour les usages existants. */
+.h2 span,
 .grad {
   background: var(--sunset);
   -webkit-background-clip: text;

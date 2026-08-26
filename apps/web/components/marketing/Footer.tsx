@@ -11,8 +11,11 @@ import styles from "@/components/marketing/Footer.module.css";
    légales obligatoires, et le maillage interne vers les pages activités. */
 
 const PRODUIT = [
-  { href: "/fonctionnement", label: "Fonctionnement" },
-  { href: "/simulation", label: "Simuler mes revenus" },
+  // /produit a absorbé /fonctionnement (la démo) et /simulation (le
+  // simulateur) : deux entrées de moins, ancres directes vers les sections.
+  { href: "/produit", label: "Le produit" },
+  { href: "/produit#demo", label: "Voir la démo" },
+  { href: "/produit#simulateur", label: "Simuler mes revenus" },
   { href: "/liste-attente", label: "Liste d'attente" },
   { href: "/connexion", label: "Connexion opérateur" },
 ];

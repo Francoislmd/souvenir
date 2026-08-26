@@ -10,8 +10,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     { url: base, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${base}/fonctionnement`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/simulation`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    // /fonctionnement et /simulation sont redirigés en 301 vers /produit :
+    // une URL redirigée n'a rien à faire dans un sitemap.
+    { url: `${base}/produit`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/liste-attente`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/mentions-legales`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/cgu`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },

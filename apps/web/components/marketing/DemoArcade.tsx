@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import Image from "next/image";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { gtmEvent } from "@/lib/gtm";
@@ -38,7 +38,25 @@ const VIGNETTES = [
   { src: "/landing/immersive/escalade-duo.webp", cls: styles.vRight },
 ];
 
-export function DemoArcade() {
+interface DemoArcadeProps {
+  /** `id` posé sur la section, pour les ancres de page (ex. /produit#demo). */
+  anchorId?: string;
+  eyebrow?: string;
+  /** Le mot accentué se met dans un <span> : il reçoit le dégradé sunset. */
+  title?: ReactNode;
+  sub?: string;
+}
+
+export function DemoArcade({
+  anchorId,
+  eyebrow = "La démo",
+  title = (
+    <>
+      Entrez dans la galerie <span>de vos clients</span>.
+    </>
+  ),
+  sub = "Ils reçoivent un lien après la sortie, retrouvent leurs photos et les achètent.",
+}: DemoArcadeProps = {}) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -76,20 +94,21 @@ export function DemoArcade() {
   }
 
   return (
-    <section className={styles.section} aria-labelledby="demo-produit">
+    <section className={styles.section} id={anchorId} aria-labelledby="demo-produit">
       {/* Sans JS, .reveal (globals.css) resterait à opacity:0. */}
       <noscript>
         <style>{".reveal{opacity:1 !important;transform:none !important}"}</style>
       </noscript>
 
+      {/* Chapeau paramétrable : l'accueil garde le sien, /produit passe le
+          sien. L'accent dégradé est appliqué au <span> du titre, quel qu'il
+          soit, plutôt qu'à une chaîne connue d'avance. */}
       <div className={styles.head}>
-        <p className={`${styles.eyebrow} reveal`}>La démo</p>
+        <p className={`${styles.eyebrow} reveal`}>{eyebrow}</p>
         <h2 id="demo-produit" className={`${styles.h2} reveal reveal-d1`}>
-          Entrez dans la galerie <span className={styles.grad}>de vos clients</span>.
+          {title}
         </h2>
-        <p className={`${styles.sub} reveal reveal-d2`}>
-          Ils reçoivent un lien après la sortie, retrouvent leurs photos et les achètent.
-        </p>
+        <p className={`${styles.sub} reveal reveal-d2`}>{sub}</p>
       </div>
 
       <div className={`${styles.trigger} reveal reveal-d3`}>

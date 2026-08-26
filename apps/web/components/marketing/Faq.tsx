@@ -158,7 +158,7 @@ const QUESTIONS: Question[] = [
     a: (
       <>
         Ils dépendent de votre tarif et de la part de clients qui achètent.{" "}
-        <Link href="/simulation">Le simulateur</Link> en donne une estimation en quelques secondes.
+        <Link href="/produit#simulateur">Le simulateur</Link> en donne une estimation en quelques secondes.
       </>
     ),
     plain:
