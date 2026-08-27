@@ -67,6 +67,20 @@
   background: transparent;
   transition: background-color 200ms ease, box-shadow 200ms ease;
 }
+.headerRail {
+  /* L'accueil est le seul écran en .railWide (1920px, pour que la carte du
+     hero respire). Le header, lui, doit garder la largeur de lecture des
+     autres pages (1320px, cf. .rail et .pp .rail sur /produit) : sans quoi le
+     logo et le CTA collent aux bords de l'écran sur grand moniteur alors
+     qu'ils sont resserrés ailleurs. Ce conteneur ne borne QUE le header ;
+     .rail applique déjà les gouttières, on retranche donc 2×--gutter.
+     Sous 1320px la valeur ne mord jamais : le comportement mobile (barre
+     collante, débord pleine largeur du .header) est inchangé. */
+  width: 100%;
+  max-width: calc(1320px - 2 * var(--gutter));
+  margin: 0 auto;
+  flex-shrink: 0;
+}
 .headerLinks {
   display: flex;
   align-items: center;

@@ -26,9 +26,15 @@ export default function AccueilPage() {
       </div>
 
       {/* railWide : sur l'accueil la carte du hero doit respirer sur les grands
-          écrans, la largeur de lecture de 1320px ne s'y applique pas. */}
+          écrans, la largeur de lecture de 1320px ne s'applique donc pas au
+          hero — le header, lui, la conserve (cf. .headerRail juste dessous). */}
       <div className={cx(styles.rail, styles.railWide)}>
-        <Header />
+        {/* Header borné à 1320px (cf. .headerRail) : la carte du hero profite
+            des 1920px de .railWide, la barre de navigation reste à la largeur
+            resserrée des autres pages. */}
+        <div className={styles.headerRail}>
+          <Header />
+        </div>
 
         {/* Hero : une seule carte photo plein cadre (cf. docs/maquette-hero-linktrip.html).
             La carte vit dans .rail, elle hérite donc des gouttières ; .heroMain lui

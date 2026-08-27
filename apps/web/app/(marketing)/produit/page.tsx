@@ -58,8 +58,12 @@ export default function ProduitPage() {
     <div className={`${landing.page} pp`}>
       {/* Le header attend `.page` (pour --gutter) et `.rail` (pour ses marges)
           comme ancêtres. `flex: 0 0 auto` l'empêche d'absorber la hauteur que
-          `.rail` réclame d'ordinaire sur les pages en un seul écran. */}
-      <div className={landing.rail} style={{ flex: "0 0 auto" }}>
+          `.rail` réclame d'ordinaire sur les pages en un seul écran — mais
+          `.rail` impose aussi `min-height: 100svh` (pensé pour les pages où
+          .rail encadre tout le premier écran), donc il faut aussi le
+          neutraliser ici, sans quoi le header à lui seul pousse le reste de
+          la page hors de l'écran. */}
+      <div className={landing.rail} style={{ flex: "0 0 auto", minHeight: "auto" }}>
         <Header current="produit" />
       </div>
 
