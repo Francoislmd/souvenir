@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maquette · Page Tarif Linktrip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   Maquette : page /tarifs
+   Mêmes tokens et mêmes polices que docs/maquette-produit-v1.html, mêmes
+   motifs (bandes pleine largeur, carte bordée, dalle encre encastrée, filet
+   1px plutôt qu'ombre). Deux formules seulement : la vente à la commission
+   et l'abonnement du mode « vous les offrez ».
+   Le bloc des formules existe en trois pistes : docs/maquette-tarifs-formules-options.html
+   ══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --ink:#161320; --ink-2:#413c4e; --ink-3:#726c80; --ink-4:#a6a0b2;
+  --line:#ece9ef; --line-2:#f4f2f6; --soft:#fff1eb; --paper:#fbfaf9;
+  --brand:#ff5a1f; --brand-ink:#e8460c; --rose:#ff3d6e; --amber:#ffb443; --aqua:#0fbeb6; --ok:#16a34a;
+  --sunset:linear-gradient(120deg,#ff3d6e,#ff5a1f 52%,#ffb443);
+  --gutter:46px; --r-slab:30px; --r-card:20px; --r-mini:14px;
+}
+@media (max-width:1280px){ :root{ --gutter:34px; } }
+@media (max-width:700px){ :root{ --gutter:20px; --r-slab:22px; } }
+
+*{box-sizing:border-box;}
+html,body{margin:0;}
+html{scroll-behavior:smooth;}
+body{background:#fff;color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;line-height:1.5;}
+::selection{background:rgba(255,90,31,.18);color:var(--ink);}
+h1,h2,h3,h4{font-family:"Inter Tight","Inter",system-ui,sans-serif;font-weight:700;margin:0;letter-spacing:-.02em;text-wrap:balance;}
+p{margin:0;}
+a{text-decoration:none;color:inherit;}
+svg{display:block;}
+img{display:block;max-width:100%;}
+button{font-family:inherit;}
+
+.rail{max-width:1320px;margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter);}
+[id]{scroll-margin-top:96px;}
+:focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:6px;}
+button,a{-webkit-tap-highlight-color:transparent;}
+
+/* ── Échelle typographique ─────────────────────────────────────────────── */
+.kicker{font-family:"Inter Tight","Inter",sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-4);}
+.h1{font-size:clamp(32px, 2.5vw + 0.5vh, 46px);line-height:1.04;font-weight:700;}
+.h2{font-size:clamp(27px, 1.9vw + 0.8vh, 42px);line-height:1.08;}
+.h3{font-size:clamp(20px, 0.9vw + 0.6vh, 27px);line-height:1.15;}
+.lead{font-size:clamp(15.5px, 0.4vw + 0.4vh, 18px);color:var(--ink-2);line-height:1.55;text-wrap:pretty;}
+.body{font-size:15px;color:var(--ink-3);line-height:1.6;}
+.grad{background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.num{font-family:"Inter Tight","Inter",sans-serif;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:0;
+  font-family:"Inter Tight","Inter",sans-serif;font-weight:800;font-size:15px;letter-spacing:-.008em;
+  color:#fff;background:var(--sunset);border-radius:99px;padding:13px 22px;
+  transition:filter .18s, background .18s;}
+@media (hover:hover){ .btn:hover{filter:brightness(1.06) saturate(1.04);} }
+.btn:active{filter:brightness(.97);}
+.btn i{font-style:normal;transition:transform .18s;}
+@media (hover:hover){ .btn:hover i{transform:translateX(3px);} }
+.btn--line{background:#fff;color:var(--ink);border:1px solid var(--line);}
+@media (hover:hover){ .btn--line:hover{border-color:var(--ink-4);} }
+.btn--full{width:100%;justify-content:center;}
+
+/* Champ e-mail */
+.field{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 6px 6px 18px;max-width:430px;}
+.field input{flex:1;min-width:0;border:0;outline:0;font-family:inherit;font-size:15px;color:var(--ink);background:transparent;padding:10px 0;}
+.field input::placeholder{color:var(--ink-4);}
+.field .btn{padding:11px 18px;font-size:14.5px;}
+.field--dark{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18);}
+.field--dark input{color:#fff;}
+.field--dark input::placeholder{color:rgba(255,255,255,.45);}
+@media (max-width:430px){
+  .field{flex-direction:column;align-items:stretch;gap:10px;border-radius:22px;padding:10px;}
+  .field input{padding:8px 10px;}
+  .field .btn{justify-content:center;}
+}
+
+/* ── Icônes maison : 24×24, stroke 1.5, currentColor ───────────────────── */
+.ico{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.ico--s{width:16px;height:16px;}
+
+/* ── Bandes, dalle, carte ──────────────────────────────────────────────── */
+.band{padding:clamp(56px, 6vw, 108px) 0;}
+.band--cream{background:var(--soft);}
+.band--paper{background:var(--paper);}
+.band--tight{padding:clamp(40px, 4vw, 72px) 0;}
+.slab{background:var(--ink);color:#fff;border-radius:var(--r-slab);position:relative;overflow:hidden;}
+.slab::before,.slab::after{content:"";position:absolute;width:44%;aspect-ratio:1;border-radius:50%;filter:blur(10px);pointer-events:none;}
+.slab::before{left:-10%;top:-64%;background:radial-gradient(closest-side,rgba(255,90,31,.20),transparent);}
+.slab::after{right:-8%;bottom:-70%;background:radial-gradient(closest-side,rgba(255,61,110,.15),transparent);}
+.slab > *{position:relative;z-index:1;}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-card);}
+.head{text-align:center;max-width:680px;margin:0 auto;}
+.micro{margin-top:12px;font-size:12.5px;color:var(--ink-4);}
+
+/* ── En-tête ───────────────────────────────────────────────────────────── */
+.header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .2s;}
+.header.is-scrolled{border-bottom-color:var(--line);}
+.header__in{display:flex;align-items:center;gap:26px;padding:14px var(--gutter);max-width:1320px;margin:0 auto;}
+.header nav{display:flex;align-items:center;gap:24px;margin-left:auto;}
+.header nav a{font-size:15.5px;color:var(--ink-2);}
+.header nav a.is-current{font-weight:600;color:var(--ink);}
+.ctaShort{display:none;}
+@media (max-width:820px){
+  .header nav a{display:none;}
+  .header nav .btn{font-size:14px;padding:11px 16px;}
+  .header nav .ctaLong{display:none;}
+  .header nav .ctaShort{display:inline;}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   1 · HÉROS ET FORMULES (piste A : les deux cartes)
+   ══════════════════════════════════════════════════════════════════════ */
+.top{padding:clamp(26px,4vh,54px) 0 0;}
+.plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;
+  margin:clamp(30px,3.4vw,52px) auto 0;max-width:1060px;align-items:stretch;}
+@media (max-width:900px){ .plans{grid-template-columns:minmax(0,1fr);max-width:560px;} }
+.plan{padding:clamp(26px,2.2vw,38px);display:flex;flex-direction:column;}
+.plan__name{display:flex;align-items:center;gap:11px;font-family:"Inter Tight","Inter",sans-serif;
+  font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--brand-ink);}
+.plan__name span{display:grid;place-items:center;}
+.plan__name .ico{width:22px;height:22px;}
+.plan__desc{margin-top:14px;font-size:14.8px;color:var(--ink-3);line-height:1.6;}
+@media (min-width:901px){ .plan__desc{min-height:4.8em;} }
+.plan__price{margin-top:20px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.plan__price b{font-family:"Inter Tight","Inter",sans-serif;font-weight:800;font-variant-numeric:tabular-nums;
+  letter-spacing:-.035em;font-size:clamp(46px,3.2vw + 0.6vh,62px);line-height:1;}
+.plan__price em{font-style:normal;font-size:15px;color:var(--ink-3);}
+.plan__sub{margin-top:9px;font-size:13.5px;color:var(--ink-4);}
+.plan__hi{margin-top:20px;border-radius:var(--r-mini);background:var(--soft);padding:15px 17px;display:flex;gap:12px;align-items:flex-start;}
+.plan__hi svg{color:var(--brand-ink);margin-top:1px;}
+.plan__hi b{display:block;font-family:"Inter Tight","Inter",sans-serif;font-size:15px;font-weight:800;color:var(--brand-ink);letter-spacing:-.015em;}
+.plan__hi p{margin-top:4px;font-size:13.8px;color:var(--ink-2);line-height:1.5;}
+.plan__hi--flat{background:var(--line-2);}
+.plan__hi--flat svg,.plan__hi--flat b{color:var(--ink);}
+.plan ul{list-style:none;margin:22px 0 0;padding:0;}
+.plan li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;font-size:14.8px;color:var(--ink-2);border-bottom:1px solid var(--line-2);}
+.plan li:last-child{border-bottom:0;}
+.plan li svg{color:var(--ok);margin-top:2px;}
+.plan__cta{margin-top:auto;padding-top:26px;}
+.plan__note{margin-top:11px;text-align:center;font-size:12.5px;color:var(--ink-4);}
+.plansNote{max-width:1060px;margin:22px auto 0;text-align:center;font-size:14px;color:var(--ink-3);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   2 · LA RÈGLE DES 24 HEURES
+   ══════════════════════════════════════════════════════════════════════ */
+.t24{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:hidden;
+  margin:clamp(28px,3vw,44px) auto 0;max-width:1060px;}
+@media (max-width:760px){ .t24{grid-template-columns:minmax(0,1fr);} }
+.t24__seg{padding:clamp(22px,2vw,34px);position:relative;}
+.t24__seg + .t24__seg{border-left:1px solid var(--line);background:var(--paper);}
+@media (max-width:760px){ .t24__seg + .t24__seg{border-left:0;border-top:1px solid var(--line);} }
+.t24__seg::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--line);}
+.t24__seg--hot::before{background:var(--sunset);}
+.t24__when{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);}
+.t24__rate{display:block;margin-top:14px;font-size:clamp(38px,2.6vw + 0.6vh,52px);line-height:1;}
+.t24__seg--hot .t24__rate{color:var(--brand-ink);}
+.t24__seg p{margin-top:12px;font-size:14.8px;color:var(--ink-2);line-height:1.6;max-width:38ch;}
+.t24__foot{max-width:1060px;margin:20px auto 0;font-size:14px;color:var(--ink-3);line-height:1.6;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3 · CE QUE NOUS NE FACTURONS PAS
+   ══════════════════════════════════════════════════════════════════════ */
+.free{max-width:820px;margin:clamp(28px,3vw,44px) auto 0;padding:clamp(10px,1.4vw,20px) clamp(20px,2.2vw,34px);}
+.free ul{list-style:none;margin:0;padding:0;}
+.free li{display:flex;align-items:center;gap:18px;padding:17px 0;border-bottom:1px solid var(--line-2);font-size:15.5px;color:var(--ink-2);}
+.free li:last-child{border-bottom:0;}
+.free li b{margin-left:auto;white-space:nowrap;font-family:"Inter Tight","Inter",sans-serif;font-weight:800;font-variant-numeric:tabular-nums;font-size:17px;color:var(--ink);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   4 · QUESTIONS   5 · CTA   6 · PIED DE PAGE
+   ══════════════════════════════════════════════════════════════════════ */
+.faq{max-width:820px;margin:clamp(26px,3vw,42px) auto 0;}
+.faq details{border-bottom:1px solid var(--line);}
+.faq summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:16px;padding:20px 0;font-family:"Inter Tight","Inter",sans-serif;font-size:17px;font-weight:700;}
+.faq summary::-webkit-details-marker{display:none;}
+.faq summary svg{margin-left:auto;color:var(--ink-4);transition:transform .2s;}
+.faq details[open] summary svg{transform:rotate(45deg);}
+.faq p{padding:0 40px 20px 0;font-size:15px;color:var(--ink-3);line-height:1.65;}
+.final{padding:clamp(38px,4.4vw,72px) clamp(24px,4vw,64px);text-align:center;}
+.final .field{margin:24px auto 0;}
+.foot{border-top:1px solid var(--line);background:#fff;}
+.foot__in{display:flex;align-items:center;gap:26px;padding-top:26px;padding-bottom:26px;flex-wrap:wrap;}
+.foot nav{display:flex;flex-wrap:wrap;gap:22px;margin-left:8px;}
+.foot nav a{font-size:14px;color:var(--ink-3);transition:color .18s;}
+@media (hover:hover){ .foot nav a:hover{color:var(--ink);} }
+.foot small{margin-left:auto;font-size:13px;color:var(--ink-4);}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  .btn,.btn i,.faq summary svg{transition:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="header" id="hdr">
+  <div class="header__in">
+    <a href="#" aria-label="Linktrip"><svg viewBox="0 0 277 100" height="32" width="88.6" role="img" aria-label="Linktrip"><defs><linearGradient id="lgHdr" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF3D6E"/><stop offset="0.52" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFB443"/></linearGradient></defs><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" fill="none" stroke="url(#lgHdr)" stroke-width="8" stroke-linecap="round"/><circle cx="73" cy="27" r="11" fill="url(#lgHdr)"/><path d="M115.23375 26.513593750000005V65.16046875H106.0V26.513593750000005Z M117.02683620689655 65.16046875V36.162343750000005H126.26058620689655V65.16046875ZM121.61777370689656 32.842343750000005Q119.67246120689656 32.842343750000005 118.27183620689655 31.54546875000001Q116.87121120689656 30.248593750000012 116.87121120689656 28.40703125000001Q116.87121120689656 26.565468750000008 118.27183620689655 25.281562500000007Q119.67246120689656 23.997656250000006 121.61777370689656 23.997656250000006Q123.58902370689655 23.997656250000006 124.97667995689656 25.281562500000007Q126.36433620689655 26.565468750000008 126.36433620689655 28.40703125000001Q126.36433620689655 30.248593750000012 124.97667995689656 31.54546875000001Q123.58902370689655 32.842343750000005 121.61777370689656 32.842343750000005Z M137.2874224137931 48.638281250000006V65.16046875H128.0536724137931V36.162343750000005H137.1836724137931V41.505468750000006H137.4171099137931Q138.4027349137931 38.85984375000001 140.5685161637931 37.32953125000001Q142.73429741379312 35.79921875000001 145.9505474137931 35.79921875000001Q149.0111724137931 35.79921875000001 151.2677349137931 37.16093750000001Q153.5242974137931 38.52265625000001 154.76929741379308 40.97375000000001Q156.0142974137931 43.42484375000001 156.0142974137931 46.692968750000006V65.16046875H146.7805474137931V48.50859375Q146.7805474137931 46.09640625000001 145.5614849137931 44.73468750000001Q144.3424224137931 43.37296875000001 142.1377349137931 43.37296875000001Q140.6852349137931 43.37296875000001 139.5958599137931 43.99546875000001Q138.5064849137931 44.61796875 137.8969536637931 45.798125000000006Q137.2874224137931 46.97828125000001 137.2874224137931 48.638281250000006Z M166.10738362068963 57.560781250000005 166.18519612068965 46.537343750000005H167.45613362068963L175.57457112068965 36.162343750000005H186.05332112068965L173.94050862068963 51.05046875000001H171.50238362068964ZM157.80738362068965 65.16046875V26.513593750000005H167.04113362068964V65.16046875ZM175.80800862068963 65.16046875 168.23425862068964 53.12546875000001 174.30363362068965 46.56328125 186.44238362068964 65.16046875Z M201.6451573275862 36.162343750000005V42.983906250000004H183.3851573275862V36.162343750000005ZM187.1979698275862 29.262968750000006H196.4057823275862V56.03046875000001Q196.4057823275862 57.19765625000001 196.97640732758617 57.78125000000001Q197.54703232758618 58.364843750000006 198.7660948275862 58.364843750000006Q199.2329698275862 58.364843750000006 199.84250107758618 58.26109375000001Q200.45203232758618 58.15734375000001 200.78921982758618 58.053593750000005L202.1639073275862 64.74546875Q200.6076573275862 65.18640625 199.2718760775862 65.38093750000002Q197.9360948275862 65.57546875000001 196.6392198275862 65.57546875000001Q192.02234482758618 65.57546875000001 189.6101573275862 63.383750000000006Q187.1979698275862 61.19203125000001 187.1979698275862 57.067968750000006Z M202.32293103448276 65.16046875V36.162343750000005H211.27136853448275V41.47953125000001H211.58261853448275Q212.36074353448276 38.57453125000001 214.16339978448275 37.18687500000001Q215.96605603448276 35.79921875000001 218.32636853448275 35.79921875000001Q218.97480603448275 35.79921875000001 219.66214978448275 35.87703125000001Q220.34949353448275 35.95484375000001 220.92011853448275 36.13640625000001V44.12515625Q220.24574353448276 43.89171875000001 219.18230603448274 43.775000000000006Q218.11886853448274 43.65828125000001 217.28886853448276 43.65828125000001Q215.65480603448276 43.65828125000001 214.34496228448276 44.38453125000001Q213.03511853448276 45.11078125000001 212.29589978448274 46.40765625000001Q211.55668103448275 47.70453125000001 211.55668103448275 49.41640625000001V65.16046875Z M220.63820474137933 65.16046875V36.162343750000005H229.8719547413793V65.16046875ZM225.22914224137932 32.842343750000005Q223.28382974137932 32.842343750000005 221.8832047413793 31.54546875000001Q220.4825797413793 30.248593750000012 220.4825797413793 28.40703125000001Q220.4825797413793 26.565468750000008 221.8832047413793 25.281562500000007Q223.28382974137932 23.997656250000006 225.22914224137932 23.997656250000006Q227.20039224137932 23.997656250000006 228.5880484913793 25.281562500000007Q229.97570474137933 26.565468750000008 229.97570474137933 28.40703125000001Q229.97570474137933 30.248593750000012 228.5880484913793 31.54546875000001Q227.20039224137932 32.842343750000005 225.22914224137932 32.842343750000005Z M231.66504094827587 76.00234375000001V36.162343750000005H240.79504094827587V41.14234375000001H241.10629094827587Q241.65097844827585 39.81953125000001 242.70144719827584 38.587500000000006Q243.75191594827587 37.35546875000001 245.37300969827587 36.57734375000001Q246.99410344827587 35.79921875000001 249.30254094827586 35.79921875000001Q252.33722844827588 35.79921875000001 254.95691594827588 37.39437500000001Q257.5766034482759 38.98953125000001 259.1976971982759 42.28359375000001Q260.8187909482759 45.577656250000004 260.8187909482759 50.68734375000001Q260.8187909482759 55.615468750000005 259.26254094827584 58.935468750000005Q257.70629094827586 62.255468750000006 255.07363469827587 63.91546875000001Q252.44097844827587 65.57546875000001 249.22472844827587 65.57546875000001Q247.04597844827586 65.57546875000001 245.43785344827586 64.84921875Q243.82972844827586 64.12296875000001 242.75332219827587 62.95578125000001Q241.67691594827588 61.788593750000004 241.10629094827587 60.43984375000001H240.89879094827586V76.00234375000001ZM246.03441594827586 58.39078125Q247.74629094827586 58.39078125 248.92644719827587 57.43109375Q250.10660344827588 56.47140625000001 250.71613469827588 54.73359375000001Q251.32566594827586 52.99578125000001 251.32566594827586 50.68734375000001Q251.32566594827586 48.35296875000001 250.71613469827588 46.62812500000001Q250.10660344827588 44.903281250000006 248.93941594827587 43.943593750000005Q247.77222844827585 42.983906250000004 246.03441594827586 42.983906250000004Q244.34847844827587 42.983906250000004 243.15535344827586 43.91765625000001Q241.96222844827585 44.85140625000001 241.32675969827585 46.57625000000001Q240.69129094827588 48.30109375000001 240.69129094827588 50.68734375000001Q240.69129094827588 53.021718750000005 241.32675969827585 54.74656250000001Q241.96222844827585 56.47140625000001 243.15535344827586 57.43109375Q244.34847844827587 58.39078125 246.03441594827586 58.39078125Z" fill="#161320"/></svg></a>
+    <nav>
+      <a href="#">Produit</a>
+      <a href="#formules" class="is-current">Tarif</a>
+      <button class="btn" type="button"><span class="ctaLong">Rejoindre la liste d'attente</span><span class="ctaShort">Rejoindre</span> <i>&rarr;</i></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══ 1 · Héros et formules ══════════════════════════════════════════ -->
+<section class="rail top" id="formules">
+  <div class="head">
+    <p class="kicker">Tarif</p>
+    <h1 class="h1" style="margin-top:14px;">Deux façons d'utiliser Linktrip, <span class="grad">deux tarifs</span>.</h1>
+    <p class="lead" style="margin-top:16px;">Vous vendez les photos : nous prenons une commission sur chaque vente, et rien d'autre. Vous les offrez contre une adresse e-mail et un avis : vous payez un abonnement.</p>
+  </div>
+
+  <div class="plans">
+    <!-- Formule 1 : la vente à la commission -->
+    <article class="card plan">
+      <h2 class="plan__name">
+        <span><svg class="ico" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2A2 2 0 0 1 3 12V5a2 2 0 0 1 2-2h7a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.6Z"/><circle cx="7.6" cy="7.6" r="1.4"/></svg></span>
+        Vous les vendez
+      </h2>
+      <p class="plan__desc">Vos clients achètent leurs photos dans la galerie, au prix que vous fixez. Ils paient par carte, depuis leur téléphone, en trois écrans.</p>
+      <p class="plan__price"><b>20 %</b><em>sur chaque vente</em></p>
+      <p class="plan__sub">Rien à l'inscription, rien par mois.</p>
+      <div class="plan__hi">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/></svg>
+        <div>
+          <b>10 % dans les 24 heures</b>
+          <p>Le taux tombe de moitié sur les ventes encaissées dans la journée qui suit la sortie.</p>
+        </div>
+      </div>
+      <ul>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Galeries et liens illimités</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Vos prix, fixés par vous</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Aperçus floutés et filigranés</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Relance des clients qui n'ont pas acheté</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Paiement Stripe, sur votre compte</span></li>
+      </ul>
+      <div class="plan__cta">
+        <button class="btn btn--full" type="button">Rejoindre la liste d'attente <i>&rarr;</i></button>
+        <p class="plan__note">Pas de vente, pas de facture.</p>
+      </div>
+    </article>
+
+    <!-- Formule 2 : l'abonnement du mode « vous les offrez » -->
+    <article class="card plan">
+      <h2 class="plan__name">
+        <span><svg class="ico" viewBox="0 0 24 24"><path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM3 7h18v4H3zM12 7v14M12 7S10.6 3 8.2 3a2.4 2.4 0 0 0 0 4.9M12 7s1.4-4 3.8-4a2.4 2.4 0 0 1 0 4.9"/></svg></span>
+        Vous les offrez
+      </h2>
+      <p class="plan__desc">Vos clients repartent avec leurs photos sans payer. Ils laissent leur adresse e-mail, puis un avis.</p>
+      <p class="plan__price"><b>29 €</b><em>par mois</em></p>
+      <p class="plan__sub">TTC, sans engagement, résiliable à tout moment.</p>
+      <div class="plan__hi plan__hi--flat">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M5 9.5h14M5 15h14"/></svg>
+        <div>
+          <b>Le prix ne bouge pas</b>
+          <p>Quel que soit le nombre de sorties, de photos et de clients servis dans le mois.</p>
+        </div>
+      </div>
+      <ul>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Les mêmes galeries, sans page de paiement</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Chaque client laisse son adresse e-mail</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>Le droit à l'image est accepté avant le téléchargement</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>L'avis est demandé juste après</span></li>
+        <li><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>La liste de vos clients vous appartient</span></li>
+      </ul>
+      <div class="plan__cta">
+        <button class="btn btn--line btn--full" type="button">Rejoindre la liste d'attente <i>&rarr;</i></button>
+        <p class="plan__note">Rien n'est prélevé : il n'y a pas de vente.</p>
+      </div>
+    </article>
+  </div>
+
+  <p class="plansNote">Le mode se choisit une fois dans vos réglages, et vaut pour toutes vos sorties.</p>
+</section>
+
+<!-- ═══ 2 · La règle des 24 heures ═════════════════════════════════════ -->
+<section class="band band--cream" id="vingt-quatre-heures" style="margin-top:clamp(56px,6vw,100px);">
+  <div class="rail">
+    <div class="head">
+      <p class="kicker">La règle des 24 heures</p>
+      <h2 class="h2" style="margin-top:14px;">Envoyez le lien le soir même, vos ventes passent à 10 %.</h2>
+      <p class="lead" style="margin-top:14px;">Le compte à rebours démarre à la fin de la sortie.</p>
+    </div>
+
+    <div class="card t24">
+      <div class="t24__seg t24__seg--hot">
+        <p class="t24__when"><svg class="ico ico--s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/></svg>Les 24 premières heures</p>
+        <b class="t24__rate num">10 %</b>
+        <p>La sortie finit à 18 h : tout ce que vos clients achètent avant 18 h le lendemain compte à ce taux.</p>
+      </div>
+      <div class="t24__seg">
+        <p class="t24__when"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M3 12h18M14 7l5 5-5 5"/></svg>Après 24 heures</p>
+        <b class="t24__rate num">20 %</b>
+        <p>Le lien reste ouvert et les relances continuent. La commission revient à son taux normal.</p>
+      </div>
+    </div>
+
+    <p class="t24__foot">Vos clients achètent surtout pendant qu'ils sont encore dedans. Le taux réduit tombe donc sur la plus grosse partie de vos ventes, et il ne dépend que de la vitesse à laquelle vous déposez les photos.</p>
+  </div>
+</section>
+
+<!-- ═══ 3 · Ce que nous ne facturons pas ═══════════════════════════════ -->
+<section class="band">
+  <div class="rail">
+    <div class="head">
+      <p class="kicker">Aucun frais caché</p>
+      <h2 class="h2" style="margin-top:14px;">Ce que nous ne facturons pas.</h2>
+    </div>
+    <div class="card free">
+      <ul>
+        <li><span>L'inscription et la création de votre compte</span><b>0 €</b></li>
+        <li><span>Le stockage des photos, jusqu'à leur suppression au bout de 90 jours</span><b>0 €</b></li>
+        <li><span>Les liens, les e-mails et les relances envoyés à vos clients</span><b>0 €</b></li>
+        <li><span>Les sorties où personne n'achète</span><b>0 €</b></li>
+        <li><span>Les mises à jour et l'assistance</span><b>0 €</b></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4 · Questions ══════════════════════════════════════════════════ -->
+<section class="band" id="faq" style="padding-top:clamp(30px,3vw,56px);">
+  <div class="rail">
+    <div class="head">
+      <p class="kicker">Questions</p>
+      <h2 class="h2" style="margin-top:14px;">Ce que vous nous demandez sur le tarif.</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>Quand est-ce que je suis payé ?<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></summary><p>Chaque vente arrive sur votre compte Stripe, puis part vers votre banque au rythme que vous y avez réglé. L'argent ne transite jamais par nous.</p></details>
+      <details><summary>Le taux à 10 %, il faut le demander ?<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></summary><p>Non. Il s'applique tout seul, vente par vente, selon l'heure de l'achat. Votre relevé indique le taux retenu sur chaque ligne.</p></details>
+      <details><summary>Et si je ne vends rien ce mois-ci ?<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></summary><p>Vous ne recevez pas de facture. La commission se déclenche à la vente, et seulement là.</p></details>
+      <details><summary>Les frais Stripe sont-ils compris ?<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></summary><p>Stripe prélève ses frais de transaction sur chaque paiement, comme pour vos réservations. Notre commission se calcule sur le montant de la vente.</p></details>
+      <details><summary>Je peux passer d'une formule à l'autre ?<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></summary><p>Oui, depuis vos réglages. Le changement vaut pour les sorties suivantes, les galeries déjà ouvertes gardent leur mode.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 5 · CTA final ══════════════════════════════════════════════════ -->
+<section class="rail" style="padding-bottom:clamp(56px,6vw,96px);">
+  <div class="slab final">
+    <h2 class="h2">Prenez date pour l'ouverture.</h2>
+    <p class="lead" style="margin-top:14px;color:rgba(255,255,255,.66);">Laissez votre e-mail, nous vous prévenons dès que les comptes ouvrent.</p>
+    <form class="field field--dark" onsubmit="return false;">
+      <input type="email" placeholder="vous@exemple.fr" aria-label="Votre e-mail">
+      <button class="btn" type="submit">Rejoindre <i>&rarr;</i></button>
+    </form>
+    <p class="micro" style="color:rgba(255,255,255,.4);">Vous choisirez votre formule à l'inscription</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="rail foot__in">
+    <a href="#" aria-label="Linktrip"><svg viewBox="0 0 277 100" height="26" width="72.0" role="img" aria-label="Linktrip"><defs><linearGradient id="lgFoot" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF3D6E"/><stop offset="0.52" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFB443"/></linearGradient></defs><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" fill="none" stroke="url(#lgFoot)" stroke-width="8" stroke-linecap="round"/><circle cx="73" cy="27" r="11" fill="url(#lgFoot)"/><path d="M115.23375 26.513593750000005V65.16046875H106.0V26.513593750000005Z M117.02683620689655 65.16046875V36.162343750000005H126.26058620689655V65.16046875ZM121.61777370689656 32.842343750000005Q119.67246120689656 32.842343750000005 118.27183620689655 31.54546875000001Q116.87121120689656 30.248593750000012 116.87121120689656 28.40703125000001Q116.87121120689656 26.565468750000008 118.27183620689655 25.281562500000007Q119.67246120689656 23.997656250000006 121.61777370689656 23.997656250000006Q123.58902370689655 23.997656250000006 124.97667995689656 25.281562500000007Q126.36433620689655 26.565468750000008 126.36433620689655 28.40703125000001Q126.36433620689655 30.248593750000012 124.97667995689656 31.54546875000001Q123.58902370689655 32.842343750000005 121.61777370689656 32.842343750000005Z M137.2874224137931 48.638281250000006V65.16046875H128.0536724137931V36.162343750000005H137.1836724137931V41.505468750000006H137.4171099137931Q138.4027349137931 38.85984375000001 140.5685161637931 37.32953125000001Q142.73429741379312 35.79921875000001 145.9505474137931 35.79921875000001Q149.0111724137931 35.79921875000001 151.2677349137931 37.16093750000001Q153.5242974137931 38.52265625000001 154.76929741379308 40.97375000000001Q156.0142974137931 43.42484375000001 156.0142974137931 46.692968750000006V65.16046875H146.7805474137931V48.50859375Q146.7805474137931 46.09640625000001 145.5614849137931 44.73468750000001Q144.3424224137931 43.37296875000001 142.1377349137931 43.37296875000001Q140.6852349137931 43.37296875000001 139.5958599137931 43.99546875000001Q138.5064849137931 44.61796875 137.8969536637931 45.798125000000006Q137.2874224137931 46.97828125000001 137.2874224137931 48.638281250000006Z M166.10738362068963 57.560781250000005 166.18519612068965 46.537343750000005H167.45613362068963L175.57457112068965 36.162343750000005H186.05332112068965L173.94050862068963 51.05046875000001H171.50238362068964ZM157.80738362068965 65.16046875V26.513593750000005H167.04113362068964V65.16046875ZM175.80800862068963 65.16046875 168.23425862068964 53.12546875000001 174.30363362068965 46.56328125 186.44238362068964 65.16046875Z M201.6451573275862 36.162343750000005V42.983906250000004H183.3851573275862V36.162343750000005ZM187.1979698275862 29.262968750000006H196.4057823275862V56.03046875000001Q196.4057823275862 57.19765625000001 196.97640732758617 57.78125000000001Q197.54703232758618 58.364843750000006 198.7660948275862 58.364843750000006Q199.2329698275862 58.364843750000006 199.84250107758618 58.26109375000001Q200.45203232758618 58.15734375000001 200.78921982758618 58.053593750000005L202.1639073275862 64.74546875Q200.6076573275862 65.18640625 199.2718760775862 65.38093750000002Q197.9360948275862 65.57546875000001 196.6392198275862 65.57546875000001Q192.02234482758618 65.57546875000001 189.6101573275862 63.383750000000006Q187.1979698275862 61.19203125000001 187.1979698275862 57.067968750000006Z M202.32293103448276 65.16046875V36.162343750000005H211.27136853448275V41.47953125000001H211.58261853448275Q212.36074353448276 38.57453125000001 214.16339978448275 37.18687500000001Q215.96605603448276 35.79921875000001 218.32636853448275 35.79921875000001Q218.97480603448275 35.79921875000001 219.66214978448275 35.87703125000001Q220.34949353448275 35.95484375000001 220.92011853448275 36.13640625000001V44.12515625Q220.24574353448276 43.89171875000001 219.18230603448274 43.775000000000006Q218.11886853448274 43.65828125000001 217.28886853448276 43.65828125000001Q215.65480603448276 43.65828125000001 214.34496228448276 44.38453125000001Q213.03511853448276 45.11078125000001 212.29589978448274 46.40765625000001Q211.55668103448275 47.70453125000001 211.55668103448275 49.41640625000001V65.16046875Z M220.63820474137933 65.16046875V36.162343750000005H229.8719547413793V65.16046875ZM225.22914224137932 32.842343750000005Q223.28382974137932 32.842343750000005 221.8832047413793 31.54546875000001Q220.4825797413793 30.248593750000012 220.4825797413793 28.40703125000001Q220.4825797413793 26.565468750000008 221.8832047413793 25.281562500000007Q223.28382974137932 23.997656250000006 225.22914224137932 23.997656250000006Q227.20039224137932 23.997656250000006 228.5880484913793 25.281562500000007Q229.97570474137933 26.565468750000008 229.97570474137933 28.40703125000001Q229.97570474137933 30.248593750000012 228.5880484913793 31.54546875000001Q227.20039224137932 32.842343750000005 225.22914224137932 32.842343750000005Z M231.66504094827587 76.00234375000001V36.162343750000005H240.79504094827587V41.14234375000001H241.10629094827587Q241.65097844827585 39.81953125000001 242.70144719827584 38.587500000000006Q243.75191594827587 37.35546875000001 245.37300969827587 36.57734375000001Q246.99410344827587 35.79921875000001 249.30254094827586 35.79921875000001Q252.33722844827588 35.79921875000001 254.95691594827588 37.39437500000001Q257.5766034482759 38.98953125000001 259.1976971982759 42.28359375000001Q260.8187909482759 45.577656250000004 260.8187909482759 50.68734375000001Q260.8187909482759 55.615468750000005 259.26254094827584 58.935468750000005Q257.70629094827586 62.255468750000006 255.07363469827587 63.91546875000001Q252.44097844827587 65.57546875000001 249.22472844827587 65.57546875000001Q247.04597844827586 65.57546875000001 245.43785344827586 64.84921875Q243.82972844827586 64.12296875000001 242.75332219827587 62.95578125000001Q241.67691594827588 61.788593750000004 241.10629094827587 60.43984375000001H240.89879094827586V76.00234375000001ZM246.03441594827586 58.39078125Q247.74629094827586 58.39078125 248.92644719827587 57.43109375Q250.10660344827588 56.47140625000001 250.71613469827588 54.73359375000001Q251.32566594827586 52.99578125000001 251.32566594827586 50.68734375000001Q251.32566594827586 48.35296875000001 250.71613469827588 46.62812500000001Q250.10660344827588 44.903281250000006 248.93941594827587 43.943593750000005Q247.77222844827585 42.983906250000004 246.03441594827586 42.983906250000004Q244.34847844827587 42.983906250000004 243.15535344827586 43.91765625000001Q241.96222844827585 44.85140625000001 241.32675969827585 46.57625000000001Q240.69129094827588 48.30109375000001 240.69129094827588 50.68734375000001Q240.69129094827588 53.021718750000005 241.32675969827585 54.74656250000001Q241.96222844827585 56.47140625000001 243.15535344827586 57.43109375Q244.34847844827587 58.39078125 246.03441594827586 58.39078125Z" fill="#161320"/></svg></a>
+    <nav>
+      <a href="#">Produit</a>
+      <a href="#faq">Questions</a>
+      <a href="#">Mentions légales</a>
+      <a href="#">Confidentialité</a>
+    </nav>
+    <small>© 2026 Linktrip</small>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var hdr = document.getElementById('hdr');
+  addEventListener('scroll', function(){ hdr.classList.toggle('is-scrolled', scrollY > 4); }, {passive:true});
+
+})();
+</script>
+</body>
+</html>

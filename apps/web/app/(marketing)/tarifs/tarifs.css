@@ -1,0 +1,156 @@
+/* Page /tarifs — feuille portée par la classe racine .pt.
+   Portée depuis docs/maquette-tarifs-v1.html.
+
+   Feuille GLOBALE et non module, comme produit.css : les deux pages partagent
+   le même vocabulaire de classes repris de la maquette (.rail, .band, .card,
+   .slab, .btn, .field, .kicker, .h1), qu'un module hacherait. Tout est donc
+   préfixé par `.pt`, la classe racine de la page. Les couleurs viennent de
+   styles/tokens.css, les polices des variables next/font déclarées dans
+   app/layout.tsx, `.reveal` de globals.css.
+
+   Motifs repris de la page /produit : bandes pleine largeur, carte bordée,
+   dalle encre encastrée, séparation au filet 1px et jamais à l'ombre. */
+.pt{--gutter:46px;--r-slab:30px;--r-card:20px;--r-mini:14px;}
+@media (max-width:1280px){ .pt{--gutter:34px;} }
+@media (max-width:700px){ .pt{--gutter:20px;--r-slab:22px;} }
+
+/* tokens.css donne déjà la famille et la graisse des titres ; il manque
+   l'équilibrage des fins de ligne, que la maquette pose sur h1 à h4. */
+.pt h1,.pt h2,.pt h3{text-wrap:balance;}
+
+
+.pt .rail{max-width:1320px;margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter);}
+.pt [id]{scroll-margin-top:96px;}
+.pt :focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:6px;}
+.pt button, .pt a{-webkit-tap-highlight-color:transparent;}
+
+/* ── Échelle typographique ─────────────────────────────────────────────── */
+.pt .kicker{font-family:var(--font-inter-tight), system-ui, sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-4);}
+.pt .h1{font-size:clamp(32px, 2.5vw + 0.5vh, 46px);line-height:1.04;font-weight:700;}
+.pt .h2{font-size:clamp(27px, 1.9vw + 0.8vh, 42px);line-height:1.08;}
+.pt .h3{font-size:clamp(20px, 0.9vw + 0.6vh, 27px);line-height:1.15;}
+.pt .lead{font-size:clamp(15.5px, 0.4vw + 0.4vh, 18px);color:var(--ink-2);line-height:1.55;text-wrap:pretty;}
+.pt .body{font-size:15px;color:var(--ink-3);line-height:1.6;}
+.pt .grad{background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.pt .num{font-family:var(--font-inter-tight), system-ui, sans-serif;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+.pt .btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:0;
+  font-family:var(--font-inter-tight), system-ui, sans-serif;font-weight:800;font-size:15px;letter-spacing:-.008em;
+  color:#fff;background:var(--sunset);border-radius:99px;padding:13px 22px;
+  transition:filter .18s, background .18s;}
+@media (hover:hover){ .pt .btn:hover{filter:brightness(1.06) saturate(1.04);} }
+.pt .btn:active{filter:brightness(.97);}
+.pt .btn i{font-style:normal;transition:transform .18s;}
+@media (hover:hover){ .pt .btn:hover i{transform:translateX(3px);} }
+.pt .btn--line{background:#fff;color:var(--ink);border:1px solid var(--line);}
+@media (hover:hover){ .pt .btn--line:hover{border-color:var(--ink-4);} }
+.pt .btn--full{width:100%;justify-content:center;}
+
+/* Champ e-mail */
+.pt .field{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 6px 6px 18px;max-width:430px;}
+.pt .field input{flex:1;min-width:0;border:0;outline:0;font-family:inherit;font-size:15px;color:var(--ink);background:transparent;padding:10px 0;}
+.pt .field input::placeholder{color:var(--ink-4);}
+.pt .field .btn{padding:11px 18px;font-size:14.5px;}
+.pt .field--dark{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18);}
+.pt .field--dark input{color:#fff;}
+.pt .field--dark input::placeholder{color:rgba(255,255,255,.45);}
+@media (max-width:430px){
+  .pt .field{flex-direction:column;align-items:stretch;gap:10px;border-radius:22px;padding:10px;}
+  .pt .field input{padding:8px 10px;}
+  .pt .field .btn{justify-content:center;}
+}
+
+/* ── Icônes maison : 24×24, stroke 1.5, currentColor ───────────────────── */
+.pt .ico{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.pt .ico--s{width:16px;height:16px;}
+
+/* ── Bandes, dalle, carte ──────────────────────────────────────────────── */
+.pt .band{padding:clamp(56px, 6vw, 108px) 0;}
+.pt .band--cream{background:var(--soft);}
+.pt .band--paper{background:var(--paper);}
+.pt .band--tight{padding:clamp(40px, 4vw, 72px) 0;}
+.pt .slab{background:var(--ink);color:#fff;border-radius:var(--r-slab);position:relative;overflow:hidden;}
+.pt .slab::before, .pt .slab::after{content:"";position:absolute;width:44%;aspect-ratio:1;border-radius:50%;filter:blur(10px);pointer-events:none;}
+.pt .slab::before{left:-10%;top:-64%;background:radial-gradient(closest-side,rgba(255,90,31,.20),transparent);}
+.pt .slab::after{right:-8%;bottom:-70%;background:radial-gradient(closest-side,rgba(255,61,110,.15),transparent);}
+.pt .slab > *{position:relative;z-index:1;}
+.pt .card{background:#fff;border:1px solid var(--line);border-radius:var(--r-card);}
+.pt .head{text-align:center;max-width:680px;margin:0 auto;}
+.pt .micro{margin-top:12px;font-size:12.5px;color:var(--ink-4);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   1 · HÉROS ET FORMULES (piste A : les deux cartes)
+   ══════════════════════════════════════════════════════════════════════ */
+.pt .top{padding:clamp(26px,4vh,54px) 0 0;}
+.pt .plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;
+  margin:clamp(30px,3.4vw,52px) auto 0;max-width:1060px;align-items:stretch;}
+@media (max-width:900px){ .pt .plans{grid-template-columns:minmax(0,1fr);max-width:560px;} }
+.pt .plan{padding:clamp(26px,2.2vw,38px);display:flex;flex-direction:column;}
+.pt .plan__name{display:flex;align-items:center;gap:11px;font-family:var(--font-inter-tight), system-ui, sans-serif;
+  font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--brand-ink);}
+.pt .plan__name span{display:grid;place-items:center;}
+.pt .plan__name .ico{width:22px;height:22px;}
+.pt .plan__desc{margin-top:14px;font-size:14.8px;color:var(--ink-3);line-height:1.6;}
+@media (min-width:901px){ .pt .plan__desc{min-height:4.8em;} }
+.pt .plan__price{margin-top:20px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.pt .plan__price b{font-family:var(--font-inter-tight), system-ui, sans-serif;font-weight:800;font-variant-numeric:tabular-nums;
+  letter-spacing:-.035em;font-size:clamp(46px,3.2vw + 0.6vh,62px);line-height:1;}
+.pt .plan__price em{font-style:normal;font-size:15px;color:var(--ink-3);}
+.pt .plan__sub{margin-top:9px;font-size:13.5px;color:var(--ink-4);}
+.pt .plan__hi{margin-top:20px;border-radius:var(--r-mini);background:var(--soft);padding:15px 17px;display:flex;gap:12px;align-items:flex-start;}
+.pt .plan__hi svg{color:var(--brand-ink);margin-top:1px;}
+.pt .plan__hi b{display:block;font-family:var(--font-inter-tight), system-ui, sans-serif;font-size:15px;font-weight:800;color:var(--brand-ink);letter-spacing:-.015em;}
+.pt .plan__hi p{margin-top:4px;font-size:13.8px;color:var(--ink-2);line-height:1.5;}
+.pt .plan__hi--flat{background:var(--line-2);}
+.pt .plan__hi--flat svg, .pt .plan__hi--flat b{color:var(--ink);}
+.pt .plan ul{list-style:none;margin:22px 0 0;padding:0;}
+.pt .plan li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;font-size:14.8px;color:var(--ink-2);border-bottom:1px solid var(--line-2);}
+.pt .plan li:last-child{border-bottom:0;}
+.pt .plan li svg{color:var(--ok);margin-top:2px;}
+.pt .plan__cta{margin-top:auto;padding-top:26px;}
+.pt .plan__note{margin-top:11px;text-align:center;font-size:12.5px;color:var(--ink-4);}
+.pt .plansNote{max-width:1060px;margin:22px auto 0;text-align:center;font-size:14px;color:var(--ink-3);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   2 · LA RÈGLE DES 24 HEURES
+   ══════════════════════════════════════════════════════════════════════ */
+.pt .t24{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:hidden;
+  margin:clamp(28px,3vw,44px) auto 0;max-width:1060px;}
+@media (max-width:760px){ .pt .t24{grid-template-columns:minmax(0,1fr);} }
+.pt .t24__seg{padding:clamp(22px,2vw,34px);position:relative;}
+.pt .t24__seg + .t24__seg{border-left:1px solid var(--line);background:var(--paper);}
+@media (max-width:760px){ .pt .t24__seg + .t24__seg{border-left:0;border-top:1px solid var(--line);} }
+.pt .t24__seg::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--line);}
+.pt .t24__seg--hot::before{background:var(--sunset);}
+.pt .t24__when{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);}
+.pt .t24__rate{display:block;margin-top:14px;font-size:clamp(38px,2.6vw + 0.6vh,52px);line-height:1;}
+.pt .t24__seg--hot .t24__rate{color:var(--brand-ink);}
+.pt .t24__seg p{margin-top:12px;font-size:14.8px;color:var(--ink-2);line-height:1.6;max-width:38ch;}
+.pt .t24__foot{max-width:1060px;margin:20px auto 0;font-size:14px;color:var(--ink-3);line-height:1.6;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3 · CE QUE NOUS NE FACTURONS PAS
+   ══════════════════════════════════════════════════════════════════════ */
+.pt .free{max-width:820px;margin:clamp(28px,3vw,44px) auto 0;padding:clamp(10px,1.4vw,20px) clamp(20px,2.2vw,34px);}
+.pt .free ul{list-style:none;margin:0;padding:0;}
+.pt .free li{display:flex;align-items:center;gap:18px;padding:17px 0;border-bottom:1px solid var(--line-2);font-size:15.5px;color:var(--ink-2);}
+.pt .free li:last-child{border-bottom:0;}
+.pt .free li b{margin-left:auto;white-space:nowrap;font-family:var(--font-inter-tight), system-ui, sans-serif;font-weight:800;font-variant-numeric:tabular-nums;font-size:17px;color:var(--ink);}
+
+/* ══════════════════════════════════════════════════════════════════════
+   4 · QUESTIONS   5 · CTA   6 · PIED DE PAGE
+   ══════════════════════════════════════════════════════════════════════ */
+.pt .faq{max-width:820px;margin:clamp(26px,3vw,42px) auto 0;}
+.pt .faq details{border-bottom:1px solid var(--line);}
+.pt .faq summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:16px;padding:20px 0;font-family:var(--font-inter-tight), system-ui, sans-serif;font-size:17px;font-weight:700;}
+.pt .faq summary::-webkit-details-marker{display:none;}
+.pt .faq summary svg{margin-left:auto;color:var(--ink-4);transition:transform .2s;}
+.pt .faq details[open] summary svg{transform:rotate(45deg);}
+.pt .faq p{padding:0 40px 20px 0;font-size:15px;color:var(--ink-3);line-height:1.65;}
+.pt .final{padding:clamp(38px,4.4vw,72px) clamp(24px,4vw,64px);text-align:center;}
+.pt .final .field{margin:24px auto 0;}
+
+@media (prefers-reduced-motion:reduce){
+  .pt .btn, .pt .btn i, .pt .faq summary svg{transition:none;}
+}

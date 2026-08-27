@@ -16,6 +16,7 @@ const PRODUIT = [
   { href: "/produit", label: "Le produit" },
   { href: "/produit#demo", label: "Voir la démo" },
   { href: "/produit#simulateur", label: "Simuler mes revenus" },
+  { href: "/tarifs", label: "Tarif" },
   { href: "/liste-attente", label: "Liste d'attente" },
   { href: "/connexion", label: "Connexion opérateur" },
 ];

@@ -8,18 +8,19 @@ import styles from "@/app/(marketing)/landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
-export type MarketingRoute = "produit" | "liste-attente";
+export type MarketingRoute = "produit" | "tarifs" | "liste-attente";
 
 interface HeaderProps {
   /** Route affichée en gras ; absent sur l'accueil (le logo fait office de lien racine). */
   current?: MarketingRoute;
 }
 
-/* Une seule entrée : /produit a absorbé /fonctionnement (la démo) et
-   /simulation (le simulateur), tous deux redirigés en 301 vers ses ancres
-   dans next.config.mjs. */
+/* Deux entrées : /produit a absorbé /fonctionnement (la démo) et /simulation
+   (le simulateur), tous deux redirigés en 301 vers ses ancres dans
+   next.config.mjs ; /tarifs porte la grille depuis le 27/08/2026. */
 const NAV_LINKS: { href: string; label: string; route: MarketingRoute }[] = [
   { href: "/produit", label: "Produit", route: "produit" },
+  { href: "/tarifs", label: "Tarif", route: "tarifs" },
 ];
 
 export function Header({ current }: HeaderProps) {
