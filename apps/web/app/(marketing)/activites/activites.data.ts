@@ -19,6 +19,7 @@
       dans le boîtier. Un visiteur ne voit qu'une page à la fois. */
 
 import type { ActivitySlug } from "@/components/marketing/ActivityIcons";
+import { NOM_ACTIVITE } from "@/components/marketing/activitesNav";
 
 export interface Moment {
   /** Repère temporel affiché en surtitre, ex. "16 h 40" ou "Dimanche". */
@@ -139,10 +140,12 @@ export function faqCommune(a: Activite, acc: Accords): [string, string][] {
   return items;
 }
 
-export const ACTIVITES: Activite[] = [
+/* Le nom affiché n'est pas dans la table : il vient de activitesNav.ts, que
+   lit aussi le menu du header. Un seul endroit à corriger, et le menu ne peut
+   pas afficher un autre libellé que la page. */
+const TABLE: Omit<Activite, "nom">[] = [
   {
     slug: "rafting",
-    nom: "Rafting",
     photo: "hero-rafting",
     alt: "Quatre participants pagayent dans un raft au passage d'un rapide",
     h1a: "Ils sortent de l'eau et demandent",
@@ -182,7 +185,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "canyoning",
-    nom: "Canyoning",
     photo: "hero-canyoning",
     alt: "Un participant descend un toboggan naturel dans le canyon",
     h1a: "Ils ont sauté de huit mètres. Ils veulent",
@@ -222,7 +224,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "kayak",
-    nom: "Kayak",
     photo: "hero-kayak",
     alt: "Un groupe de kayaks de couleur sur la rivière, sous un pont",
     h1a: "La photo de la traversée, ils la veulent",
@@ -262,7 +263,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "jet-ski",
-    nom: "Jet-ski",
     photo: "hero-jet-ski",
     alt: "Un jet-ski de trois quarts au virage, gerbe d'eau derrière",
     h1a: "Ils veulent la photo du jet",
@@ -302,7 +302,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "paddle",
-    nom: "Paddle",
     photo: "hero-paddle",
     alt: "Trois paddles en silhouette sur l'eau, au lever du soleil",
     h1a: "Le lever de soleil sur la baie, ils veulent",
@@ -342,7 +341,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "surf",
-    nom: "Surf",
     photo: "hero-surf",
     alt: "Un moniteur reprend la position d'un élève sur sa planche, sur le sable",
     h1a: "La première vague debout, elle",
@@ -382,7 +380,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "tyrolienne",
-    nom: "Tyrolienne",
     photo: "hero-tyrolienne",
     alt: "Une participante suspendue à la tyrolienne, en forêt",
     h1a: "Sur la tyrolienne, il n'y a qu'un",
@@ -423,7 +420,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "quad",
-    nom: "Quad",
     photo: "hero-quad",
     alt: "Un quad au passage du gué, projection d'eau",
     h1a: "Ils reviennent couverts de boue, et",
@@ -463,7 +459,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "parapente",
-    nom: "Parapente",
     photo: "hero-parapente",
     alt: "Le passager et le pilote en vol biplace, vus depuis la perche",
     h1a: "Sur un biplace, le passager ne peut",
@@ -503,7 +498,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "helicoptere",
-    nom: "Hélicoptère",
     photo: "hero-helicoptere",
     alt: "Deux passagers rejoignent l'hélicoptère sur l'aire d'embarquement",
     h1a: "La photo devant l'appareil, ils la veulent",
@@ -543,7 +537,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "plongee",
-    nom: "Plongée",
     photo: "hero-plongee",
     alt: "Un plongeur au-dessus du récif",
     h1a: "Sous l'eau, il n'y a",
@@ -583,7 +576,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "parc-aventure",
-    nom: "Parc aventure",
     photo: "hero-parc-aventure",
     alt: "Un groupe casqué sur un pont de singe, dans les arbres",
     h1a: "Les parents sont en bas,",
@@ -624,7 +616,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "ski-nautique",
-    nom: "Ski nautique",
     photo: "hero-ski-nautique",
     alt: "Une skieuse tractée, le bateau derrière elle",
     h1a: "Le premier départ réussi,",
@@ -665,7 +656,6 @@ export const ACTIVITES: Activite[] = [
   },
   {
     slug: "bouee",
-    nom: "Bouée tractée",
     photo: "hero-bouee",
     alt: "Trois participants sur une bouée tractée, au large",
     h1a: "Ils tombent tous.",
@@ -705,6 +695,8 @@ export const ACTIVITES: Activite[] = [
     sansQuestionMineurs: true,
   },
 ];
+
+export const ACTIVITES: Activite[] = TABLE.map((a) => ({ ...a, nom: NOM_ACTIVITE[a.slug] }));
 
 export const PAR_SLUG = new Map(ACTIVITES.map((a) => [a.slug, a]));
 

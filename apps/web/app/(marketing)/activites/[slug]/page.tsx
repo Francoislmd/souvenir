@@ -150,7 +150,7 @@ export default function ActivitePage({ params }: { params: { slug: string } }) {
       {/* Même neutralisation que sur /produit et /tarifs : `.rail` impose
           min-height:100svh, pensé pour les pages où il encadre le premier écran. */}
       <div className={landing.rail} style={{ flex: "0 0 auto", minHeight: "auto" }}>
-        <Header />
+        <Header current="activites" />
       </div>
 
       <main>

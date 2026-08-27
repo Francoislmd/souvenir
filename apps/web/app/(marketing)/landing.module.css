@@ -54,7 +54,10 @@
      Débord pleine largeur (marge négative + padding = gutter) pour que le
      fond, une fois opaque au défilement, ne laisse pas de bande transparente
      dans les gouttières. */
-  position: static;
+  /* relative (et non static) : le volet des activités s'ancre sur cette boîte.
+     Le header continue de défiler avec la page, seul le contexte de
+     positionnement change. En mobile la règle sticky ci-dessous reprend. */
+  position: relative;
   z-index: 20;
   flex-shrink: 0;
   padding: clamp(14px, 2.4vh, 22px) 0;
@@ -108,6 +111,10 @@
 }
 @media (max-width: 1000px) {
   .headerLinks a:not(.headerCta) { display: none; }
+  /* Sélecteurs à deux classes : le bloc du volet est déclaré plus bas dans la
+     feuille, à spécificité égale il l'emporterait sur cette media query. */
+  .headerLinks .navBtn { display: none; }
+  .header .panel { display: none; }
   /* CTA "Rejoindre" retiré du header sur mobile — le formulaire e-mail du
      hero (et le menu déroulant pour la nav) suffisent, header allégé. */
   .headerCta { display: none; }
@@ -157,14 +164,175 @@
     padding: 6px var(--gutter) 10px;
     box-shadow: 0 16px 34px -20px rgba(22, 19, 32, 0.34);
   }
-  .menuPanel a {
+  .menuPanel > a {
     padding: 14px 2px;
     font-size: 15.5px;
     font-weight: 600;
     color: var(--ink-2);
     border-bottom: 1px solid var(--line);
   }
-  .menuPanel a:last-child { border-bottom: 0; }
+  .menuPanel > a:last-child { border-bottom: 0; }
+}
+
+/* ─── Volet "Activités" (bandeau groupé) ───
+   Les quatorze pages /activites/<slug> n'ont pas de page d'index : le menu les
+   liste toutes. Bandeau à la largeur de la barre plutôt qu'une liste ancrée
+   sous le lien, parce que quatorze noms en une colonne dépassent le pli. */
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15.5px;
+  color: var(--ink-2);
+  transition: color 200ms ease;
+}
+/* Pas de passage en gras à l'ouverture : la largeur du bouton changerait et
+   décalerait les entrées suivantes de la barre. Seule la couleur bouge. */
+.navBtn[aria-expanded="true"] { color: var(--ink); }
+.navBtnCurrent { font-weight: 600; color: var(--ink); }
+.navChevron { transition: transform 180ms ease; }
+.navBtn[aria-expanded="true"] .navChevron,
+.menuAcc > button[aria-expanded="true"] .navChevron { transform: rotate(180deg); }
+@media (hover: hover) {
+  .navBtn:hover { color: var(--ink); }
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% - 6px);
+  left: var(--gutter);
+  right: var(--gutter);
+  z-index: 30;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+}
+/* Une valeur de display dans la feuille l'emporte sur l'attribut hidden. */
+.panel[hidden] { display: none; }
+.panelCols {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 34px;
+}
+.panelIntro { align-self: center; }
+.panelKicker {
+  font-family: var(--font-inter-tight);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--brand);
+}
+.panelTitle {
+  margin-top: 10px;
+  font-size: 19px;
+  text-wrap: balance;
+}
+.panelLead {
+  margin-top: 9px;
+  font-size: 14.5px;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+/* "Sur l'eau" porte neuf activités sur quatorze : il occupe les deux premières
+   colonnes sur deux rangées, les deux autres milieux se partagent la
+   troisième. Sans le placement explicite, "Sur terre" retomberait en
+   rangée 2 colonne 1, sous les activités nautiques. */
+.panelGroups {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 26px;
+  row-gap: 16px;
+  align-content: start;
+}
+.panelGroupEau {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+}
+.panelGroup:nth-child(3) {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.panelGroupTitle {
+  padding: 0 10px 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-4);
+}
+.panelList {
+  display: grid;
+  gap: 2px;
+}
+/* Lecture en colonnes, pas en lignes : sur neuf noms l'oeil descend. */
+.panelGroupEau .panelList {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+}
+.panelItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--ink-2);
+}
+.panelItem svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--ink-4);
+  transition: color 140ms ease;
+}
+@media (hover: hover) {
+  .panelItem:hover { background: var(--line-2); color: var(--ink); }
+  .panelItem:hover svg { color: var(--brand); }
+}
+.panelNote {
+  margin-top: 10px;
+  padding: 11px 10px 3px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+.panelNote a { color: var(--brand); font-weight: 600; }
+
+/* La rotation du chevron et la teinte des pictogrammes sont les seules
+   transitions du volet : elles tombent avec les animations réduites. */
+@media (prefers-reduced-motion: reduce) {
+  .navChevron,
+  .panelItem svg { transition: none; }
+}
+
+/* Volet mobile : les quatorze noms se déplient dans le menu, sur deux
+   colonnes, pour que "Produit" et "Tarif" restent au-dessus du pli. */
+.menuAcc { border-bottom: 1px solid var(--line); }
+.menuAcc > button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 2px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.menuAccList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding-bottom: 10px;
+}
+.menuAccList[hidden] { display: none; }
+.menuAccList .panelItem {
+  padding: 8px;
+  font-size: 13.5px;
+  white-space: nowrap;
 }
 
 .main {
