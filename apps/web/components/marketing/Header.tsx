@@ -147,26 +147,17 @@ export function Header({ current }: HeaderProps) {
           .header (position:relative sur desktop). Masqué sous 1000px, où les
           quatorze noms passent par l'accordéon du menu déroulant. */}
       <div id={panelId} className={styles.panel} hidden={!panelOpen}>
-        <div className={styles.panelCols}>
-          <div className={styles.panelIntro}>
-            <p className={styles.panelKicker}>Une page par activité</p>
-            <h2 className={styles.panelTitle}>Le vocabulaire de votre métier, pas le nôtre.</h2>
-            <p className={styles.panelLead}>
-              Chaque page reprend le déroulé d&apos;une journée, ses créneaux et ses questions.
-            </p>
-          </div>
-          <div className={styles.panelGroups}>
-            {MILIEUX.map(({ cle, titre }) => (
-              <div key={cle} className={cx(styles.panelGroup, cle === "eau" && styles.panelGroupEau)}>
-                <h3 className={styles.panelGroupTitle}>{titre}</h3>
-                <div className={styles.panelList}>
-                  {parMilieu(cle).map((a) => (
-                    <LienActivite key={a.slug} slug={a.slug} nom={a.nom} onClick={fermerVolet} />
-                  ))}
-                </div>
+        <div className={styles.panelGroups}>
+          {MILIEUX.map(({ cle, titre }) => (
+            <div key={cle} className={cx(styles.panelGroup, cle === "eau" && styles.panelGroupEau)}>
+              <h2 className={styles.panelGroupTitle}>{titre}</h2>
+              <div className={styles.panelList}>
+                {parMilieu(cle).map((a) => (
+                  <LienActivite key={a.slug} slug={a.slug} nom={a.nom} onClick={fermerVolet} />
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
         <p className={styles.panelNote}>
           Vous ne trouvez pas votre activité ?{" "}

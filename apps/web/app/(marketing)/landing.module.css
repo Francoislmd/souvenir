@@ -210,49 +210,18 @@
 }
 /* Une valeur de display dans la feuille l'emporte sur l'attribut hidden. */
 .panel[hidden] { display: none; }
-.panelCols {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 34px;
-}
-.panelIntro { align-self: center; }
-.panelKicker {
-  font-family: var(--font-inter-tight);
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--brand);
-}
-.panelTitle {
-  margin-top: 10px;
-  font-size: 19px;
-  text-wrap: balance;
-}
-.panelLead {
-  margin-top: 9px;
-  font-size: 14.5px;
-  color: var(--ink-3);
-  text-wrap: pretty;
-}
-/* "Sur l'eau" porte neuf activités sur quatorze : il occupe les deux premières
-   colonnes sur deux rangées, les deux autres milieux se partagent la
-   troisième. Sans le placement explicite, "Sur terre" retomberait en
-   rangée 2 colonne 1, sous les activités nautiques. */
+/* Quatre colonnes, une seule rangée : "Sur l'eau" porte neuf activités sur
+   quatorze et prend les deux premières, les deux autres milieux ont chacun la
+   leur. Les trois intitulés tombent ainsi sur la même ligne. Sans le placement
+   explicite, "Sur terre" repasserait sous les activités nautiques. */
 .panelGroups {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   column-gap: 26px;
-  row-gap: 16px;
   align-content: start;
 }
 .panelGroupEau {
   grid-column: 1 / 3;
-  grid-row: 1 / 3;
-}
-.panelGroup:nth-child(3) {
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
 }
 .panelGroupTitle {
   padding: 0 10px 8px;
