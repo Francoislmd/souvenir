@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
 import type { Metadata } from "next";
 import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
@@ -223,12 +224,12 @@ export default function ProduitPage() {
               <h2 className="h2 reveal" style={{ marginTop: "14px" }}>Pensé pour les sorties où l&apos;on ne peut pas sortir son téléphone.</h2>
             </div>
             <div className="acts reveal">
-              <a className="act" href="#"><img src="/produit/card-canyoning-cascade.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Canyoning</span></a>
-              <a className="act" href="#"><img src="/produit/card-rafting-eaux-vives.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Rafting</span></a>
-              <a className="act" href="#"><img src="/produit/card-snorkeling-surface.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie individuelle</span><span className="act__name">Plongée</span></a>
-              <a className="act" href="#"><img src="/produit/card-parapente-biplace.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie individuelle</span><span className="act__name">Parapente</span></a>
-              <a className="act" href="#"><img src="/produit/card-escalade-falaise.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Escalade</span></a>
-              <a className="act" href="#"><img src="/produit/card-tyrolienne-foret.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Parc aventure</span></a>
+              <Link className="act" href="/activites/canyoning"><img src="/produit/card-canyoning-cascade.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Canyoning</span></Link>
+              <Link className="act" href="/activites/rafting"><img src="/produit/card-rafting-eaux-vives.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Rafting</span></Link>
+              <Link className="act" href="/activites/plongee"><img src="/produit/card-snorkeling-surface.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie individuelle</span><span className="act__name">Plongée</span></Link>
+              <Link className="act" href="/activites/parapente"><img src="/produit/card-parapente-biplace.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie individuelle</span><span className="act__name">Parapente</span></Link>
+              <Link className="act" href="/activites/surf"><img src="/produit/card-surf-lecon.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Surf</span></Link>
+              <Link className="act" href="/activites/parc-aventure"><img src="/produit/card-tyrolienne-foret.webp" alt="" /><span className="act__veil"></span><span className="act__tag">Galerie de groupe</span><span className="act__name">Parc aventure</span></Link>
             </div>
             <p className="body reveal" style={{ marginTop: "20px" }}>Votre activité n&apos;est pas dans la liste ? Ça marche pareil.</p>
           </div>
