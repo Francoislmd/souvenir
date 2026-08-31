@@ -174,11 +174,22 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
     });
     setLoading(false);
     if (err) {
-      setError(
-        err.message === "User already registered"
-          ? "Un compte existe déjà avec cet email. Connecte-toi plutôt."
-          : "Le réseau a coupé, réessaie dans une minute.",
-      );
+      // Ne pas tout ranger sous « le réseau a coupé » : une panne côté Supabase
+      // (402 quota dépassé, 5xx) doit se dire, sinon on la cherche pendant des
+      // heures du côté du formulaire. Voir api/auth/login pour le même garde-fou.
+      const status = err.status ?? 0;
+      if (err.message === "User already registered") {
+        setError("Un compte existe déjà avec cet email. Connecte-toi plutôt.");
+      } else if (status === 429) {
+        setError("Trop de tentatives. Réessaie dans quelques minutes.");
+      } else if (status >= 500 || status === 402) {
+        console.error("[onboarding] panne côté Supabase", { status, message: err.message });
+        setError("Service momentanément indisponible. Ce n'est pas toi — réessaie dans quelques minutes.");
+      } else if (status === 0) {
+        setError("Le réseau a coupé, réessaie dans une minute.");
+      } else {
+        setError(err.message);
+      }
       return;
     }
     gtmEvent("sign_up", { method: "email", verification_pending: !data.session });

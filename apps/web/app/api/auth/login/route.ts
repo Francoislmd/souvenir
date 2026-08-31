@@ -39,6 +39,16 @@ const MAX_PER_IP = 20;
 // ne jamais laisser deviner si le compte existe.
 const GENERIC_ERROR = "Email ou mot de passe incorrect.";
 
+// Une panne d'infrastructure n'est PAS un refus d'identifiants. Le 31/08/2026,
+// le projet Supabase restreint pour dépassement de quota répondait 402 sur
+// /auth/v1/token : l'écran de connexion affichait « Email ou mot de passe
+// incorrect » et la panne a été cherchée du mauvais côté pendant des heures.
+const SERVICE_ERROR = "Service momentanément indisponible. Ce n'est pas votre mot de passe — réessayez dans quelques minutes.";
+
+// Seuls ces statuts veulent dire « Supabase a lu les identifiants et les
+// refuse ». Tout le reste (402 quota, 5xx, coupure réseau) est une panne.
+const CREDENTIAL_REFUSAL_STATUSES = new Set([400, 401, 403, 422]);
+
 export async function POST(req: Request) {
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
@@ -58,6 +68,14 @@ export async function POST(req: Request) {
   const supabase = createSessionAwareClient(remember);
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    const status = error.status ?? 0;
+    if (status === 429) {
+      return NextResponse.json({ error: "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
+    }
+    if (!CREDENTIAL_REFUSAL_STATUSES.has(status)) {
+      console.error("[api/auth/login] panne côté Supabase", { status, message: error.message });
+      return NextResponse.json({ error: SERVICE_ERROR }, { status: 503 });
+    }
     return NextResponse.json({ error: GENERIC_ERROR }, { status: 401 });
   }
   return NextResponse.json({ ok: true });
