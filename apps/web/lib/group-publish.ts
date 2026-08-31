@@ -1,8 +1,7 @@
 import exifr from "exifr";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
-import { supabaseAdmin } from "./supabase";
-import { ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
+import { downloadObject, uploadObject, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
 import { generateGroupPreview } from "./group-watermark";
 import { clusterByTime, type ClusterItem } from "./cluster";
 
@@ -59,13 +58,13 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
 async function uploadGroupPreview(photoId: string, buffer: Buffer, operatorName: string): Promise<string> {
   const groupPreviewKey = `${photoId}/group-preview.jpg`;
   const previewBuffer = await generateGroupPreview(buffer, operatorName);
-  // cacheControl court (et non l'heure par défaut de Supabase) : cette clé
+  // cacheControl court (et non celui par défaut du CDN) : cette clé
   // peut être réécrite en place (upsert) si la sortie est republiée ou
   // qu'un correctif du filigrane est déployé — sans ça, le CDN/le
   // navigateur continue de servir l'ancien contenu pendant jusqu'à une
   // heure après la mise à jour, ce qui a déjà semé la confusion (aperçus
   // qui "ne changent pas" ou parlant les uns des autres après un correctif).
-  await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, previewBuffer, { contentType: "image/jpeg", upsert: true, cacheControl: "60" });
+  await uploadObject(PREVIEWS_BUCKET, groupPreviewKey, previewBuffer, { contentType: "image/jpeg", cacheControl: "60" });
   return groupPreviewKey;
 }
 
@@ -76,10 +75,7 @@ async function uploadGroupPreview(photoId: string, buffer: Buffer, operatorName:
  * protection tient entièrement au filigrane.
  */
 async function preparePhotoOnce(photoId: string, originalKey: string, operatorName: string): Promise<PhotoPrep> {
-  const { data, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(originalKey);
-  if (error || !data) throw error ?? new Error("download returned no data");
-
-  const buffer = Buffer.from(await data.arrayBuffer());
+  const buffer = await downloadObject(ORIGINALS_BUCKET, originalKey);
 
   const exif = await exifr.parse(buffer, ["DateTimeOriginal"]).catch(() => null);
   const takenAtRaw = exif?.DateTimeOriginal;
@@ -141,9 +137,7 @@ async function preparePhoto(photoId: string, originalKey: string, operatorName: 
  */
 export async function regenerateGroupPreview(photoId: string, originalKey: string, operatorName: string): Promise<string | null> {
   try {
-    const { data, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(originalKey);
-    if (error || !data) throw error ?? new Error("download returned no data");
-    const buffer = Buffer.from(await data.arrayBuffer());
+    const buffer = await downloadObject(ORIGINALS_BUCKET, originalKey);
     return await uploadGroupPreview(photoId, buffer, operatorName);
   } catch (error) {
     console.error(`[group-publish] backfill preview failed for ${originalKey}`, error);

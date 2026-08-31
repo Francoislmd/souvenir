@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import { prisma, track } from "@souvenir/db";
-import { supabaseAdmin, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "../lib/supabase.js";
+import { downloadObject, uploadObject, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "../lib/storage.js";
 
 const LOCK_BADGE_SVG = `
 <svg width="112" height="112" xmlns="http://www.w3.org/2000/svg">
@@ -29,11 +29,8 @@ export async function processPreviewJob({ photoId }: ProcessPreviewParams): Prom
 
   const dir = await mkdtemp(join(tmpdir(), "linktrip-"));
   try {
-    const { data: original, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(photo.originalKey);
-    if (error || !original) throw error ?? new Error("Failed to download original");
-
     const inputPath = join(dir, "input");
-    await writeFile(inputPath, Buffer.from(await original.arrayBuffer()));
+    await writeFile(inputPath, await downloadObject(ORIGINALS_BUCKET, photo.originalKey));
 
     // .rotate() sans argument : réoriente les pixels selon le tag EXIF de la
     // photo puis le supprime. Indispensable — sans ça l'image reste physiquement
@@ -69,10 +66,10 @@ export async function processPreviewJob({ photoId }: ProcessPreviewParams): Prom
     const blurEmailKey = `${photoId}/blur-email.jpg`;
 
     await Promise.all([
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurKey, blurBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
+      uploadObject(PREVIEWS_BUCKET, thumbKey, thumbBuffer, "image/jpeg"),
+      uploadObject(PREVIEWS_BUCKET, previewKey, previewBuffer, "image/jpeg"),
+      uploadObject(PREVIEWS_BUCKET, blurKey, blurBuffer, "image/jpeg"),
+      uploadObject(PREVIEWS_BUCKET, blurEmailKey, blurEmailBuffer, "image/jpeg"),
     ]);
 
     await prisma.photo.update({ where: { id: photoId }, data: { thumbKey, previewKey, blurKey, blurEmailKey, status: "READY" } });

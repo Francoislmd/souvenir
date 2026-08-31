@@ -4,8 +4,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
-import { supabaseAdmin } from "./supabase";
-import { ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
+import { downloadObject, uploadObject, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
 import { generateGroupPreview } from "./group-watermark";
 
 const LOCK_BADGE_SVG = `
@@ -38,10 +37,7 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
 
   const dir = await mkdtemp(join(tmpdir(), "souvenir-"));
   try {
-    const { data: original, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(photo.originalKey);
-    if (error || !original) throw error ?? new Error("Failed to download original");
-
-    const originalBuffer = Buffer.from(await original.arrayBuffer());
+    const originalBuffer = await downloadObject(ORIGINALS_BUCKET, photo.originalKey);
     const inputPath = join(dir, "input");
     await writeFile(inputPath, originalBuffer);
 
@@ -80,11 +76,11 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const groupPreviewKey = groupPreviewBuffer ? `${photoId}/group-preview.jpg` : null;
 
     await Promise.all([
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
+      uploadObject(PREVIEWS_BUCKET, thumbKey, thumbBuffer, { contentType: "image/jpeg" }),
+      uploadObject(PREVIEWS_BUCKET, previewKey, previewBuffer, { contentType: "image/jpeg" }),
+      uploadObject(PREVIEWS_BUCKET, blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg" }),
       groupPreviewKey && groupPreviewBuffer
-        ? supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg", upsert: true })
+        ? uploadObject(PREVIEWS_BUCKET, groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg" })
         : Promise.resolve(),
     ]);
 

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { supabaseAdmin } from "@/lib/supabase";
-import { getPreviewUrl } from "@/lib/storage";
+import { createSignedUploadUrl, getPreviewUrl, ORIGINALS_BUCKET } from "@/lib/storage";
 import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
 
@@ -61,10 +60,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     const extension = extensionMatch ? `.${extensionMatch[1].toLowerCase()}` : "";
     const originalKey = `${sortie.id}/${crypto.randomUUID()}${extension}`;
 
-    const { data, error } = await supabaseAdmin.storage.from("originals").createSignedUploadUrl(originalKey);
-    if (error || !data) {
-      throw error ?? new Error("Failed to create signed upload URL");
-    }
+    const signedUrl = await createSignedUploadUrl(ORIGINALS_BUCKET, originalKey);
 
     const photo = await prisma.photo.create({
       data: { sortieId: sortie.id, originalKey, status: "UPLOADED" },
@@ -80,7 +76,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
 
     await track("photos_uploaded", { operatorId: dbUser.operatorId, meta: { photoId: photo.id } });
 
-    return Response.json({ photoId: photo.id, signedUrl: data.signedUrl }, { status: 201 });
+    return Response.json({ photoId: photo.id, signedUrl }, { status: 201 });
   } catch (error) {
     console.error("[API /api/sorties/[sortieId]/photos]", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

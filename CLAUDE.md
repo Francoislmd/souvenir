@@ -116,7 +116,8 @@ Considère Souvenir comme une startup ambitieuse en phase de lancement et propos
 
 ## 2. Décisions verrouillées 🔒
 
-1. **Stack** : Next.js 14 (App Router, TypeScript strict) · Supabase (Postgres + Auth + Storage) · Prisma · Stripe Connect (Express) · Twilio WhatsApp · Resend (email) · Tailwind. C'est la stack des projets précédents (Yieldly/Linktrip) — réutilise les patterns, n'introduis pas de nouveau framework.
+1. **Stack** : Next.js 14 (App Router, TypeScript strict) · Supabase (Postgres + Auth) · **Cloudflare R2 (fichiers)** · Prisma · Stripe Connect (Express) · Twilio WhatsApp · Resend (email) · Tailwind. C'est la stack des projets précédents (Yieldly/Linktrip) — réutilise les patterns, n'introduis pas de nouveau framework.
+   *Modifié le 31/08/2026 (seule entorse à ce verrou depuis l'origine)* : le stockage des fichiers a quitté Supabase Storage. Deux raisons. L'egress y est facturé 0,09 $/Go au-delà de 250 Go alors qu'il est gratuit chez R2 — or ce produit fait télécharger des originaux, l'egress croît donc avec le chiffre d'affaires. Et surtout, un bucket qui déborde ne doit pas pouvoir couper l'authentification : c'est exactement ce qui est arrivé ce jour-là, quota de stockage dépassé → projet restreint → plus personne ne pouvait se connecter. Postgres et l'auth restent chez Supabase.
 2. **Monorepo** pnpm : `apps/web` (Next, déployé Vercel) + `apps/worker` (Node, déployé via Dockerfile/Railway-Fly) + `packages/db` (Prisma partagé).
 3. **Queue de traitement = table Postgres** (`ProcessingJob`, polling `FOR UPDATE SKIP LOCKED`). Pas de Redis, pas de BullMQ, pas d'Inngest. Zéro infra en plus.
 
@@ -161,7 +162,7 @@ souvenir/
 ```
 
 - **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie (`/g/[token]` ou `/g/s/[shareToken]`). `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
-- **Storage** : buckets Supabase `originals` (privé) et `previews` (aperçus/miniatures/flous — voir `lib/storage.ts`).
+- **Storage** : buckets Cloudflare R2 `originals` (privé, servi uniquement par lien signé 24 h) et `previews` (public, servi par un domaine Cloudflare — `R2_PREVIEWS_PUBLIC_URL` — pour les aperçus, miniatures, flous et logos d'opérateur). **Tout passe par `lib/storage.ts`, seule couture vers le stockage** : aucun autre fichier ne parle au SDK S3 directement. Le worker a sa propre copie réduite (`apps/worker/src/lib/storage.ts`, lecture d'originaux et écriture d'aperçus seulement) — duplication assumée plutôt qu'un quatrième espace dans le monorepo. Les logos d'opérateur vivent dans `previews/logos/` : toute purge doit les épargner.
 - **Accès DB** : Prisma côté serveur uniquement (server components / route handlers / worker). Pas de requête Supabase côté client.
 - **SEO** : `app/sitemap.ts` et `app/robots.ts` n'exposent que la landing et les 4 pages légales — galeries, espace opérateur et auth sont explicitement exclus (`Disallow` + header `X-Robots-Tag: noindex` sur `/g/:path*`, posé dans `next.config.mjs`).
 - **Monitoring** : Sentry (`@sentry/nextjs` côté web, `@sentry/node` côté worker), entièrement optionnel — inerte tant que `NEXT_PUBLIC_SENTRY_DSN`/`SENTRY_DSN` ne sont pas définies, l'app démarre sans.
@@ -214,4 +215,5 @@ Points notables :
 - `CRON_SECRET` (min. 20 caractères) protège les deux crons Vercel.
 - `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` / `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` sont **optionnelles**, hors du schéma zod — l'app tourne sans.
 - `RESEND_FROM_EMAIL` est requise, sans repli sur un domaine Resend partagé (mauvais pour la délivrabilité).
+- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_ORIGINALS`, `R2_BUCKET_PREVIEWS`, `R2_PREVIEWS_PUBLIC_URL` : le stockage des fichiers (depuis le 31/08/2026). Le worker a besoin des cinq premières, pas de la sixième — il écrit des aperçus, il n'en construit jamais l'URL. Il n'a en revanche plus aucune variable Supabase.
 - `STRIPE_CONNECT_WEBHOOK_SECRET` traîne parfois dans des `.env.local` existants mais n'est référencée nulle part dans le code actuel (`account.updated` est traité dans le webhook principal via `STRIPE_WEBHOOK_SECRET`) — probablement un reliquat, à confirmer avant de le retirer pour de bon.
