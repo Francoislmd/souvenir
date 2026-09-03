@@ -12,7 +12,11 @@
   --line: #ece9ef;
   --line-2: #f4f2f6;
   --soft: #fff1eb;
-  --bg: #fbfaf9;
+  --bg: #ffffff;
+  --side-bg: #faf9f8;
+  --fill: #f3f2f5;
+  --fill-2: #eae8ee;
+  --brand-ic: #ea4d10;
   --sunset: linear-gradient(120deg, #ff3d6e, #ff5a1f 52%, #ffb443);
   --ok: #16a34a;
   --ok-soft: #eaf7ef;
@@ -78,16 +82,15 @@
 
 /* ---------- shell : 3 entrées ---------- */
 .side {
-  width: 248px;
-  flex: 0 0 248px;
-  background: var(--side);
-  border-right: 1px solid var(--line);
+  width: 262px;
+  flex: 0 0 262px;
+  background: var(--side-bg);
   position: sticky;
   top: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 22px 16px 18px;
+  padding: 26px 16px 20px;
 }
 .logoRow {
   display: flex;
@@ -206,6 +209,7 @@
   flex-direction: column;
 }
 .hdr {
+  display: none;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -311,13 +315,14 @@
   transition: opacity 0.22s ease;
 }
 .content {
-  padding: 34px 28px 40px;
+  padding: 0;
   width: 100%;
 }
 .view {
   max-width: 720px;
   margin: 0 auto;
   width: 100%;
+  padding: 34px 28px 40px;
   animation: appRise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 /* Page Sorties uniquement — tableau + KPI ont besoin de la largeur de l'écran.
@@ -1788,4 +1793,550 @@ a.trow:hover .tgo {
   .spinner {
     animation: none;
   }
+}
+
+
+/* =====================================================================
+   Page Sorties — refonte du 03/09/2026. Classes préfixées `s` : la
+   feuille est partagée avec Revenus et Réglages, qui utilisent déjà
+   .row, .kpi, .rows. Ne jamais redéfinir celles-là ici.
+   ===================================================================== */
+
+.sBrand {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px 30px;
+}
+.sNav {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: background 0.15s, color 0.15s;
+}
+.sNav svg {
+  flex: 0 0 auto;
+  color: var(--ink-4);
+  transition: color 0.15s;
+}
+.sNav:hover {
+  background: #f1eff2;
+  color: var(--ink);
+}
+.sNavOn {
+  background: #fff;
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 2px 6px -2px rgba(22, 19, 32, 0.1), 0 8px 18px -12px rgba(22, 19, 32, 0.16);
+}
+.sNavOn svg {
+  color: var(--brand);
+}
+.sNavCount {
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.sNavOn .sNavCount {
+  color: var(--ink-2);
+}
+.sAcct {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 56px;
+  padding: 0 12px;
+  border-radius: 14px;
+  transition: background 0.15s;
+  width: 100%;
+  text-align: left;
+}
+.sAcct:hover {
+  background: #f1eff2;
+}
+.sAv {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  flex: 0 0 auto;
+  background: var(--fill-2);
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.sWho {
+  min-width: 0;
+  flex: 1;
+}
+.sWho b {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sWho span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--ink-4);
+}
+
+/* ---------- en-tête de vue ---------- */
+.sHdr {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--bg);
+  transition: box-shadow 0.22s;
+}
+.sHdrScrolled {
+  box-shadow: 0 1px 0 rgba(22, 19, 32, 0.07), 0 12px 26px -24px rgba(22, 19, 32, 0.5);
+}
+.sHdrIn {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 48px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.sTitle {
+  font-family: inherit;
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.032em;
+  flex: 0 0 auto;
+}
+.sSpacer {
+  flex: 1;
+}
+.sWrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 16px 48px 120px;
+}
+
+/* ---------- boutons ---------- */
+.sBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 13px;
+  font-size: 1.03rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.14s ease, box-shadow 0.14s ease, transform 0.07s ease;
+}
+.sBtn > svg:first-child {
+  margin-left: -3px;
+  flex: 0 0 auto;
+}
+.sBtnPri {
+  background: linear-gradient(180deg, #ff6b2c 0%, #f2500f 100%);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(140, 40, 4, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(172, 50, 5, 0.32),
+    0 1px 2px rgba(172, 50, 5, 0.3),
+    0 4px 10px -3px rgba(172, 50, 5, 0.3);
+}
+.sBtnPri:hover {
+  background: linear-gradient(180deg, #fb6122 0%, #e34709 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 0 0 1px rgba(160, 45, 4, 0.36),
+    0 1px 2px rgba(160, 45, 4, 0.32),
+    0 6px 14px -4px rgba(160, 45, 4, 0.34);
+}
+.sBtnPri:active {
+  background: linear-gradient(180deg, #e94f13 0%, #d64309 100%);
+  box-shadow: inset 0 2px 4px rgba(112, 30, 2, 0.34), inset 0 0 0 1px rgba(150, 42, 4, 0.4);
+  transform: translateY(1px);
+}
+.sBtnInk {
+  background: linear-gradient(180deg, #2e2a3a 0%, var(--ink) 100%);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 1px 2px rgba(22, 19, 32, 0.28),
+    0 4px 10px -3px rgba(22, 19, 32, 0.24);
+}
+.sBtnInk:hover {
+  background: linear-gradient(180deg, #3b3549 0%, #221e2e 100%);
+}
+.sBtnInk:active {
+  background: var(--ink);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  transform: translateY(1px);
+}
+.sBtnSm {
+  height: 42px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  border-radius: 11px;
+}
+
+/* ---------- synthèse du mois ---------- */
+.sKpis {
+  margin-bottom: 50px;
+}
+.sPeriod {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin: 0 0 18px;
+}
+.sLead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.sLeadN {
+  font-size: 3.35rem;
+  font-weight: 500;
+  letter-spacing: -0.044em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sDelta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ok-ink);
+}
+.sDeltaDown {
+  color: var(--ink-4);
+}
+.sLeadL {
+  margin: 11px 0 0;
+  font-size: 0.97rem;
+  color: var(--ink-2);
+}
+.sSub {
+  display: flex;
+  gap: 56px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+.sSubIt {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.sSubN {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.032em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sSubT {
+  font-size: 0.94rem;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+.sSubT small {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+
+/* ---------- liste des sorties ---------- */
+.sDay {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin: 0 0 14px 4px;
+}
+.sDay em {
+  font-style: normal;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 0.86rem;
+}
+.sGroup {
+  margin-bottom: 38px;
+}
+.sRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 18px;
+  border-radius: 16px;
+  margin: 0 -18px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.16s;
+}
+a.sRow:hover {
+  background: var(--side-bg);
+}
+.sTh {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: var(--soft);
+  color: var(--brand-ic);
+  display: grid;
+  place-items: center;
+  transition: background 0.16s;
+}
+.sTh svg {
+  width: 21px;
+  height: 21px;
+}
+a.sRow:hover .sTh {
+  background: #ffe1cf;
+}
+.sMain {
+  flex: 1;
+  min-width: 0;
+}
+.sMain b {
+  display: block;
+  font-size: 1.06rem;
+  font-weight: 500;
+  letter-spacing: -0.024em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sMain span {
+  display: block;
+  font-size: 0.94rem;
+  color: var(--ink-4);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sVal {
+  text-align: right;
+  flex: 0 0 auto;
+}
+.sVal b {
+  display: block;
+  font-size: 1.24rem;
+  font-weight: 500;
+  letter-spacing: -0.032em;
+  font-variant-numeric: tabular-nums;
+}
+.sVal span {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+.sValZero b {
+  color: var(--ink-4);
+}
+.sPill {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink-4);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.sMore {
+  display: block;
+  width: 100%;
+  height: 46px;
+  border-radius: 13px;
+  background: var(--fill);
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: background 0.15s;
+}
+.sMore:hover {
+  background: var(--fill-2);
+}
+.sEmpty {
+  text-align: center;
+  padding: 70px 20px 80px;
+}
+.sEmpty h2 {
+  font-size: 1.7rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+.sEmpty p {
+  font-size: 1rem;
+  color: var(--ink-4);
+  max-width: 38ch;
+  margin: 0 auto 26px;
+}
+
+/* ---------- barre basse sur téléphone ---------- */
+@media (max-width: 1120px) {
+  .side {
+    width: 82px;
+    flex: 0 0 82px;
+    padding: 24px 12px 18px;
+    align-items: center;
+  }
+  .sBrand {
+    padding: 4px 0 26px;
+  }
+  .sNavLabel,
+  .sNavCount,
+  .sWho {
+    display: none;
+  }
+  .sNav {
+    justify-content: center;
+    padding: 0;
+    width: 50px;
+    height: 50px;
+  }
+  .sAcct {
+    padding: 0;
+    justify-content: center;
+  }
+  .sHdrIn {
+    padding: 0 34px;
+  }
+  .sWrap {
+    padding: 14px 34px 120px;
+  }
+}
+@media (max-width: 760px) {
+  .side {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    flex: none;
+    height: auto;
+    z-index: 50;
+    flex-direction: row;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -1px 0 rgba(22, 19, 32, 0.07);
+  }
+  .sBrand,
+  .side .sp {
+    display: none;
+  }
+  .side .sNav {
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    width: auto;
+    height: 52px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ink-4);
+    background: none;
+    box-shadow: none;
+  }
+  .side .sNavLabel {
+    display: block;
+  }
+  .side .sNavOn,
+  .side .sNavOn svg {
+    color: var(--brand);
+  }
+  .sAcct {
+    display: none;
+  }
+  .sHdrIn {
+    padding: 0 18px;
+    height: 68px;
+  }
+  .sTitle {
+    font-size: 1.55rem;
+  }
+  .sHdrIn .sBtn {
+    display: none;
+  }
+  .sWrap {
+    padding: 12px 18px 108px;
+  }
+  .sCtaMobile {
+    display: flex !important;
+    width: 100%;
+    margin-bottom: 36px;
+  }
+  .sLeadN {
+    font-size: 2.35rem;
+  }
+  .sSub {
+    gap: 30px;
+    margin-top: 22px;
+  }
+  .sSubN {
+    font-size: 1.25rem;
+  }
+  /* Sur téléphone la valeur passe sous le titre : la garder à droite
+     rognait le nom de la sortie, qui est l'information principale. */
+  .sRow {
+    gap: 4px 14px;
+    padding: 12px;
+    margin: 0 -12px;
+    flex-wrap: wrap;
+  }
+  .sMain {
+    flex: 1 1 auto;
+  }
+  .sVal {
+    flex: 1 1 100%;
+    text-align: right;
+    margin-top: 2px;
+  }
+  .sTh {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+  .sTh svg {
+    width: 19px;
+    height: 19px;
+  }
+  .sMain b {
+    font-size: 1rem;
+  }
+  .sVal b {
+    font-size: 1.1rem;
+  }
+}
+.sCtaMobile {
+  display: none;
 }
