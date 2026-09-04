@@ -17,16 +17,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().min(1),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  // Stockage des fichiers : Cloudflare R2, séparé de Supabase depuis le
-  // 31/08/2026 (egress gratuit, et un bucket plein ne peut plus couper l'auth).
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET_ORIGINALS: z.string().min(1).default("originals"),
-  R2_BUCKET_PREVIEWS: z.string().min(1).default("previews"),
-  // Domaine public du bucket previews (custom domain Cloudflare, ou r2.dev en
-  // développement). Sans lui, aucune galerie ne peut afficher d'aperçu.
-  R2_PREVIEWS_PUBLIC_URL: z.string().url(),
   STRIPE_SECRET_KEY: z.string().min(1),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),

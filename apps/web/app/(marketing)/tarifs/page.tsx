@@ -84,6 +84,7 @@ export default function TarifsPage() {
           <div className="head reveal">
             <p className="kicker">Tarif</p>
             <h1 className="h1" style={{ marginTop: "14px" }}>Deux façons d&apos;utiliser Linktrip, <span className="grad">deux tarifs</span>.</h1>
+            <p className="lead" style={{ marginTop: "16px" }}>Vous vendez les photos : nous prenons une commission sur chaque vente, et rien d&apos;autre. Vous les offrez contre une adresse e-mail et un avis : vous payez un abonnement.</p>
           </div>
 
           <div className="plans">
