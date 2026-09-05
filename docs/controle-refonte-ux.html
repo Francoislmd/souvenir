@@ -1982,17 +1982,44 @@ a.trow:hover .tgo {
   max-width: 1040px;
   margin: 0 auto;
   padding: 0 48px;
-  height: 88px;
+  min-height: 88px;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
 }
 .sTitle {
   font-family: inherit;
   font-size: 1.8rem;
   font-weight: 500;
   letter-spacing: -0.032em;
+  line-height: 1.15;
+  margin: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Le retour est un bouton sur la ligne du titre, pas une ligne au-dessus :
+   le titre garde la même place d'un écran à l'autre. 44 px de cible, décalé
+   de sa moitié de marge pour que le chevron s'aligne sur le bord du contenu. */
+.sBack {
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
+  margin-left: -11px;
+  margin-right: -6px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-4);
+  text-decoration: none;
+  transition: background 0.14s, color 0.14s;
+}
+.sBack:hover {
+  background: var(--fill);
+  color: var(--ink);
 }
 .sSpacer {
   flex: 1;
@@ -2281,11 +2308,23 @@ a.sRow:hover .sTh {
     display: none;
   }
   .sHdrIn {
-    padding: 0 18px;
-    height: 68px;
+    padding: 14px 18px;
+    min-height: 68px;
+    gap: 10px;
   }
+  /* Sur téléphone le titre passe à la ligne, mais jamais au-delà de deux :
+     un nom de sortie long mangeait sinon le sixième de l'écran, entre
+     l'en-tête et la barre d'onglets. */
   .sTitle {
-    font-size: 1.55rem;
+    font-size: 1.45rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .sBack {
+    margin-left: -12px;
+    margin-right: -8px;
   }
   .sHdrIn .sBtn {
     display: none;
@@ -2595,34 +2634,6 @@ a.sRow:hover .sTh {
    L'en-tête et le corps reprennent le vocabulaire de la liste (boutons de
    46 px, rayon 13, aucun filet) — les classes .view/.h1/.btn du back-office
    d'origine ne sont pas réemployées ici. */
-.sdHead {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-.sdBack {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.94rem;
-  color: var(--ink-4);
-  text-decoration: none;
-  transition: color 0.14s;
-}
-.sdBack:hover {
-  color: var(--ink-2);
-}
-.sdTitle {
-  font-family: inherit;
-  font-size: 1.62rem;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .sdMeta {
   margin: 0 0 22px;
   font-size: 0.97rem;
@@ -2991,10 +3002,6 @@ a.sdClient:hover {
   }
 }
 @media (max-width: 760px) {
-  .sdTitle {
-    font-size: 1.42rem;
-    white-space: normal;
-  }
   .sdGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
@@ -3317,7 +3324,7 @@ a.sdClient:hover {
 
 .app{min-height:0}
 </style></head><body>
-<section id="liste" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Reglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
+<section id="liste" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Réglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
 <header class="sHdr"><div class="sHdrIn"><h1 class="sTitle">Sorties</h1><span class="sSpacer"></span><button class="sBtn sBtnPri">Nouvelle sortie</button></div></header>
 <div class="sCtaWrap"><button class="sBtn sBtnPri sCtaMobile">Nouvelle sortie</button></div>
 <div class="sWrap">
@@ -3329,14 +3336,14 @@ a.sdClient:hover {
 <div class="sGroup"><div class="sRow"><span class="sTh"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M3.4 11.4h17.2l-1.9 5a2.4 2.4 0 0 1-2.2 1.5H7.5a2.4 2.4 0 0 1-2.2-1.5l-1.9-5Z"/><path d="M15.9 3.3 10.4 10l1.7 1.4 5.5-6.7a1.1 1.1 0 0 0-1.7-1.4Z"/></svg></span><span class="sMain"><b>Kayak, la Sorgue</b><span>10 h 00 · Léa</span></span><span class="sVal "><b>148 €</b><span>9 achats sur 12</span></span></div></div>
 <button class="sMore">Afficher les sorties plus anciennes</button>
 </div></div></div></section>
-<section id="sortie" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Reglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
-<header class="sHdr"><div class="sHdrIn"><span class="sdHead"><a class="sdBack">Sorties</a><h1 class="sdTitle">Canyoning, Gorges du Loup</h1></span></div></header>
+<section id="sortie" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Réglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
+<header class="sHdr"><div class="sHdrIn"><a class="sBack"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5 8 12l6.5 7"/></svg></a><h1 class="sTitle">Randonnée, plateau de Valensole et gorges du Verdon</h1><span class="sSpacer"></span></div></header>
 <div class="sWrap">
 <p class="sdMeta">Aujourd'hui 14 h 00 · Léa · 6 participants</p>
-<div class="sdGrid sdGridPicking"><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span></div>
+<div class="sdGrid sdGridPicking"><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span></div>
 <div class="sdBar"><div class="sdBarIn"><span class="sdBarText"><b>3 photos</b> <span>sélectionnées</span></span><span class="sdBarActions"><button class="sdChip">Visibles par tous</button><button class="sdChip">Réserver à Camille</button><button class="sdChip sdChipDanger">Supprimer</button></span><button class="sdChip sdChipGhost sdCancel">Annuler</button></div></div>
 </div></div></div></section>
-<section id="reglages" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Reglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
+<section id="reglages" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Réglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
 <header class="sHdr"><div class="sHdrIn"><h1 class="sTitle">Réglages</h1><span class="sSpacer"></span><span class="rgStatus">Enregistré</span></div></header>
 <div class="sWrap"><div class="rgCols">
 <div>
@@ -3345,15 +3352,13 @@ a.sdClient:hover {
 <div class="rgField"><label>Logo et couleur</label><div class="rgLogo"><button class="rgLogoBtn">AV</button><div class="rgSws"><button class="rgSw rgSwOn" style="background:#FF5A1F"></button><button class="rgSw " style="background:#0FBEB6"></button><button class="rgSw " style="background:#FF3D6E"></button><button class="rgSw " style="background:#7C3AED"></button><button class="rgSw " style="background:#2563EB"></button><button class="rgSw " style="background:#16A34A"></button><button class="rgSw " style="background:#0F0D16"></button></div></div><span class="rgHint">Visibles sur la galerie et dans les emails.</span></div>
 <p class="sDay">Vos prix</p>
 <div class="rgField"><div class="rgPrice"><span>Une photo</span><input type="number" value="6"><span class="rgUnit">€</span></div><span class="rgHint">Vous touchez 4,80 € — Linktrip prend 20 %.</span></div>
-<div class="rgField"><div class="rgPrice"><span>Toutes les photos de la sortie</span><input type="number" value="24"><span class="rgUnit">€</span></div><span class="rgHint">Vous touchez 19,20 €.</span></div>
 <div class="rgSwitch"><span class="rgSwitchMain"><b>Vente à l'unité</b><span>Sans elle, vos clients ne peuvent prendre que le lot complet.</span></span><button class="tog on"><i></i></button></div>
 </div>
 <div>
 <p class="sDay">Vos activités</p><div class="shChips"><button class="shChip shChipOn">Rafting</button><button class="shChip shChipOn">Canyoning</button><button class="shChip shChipOn">Kayak</button><button class="shChip ">Randonnée</button><button class="shChip ">Parapente</button><button class="shChip ">Via ferrata</button><button class="shChip ">Surf</button><button class="shChip ">Ski</button></div>
 <p class="sDay">On relance à votre place</p>
-<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils n'ont pas ouvert</b><span>Deux heures après, on leur remet le lien. Ils sont souvent encore sur la route.</span></span><button class="tog on"><i></i></button></div>
-<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils ont regardé sans acheter</b><span>Le lendemain, on leur propose leurs photos à prix réduit. C'est ce qui rapporte le plus.</span></span><button class="tog on"><i></i></button></div>
-<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils ont acheté</b><span>On leur demande un avis Google. Vos meilleures notes viennent de là.</span></span><button class="tog "><i></i></button></div>
+<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils n'ont pas ouvert</b><span>Deux heures après, on leur remet le lien.</span></span><button class="tog on"><i></i></button></div>
+<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils ont regardé sans acheter</b><span>Le lendemain, prix réduit. C'est ce qui rapporte le plus.</span></span><button class="tog on"><i></i></button></div>
 <div class="rgFoot"><span class="rgFootIc">✓</span><span class="rgFootText">Paiements actifs · virement le vendredi</span></div>
 <button class="rgQuiet">Se déconnecter</button>
 </div></div></div></div></div></section>

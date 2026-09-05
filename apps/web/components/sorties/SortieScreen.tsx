@@ -8,6 +8,7 @@ import styles from "@/app/(operator)/operator.module.css";
 import { formatEuros } from "@/lib/format";
 import { useToast } from "@/components/operator/ToastProvider";
 import { PhotoDropZone, type UploadProgress } from "@/components/photos/PhotoDropZone";
+import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
 import { getUploadItemsForSortie } from "@/lib/idb";
 
@@ -73,19 +74,12 @@ export function SortieScreen({
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>({ done: 0, total: 0, pending: [] });
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [scrolled, setScrolled] = useState(false);
 
   // Aperçu local instantané (le fichier est déjà sur l'appareil) — sert de
   // repli tant que la vraie miniature n'est pas prête côté serveur.
   const [localPreviews, setLocalPreviews] = useState<Map<string, string>>(new Map());
   const localPreviewsRef = useRef<Map<string, string>>(new Map());
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 6);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const refreshLocalPreviews = useCallback(async () => {
     const items = await getUploadItemsForSortie(sortieId);
@@ -387,19 +381,7 @@ export function SortieScreen({
 
   return (
     <>
-      <header className={`${styles.sHdr} ${scrolled ? styles.sHdrScrolled : ""}`}>
-        <div className={styles.sHdrIn}>
-          <span className={styles.sdHead}>
-            <Link href="/sorties" className={styles.sdBack}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14.5 5 8 12l6.5 7" />
-              </svg>
-              Sorties
-            </Link>
-            <h1 className={styles.sdTitle}>{title}</h1>
-          </span>
-        </div>
-      </header>
+      <AppHeader title={title} backHref="/sorties" backLabel="Revenir aux sorties" />
 
       <div className={styles.sWrap}>
         <p className={styles.sdMeta}>{meta}</p>

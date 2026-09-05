@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
+import { AppHeader } from "@/components/operator/AppHeader";
 import { NewSortieSheet, type SortieMode } from "@/components/sorties/NewSortieSheet";
 
 function PlusIcon() {
@@ -12,35 +13,23 @@ function PlusIcon() {
   );
 }
 
-/** L'ombre n'apparaît qu'une fois la page défilée : elle dit que l'en-tête
- *  flotte au-dessus de la liste, elle ne décore pas le haut de page.
- *
- *  Le même composant porte les deux déclencheurs — le bouton d'en-tête sur
- *  grand écran, le bouton pleine largeur sur téléphone (l'en-tête masque le
- *  sien sous 760 px) — pour qu'ils partagent l'état du panneau. */
+/** Les deux déclencheurs — le bouton d'en-tête sur grand écran, le bouton
+ *  pleine largeur sur téléphone (l'en-tête masque le sien sous 760 px) —
+ *  vivent dans le même composant pour partager l'état du panneau. */
 export function SortiesHeader({ activities, mode }: { activities: string[]; mode: SortieMode | null }) {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 6);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   return (
     <>
-      <header className={`${styles.sHdr} ${scrolled ? styles.sHdrScrolled : ""}`}>
-        <div className={styles.sHdrIn}>
-          <h1 className={styles.sTitle}>Sorties</h1>
-          <span className={styles.sSpacer} />
+      <AppHeader
+        title="Sorties"
+        action={
           <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setOpen(true)}>
             <PlusIcon />
             Nouvelle sortie
           </button>
-        </div>
-      </header>
+        }
+      />
 
       <div className={styles.sCtaWrap}>
         <button type="button" className={`${styles.sBtn} ${styles.sBtnPri} ${styles.sCtaMobile}`} onClick={() => setOpen(true)}>

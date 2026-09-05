@@ -1907,17 +1907,44 @@ a.trow:hover .tgo {
   max-width: 1040px;
   margin: 0 auto;
   padding: 0 48px;
-  height: 88px;
+  min-height: 88px;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
 }
 .sTitle {
   font-family: inherit;
   font-size: 1.8rem;
   font-weight: 500;
   letter-spacing: -0.032em;
+  line-height: 1.15;
+  margin: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Le retour est un bouton sur la ligne du titre, pas une ligne au-dessus :
+   le titre garde la même place d'un écran à l'autre. 44 px de cible, décalé
+   de sa moitié de marge pour que le chevron s'aligne sur le bord du contenu. */
+.sBack {
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
+  margin-left: -11px;
+  margin-right: -6px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-4);
+  text-decoration: none;
+  transition: background 0.14s, color 0.14s;
+}
+.sBack:hover {
+  background: var(--fill);
+  color: var(--ink);
 }
 .sSpacer {
   flex: 1;
@@ -2206,11 +2233,23 @@ a.sRow:hover .sTh {
     display: none;
   }
   .sHdrIn {
-    padding: 0 18px;
-    height: 68px;
+    padding: 14px 18px;
+    min-height: 68px;
+    gap: 10px;
   }
+  /* Sur téléphone le titre passe à la ligne, mais jamais au-delà de deux :
+     un nom de sortie long mangeait sinon le sixième de l'écran, entre
+     l'en-tête et la barre d'onglets. */
   .sTitle {
-    font-size: 1.55rem;
+    font-size: 1.45rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .sBack {
+    margin-left: -12px;
+    margin-right: -8px;
   }
   .sHdrIn .sBtn {
     display: none;
@@ -2520,34 +2559,6 @@ a.sRow:hover .sTh {
    L'en-tête et le corps reprennent le vocabulaire de la liste (boutons de
    46 px, rayon 13, aucun filet) — les classes .view/.h1/.btn du back-office
    d'origine ne sont pas réemployées ici. */
-.sdHead {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-.sdBack {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.94rem;
-  color: var(--ink-4);
-  text-decoration: none;
-  transition: color 0.14s;
-}
-.sdBack:hover {
-  color: var(--ink-2);
-}
-.sdTitle {
-  font-family: inherit;
-  font-size: 1.62rem;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .sdMeta {
   margin: 0 0 22px;
   font-size: 0.97rem;
@@ -2916,10 +2927,6 @@ a.sdClient:hover {
   }
 }
 @media (max-width: 760px) {
-  .sdTitle {
-    font-size: 1.42rem;
-    white-space: normal;
-  }
   .sdGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;

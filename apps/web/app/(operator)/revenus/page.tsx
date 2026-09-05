@@ -1,6 +1,7 @@
 import { requireOperatorUser } from "@/lib/current-user";
 import { getGmv, getSales, nextPayoutDate } from "@/lib/metrics";
 import { formatEuros } from "@/lib/format";
+import { AppHeader } from "@/components/operator/AppHeader";
 import { CountUp } from "@/components/operator/CountUp";
 import styles from "@/app/(operator)/operator.module.css";
 
@@ -24,11 +25,7 @@ export default async function RevenusPage() {
 
   return (
     <>
-      <header className={styles.sHdr}>
-        <div className={styles.sHdrIn}>
-          <h1 className={styles.sTitle}>Revenus</h1>
-        </div>
-      </header>
+      <AppHeader title="Revenus" />
 
       <div className={styles.sWrap}>
         <div className={styles.rvLead}>

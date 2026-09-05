@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
+import { AppHeader } from "@/components/operator/AppHeader";
 import { useToast } from "@/components/operator/ToastProvider";
 import { StripeConnectSection } from "@/components/reglages/StripeConnectSection";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
@@ -131,10 +132,9 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
 
   return (
     <>
-      <header className={styles.sHdr}>
-        <div className={styles.sHdrIn}>
-          <h1 className={styles.sTitle}>Réglages</h1>
-          <span className={styles.sSpacer} />
+      <AppHeader
+        title="Réglages"
+        status={
           <span className={styles.rgStatus} aria-live="polite">
             {status === "saving" ? (
               "Enregistrement…"
@@ -147,8 +147,8 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
               </>
             ) : null}
           </span>
-        </div>
-      </header>
+        }
+      />
 
       <div className={styles.sWrap}>
         <div className={styles.rgCols}>
