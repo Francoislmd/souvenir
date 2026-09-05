@@ -33,6 +33,7 @@ export function PhotoDropZone({
   onAllRegistered,
   onProgress,
   variant = "zone",
+  openRef,
   label,
 }: {
   sortieId: string;
@@ -42,7 +43,12 @@ export function PhotoDropZone({
   /** L'avancement est remonté à l'écran de la sortie, qui l'affiche dans sa
    *  barre basse — le dépôt ne dessine pas sa propre grille de vignettes. */
   onProgress?: (progress: UploadProgress) => void;
-  variant?: "zone" | "button";
+  /** "silent" ne rend que le champ de fichier : le composant reste monté —
+   *  donc la file d'envoi continue de tourner — sans rien afficher. */
+  variant?: "zone" | "button" | "silent";
+  /** Reçoit une fonction qui ouvre le sélecteur de fichiers, pour qu'un
+   *  bouton placé ailleurs (la barre basse) déclenche ce dépôt-ci. */
+  openRef?: React.MutableRefObject<(() => void) | null>;
   label?: string;
 }) {
   const [items, setItems] = useState<UploadItem[]>([]);
@@ -135,17 +141,35 @@ export function PhotoDropZone({
   }, [sortieId, refresh, uploadOne]);
 
   useEffect(() => {
+    if (openRef) openRef.current = () => inputRef.current?.click();
+    return () => {
+      if (openRef) openRef.current = null;
+    };
+  }, [openRef]);
+
+  useEffect(() => {
     void (async () => {
-      const all = await refresh();
+      let all = await refresh();
       if (all.length === 0) return;
+
+      // Un envoi interrompu — onglet fermé, rechargement, navigation — laisse
+      // des éléments en "uploading". La file ne réclame que "queued" et
+      // "error" : personne ne les reprenait, et l'avancement restait figé à
+      // « 0 sur 6 » pour toujours. On les remet dans la file.
+      const stalled = all.filter((i) => i.status === "uploading");
+      if (stalled.length > 0) {
+        await Promise.all(stalled.map((item) => updateUploadItem(item.id, { status: "queued", progress: 0 })));
+        all = await refresh();
+      }
+
       const unregistered = all.filter((i) => !i.photoId || !i.signedUrl);
       if (unregistered.length > 0) {
         await Promise.all(unregistered.map((item) => registerOne(item)));
-        await refresh();
+        all = await refresh();
       }
       onAllRegistered();
       // Reprise : des fichiers déposés avant un rechargement de page reprennent leur envoi.
-      if (all.some((i) => i.status === "queued" || i.status === "error" || i.status === "uploading")) void processQueue();
+      if (all.some((i) => i.status === "queued" || i.status === "error")) void processQueue();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
@@ -189,6 +213,10 @@ export function PhotoDropZone({
     // `items` porte déjà l'avancement ; `onProgress` est stable côté appelant.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, done, total]);
+
+  if (variant === "silent") {
+    return <input ref={inputRef} type="file" multiple accept="image/*" onChange={handleFilesSelected} className="hidden" />;
+  }
 
   if (variant === "button") {
     return (

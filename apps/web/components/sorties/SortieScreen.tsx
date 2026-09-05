@@ -75,11 +75,13 @@ export function SortieScreen({
   const [progress, setProgress] = useState<UploadProgress>({ done: 0, total: 0, pending: [] });
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
+  // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
+  const openPicker = useRef<(() => void) | null>(null);
+
   // Aperçu local instantané (le fichier est déjà sur l'appareil) — sert de
   // repli tant que la vraie miniature n'est pas prête côté serveur.
   const [localPreviews, setLocalPreviews] = useState<Map<string, string>>(new Map());
   const localPreviewsRef = useRef<Map<string, string>>(new Map());
-
 
   const refreshLocalPreviews = useCallback(async () => {
     const items = await getUploadItemsForSortie(sortieId);
@@ -367,7 +369,12 @@ export function SortieScreen({
             </span>
           </span>
           <span className={styles.sdBarActions}>
-            <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} onProgress={setProgress} variant="button" />
+              <button type="button" className={styles.sdChip} onClick={() => openPicker.current?.()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5.8v12.4M5.8 12h12.4" />
+              </svg>
+              <span className={styles.sdChipLabel}>Ajouter des photos</span>
+            </button>
             {needsClients ? null : (
               <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void publish()} disabled={busy}>
                 {busy ? "Publication…" : isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
@@ -414,14 +421,19 @@ export function SortieScreen({
           </div>
         ) : null}
 
+        {empty ? null : grid}
+
+        <PhotoDropZone
+          sortieId={sortieId}
+          onAllRegistered={onAllRegistered}
+          onProgress={setProgress}
+          openRef={openPicker}
+          variant={empty ? "zone" : "silent"}
+        />
+
         {empty ? (
-          <>
-            <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} onProgress={setProgress} />
-            <p className={styles.sdNote}>Rien n&rsquo;est visible par vos clients tant que vous n&rsquo;avez pas publié.</p>
-          </>
-        ) : (
-          grid
-        )}
+          <p className={styles.sdNote}>Rien n&rsquo;est visible par vos clients tant que vous n&rsquo;avez pas publié.</p>
+        ) : null}
 
         {published ? (
           clients.length > 0 ? (
