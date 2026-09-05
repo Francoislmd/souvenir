@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { StrengthMeter } from "@/components/auth/StrengthMeter";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ErrorBanner } from "@/components/auth/ErrorBanner";
+import { useAutofillSync } from "@/components/auth/useAutofillSync";
 import { isAcceptable } from "@/lib/auth/password-strength";
 import styles from "@/components/auth/auth.module.css";
 
@@ -14,19 +15,32 @@ export function ReinitialiserForm() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
-  const canSubmit = isAcceptable(password);
+  useAutofillSync([{ ref: passwordRef, value: password, onChange: setPassword }]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit || status === "loading") return;
+    if (status === "loading") return;
+
+    // Le gestionnaire de mots de passe en propose souvent un sans que React
+    // le voie passer : on lit le champ, pas seulement l'état.
+    const typedPassword = passwordRef.current?.value ?? password;
+    setPassword(typedPassword);
+
+    if (!isAcceptable(typedPassword)) {
+      setError("Choisissez un mot de passe d'au moins 10 caractères, un peu moins courant.");
+      passwordRef.current?.focus();
+      return;
+    }
+
     setStatus("loading");
     setError(null);
     try {
       const res = await fetch("/api/auth/update-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password: typedPassword }),
       });
       if (!res.ok) {
         setError("Impossible d'enregistrer ce mot de passe — réessayez.");
@@ -74,11 +88,12 @@ export function ReinitialiserForm() {
           onChange={setPassword}
           autoComplete="new-password"
           placeholder="Au moins 10 caractères"
+          inputRef={passwordRef}
         >
           <StrengthMeter password={password} />
         </PasswordField>
 
-        <SubmitButton loading={status === "loading"} disabled={!canSubmit} loadingLabel="Enregistrement…">
+        <SubmitButton loading={status === "loading"} loadingLabel="Enregistrement…">
           Enregistrer et me connecter
         </SubmitButton>
       </form>

@@ -6,6 +6,7 @@ import { EmailField } from "@/components/auth/EmailField";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ErrorBanner } from "@/components/auth/ErrorBanner";
+import { useAutofillSync } from "@/components/auth/useAutofillSync";
 import { isEmail } from "@/lib/auth/password-strength";
 import styles from "@/components/auth/auth.module.css";
 
@@ -16,20 +17,45 @@ export default function ConnexionPage() {
   const [remember, setRemember] = useState(true);
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  const canSubmit = isEmail(email) && password.length > 0;
+  useAutofillSync([
+    { ref: emailRef, value: email, onChange: setEmail },
+    { ref: passwordRef, value: password, onChange: setPassword },
+  ]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit || status === "loading") return;
+    if (status === "loading") return;
+
+    // On envoie ce que l'utilisateur a sous les yeux : si le navigateur a
+    // rempli les champs sans prévenir React, l'état est en retard sur le DOM.
+    const typedEmail = (emailRef.current?.value ?? email).trim();
+    const typedPassword = passwordRef.current?.value ?? password;
+    setEmail(typedEmail);
+    setPassword(typedPassword);
+
+    if (!isEmail(typedEmail)) {
+      setEmailError("Il manque une adresse email valide.");
+      emailRef.current?.focus();
+      return;
+    }
+    if (typedPassword.length === 0) {
+      setError("Il manque le mot de passe.");
+      passwordRef.current?.focus();
+      return;
+    }
+
     setStatus("loading");
     setError(null);
+    setEmailError(null);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password, remember }),
+        body: JSON.stringify({ email: typedEmail, password: typedPassword, remember }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -77,10 +103,15 @@ export default function ConnexionPage() {
         <EmailField
           label="Email"
           value={email}
-          onChange={setEmail}
+          onChange={(value) => {
+            setEmail(value);
+            setEmailError(null);
+          }}
           autoComplete="username"
           placeholder="marc@annecyvollibre.fr"
+          error={emailError}
           autoFocus
+          inputRef={emailRef}
         />
         <PasswordField
           label="Mot de passe"
@@ -97,7 +128,7 @@ export default function ConnexionPage() {
           Rester connecté sur cet appareil
         </label>
 
-        <SubmitButton loading={status === "loading"} disabled={!canSubmit} loadingLabel="Connexion…">
+        <SubmitButton loading={status === "loading"} loadingLabel="Connexion…">
           Me connecter
         </SubmitButton>
       </form>
