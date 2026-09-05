@@ -133,15 +133,21 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
             {group.items.map((row) => {
               const d = new Date(row.startsAt);
               const title = row.place ? `${row.activity}, ${row.place}` : row.activity;
-              const future = midnight(d) > midnight(today);
 
               // La règle de la liste : tant qu'une sortie doit quelque chose,
               // sa ligne porte un bouton ; une fois publiée, elle porte son
-              // résultat. Une sortie à venir ne doit encore rien — elle reste
-              // une ligne nue, sans bouton grisé ni état "à publier" muet.
+              // résultat.
+              //
+              // Le bouton ne dépend pas de la date. Une première version le
+              // masquait sur les sorties à venir — « elles ne doivent encore
+              // rien » — et la ligne devenait inerte : après avoir créé une
+              // sortie pour le lendemain, plus rien dans la liste ne disait
+              // qu'on pouvait y déposer des photos. L'opérateur note souvent
+              // sa sortie la veille et revient avec la carte mémoire ; il n'y
+              // a pas de bascule « c'est aujourd'hui » dans sa tête.
               let action: string | null = null;
-              if (!future && row.photoCount === 0) action = "Ajouter les photos";
-              else if (row.photoCount > 0 && row.publicationStatus === "pending") action = "Publier les photos";
+              if (row.photoCount === 0) action = "Ajouter les photos";
+              else if (row.publicationStatus === "pending") action = "Publier les photos";
 
               const result = action === null && row.publicationStatus === "online" ? outcome(row) : null;
 
