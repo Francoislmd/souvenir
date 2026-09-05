@@ -1,50 +1,10 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { requireOperatorUser } from "@/lib/current-user";
-import { getPreviewUrl } from "@/lib/storage";
-import { env } from "@/lib/env";
-import { PhotosFlow } from "@/components/photos/PhotosFlow";
-import styles from "@/app/(operator)/operator.module.css";
+import { redirect } from "next/navigation";
 
-export default async function SortiePhotosPage({ params }: { params: { sortieId: string } }) {
-  const dbUser = await requireOperatorUser();
-
-  const sortie = await prisma.sortie.findFirst({
-    where: { id: params.sortieId, operatorId: dbUser.operatorId },
-    include: {
-      participants: { orderBy: { createdAt: "asc" } },
-      photos: { orderBy: { createdAt: "asc" } },
-    },
-  });
-  if (!sortie) notFound();
-
-  // La phase de départ ne peut pas se fier uniquement à sortie.status : si
-  // l'opérateur a déposé des photos puis fermé l'onglet avant que la fiche
-  // serveur soit créée, la sortie peut rester "UPCOMING" alors que des photos
-  // existent déjà — on regarde directement s'il y a des photos.
-  let initialPhase: "drop" | "lanes" | "sent" = "drop";
-  if (sortie.status === "SENT") initialPhase = "sent";
-  else if (sortie.photos.length > 0) initialPhase = "lanes";
-
-  return (
-    <section className={styles.view}>
-      <Link href={`/sorties/${sortie.id}`} className={styles.back}>
-        ← Sortie
-      </Link>
-
-      <PhotosFlow
-        sortieId={sortie.id}
-        mode={sortie.mode}
-        shareUrl={dbUser.operator.shareToken ? `${env.NEXT_PUBLIC_APP_URL}/g/s/${dbUser.operator.shareToken}` : null}
-        initialPhase={initialPhase}
-        participants={sortie.participants.map((p) => ({ id: p.id, name: p.name, contact: p.contact }))}
-        initialPhotos={sortie.photos.map((p) => ({
-          id: p.id,
-          ownerId: p.ownerId,
-          thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
-        }))}
-      />
-    </section>
-  );
+/**
+ * Le dépôt des photos n'est plus une page à part : la sortie est un seul
+ * écran qui change d'état. La route reste pour les liens déjà partagés
+ * (emails, favoris) et renvoie sur la sortie.
+ */
+export default function SortiePhotosPage({ params }: { params: { sortieId: string } }) {
+  redirect(`/sorties/${params.sortieId}`);
 }

@@ -1,17 +1,21 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
+import { getPreviewUrl } from "@/lib/storage";
 import { bucketSortie } from "@/lib/sorties";
 import { env } from "@/lib/env";
-import { SortieParticipantsSection } from "@/components/sorties/SortieParticipantsSection";
-import { GroupShareCard } from "@/components/sorties/GroupShareCard";
-import styles from "@/app/(operator)/operator.module.css";
+import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
-function formatMetaFr(d: Date, bucket: "today" | "upcoming" | "past"): string {
-  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
-  if (bucket === "today") return `Aujourd'hui ${time}`;
-  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).replace(/^./, (c) => c.toUpperCase()) + ` · ${time}`;
+function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
+  const time = startsAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+  const day =
+    bucket === "today"
+      ? "Aujourd'hui"
+      : startsAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).replace(/^./, (c) => c.toUpperCase());
+  const bits = [`${day} ${time}`];
+  if (guide) bits.push(guide);
+  if (clientCount > 0) bits.push(`${clientCount} participant${clientCount > 1 ? "s" : ""}`);
+  return bits.join(" · ");
 }
 
 export default async function SortieDetailPage({ params }: { params: { sortieId: string } }) {
@@ -19,72 +23,38 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
 
   const sortie = await prisma.sortie.findFirst({
     where: { id: params.sortieId, operatorId: dbUser.operatorId },
-    include: { participants: { orderBy: { createdAt: "asc" } } },
+    include: {
+      participants: { orderBy: { createdAt: "asc" }, include: { order: true } },
+      photos: { orderBy: { createdAt: "asc" } },
+    },
   });
   if (!sortie) notFound();
 
-  const bucket = bucketSortie(sortie.startsAt);
-  const isToday = bucket === "today";
   const isGroup = sortie.mode === "GROUPE";
-
-  let btnLabel = "Les photos, après la sortie";
-  let btnHref: string | null = null;
-  let btnDisabled = true;
-  if (isToday) {
-    btnDisabled = false;
-    btnHref = `/sorties/${sortie.id}/photos`;
-    btnLabel = sortie.status === "SENT" ? (isGroup ? "Voir où en sont les ventes" : "Voir ce que reçoit un client") : isGroup ? "Publier les photos" : "Ajouter les photos";
-  } else if (bucket === "past") {
-    btnLabel = "Sortie terminée";
-  }
+  const clients: ScreenClient[] = sortie.participants.map((p) => ({
+    id: p.id,
+    name: p.name,
+    contact: p.contact,
+    sentAt: p.sentAt ? p.sentAt.toISOString() : null,
+    token: p.token,
+    paid: p.order?.status === "succeeded",
+    amountCents: p.order?.status === "succeeded" ? p.order.amountCents : 0,
+  }));
 
   return (
-    <section className={styles.view}>
-      <Link href="/sorties" className={styles.back}>
-        ← Sorties
-      </Link>
-      <h1 className={styles.h1}>
-        {sortie.activity}
-        {sortie.place ? ` · ${sortie.place}` : ""}
-      </h1>
-      <p className={styles.lead}>
-        {formatMetaFr(sortie.startsAt, bucket)}
-        {sortie.guide ? ` · guide ${sortie.guide}` : ""}
-      </p>
-
-      {isGroup ? (
-        <GroupShareCard sortieId={sortie.id} shareUrl={`${env.NEXT_PUBLIC_APP_URL}/g/s/${dbUser.operator.shareToken}`} />
-      ) : (
-        <>
-          <p className={styles.lead}>Ajoutez vos clients</p>
-          <div className={styles.lbl}>
-            Vos clients · {sortie.participants.length} sur {sortie.seats}
-          </div>
-
-          <SortieParticipantsSection
-            sortieId={sortie.id}
-            participants={sortie.participants.map((p) => ({
-              id: p.id,
-              name: p.name,
-              contact: p.contact,
-              sentAt: p.sentAt ? p.sentAt.toISOString() : null,
-              token: p.token,
-            }))}
-          />
-        </>
-      )}
-
-      <div className={styles.act}>
-        {btnHref ? (
-          <Link href={btnHref} className={`${styles.btn} ${styles.full}`}>
-            {btnLabel}
-          </Link>
-        ) : (
-          <button type="button" className={`${styles.btn} ${styles.full}`} disabled={btnDisabled}>
-            {btnLabel}
-          </button>
-        )}
-      </div>
-    </section>
+    <SortieScreen
+      sortieId={sortie.id}
+      title={sortie.place ? `${sortie.activity}, ${sortie.place}` : sortie.activity}
+      meta={metaLine(sortie.startsAt, bucketSortie(sortie.startsAt), sortie.guide, sortie.participants.length)}
+      isGroup={isGroup}
+      published={sortie.status === "SENT"}
+      shareUrl={isGroup && dbUser.operator.shareToken ? `${env.NEXT_PUBLIC_APP_URL}/g/s/${dbUser.operator.shareToken}` : null}
+      clients={clients}
+      initialPhotos={sortie.photos.map((p) => ({
+        id: p.id,
+        ownerId: p.ownerId,
+        thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
+      }))}
+    />
   );
 }

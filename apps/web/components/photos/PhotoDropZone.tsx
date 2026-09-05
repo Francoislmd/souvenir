@@ -20,39 +20,34 @@ function putToSignedUrl(url: string, file: Blob, onProgress: (pct: number) => vo
   });
 }
 
+export interface UploadProgress {
+  done: number;
+  total: number;
+  /** Fiches photo dont les octets ne sont pas encore arrivés : l'écran les
+   *  affiche en retrait dans la grille plutôt que de masquer la vignette. */
+  pending: string[];
+}
+
 export function PhotoDropZone({
   sortieId,
   onAllRegistered,
+  onProgress,
+  variant = "zone",
+  label,
 }: {
   sortieId: string;
   /** Appelé dès que toutes les photos déposées ont leur fiche créée côté serveur —
    * pas besoin d'attendre la fin de l'envoi des fichiers ni leur traitement (miniatures). */
   onAllRegistered: () => void;
+  /** L'avancement est remonté à l'écran de la sortie, qui l'affiche dans sa
+   *  barre basse — le dépôt ne dessine pas sa propre grille de vignettes. */
+  onProgress?: (progress: UploadProgress) => void;
+  variant?: "zone" | "button";
+  label?: string;
 }) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const processingRef = useRef(false);
-  const objectUrls = useRef<Map<string, string>>(new Map());
-
-  // Aperçu local instantané — dès qu'un fichier est choisi, on le voit, sans
-  // attendre la fin de l'envoi réseau ni le traitement serveur (miniature,
-  // filigrane…).
-  function previewUrlFor(item: UploadItem): string {
-    let url = objectUrls.current.get(item.id);
-    if (!url) {
-      url = URL.createObjectURL(item.file);
-      objectUrls.current.set(item.id, url);
-    }
-    return url;
-  }
-
-  useEffect(() => {
-    const urls = objectUrls.current;
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, []);
-
   const refresh = useCallback(async () => {
     const all = await getUploadItemsForSortie(sortieId);
     setItems(all.sort((a, b) => a.createdAt - b.createdAt));
@@ -184,79 +179,46 @@ export function PhotoDropZone({
   const total = items.length;
   const done = items.filter((i) => i.status === "done").length;
 
-  let caption = "Vous n'avez rien à trier";
-  if (total > 0) caption = `${done} / ${total} envoyées`;
+  useEffect(() => {
+    if (!onProgress) return;
+    onProgress({
+      done,
+      total,
+      pending: items.filter((i) => i.status !== "done" && i.photoId).map((i) => i.photoId as string),
+    });
+    // `items` porte déjà l'avancement ; `onProgress` est stable côté appelant.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, done, total]);
+
+  if (variant === "button") {
+    return (
+      <>
+        <input ref={inputRef} type="file" multiple accept="image/*" onChange={handleFilesSelected} className="hidden" />
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sdChip}`} onClick={() => inputRef.current?.click()}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5.8v12.4M5.8 12h12.4" />
+          </svg>
+          {label ?? "Ajouter des photos"}
+        </button>
+      </>
+    );
+  }
 
   return (
-    <div>
+    <>
       <input ref={inputRef} type="file" multiple accept="image/*" onChange={handleFilesSelected} className="hidden" />
-      <div
-        className={styles.drop}
-        style={{ marginTop: 20 }}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
-      >
-        <div className={styles.ic}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 16V4" />
-            <path d="m7 9 5-5 5 5" />
-            <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+      <button type="button" className={styles.sdDrop} onClick={() => inputRef.current?.click()}>
+        <span className={styles.sdDropIc}>
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 17V4.5" />
+            <path d="M6.5 10 12 4.5 17.5 10" />
+            <path d="M4 15.5v2.8A2.2 2.2 0 0 0 6.2 20.5h11.6a2.2 2.2 0 0 0 2.2-2.2v-2.8" />
           </svg>
-        </div>
-        <div className={styles.t}>Déposez toutes les photos</div>
-        <div className={styles.h}>{caption}</div>
-      </div>
-
-      {items.length > 0 ? (
-        <div className={styles.thumbs} style={{ marginTop: 14 }}>
-          {items.map((item) => (
-            <span key={item.id} className={styles.th2} style={{ position: "relative" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrlFor(item)} alt="" style={{ opacity: item.status === "error" ? 0.5 : 1 }} />
-              {item.status === "uploading" || item.status === "queued" ? (
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "grid",
-                    placeItems: "center",
-                    background: "rgba(20,19,32,.28)",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      border: "2px solid rgba(255,255,255,.5)",
-                      borderTopColor: "#fff",
-                      animation: "spin .7s linear infinite",
-                    }}
-                  />
-                </span>
-              ) : null}
-              {item.status === "error" ? (
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "grid",
-                    placeItems: "center",
-                    background: "rgba(220,38,38,.35)",
-                    color: "#fff",
-                    fontSize: "1.1rem",
-                  }}
-                >
-                  !
-                </span>
-              ) : null}
-            </span>
-          ))}
-        </div>
-      ) : null}
-      <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
-    </div>
+        </span>
+        <span className={styles.sdDropT}>{label ?? "Déposez les photos de la sortie"}</span>
+        <span className={styles.sdDropH}>Videz la carte mémoire d&rsquo;un coup. Glissez-les ici, ou choisissez-les sur l&rsquo;appareil.</span>
+        <span className={`${styles.sBtn} ${styles.sBtnPri}`}>Choisir les photos</span>
+      </button>
+    </>
   );
 }

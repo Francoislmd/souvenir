@@ -15,6 +15,8 @@ export interface SortieRow {
   guide: string | null;
   participantCount: number;
   photoCount: number;
+  paidCount: number;
+  isGroup: boolean;
   revenueCents: number;
   publicationStatus: PublicationStatus;
 }
@@ -49,10 +51,33 @@ function timeLabel(d: Date): string {
 function meta(row: SortieRow, d: Date): string {
   const bits = [timeLabel(d)];
   if (row.guide) bits.push(row.guide);
-  if (row.participantCount > 0) {
+  if (row.photoCount > 0 && row.publicationStatus === "pending") {
+    bits.push(`${row.photoCount} photo${row.photoCount > 1 ? "s" : ""} déposée${row.photoCount > 1 ? "s" : ""}`);
+  } else if (row.participantCount > 0) {
     bits.push(`${row.participantCount} participant${row.participantCount > 1 ? "s" : ""}`);
   }
   return bits.join(" · ");
+}
+
+/** Ce que la ligne dit une fois la galerie en ligne : le résultat, jamais
+ *  une redite de l'état. Sans achat, le montant reste en gris — c'est une
+ *  information, pas une alerte. */
+function outcome(row: SortieRow): { value: string; sub: string; muted: boolean } {
+  if (row.paidCount === 0) {
+    return { value: formatEuros(0), sub: "en ligne", muted: true };
+  }
+  const plural = row.paidCount > 1 ? "s" : "";
+  const denominator = !row.isGroup && row.participantCount > 0 ? ` sur ${row.participantCount}` : "";
+  return { value: formatEuros(row.revenueCents), sub: `${row.paidCount} achat${plural}${denominator}`, muted: false };
+}
+
+function UploadIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 19V6" />
+      <path d="M6 12l6-6 6 6" />
+    </svg>
+  );
 }
 
 export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
@@ -62,11 +87,25 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
   if (rows.length === 0) {
     return (
       <div className={styles.sEmpty}>
-        <h2>Aucune sortie pour l&rsquo;instant</h2>
-        <p>Créez-en une, vos guides y déposeront les photos dès la fin de l&rsquo;activité.</p>
-        <Link href="/sorties/nouvelle" className={`${styles.sBtn} ${styles.sBtnPri}`}>
-          Créer une sortie
-        </Link>
+        <h2>Votre première sortie</h2>
+        <p>Notez-la maintenant, même si elle est demain. Les photos viendront après, en deux minutes.</p>
+        <div className={styles.sSteps}>
+          <span className={styles.sStep}>
+            <b>1</b>
+            <i>Vous créez la sortie</i>
+            <em>L&rsquo;activité et la date. Rien d&rsquo;autre.</em>
+          </span>
+          <span className={styles.sStep}>
+            <b>2</b>
+            <i>Vous déposez les photos</i>
+            <em>Toute la carte mémoire, sans trier.</em>
+          </span>
+          <span className={styles.sStep}>
+            <b>3</b>
+            <i>Vos clients les reçoivent</i>
+            <em>Un lien, et vous êtes payé le vendredi.</em>
+          </span>
+        </div>
       </div>
     );
   }
@@ -94,49 +133,40 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
             {group.items.map((row) => {
               const d = new Date(row.startsAt);
               const title = row.place ? `${row.activity}, ${row.place}` : row.activity;
-              const glyph = (
-                <span className={styles.sTh}>
-                  <ActivityGlyph activity={row.activity} />
-                </span>
-              );
-              const main = (
-                <span className={styles.sMain}>
-                  <b>{title}</b>
-                  <span>{meta(row, d)}</span>
-                </span>
-              );
+              const future = midnight(d) > midnight(today);
 
-              // Une sortie sans photo porte son action : c'est une règle, pas
-              // un cas particulier de la sortie du jour.
-              if (row.photoCount === 0) {
-                return (
-                  <div key={row.id} className={styles.sRow}>
-                    {glyph}
-                    {main}
-                    <span className={styles.sVal}>
-                      <Link href={`/sorties/${row.id}/photos`} className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M12 19V6" />
-                          <path d="M6 12l6-6 6 6" />
-                        </svg>
-                        Ajouter les photos
-                      </Link>
-                    </span>
-                  </div>
-                );
-              }
+              // La règle de la liste : tant qu'une sortie doit quelque chose,
+              // sa ligne porte un bouton ; une fois publiée, elle porte son
+              // résultat. Une sortie à venir ne doit encore rien — elle reste
+              // une ligne nue, sans bouton grisé ni état "à publier" muet.
+              let action: string | null = null;
+              if (!future && row.photoCount === 0) action = "Ajouter les photos";
+              else if (row.photoCount > 0 && row.publicationStatus === "pending") action = "Publier les photos";
+
+              const result = action === null && row.publicationStatus === "online" ? outcome(row) : null;
 
               return (
                 <Link key={row.id} href={`/sorties/${row.id}`} className={styles.sRow}>
-                  {glyph}
-                  {main}
-                  <span className={`${styles.sVal} ${row.revenueCents === 0 ? styles.sValZero : ""}`}>
-                    <b>{formatEuros(row.revenueCents)}</b>
-                    <span>
-                      {row.photoCount} photo{row.photoCount > 1 ? "s" : ""}{" "}
-                      {row.publicationStatus === "online" ? "en ligne" : "à publier"}
-                    </span>
+                  <span className={styles.sTh}>
+                    <ActivityGlyph activity={row.activity} />
                   </span>
+                  <span className={styles.sMain}>
+                    <b>{title}</b>
+                    <span>{meta(row, d)}</span>
+                  </span>
+                  {action ? (
+                    <span className={`${styles.sVal} ${styles.sRowAct}`}>
+                      <span className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`}>
+                        {action === "Ajouter les photos" ? <UploadIcon /> : null}
+                        {action}
+                      </span>
+                    </span>
+                  ) : result ? (
+                    <span className={`${styles.sVal} ${result.muted ? styles.sValZero : ""}`}>
+                      <b>{result.value}</b>
+                      <span>{result.sub}</span>
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}

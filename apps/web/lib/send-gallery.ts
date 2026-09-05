@@ -29,7 +29,7 @@ export async function sendParticipantGallery(
   const message = renderGalleryMessage({ clientName: participant.name.split(/\s+/)[0] ?? "", operatorName: operator.name });
 
   // Pas seulement "READY" : le pro peut envoyer avant que le worker ait fini
-  // de traiter toutes les photos (voir PhotosFlow — le tri ne bloque plus sur
+  // de traiter toutes les photos (voir SortieScreen — le tri ne bloque plus sur
   // le traitement serveur). Le compte et l'email doivent refléter tout ce qui
   // est réellement assigné, pas seulement ce qui a déjà une miniature.
   const photos = await prisma.photo.findMany({

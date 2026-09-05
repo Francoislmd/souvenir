@@ -1994,78 +1994,6 @@ a.trow:hover .tgo {
   border-radius: 11px;
 }
 
-/* ---------- synthèse du mois ---------- */
-.sKpis {
-  margin-bottom: 50px;
-}
-.sPeriod {
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: var(--ink-4);
-  margin: 0 0 18px;
-}
-.sLead {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin: 0;
-}
-.sLeadN {
-  font-size: 3.35rem;
-  font-weight: 500;
-  letter-spacing: -0.044em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.sDelta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--ok-ink);
-}
-.sDeltaDown {
-  color: var(--ink-4);
-}
-.sLeadL {
-  margin: 11px 0 0;
-  font-size: 0.97rem;
-  color: var(--ink-2);
-}
-.sSub {
-  display: flex;
-  gap: 56px;
-  flex-wrap: wrap;
-  margin-top: 30px;
-}
-.sSubIt {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-.sSubN {
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: -0.032em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.sSubT {
-  font-size: 0.94rem;
-  color: var(--ink-2);
-  line-height: 1.3;
-}
-.sSubT small {
-  display: block;
-  font-size: 0.84rem;
-  color: var(--ink-4);
-  margin-top: 2px;
-}
-
 /* ---------- liste des sorties ---------- */
 .sDay {
   font-size: 0.78rem;
@@ -2290,20 +2218,39 @@ a.sRow:hover .sTh {
   .sWrap {
     padding: 12px 18px 108px;
   }
+  .sCtaWrap {
+    display: block;
+    padding: 12px 18px 0;
+  }
   .sCtaMobile {
     display: flex !important;
     width: 100%;
-    margin-bottom: 36px;
+    margin-bottom: 26px;
   }
-  .sLeadN {
-    font-size: 2.35rem;
+  .sRowAct {
+    flex: 1 1 100%;
+    margin-top: 8px;
   }
-  .sSub {
-    gap: 30px;
-    margin-top: 22px;
+  .sRowAct .sBtn {
+    width: 100%;
   }
-  .sSubN {
-    font-size: 1.25rem;
+  .shOverlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .shPanel {
+    max-width: none;
+    border-radius: 26px 26px 0 0;
+    padding: 12px 18px calc(30px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+  }
+  .shGrip {
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--fill-2);
+    margin: 0 auto 18px;
   }
   /* Sur téléphone la valeur passe sous le titre : la garder à droite
      rognait le nom de la sortie, qui est l'information principale. */
@@ -2337,6 +2284,702 @@ a.sRow:hover .sTh {
     font-size: 1.1rem;
   }
 }
+.sCtaWrap {
+  display: none;
+}
 .sCtaMobile {
   display: none;
+}
+
+/* ---------- action portée par une ligne ---------- */
+.sRowAct {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- première ouverture ---------- */
+.sSteps {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  text-align: left;
+  max-width: 760px;
+  margin: 74px auto 0;
+  padding-top: 34px;
+  border-top: 1px solid var(--line);
+}
+.sStep {
+  flex: 1;
+  max-width: 230px;
+}
+.sStep b {
+  display: block;
+  font-size: 0.81rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--brand-ic);
+}
+.sStep i {
+  display: block;
+  font-style: normal;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  margin-top: 6px;
+}
+.sStep em {
+  display: block;
+  font-style: normal;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+/* ---------- feuille "nouvelle sortie" ---------- */
+.shOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(22, 19, 32, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: shFade 0.16s ease;
+}
+.shPanel {
+  width: 100%;
+  max-width: 470px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 22px;
+  padding: 26px 26px 24px;
+  box-shadow: var(--sh-3);
+  outline: 0;
+  animation: shRise 0.2s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.shGrip {
+  display: none;
+}
+.shTitle {
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin: 0 0 22px;
+}
+.shLbl {
+  margin: 0 0 10px 2px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.shHint {
+  margin: -4px 0 12px 2px;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  line-height: 1.45;
+}
+.shChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.shChip {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 13px;
+  font-size: 0.97rem;
+  font-weight: 500;
+  background: var(--line-2);
+  color: var(--ink-2);
+  transition: background 0.14s, color 0.14s;
+}
+.shChip:hover {
+  background: var(--fill-2);
+}
+.shChipOn,
+.shChipOn:hover {
+  background: var(--ink);
+  color: #fff;
+}
+.shSeg {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.shSegBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 0.97rem;
+  font-weight: 500;
+  background: var(--line-2);
+  color: var(--ink-2);
+  transition: background 0.14s, color 0.14s;
+}
+.shSegBtn:hover {
+  background: var(--fill-2);
+}
+.shSegOn,
+.shSegOn:hover {
+  background: var(--ink);
+  color: #fff;
+}
+.shRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 52px;
+  padding: 0 6px 0 16px;
+  border-radius: 14px;
+  background: var(--line-2);
+  margin-bottom: 12px;
+}
+.shRow label {
+  flex: 1;
+  font-size: 0.97rem;
+  color: var(--ink-2);
+}
+.shInp {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.03rem;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding: 0 10px;
+  height: 40px;
+}
+.shPick {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 15px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  margin-bottom: 10px;
+  transition: border-color 0.14s;
+}
+.shPickOn {
+  border-color: var(--brand);
+}
+.shPick b {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.shPick span {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.shActions {
+  margin-top: 22px;
+}
+.shFull {
+  width: 100%;
+}
+@keyframes shFade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes shRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shOverlay,
+  .shPanel {
+    animation: none;
+  }
+}
+
+/* ---------- écran d'une sortie ---------- */
+/* Un seul écran pour toute la vie d'une sortie : vide → dépôt → publiée.
+   L'en-tête et le corps reprennent le vocabulaire de la liste (boutons de
+   46 px, rayon 13, aucun filet) — les classes .view/.h1/.btn du back-office
+   d'origine ne sont pas réemployées ici. */
+.sdHead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sdBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.94rem;
+  color: var(--ink-4);
+  text-decoration: none;
+  transition: color 0.14s;
+}
+.sdBack:hover {
+  color: var(--ink-2);
+}
+.sdTitle {
+  font-family: inherit;
+  font-size: 1.62rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sdMeta {
+  margin: 0 0 22px;
+  font-size: 0.97rem;
+  color: var(--ink-4);
+}
+
+.sdDrop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 340px;
+  padding: 40px 24px;
+  border: 1.5px dashed var(--line-3);
+  border-radius: 20px;
+  background: #fff;
+  width: 100%;
+  transition: border-color 0.16s, background 0.16s;
+}
+.sdDrop:hover {
+  border-color: var(--brand);
+  background: var(--soft);
+}
+.sdDropIc {
+  width: 56px;
+  height: 56px;
+  border-radius: 17px;
+  background: var(--soft);
+  color: var(--brand-ic);
+  display: grid;
+  place-items: center;
+}
+.sdDropT {
+  margin: 20px 0 0;
+  font-family: inherit;
+  font-size: 1.32rem;
+  font-weight: 500;
+  letter-spacing: -0.028em;
+}
+.sdDropH {
+  margin: 8px 0 22px;
+  font-size: 0.97rem;
+  color: var(--ink-4);
+  max-width: 44ch;
+  line-height: 1.5;
+}
+.sdNote {
+  margin: 22px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+}
+
+.sdGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+.sdPh {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 2;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--line-2);
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.07);
+  cursor: pointer;
+  transition: box-shadow 0.14s, opacity 0.2s;
+}
+.sdPh img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+.sdPhOn {
+  box-shadow: 0 0 0 3px var(--brand);
+}
+.sdPhPending {
+  opacity: 0.34;
+}
+.sdPhCheck {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  transition: background 0.12s, color 0.12s;
+}
+.sdPhCheck svg {
+  width: 12px;
+  height: 12px;
+}
+.sdPhCheckOn {
+  background: var(--brand);
+  color: #fff;
+}
+
+.sdBar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 20;
+  margin-top: 26px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  box-shadow: var(--sh-3);
+  padding: 14px 16px;
+}
+.sdBarIn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sdBarText {
+  flex: 1;
+  min-width: 180px;
+  font-size: 0.97rem;
+  color: var(--ink-2);
+}
+.sdBarText b {
+  font-weight: 500;
+  color: var(--ink);
+}
+.sdBarText span {
+  color: var(--ink-4);
+}
+.sdChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 11px;
+  background: var(--fill);
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.14s;
+}
+.sdChip:hover {
+  background: var(--fill-2);
+}
+.sdChipGhost {
+  background: none;
+  color: var(--ink-4);
+}
+.sdChipGhost:hover {
+  background: var(--fill);
+}
+.sdChipDanger {
+  color: #c0392b;
+}
+.sdChipDanger:hover {
+  background: #fdecea;
+}
+
+.sdProgLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+.sdProgLine b {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.sdProgLine span {
+  font-size: 0.94rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.sdProg {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fill-2);
+  overflow: hidden;
+}
+.sdProgFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff6b2c, #f2500f);
+  transition: width 0.3s ease;
+}
+
+.sdShare {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fff;
+  margin-bottom: 34px;
+}
+.sdQr {
+  flex: 0 0 auto;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--page);
+  line-height: 0;
+}
+.sdQr img {
+  width: 108px;
+  height: 108px;
+  display: block;
+}
+.sdShareMain {
+  flex: 1;
+  min-width: 0;
+}
+.sdShareT {
+  display: block;
+  margin-top: 12px;
+  font-family: inherit;
+  font-size: 1.28rem;
+  font-weight: 500;
+  letter-spacing: -0.028em;
+}
+.sdShareH {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.94rem;
+  color: var(--ink-4);
+}
+.sdShareRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.sdShareUrl {
+  flex: 1;
+  min-width: 180px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  border-radius: 13px;
+  background: var(--line-2);
+  color: var(--ink-2);
+  font-size: 0.94rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sdOk {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+  font-size: 0.81rem;
+  font-weight: 500;
+}
+
+.sdClients {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+.sdClient {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 18px;
+  border-radius: 14px;
+  margin: 0 -18px;
+  color: var(--ink);
+  text-decoration: none;
+}
+a.sdClient:hover {
+  background: var(--line-2);
+}
+.sdClient .sdAv {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  flex: 0 0 auto;
+  background: var(--fill-2);
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.sdClientMain {
+  flex: 1;
+  min-width: 0;
+}
+.sdClientMain b {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.sdClientMain span {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sdTag {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background: var(--fill);
+  color: var(--ink-3);
+  font-size: 0.81rem;
+  font-weight: 500;
+}
+.sdTagPaid {
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+.sdTagWait {
+  background: var(--wait-bg);
+  color: var(--wait-ink);
+}
+
+@media (max-width: 1120px) {
+  .sdShare {
+    gap: 20px;
+    padding: 20px;
+  }
+}
+@media (max-width: 760px) {
+  .sdTitle {
+    font-size: 1.42rem;
+    white-space: normal;
+  }
+  .sdGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .sdBar {
+    bottom: 88px;
+    padding: 13px 14px;
+  }
+  .sdBarText {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .sdBarIn .sBtn,
+  .sdBarIn .sdChip {
+    flex: 1;
+  }
+  .sdShare {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .sdQr {
+    align-self: center;
+  }
+  .sdQr img {
+    width: 146px;
+    height: 146px;
+  }
+  .sdShareRow {
+    justify-content: center;
+  }
+  .sdShareUrl {
+    flex: 1 1 100%;
+  }
+  .sdShareRow .sBtn {
+    flex: 1;
+  }
+}
+
+/* ---------- clients d'une sortie nominative ---------- */
+.sdAdd {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.sdInp {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 0 15px;
+  font-size: 0.97rem;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.sdInp:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+}
+.sdIconBtn {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-4);
+  transition: background 0.14s, color 0.14s;
+}
+.sdIconBtn:hover {
+  background: var(--fill);
+  color: var(--ink-2);
+}
+@media (max-width: 760px) {
+  .sdAdd {
+    grid-template-columns: 1fr;
+  }
 }
