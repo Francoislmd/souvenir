@@ -253,7 +253,7 @@ export function SortieScreen({
   const selectable = !published;
 
   const grid = (
-    <div className={styles.sdGrid}>
+    <div className={`${styles.sdGrid} ${selected.size > 0 ? styles.sdGridPicking : ""}`}>
       {photos.map((p) => {
         const src = p.thumbUrl ?? localPreviews.get(p.id) ?? null;
         const on = selected.has(p.id);
@@ -303,30 +303,32 @@ export function SortieScreen({
             </b>{" "}
             <span>sélectionnée{selected.size > 1 ? "s" : ""}</span>
           </span>
-          {!isGroup && clients.length > 0 ? (
-            <>
-              <button type="button" className={styles.sdChip} onClick={() => void assignSelected(null)}>
-                Visibles par tous
-              </button>
-              {clients.map((c) => (
-                <button key={c.id} type="button" className={styles.sdChip} onClick={() => void assignSelected(c.id)}>
-                  Réserver à {c.name}
+          <span className={styles.sdBarActions}>
+            {!isGroup && clients.length > 0 ? (
+              <>
+                <button type="button" className={styles.sdChip} onClick={() => void assignSelected(null)}>
+                  Visibles par tous
                 </button>
-              ))}
-            </>
-          ) : null}
-          {confirmDelete ? (
-            <button type="button" className={`${styles.sdChip} ${styles.sdChipDanger}`} onClick={() => void deleteSelected()}>
-              Supprimer définitivement
-            </button>
-          ) : (
-            <button type="button" className={`${styles.sdChip} ${styles.sdChipDanger}`} onClick={() => setConfirmDelete(true)}>
-              Supprimer
-            </button>
-          )}
+                {clients.map((c) => (
+                  <button key={c.id} type="button" className={styles.sdChip} onClick={() => void assignSelected(c.id)}>
+                    Réserver à {c.name}
+                  </button>
+                ))}
+              </>
+            ) : null}
+            {confirmDelete ? (
+              <button type="button" className={`${styles.sdChip} ${styles.sdChipDanger}`} onClick={() => void deleteSelected()}>
+                Supprimer définitivement
+              </button>
+            ) : (
+              <button type="button" className={`${styles.sdChip} ${styles.sdChipDanger}`} onClick={() => setConfirmDelete(true)}>
+                Supprimer
+              </button>
+            )}
+          </span>
           <button
             type="button"
-            className={`${styles.sdChip} ${styles.sdChipGhost}`}
+            className={`${styles.sdChip} ${styles.sdChipGhost} ${styles.sdCancel}`}
             onClick={() => {
               setSelected(new Set());
               setConfirmDelete(false);
@@ -370,12 +372,14 @@ export function SortieScreen({
                   : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`}
             </span>
           </span>
-          <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} onProgress={setProgress} variant="button" />
-          {needsClients ? null : (
-            <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void publish()} disabled={busy}>
-              {busy ? "Publication…" : isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
-            </button>
-          )}
+          <span className={styles.sdBarActions}>
+            <PhotoDropZone sortieId={sortieId} onAllRegistered={onAllRegistered} onProgress={setProgress} variant="button" />
+            {needsClients ? null : (
+              <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void publish()} disabled={busy}>
+                {busy ? "Publication…" : isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
+              </button>
+            )}
+          </span>
         </div>
       </div>
     );

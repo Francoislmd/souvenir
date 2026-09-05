@@ -3,6 +3,14 @@
 import { useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
 
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 export function StripeConnectSection({ stripeOnboarded }: { stripeOnboarded: boolean }) {
   const [loading, setLoading] = useState(false);
 
@@ -23,23 +31,22 @@ export function StripeConnectSection({ stripeOnboarded }: { stripeOnboarded: boo
 
   if (stripeOnboarded) {
     return (
-      <div className={styles.soon} style={{ borderLeftColor: "var(--ok)" }}>
-        <div>
-          <div className={styles.t}>Paiements activés</div>
-          <div className={styles.h}>Vous encaissez directement sur votre compte Stripe.</div>
-        </div>
+      <div className={styles.rgFoot}>
+        <span className={styles.rgFootIc}>
+          <CheckIcon />
+        </span>
+        <span className={styles.rgFootText}>Paiements actifs · virement le vendredi</span>
       </div>
     );
   }
 
   return (
-    <div className={styles.soon}>
-      <div style={{ flex: 1 }}>
-        <div className={styles.t}>Paiements</div>
-        <div className={styles.h}>Connectez Stripe pour encaisser vos ventes — vous gardez 80 %.</div>
-      </div>
-      <button type="button" className={`${styles.btn} ${styles.sm}`} onClick={handleConnect} disabled={loading} style={{ flex: "0 0 auto" }}>
-        {loading ? "…" : "Connecter"}
+    <div className={styles.rgFoot}>
+      <span className={styles.rgFootText}>
+        Connectez Stripe pour encaisser vos ventes. Sans lui, vos galeries s&rsquo;ouvrent mais personne ne peut payer.
+      </span>
+      <button type="button" className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`} onClick={handleConnect} disabled={loading}>
+        {loading ? "…" : "Connecter Stripe"}
       </button>
     </div>
   );

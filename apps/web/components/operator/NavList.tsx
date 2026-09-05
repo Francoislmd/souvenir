@@ -9,7 +9,7 @@ import { SortiesIcon, RevenusIcon, ReglagesIcon } from "@/components/operator/na
 
 const ICONS = { sorties: SortiesIcon, revenus: RevenusIcon, reglages: ReglagesIcon };
 
-export function NavList({ operatorName, badgeCount }: { operatorName: string; badgeCount: number }) {
+export function NavList({ operatorName }: { operatorName: string }) {
   const pathname = usePathname();
 
   return (
@@ -21,7 +21,6 @@ export function NavList({ operatorName, badgeCount }: { operatorName: string; ba
       {NAV_ITEMS.map((item) => {
         const Icon = ICONS[item.key];
         const active = pathname.startsWith(item.href);
-        const count = item.key === "sorties" ? badgeCount : 0;
         return (
           <Link
             key={item.href}
@@ -31,22 +30,18 @@ export function NavList({ operatorName, badgeCount }: { operatorName: string; ba
           >
             <Icon />
             <span className={styles.sNavLabel}>{item.label}</span>
-            {count > 0 ? <span className={styles.sNavCount}>{count}</span> : null}
           </Link>
         );
       })}
 
       <div className={styles.sp} />
 
-      <form action="/auth/signout" method="post">
-        <button type="submit" className={styles.sAcct} title="Se déconnecter">
-          <span className={styles.sAv}>{operatorName.slice(0, 2).toUpperCase()}</span>
-          <span className={styles.sWho}>
-            <b>{operatorName}</b>
-            <span>Se déconnecter</span>
-          </span>
-        </button>
-      </form>
+      <span className={styles.sAcct} title={operatorName}>
+        <span className={styles.sAv}>{operatorName.slice(0, 2).toUpperCase()}</span>
+        <span className={styles.sWho}>
+          <b>{operatorName}</b>
+        </span>
+      </span>
     </>
   );
 }

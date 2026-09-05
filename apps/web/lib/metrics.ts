@@ -1,5 +1,4 @@
 import { prisma } from "./prisma";
-import { startOfMonth, daysAgo } from "./dates";
 
 export interface GmvSummary {
   totalCents: number;
@@ -49,57 +48,6 @@ export async function getSales(operatorId: string, limit = 30): Promise<Sale[]> 
     feeCents: o.feeCents,
     paidAt: o.paidAt ?? o.createdAt,
   }));
-}
-
-export interface SortiesKpis {
-  revenueCents: number;
-  previousRevenueCents: number;
-  sortieCount: number;
-  participantCount: number;
-  photosSoldCount: number;
-  photosSoldThisWeek: number;
-  buyerCount: number;
-  purchaseRatePercent: number;
-}
-
-/** KPIs de la page Sorties — tous scopés au mois en cours (sauf le delta hebdo photos). */
-export async function getSortiesKpis(operatorId: string, now: Date = new Date()): Promise<SortiesKpis> {
-  const monthStart = startOfMonth(now);
-  const previousMonthStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-  const weekStart = daysAgo(now, 7);
-
-  const [revenue, previousRevenue, sorties, ordersThisMonth, ordersThisWeek] = await Promise.all([
-    getGmv(operatorId, monthStart),
-    getGmv(operatorId, previousMonthStart, monthStart),
-    prisma.sortie.findMany({
-      where: { operatorId, startsAt: { gte: monthStart } },
-      select: { _count: { select: { participants: true } } },
-    }),
-    prisma.order.findMany({
-      where: { participant: { sortie: { operatorId, startsAt: { gte: monthStart } } }, status: "succeeded" },
-      select: { photoIds: true, participantId: true },
-    }),
-    prisma.order.findMany({
-      where: { participant: { sortie: { operatorId } }, status: "succeeded", paidAt: { gte: weekStart } },
-      select: { photoIds: true },
-    }),
-  ]);
-
-  const participantCount = sorties.reduce((sum, s) => sum + s._count.participants, 0);
-  const photosSoldCount = ordersThisMonth.reduce((sum, o) => sum + o.photoIds.length, 0);
-  const photosSoldThisWeek = ordersThisWeek.reduce((sum, o) => sum + o.photoIds.length, 0);
-  const buyerCount = new Set(ordersThisMonth.map((o) => o.participantId)).size;
-
-  return {
-    revenueCents: revenue.operatorCents,
-    previousRevenueCents: previousRevenue.operatorCents,
-    sortieCount: sorties.length,
-    participantCount,
-    photosSoldCount,
-    photosSoldThisWeek,
-    buyerCount,
-    purchaseRatePercent: participantCount > 0 ? Math.round((buyerCount / participantCount) * 100) : 0,
-  };
 }
 
 /** Prochain vendredi (virements hebdomadaires, brief §7). */

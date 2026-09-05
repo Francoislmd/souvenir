@@ -1,3 +1,78 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&display=swap">
+<style>*{box-sizing:border-box}body{margin:0}
+/* Tokens de marque Linktrip (cf. brief logo §5). Source de vérité pour
+   --brand/--ink/--line/--soft/--paper : chargé après les tokens legacy dans
+   globals.css pour que ces valeurs gagnent la cascade sans les dupliquer
+   ailleurs. --font-inter / --font-inter-tight aliasent les variables
+   next/font/google déjà déclarées dans app/layout.tsx (Inter → --font-space-grotesk,
+   Inter Tight → --font-bricolage) : les noms legacy sont conservés pour ne
+   pas casser les CSS existants, ceux-ci sont la lecture "propre". */
+:root {
+  --ink: #161320;
+  --ink-2: #413c4e;
+  --ink-3: #726c80;
+  --ink-4: #a6a0b2;
+  --line: #ece9ef;
+  --line-2: #f4f2f6;
+  --soft: #fff1eb;
+  --paper: #fbfaf9;
+
+  --brand: #ff5a1f;
+  --brand-ink: #e8460c;
+  --rose: #ff3d6e;
+  --amber: #ffb443;
+  --aqua: #0fbeb6;
+  --ok: #16a34a;
+  --sunset: linear-gradient(120deg, #ff3d6e, #ff5a1f 52%, #ffb443);
+
+  /* Alias vers les tokens Tailwind existants (voir tailwind.config.ts) pour
+     que .btn/.text-brand/etc suivent la nouvelle couleur de marque sans
+     dupliquer un second système de couleurs. */
+  --brand-hover: var(--brand-ink);
+  --brand-tint: var(--soft);
+  --brand-gradient: var(--sunset);
+
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-inter-tight: 'Inter Tight', 'Inter', sans-serif;
+}
+
+/* Règle typographique de marque : titres en 700, chiffres et boutons en 800
+   avec tabular-nums, interlettrage négatif proportionnel à la taille. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+button,
+.btn,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+h1 {
+  letter-spacing: -0.022em;
+}
+
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
+h4,
+h5,
+h6,
+button,
+.btn {
+  letter-spacing: -0.008em;
+}
+
 /* Portage fidèle de linktrip-simple.html — mêmes valeurs, mêmes noms de
    classes (kebab-case, accès via styles['...']), scopés sous .app pour ne
    pas déteindre sur le reste du site (marketing, boutique). */
@@ -47,7 +122,7 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-space-grotesk), system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 .app * {
@@ -57,7 +132,7 @@
 .app h1,
 .app h2,
 .app h3 {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   margin: 0;
   letter-spacing: -0.025em;
   line-height: 1.14;
@@ -170,7 +245,7 @@
   display: grid;
   place-items: center;
   color: var(--ink-3);
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 800;
   font-size: 0.75rem;
   flex: 0 0 auto;
@@ -242,7 +317,7 @@
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink-3);
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 800;
   font-size: 0.75rem;
   flex: 0 0 auto;
@@ -411,7 +486,7 @@
   gap: 5px;
   padding: 4px 11px;
   border-radius: 999px;
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-size: 0.73rem;
   font-weight: 700;
   white-space: nowrap;
@@ -433,7 +508,7 @@
   color: var(--ok);
 }
 .lbl {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 700;
   font-size: 0.72rem;
   letter-spacing: 0.13em;
@@ -469,7 +544,7 @@
   font-weight: 600;
 }
 .kpi .v {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-size: 1.55rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -756,7 +831,7 @@ a.trow:hover .tgo {
   white-space: nowrap;
 }
 .amt {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 800;
   font-size: 0.98rem;
   white-space: nowrap;
@@ -773,7 +848,7 @@ a.trow:hover .tgo {
   display: grid;
   place-items: center;
   color: #fff;
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 800;
   font-size: 0.78rem;
   background: var(--sunset);
@@ -811,7 +886,7 @@ a.trow:hover .tgo {
   box-shadow: 0 10px 24px rgba(255, 90, 31, 0.28);
 }
 .drop .t {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 800;
   font-size: 1.06rem;
 }
@@ -1132,7 +1207,7 @@ a.trow:hover .tgo {
   box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.1);
 }
 .mt {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 700;
   font-size: 0.92rem;
   color: var(--ink);
@@ -1260,7 +1335,7 @@ a.trow:hover .tgo {
   font-weight: 600;
 }
 .balance .big {
-  font-family: var(--font-bricolage);
+  font-family: 'Inter Tight', 'Inter', sans-serif;
   font-weight: 800;
   font-size: 2.3rem;
   letter-spacing: -0.03em;
@@ -3239,3 +3314,47 @@ a.sdClient:hover {
     gap: 0;
   }
 }
+
+.app{min-height:0}
+</style></head><body>
+<section id="liste" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Reglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
+<header class="sHdr"><div class="sHdrIn"><h1 class="sTitle">Sorties</h1><span class="sSpacer"></span><button class="sBtn sBtnPri">Nouvelle sortie</button></div></header>
+<div class="sCtaWrap"><button class="sBtn sBtnPri sCtaMobile">Nouvelle sortie</button></div>
+<div class="sWrap">
+<p class="sDay">Aujourd'hui<em> · samedi 5 septembre</em></p>
+<div class="sGroup"><div class="sRow"><span class="sTh"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M3.4 11.4h17.2l-1.9 5a2.4 2.4 0 0 1-2.2 1.5H7.5a2.4 2.4 0 0 1-2.2-1.5l-1.9-5Z"/><path d="M15.9 3.3 10.4 10l1.7 1.4 5.5-6.7a1.1 1.1 0 0 0-1.7-1.4Z"/></svg></span><span class="sMain"><b>Rafting, Basse Ardèche</b><span>9 h 30 · Marc · 6 participants</span></span><span class="sVal sRowAct"><span class="sBtn sBtnInk sBtnSm">Ajouter les photos</span></span></div><div class="sRow"><span class="sTh"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M3.4 11.4h17.2l-1.9 5a2.4 2.4 0 0 1-2.2 1.5H7.5a2.4 2.4 0 0 1-2.2-1.5l-1.9-5Z"/><path d="M15.9 3.3 10.4 10l1.7 1.4 5.5-6.7a1.1 1.1 0 0 0-1.7-1.4Z"/></svg></span><span class="sMain"><b>Canyoning, Gorges du Loup</b><span>14 h 00 · Léa · 34 photos déposées</span></span><span class="sVal sRowAct"><span class="sBtn sBtnInk sBtnSm">Publier les photos</span></span></div></div>
+<p class="sDay">Hier<em> · vendredi 4 septembre</em></p>
+<div class="sGroup"><div class="sRow"><span class="sTh"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M3.4 11.4h17.2l-1.9 5a2.4 2.4 0 0 1-2.2 1.5H7.5a2.4 2.4 0 0 1-2.2-1.5l-1.9-5Z"/><path d="M15.9 3.3 10.4 10l1.7 1.4 5.5-6.7a1.1 1.1 0 0 0-1.7-1.4Z"/></svg></span><span class="sMain"><b>Rafting, Basse Ardèche</b><span>9 h 30 · Marc</span></span><span class="sVal "><b>62 €</b><span>4 achats sur 8</span></span></div><div class="sRow"><span class="sTh"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M3.4 11.4h17.2l-1.9 5a2.4 2.4 0 0 1-2.2 1.5H7.5a2.4 2.4 0 0 1-2.2-1.5l-1.9-5Z"/><path d="M15.9 3.3 10.4 10l1.7 1.4 5.5-6.7a1.1 1.1 0 0 0-1.7-1.4Z"/></svg></span><span class="sMain"><b>Saint-Hilaire, biplace</b><span>16 h 00 · Marc</span></span><span class="sVal sValZero"><b>0 €</b><span>en ligne</span></span></div></div>
+<p class="sDay">Mercredi 2 septembre</p>
+<div class="sGroup"><div class="sRow"><span class="sTh"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M3.4 11.4h17.2l-1.9 5a2.4 2.4 0 0 1-2.2 1.5H7.5a2.4 2.4 0 0 1-2.2-1.5l-1.9-5Z"/><path d="M15.9 3.3 10.4 10l1.7 1.4 5.5-6.7a1.1 1.1 0 0 0-1.7-1.4Z"/></svg></span><span class="sMain"><b>Kayak, la Sorgue</b><span>10 h 00 · Léa</span></span><span class="sVal "><b>148 €</b><span>9 achats sur 12</span></span></div></div>
+<button class="sMore">Afficher les sorties plus anciennes</button>
+</div></div></div></section>
+<section id="sortie" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Reglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
+<header class="sHdr"><div class="sHdrIn"><span class="sdHead"><a class="sdBack">Sorties</a><h1 class="sdTitle">Canyoning, Gorges du Loup</h1></span></div></header>
+<div class="sWrap">
+<p class="sdMeta">Aujourd'hui 14 h 00 · Léa · 6 participants</p>
+<div class="sdGrid sdGridPicking"><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh sdPhOn " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck sdPhCheckOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  " style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#8fb6c4,#4b7d90 55%,#2f5566)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span><span class="sdPh  sdPhPending" style="background:linear-gradient(155deg,#b9c3d2,#77869c 55%,#4d5a6e)"><span class="sdPhCheck "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span></div>
+<div class="sdBar"><div class="sdBarIn"><span class="sdBarText"><b>3 photos</b> <span>sélectionnées</span></span><span class="sdBarActions"><button class="sdChip">Visibles par tous</button><button class="sdChip">Réserver à Camille</button><button class="sdChip sdChipDanger">Supprimer</button></span><button class="sdChip sdChipGhost sdCancel">Annuler</button></div></div>
+</div></div></div></section>
+<section id="reglages" class="app"><aside class="side"><span class="sBrand"><b style="font-family:'Inter Tight';font-size:19px;letter-spacing:-.03em">linktrip</b></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7H20"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 17H16"/></svg><span class="sNavLabel">Sorties</span></span><span class="sNav "><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.6"/><circle cx="12" cy="12" r="2.7"/></svg><span class="sNavLabel">Revenus</span></span><span class="sNav sNavOn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8"/><circle cx="15.2" cy="8" r="2.3"/><circle cx="9.7" cy="16" r="2.3"/></svg><span class="sNavLabel">Reglages</span></span><div class="sp"></div><span class="sAcct"><span class="sAv">AV</span><span class="sWho"><b>Aventure Verdon</b></span></span></aside><div class="main"><div class="content">
+<header class="sHdr"><div class="sHdrIn"><h1 class="sTitle">Réglages</h1><span class="sSpacer"></span><span class="rgStatus">Enregistré</span></div></header>
+<div class="sWrap"><div class="rgCols">
+<div>
+<p class="sDay">Ce que voient vos clients</p>
+<div class="rgField"><label>Nom de la structure</label><input class="sdInp" value="Aventure Verdon"></div>
+<div class="rgField"><label>Logo et couleur</label><div class="rgLogo"><button class="rgLogoBtn">AV</button><div class="rgSws"><button class="rgSw rgSwOn" style="background:#FF5A1F"></button><button class="rgSw " style="background:#0FBEB6"></button><button class="rgSw " style="background:#FF3D6E"></button><button class="rgSw " style="background:#7C3AED"></button><button class="rgSw " style="background:#2563EB"></button><button class="rgSw " style="background:#16A34A"></button><button class="rgSw " style="background:#0F0D16"></button></div></div><span class="rgHint">Visibles sur la galerie et dans les emails.</span></div>
+<p class="sDay">Vos prix</p>
+<div class="rgField"><div class="rgPrice"><span>Une photo</span><input type="number" value="6"><span class="rgUnit">€</span></div><span class="rgHint">Vous touchez 4,80 € — Linktrip prend 20 %.</span></div>
+<div class="rgField"><div class="rgPrice"><span>Toutes les photos de la sortie</span><input type="number" value="24"><span class="rgUnit">€</span></div><span class="rgHint">Vous touchez 19,20 €.</span></div>
+<div class="rgSwitch"><span class="rgSwitchMain"><b>Vente à l'unité</b><span>Sans elle, vos clients ne peuvent prendre que le lot complet.</span></span><button class="tog on"><i></i></button></div>
+</div>
+<div>
+<p class="sDay">Vos activités</p><div class="shChips"><button class="shChip shChipOn">Rafting</button><button class="shChip shChipOn">Canyoning</button><button class="shChip shChipOn">Kayak</button><button class="shChip ">Randonnée</button><button class="shChip ">Parapente</button><button class="shChip ">Via ferrata</button><button class="shChip ">Surf</button><button class="shChip ">Ski</button></div>
+<p class="sDay">On relance à votre place</p>
+<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils n'ont pas ouvert</b><span>Deux heures après, on leur remet le lien. Ils sont souvent encore sur la route.</span></span><button class="tog on"><i></i></button></div>
+<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils ont regardé sans acheter</b><span>Le lendemain, on leur propose leurs photos à prix réduit. C'est ce qui rapporte le plus.</span></span><button class="tog on"><i></i></button></div>
+<div class="rgSwitch"><span class="rgSwitchMain"><b>Ils ont acheté</b><span>On leur demande un avis Google. Vos meilleures notes viennent de là.</span></span><button class="tog "><i></i></button></div>
+<div class="rgFoot"><span class="rgFootIc">✓</span><span class="rgFootText">Paiements actifs · virement le vendredi</span></div>
+<button class="rgQuiet">Se déconnecter</button>
+</div></div></div></div></div></section>
+</body></html>
