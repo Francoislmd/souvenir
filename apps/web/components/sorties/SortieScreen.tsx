@@ -7,10 +7,10 @@ import QRCode from "qrcode";
 import styles from "@/app/(operator)/operator.module.css";
 import { formatEuros } from "@/lib/format";
 import { useToast } from "@/components/operator/ToastProvider";
-import { PhotoDropZone, type UploadProgress } from "@/components/photos/PhotoDropZone";
+import { PhotoDropZone, type PhotoDropZoneHandle, type UploadProgress } from "@/components/photos/PhotoDropZone";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
-import { getUploadItemsForSortie } from "@/lib/idb";
+import { deleteUploadItemsByPhotoIds, getUploadItemsForSortie } from "@/lib/idb";
 
 export interface ScreenPhoto {
   id: string;
@@ -72,11 +72,12 @@ export function SortieScreen({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<UploadProgress>({ done: 0, total: 0, pending: [] });
+  const [progress, setProgress] = useState<UploadProgress>({ sent: 0, total: 0, ratio: 0, finalizing: 0, failed: 0, pending: [] });
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
-  // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
-  const openPicker = useRef<(() => void) | null>(null);
+  // Pilote le dépôt depuis n'importe quel bouton de l'écran : ouvrir le
+  // sélecteur, relancer les photos abandonnées, relire la file locale.
+  const dropZone = useRef<PhotoDropZoneHandle | null>(null);
 
   // Aperçu local instantané (le fichier est déjà sur l'appareil) — sert de
   // repli tant que la vraie miniature n'est pas prête côté serveur.
@@ -122,6 +123,15 @@ export function SortieScreen({
     setPhotos(await fetchPhotos());
     void refreshLocalPreviews();
   }, [fetchPhotos, refreshLocalPreviews]);
+
+  // La file n'a plus rien à faire : on resynchronise ce que le serveur compte
+  // (la liste des sorties affiche un nombre de photos rendu côté serveur, il
+  // restait périmé après un dépôt comme après une suppression).
+  const onSettled = useCallback(async () => {
+    setPhotos(await fetchPhotos());
+    void refreshLocalPreviews();
+    router.refresh();
+  }, [fetchPhotos, refreshLocalPreviews, router]);
 
   // Les miniatures arrivent en tâche de fond pendant que l'opérateur regarde
   // déjà ses photos — on complète discrètement, sans écran de chargement.
@@ -202,7 +212,15 @@ export function SortieScreen({
     if (results.some((ok) => !ok)) {
       setPhotos(previous);
       toast("La suppression a échoué pour certaines photos — réessayez.");
+      return;
     }
+    // Une photo supprimée doit aussi disparaître de la file locale : sinon
+    // elle continue d'être comptée dans l'avancement, et son aperçu local
+    // survit à sa suppression.
+    await deleteUploadItemsByPhotoIds(sortieId, ids);
+    dropZone.current?.sync();
+    void refreshLocalPreviews();
+    router.refresh();
   }
 
   async function publish(): Promise<void> {
@@ -243,9 +261,13 @@ export function SortieScreen({
     await copyLink();
   }
 
-  const uploading = progress.total > 0 && progress.done < progress.total;
+  // Deux temps distincts, dits séparément : les octets qui montent (ce que
+  // l'opérateur attend vraiment) puis les aperçus que le serveur termine.
+  const sending = progress.total > 0 && progress.sent < progress.total;
+  const preparing = !sending && progress.finalizing > 0;
+  const working = sending || preparing;
   const pending = new Set(progress.pending);
-  const empty = photos.length === 0 && !uploading;
+  const empty = photos.length === 0 && !working;
   const selectable = !published;
 
   const grid = (
@@ -286,6 +308,23 @@ export function SortieScreen({
       })}
     </div>
   );
+
+  // Une photo abandonnée après plusieurs tentatives se dit, et se rattrape —
+  // avant, la file réessayait indéfiniment et la barre ne partait jamais.
+  const failedNotice =
+    progress.failed > 0 ? (
+      <p className={styles.sdNote}>
+        {progress.failed} photo{progress.failed > 1 ? "s" : ""} n&rsquo;{progress.failed > 1 ? "ont" : "a"} pas pu être envoyée
+        {progress.failed > 1 ? "s" : ""}.{" "}
+        <button
+          type="button"
+          className={`${styles.sdChip} ${styles.sdChipGhost}`}
+          onClick={() => dropZone.current?.retryFailed()}
+        >
+          Réessayer
+        </button>
+      </p>
+    ) : null;
 
   let bar: React.ReactNode = null;
 
@@ -335,20 +374,28 @@ export function SortieScreen({
         </div>
       </div>
     );
-  } else if (uploading) {
+  } else if (working) {
     // Pendant l'envoi : pas de bouton grisé, pas de bouton du tout.
+    // La barre suit les octets, pas les photos finies — sur trente photos, une
+    // photo finie ne faisait bouger la barre que d'un trentième, entre deux
+    // elle semblait à l'arrêt.
+    const prepared = progress.total - progress.finalizing;
+    const pct = sending ? Math.round(progress.ratio * 100) : Math.round((prepared / Math.max(1, progress.total)) * 100);
     bar = (
       <div className={styles.sdBar}>
         <div className={styles.sdProgLine}>
-          <b>Envoi des photos</b>
-          <span>
-            {progress.done} sur {progress.total}
-          </span>
+          <b>{sending ? "Envoi des photos" : "Préparation des aperçus"}</b>
+          <span>{sending ? `${progress.sent} sur ${progress.total} · ${pct} %` : `${prepared} sur ${progress.total}`}</span>
         </div>
         <span className={styles.sdProg}>
-          <span className={styles.sdProgFill} style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+          <span className={styles.sdProgFill} style={{ width: `${pct}%` }} />
         </span>
-        <p className={styles.sdNote}>Vous pouvez ranger votre téléphone, l&rsquo;envoi continue.</p>
+        <p className={styles.sdNote}>
+          {sending
+            ? "Vous pouvez ranger votre téléphone, l\u2019envoi continue."
+            : "Vos photos sont arrivées. Les aperçus se terminent, vous pourrez publier juste après."}
+        </p>
+        {failedNotice}
       </div>
     );
   } else if (!published && photos.length > 0) {
@@ -369,7 +416,7 @@ export function SortieScreen({
             </span>
           </span>
           <span className={styles.sdBarActions}>
-              <button type="button" className={styles.sdChip} onClick={() => openPicker.current?.()}>
+              <button type="button" className={styles.sdChip} onClick={() => dropZone.current?.open()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <path d="M12 5.8v12.4M5.8 12h12.4" />
               </svg>
@@ -382,6 +429,7 @@ export function SortieScreen({
             )}
           </span>
         </div>
+        {failedNotice}
       </div>
     );
   }
@@ -427,7 +475,8 @@ export function SortieScreen({
           sortieId={sortieId}
           onAllRegistered={onAllRegistered}
           onProgress={setProgress}
-          openRef={openPicker}
+          onSettled={onSettled}
+          controlRef={dropZone}
           variant={empty ? "zone" : "silent"}
         />
 

@@ -45,14 +45,38 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const inputPath = join(dir, "input");
     await writeFile(inputPath, originalBuffer);
 
+    // Une seule décompression de l'original (24 Mpx sur un reflex récent) au
+    // lieu de trois : miniature, aperçu filigrané et flou email dérivent tous
+    // de la même base 1280 px gardée en pixels bruts. Décoder trois fois le
+    // JPEG d'origine était le gros du temps de traitement d'une photo.
+    //
     // .rotate() sans argument : réoriente les pixels selon le tag EXIF de la
     // photo puis le supprime. Indispensable — sans ça l'image reste physiquement
     // dans le sens du capteur et ne compte que sur le tag EXIF pour s'afficher
     // droite ; certains clients (le proxy d'images de Gmail, notamment)
     // l'ignorent et la photo apparaît pivotée dans l'email.
-    const thumbBuffer = await sharp(inputPath).rotate().resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
-    const previewBase = sharp(inputPath).rotate().resize({ width: 1280 });
-    const previewBuffer = await watermarkBuffer(previewBase.jpeg({ quality: 78 }), operator, 1280);
+    const { data: baseData, info: baseInfo } = await sharp(inputPath)
+      .rotate()
+      .resize({ width: 1280 })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const base = (): sharp.Sharp =>
+      sharp(baseData, {
+        raw: { width: baseInfo.width, height: baseInfo.height, channels: baseInfo.channels as 1 | 2 | 3 | 4 },
+      });
+
+    const thumbKey = `${photoId}/thumb.jpg`;
+    const previewKey = `${photoId}/preview.jpg`;
+    const blurEmailKey = `${photoId}/blur-email.jpg`;
+
+    // La miniature part la première et la fiche est mise à jour dans la
+    // foulée : la grille de l'opérateur se remplit pendant que le filigrane et
+    // le flou se calculent, plutôt qu'à la toute fin du traitement.
+    const thumbBuffer = await base().resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
+    await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true });
+    await prisma.photo.update({ where: { id: photoId }, data: { thumbKey } });
+
+    const previewBuffer = await watermarkBuffer(base().jpeg({ quality: 78 }), operator, 1280);
     // Variante email : flou (pixels, pas CSS — les clients mail l'ignorent) et
     // cadenas incrusté dans le JPEG plutôt qu'en overlay CSS, que Gmail (et la
     // plupart des clients mail) supprime des styles inline. La galerie web,
@@ -61,17 +85,12 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // avec un cadenas en overlay CSS (BoutiqueGallery) — jamais de photo qui
     // se dévoile en un clic devtools.
     const lockBadge = await sharp(Buffer.from(LOCK_BADGE_SVG)).resize(112, 112).png().toBuffer();
-    const blurEmailBuffer = await sharp(inputPath)
-      .rotate()
+    const blurEmailBuffer = await base()
       .resize({ width: 960 })
       .blur(10)
       .composite([{ input: lockBadge, gravity: "center" }])
       .jpeg({ quality: 66 })
       .toBuffer();
-
-    const thumbKey = `${photoId}/thumb.jpg`;
-    const previewKey = `${photoId}/preview.jpg`;
-    const blurEmailKey = `${photoId}/blur-email.jpg`;
 
     // Mode GROUPE : l'aperçu filigrané est (re)généré à la publication de la
     // sortie (lib/group-publish.ts) — pas ici, ce serait un calcul perdu (visages
@@ -80,7 +99,6 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const groupPreviewKey = groupPreviewBuffer ? `${photoId}/group-preview.jpg` : null;
 
     await Promise.all([
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
       groupPreviewKey && groupPreviewBuffer
