@@ -145,9 +145,18 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
               // qu'on pouvait y déposer des photos. L'opérateur note souvent
               // sa sortie la veille et revient avec la carte mémoire ; il n'y
               // a pas de bascule « c'est aujourd'hui » dans sa tête.
+              // "Publier" n'a de sens qu'en mode GROUPE (une galerie unique) —
+              // en INDIVIDUEL l'action réelle est d'envoyer à des clients, et
+              // encore faut-il en avoir un : la fiche sortie ne montre même pas
+              // de bouton tant que la liste est vide, la ligne ne devrait pas
+              // promettre un « Publier » qui n'existe pas derrière.
               let action: string | null = null;
               if (row.photoCount === 0) action = "Ajouter les photos";
-              else if (row.publicationStatus === "pending") action = "Publier les photos";
+              else if (row.publicationStatus === "pending") {
+                if (row.isGroup) action = "Publier les photos";
+                else if (row.participantCount === 0) action = "Ajouter des clients";
+                else action = `Envoyer à ${row.participantCount} client${row.participantCount > 1 ? "s" : ""}`;
+              }
 
               const result = action === null && row.publicationStatus === "online" ? outcome(row) : null;
 
@@ -161,8 +170,8 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                     <span>{meta(row, d)}</span>
                   </span>
                   {action ? (
-                    <span className={`${styles.sVal} ${styles.sRowAct}`}>
-                      <span className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`}>
+                    <span className={styles.sRowAct}>
+                      <span className={styles.sdChip}>
                         {action === "Ajouter les photos" ? <UploadIcon /> : null}
                         {action}
                       </span>

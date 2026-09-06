@@ -80,35 +80,17 @@ function writeIntents(intents: Record<string, PublishIntent>): void {
 }
 
 export interface SortieUpload {
-  /** Photos du transfert en cours pour cette sortie (échecs exclus). */
-  total: number;
-  /** Photos dont les octets sont arrivés. */
-  sent: number;
-  /** Photos entièrement prêtes (aperçus générés). */
-  done: number;
-  /** Photos envoyées dont l'aperçu se prépare encore côté serveur. */
-  finalizing: number;
   failed: number;
-  /** Avancement en octets, 0 → 1. */
-  ratio: number;
   /** Il reste quelque chose à faire pour cette sortie. */
   working: boolean;
   /** Les éléments de la file, pour afficher les vignettes locales tout de suite. */
   items: UploadItem[];
-  /** Fiches photo dont l'image n'est pas encore prête côté serveur. */
-  pending: Set<string>;
 }
 
 const EMPTY: SortieUpload = {
-  total: 0,
-  sent: 0,
-  done: 0,
-  finalizing: 0,
   failed: 0,
-  ratio: 0,
   working: false,
   items: [],
-  pending: new Set(),
 };
 
 interface UploadQueueValue {
@@ -150,6 +132,13 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
    *  disparaître de la grille. */
   const optimistic = useRef<Map<string, UploadItem>>(new Map());
   const paintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** `enqueue` enregistre chaque photo côté serveur dès le dépôt (pour un
+   *  total exact tout de suite), et `pump` le refait au moment de l'envoi si
+   *  ce n'est pas déjà fait : sans ce verrou les deux appels concurrents
+   *  passaient chacun le test « pas encore enregistrée » sur un instantané
+   *  périmé de l'item, et créaient chacun leur fiche photo — l'une des deux
+   *  ne recevait jamais ses octets et restait une case vide pour toujours. */
+  const registering = useRef<Set<string>>(new Set());
   const pumpingRef = useRef(false);
   const pumpRef = useRef<(() => void) | null>(null);
   const publishRef = useRef<(() => void) | null>(null);
@@ -208,8 +197,13 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   // serveur (pour connaître le total exact tout de suite) sans attendre que
   // les octets du fichier soient envoyés.
   const registerOne = useCallback(async (item: UploadItem): Promise<void> => {
-    if (item.photoId && item.signedUrl) return;
+    if (registering.current.has(item.id)) return;
+    registering.current.add(item.id);
     try {
+      // Relire l'état courant plutôt que de faire confiance à `item` : un
+      // appel concurrent a pu l'enregistrer entre-temps.
+      const current = (await getAllUploadItems()).find((i) => i.id === item.id);
+      if (current?.photoId && current?.signedUrl) return;
       const res = await fetch(`/api/sorties/${item.sortieId}/photos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -220,6 +214,8 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       await updateUploadItem(item.id, { photoId: data.photoId, signedUrl: data.signedUrl });
     } catch {
       // L'envoi (uploadOne) réessaiera l'enregistrement s'il manque encore.
+    } finally {
+      registering.current.delete(item.id);
     }
   }, []);
 
@@ -525,23 +521,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       const mine = items.filter((i) => i.sortieId === sortieId);
       if (mine.length === 0) return EMPTY;
       const live = mine.filter((i) => i.status !== "failed");
-      const totalBytes = live.reduce((sum, i) => sum + i.file.size, 0);
-      const sentBytes = live.reduce((sum, i) => {
-        if (i.status === "queued") return sum;
-        if (i.status === "uploading") return sum + (i.file.size * Math.min(100, Math.max(0, i.progress))) / 100;
-        return sum + i.file.size;
-      }, 0);
       const done = live.filter((i) => i.status === "done").length;
       return {
-        total: live.length,
-        sent: live.filter((i) => i.status === "sent" || i.status === "done").length,
-        done,
-        finalizing: live.filter((i) => i.status === "sent").length,
         failed: mine.length - live.length,
-        ratio: totalBytes > 0 ? Math.min(1, sentBytes / totalBytes) : 0,
         working: done < live.length,
         items: mine,
-        pending: new Set(mine.filter((i) => i.status !== "done" && i.photoId).map((i) => i.photoId as string)),
       };
     },
     [items],

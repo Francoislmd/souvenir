@@ -43,9 +43,11 @@ function CheckIcon() {
  * principale d'un écran « aller sur l'autre », et affichait un bouton
  * primaire désactivé tant que la sortie n'était pas du jour. Ici il n'y a
  * jamais de bouton grisé — ni d'écran qui attend : le dépôt est instantané
- * (les vignettes viennent des fichiers déjà sur l'appareil), l'envoi tourne en
- * tâche de fond dans tout l'espace pro, et publier avant la fin du transfert
- * programme l'envoi au lieu de faire patienter.
+ * (les vignettes viennent des fichiers déjà sur l'appareil, affichées à pleine
+ * intensité tout de suite, sans état « en cours » visible), l'envoi tourne en
+ * tâche de fond dans tout l'espace pro sans jauge ni pourcentage à l'écran, et
+ * publier avant la fin du transfert programme l'envoi au lieu de faire
+ * patienter — le chargement reste invisible pour l'opérateur du début à la fin.
  */
 export function SortieScreen({
   sortieId,
@@ -75,14 +77,20 @@ export function SortieScreen({
   const [photos, setPhotos] = useState<ScreenPhoto[]>(initialPhotos);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [deleteSortieState, setDeleteSortieState] = useState<"idle" | "confirm" | "deleting">("idle");
 
   // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
   const dropZone = useRef<PhotoDropZoneHandle | null>(null);
   // Pendant une attribution ou une suppression, la relecture de fond ne doit
   // pas réécrire par-dessus l'affichage optimiste.
   const mutating = useRef(false);
+  // Distingue l'écran de publication qui attend la fin d'un envoi programmé
+  // (rien à faire nous-mêmes, on regarde `scheduled`/`state.working` retomber)
+  // de celui qui attend sa propre requête (déjà géré dans confirmPublish).
+  const awaitingSchedule = useRef(false);
 
   const fetchPhotos = useCallback(async (): Promise<ScreenPhoto[]> => {
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
@@ -121,6 +129,15 @@ export function SortieScreen({
     if (!published || !shareUrl || qrDataUrl) return;
     void QRCode.toDataURL(shareUrl, { width: 480, margin: 2, color: { dark: "#161320", light: "#FFFFFF" } }).then(setQrDataUrl);
   }, [published, shareUrl, qrDataUrl]);
+
+  useEffect(() => {
+    if (!confirmPublishOpen) return;
+    function onKey(e: KeyboardEvent): void {
+      if (e.key === "Escape") setConfirmPublishOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [confirmPublishOpen]);
 
   function toggleSelect(photoId: string): void {
     setConfirmDelete(false);
@@ -183,26 +200,64 @@ export function SortieScreen({
     router.refresh();
   }
 
-  async function publish(): Promise<void> {
-    if (busy) return;
+  // Refusée côté serveur si une commande existe déjà pour cette sortie — la
+  // fiche s'efface, mais pas un paiement.
+  async function deleteSortie(): Promise<void> {
+    setDeleteSortieState("deleting");
+    const res = await fetch(`/api/sorties/${sortieId}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/sorties");
+      router.refresh();
+      return;
+    }
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    toast(data?.error ?? "La suppression a échoué — réessayez.");
+    setDeleteSortieState("idle");
+  }
+
+  // Confirmée, la publication ne se discute plus : les photos disparaissent au
+  // profit d'un simple écran d'attente, jusqu'à ce que `published` arrive (ou,
+  // pour un envoi programmé qui échoue, jusqu'à ce que l'effet ci-dessous le
+  // détecte et rende la main).
+  async function confirmPublish(): Promise<void> {
+    if (publishing) return;
+    setConfirmPublishOpen(false);
+    setPublishing(true);
+    awaitingSchedule.current = false;
     // Publier n'attend pas la fin du transfert : la demande est enregistrée et
     // part toute seule dès que la dernière photo est prête.
     if (state.working) {
+      awaitingSchedule.current = true;
       upload.schedulePublish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now() });
       toast(isGroup ? "Publication programmée" : "Envoi programmé");
       return;
     }
-    setBusy(true);
     const endpoint = isGroup ? `/api/sorties/${sortieId}/publish` : `/api/sorties/${sortieId}/send`;
     const res = await fetch(endpoint, { method: "POST" });
-    setBusy(false);
     if (res.ok) {
       toast(isGroup ? "Galerie publiée" : `Envoyé à ${clients.length} client${clients.length > 1 ? "s" : ""}`);
       router.refresh();
     } else {
       toast("La publication a échoué — réessayez.");
+      setPublishing(false);
     }
   }
+
+  useEffect(() => {
+    if (!publishing) return;
+    if (published) {
+      awaitingSchedule.current = false;
+      setPublishing(false);
+      return;
+    }
+    // L'envoi programmé s'est résolu (fini ou en échec) sans que `published`
+    // soit arrivé : dans le cas d'un échec, rien d'autre ne fera jamais
+    // retomber l'écran d'attente.
+    if (awaitingSchedule.current && !state.working && !scheduled) {
+      awaitingSchedule.current = false;
+      setPublishing(false);
+    }
+  }, [publishing, published, state.working, scheduled]);
 
   async function copyLink(): Promise<void> {
     if (!shareUrl) return;
@@ -248,11 +303,10 @@ export function SortieScreen({
       {photos.map((p) => {
         const src = p.thumbUrl ?? localByPhoto.get(p.id) ?? null;
         const on = selected.has(p.id);
-        const waiting = state.pending.has(p.id);
         return (
           <span
             key={p.id}
-            className={`${styles.sdPh} ${on ? styles.sdPhOn : ""} ${waiting ? styles.sdPhPending : ""}`}
+            className={`${styles.sdPh} ${on ? styles.sdPhOn : ""}`}
             role={selectable ? "button" : undefined}
             tabIndex={selectable ? 0 : undefined}
             aria-pressed={selectable ? on : undefined}
@@ -282,12 +336,45 @@ export function SortieScreen({
       {fresh.map((item) => {
         const src = upload.previewUrl(item.id);
         return (
-          <span key={item.id} className={`${styles.sdPh} ${styles.sdPhPending}`} style={{ cursor: "default" }}>
+          <span key={item.id} className={styles.sdPh} style={{ cursor: "default" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {src ? <img src={src} alt="" draggable={false} /> : null}
           </span>
         );
       })}
+    </div>
+  );
+
+  const publishingScreen = (
+    <div className={styles.sdPublishing}>
+      <span className={styles.sdPublishingSpinner} aria-hidden="true" />
+      <p className={styles.sdPublishingText}>{isGroup ? "Publication de la galerie…" : "Envoi des photos à vos clients…"}</p>
+      <p className={styles.sdPublishingHint}>
+        {state.working ? "Les dernières photos finissent d'arriver, la suite continue toute seule." : "Quelques secondes."}
+      </p>
+    </div>
+  );
+
+  // Remplace la grille à la place d'une popup : valider une publication n'a
+  // rien à voir avec regarder ses photos, la grille n'a donc plus sa place à
+  // l'écran pendant qu'on décide.
+  const confirmScreen = (
+    <div className={styles.sdPublishing}>
+      <p className={styles.sdPublishingText}>{isGroup ? "Publier la galerie ?" : "Envoyer les photos ?"}</p>
+      <p className={styles.sdPublishingHint}>
+        {isGroup
+          ? `${photoCount} photo${photoCount > 1 ? "s" : ""} deviendront visibles par tous vos clients.`
+          : `${photoCount} photo${photoCount > 1 ? "s" : ""} seront envoyées à vos ${clients.length} client${clients.length > 1 ? "s" : ""}.`}
+        {state.working ? " Le transfert n'est pas fini : l'envoi partira automatiquement dès qu'il le sera." : ""}
+      </p>
+      <div className={styles.sdConfirmActions}>
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnGhost}`} onClick={() => setConfirmPublishOpen(false)}>
+          Annuler
+        </button>
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void confirmPublish()}>
+          {isGroup ? "Publier" : "Envoyer"}
+        </button>
+      </div>
     </div>
   );
 
@@ -303,22 +390,6 @@ export function SortieScreen({
         </button>
       </p>
     ) : null;
-
-  // Discret, sous la ligne d'action : l'envoi se voit, il n'empêche rien.
-  const transferLine = state.working ? (
-    <div className={styles.sdTransfer}>
-      <span className={styles.sdProg}>
-        <span className={styles.sdProgFill} style={{ width: `${Math.round(state.ratio * 100)}%` }} />
-      </span>
-      <span className={styles.sdTransferText}>
-        {state.sent < state.total
-          ? `Envoi en cours · ${state.sent} sur ${state.total} · ${Math.round(state.ratio * 100)} %`
-          : `Préparation des aperçus · ${state.done} sur ${state.total}`}
-        {" — "}
-        vous pouvez continuer, même sur un autre écran.
-      </span>
-    </div>
-  ) : null;
 
   let bar: React.ReactNode = null;
 
@@ -401,13 +472,12 @@ export function SortieScreen({
                 Annuler l&rsquo;envoi programmé
               </button>
             ) : needsClients ? null : (
-              <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void publish()} disabled={busy}>
-                {busy ? "Publication…" : isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
+              <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setConfirmPublishOpen(true)}>
+                {isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
               </button>
             )}
           </span>
         </div>
-        {transferLine}
         {failedNotice}
       </div>
     );
@@ -448,15 +518,19 @@ export function SortieScreen({
           </div>
         ) : null}
 
-        {empty ? null : grid}
+        {published ? null : (
+          <>
+            {empty ? null : publishing ? publishingScreen : confirmPublishOpen ? confirmScreen : grid}
 
-        <PhotoDropZone sortieId={sortieId} controlRef={dropZone} variant={empty ? "zone" : "silent"} />
+            <PhotoDropZone sortieId={sortieId} controlRef={dropZone} variant={empty ? "zone" : "silent"} />
 
-        {empty ? (
-          <p className={styles.sdNote}>Rien n&rsquo;est visible par vos clients tant que vous n&rsquo;avez pas publié.</p>
-        ) : null}
+            {empty ? (
+              <p className={styles.sdNote}>Rien n&rsquo;est visible par vos clients tant que vous n&rsquo;avez pas publié.</p>
+            ) : null}
+          </>
+        )}
 
-        {published ? (
+        {publishing || confirmPublishOpen ? null : published ? (
           clients.length > 0 ? (
             <>
               <p className={styles.sDay} style={{ marginTop: 34 }}>
@@ -484,7 +558,42 @@ export function SortieScreen({
           </div>
         ) : null}
 
-        {bar}
+        {publishing || confirmPublishOpen ? null : bar}
+
+        {publishing || confirmPublishOpen ? null : (
+          <div className={styles.sDangerZone}>
+            {deleteSortieState === "idle" ? (
+              <button type="button" className={styles.sDangerLink} onClick={() => setDeleteSortieState("confirm")}>
+                Supprimer cette sortie
+              </button>
+            ) : (
+              <div className={styles.sDangerConfirm}>
+                <p>
+                  Supprimer définitivement cette sortie{photoCount > 0 ? ` (${photoCount} photo${photoCount > 1 ? "s" : ""})` : ""} ?
+                  Cette action est irréversible.
+                </p>
+                <div className={styles.sDangerActions}>
+                  <button
+                    type="button"
+                    className={`${styles.sBtn} ${styles.sBtnGhost}`}
+                    onClick={() => setDeleteSortieState("idle")}
+                    disabled={deleteSortieState === "deleting"}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sBtn} ${styles.sBtnDanger}`}
+                    onClick={() => void deleteSortie()}
+                    disabled={deleteSortieState === "deleting"}
+                  >
+                    {deleteSortieState === "deleting" ? "Suppression…" : "Supprimer définitivement"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

@@ -24,7 +24,8 @@ export type EventName =
   | "group_purge"
   | "order_refunded"
   | "order_disputed"
-  | "order_dispute_resolved";
+  | "order_dispute_resolved"
+  | "sortie_deleted";
 
 interface TrackParams {
   operatorId: string;

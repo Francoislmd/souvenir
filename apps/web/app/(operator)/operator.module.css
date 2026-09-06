@@ -1998,6 +1998,20 @@ a.trow:hover .tgo {
   box-shadow: inset 0 2px 4px rgba(112, 30, 2, 0.34), inset 0 0 0 1px rgba(150, 42, 4, 0.4);
   transform: translateY(1px);
 }
+.sBtnGhost {
+  background: var(--fill);
+  color: var(--ink-2);
+}
+.sBtnGhost:hover {
+  background: var(--fill-2);
+}
+.sBtnDanger {
+  background: #c0392b;
+  color: #fff;
+}
+.sBtnDanger:hover {
+  background: #a93226;
+}
 .sBtnInk {
   background: linear-gradient(180deg, #2e2a3a 0%, var(--ink) 100%);
   color: #fff;
@@ -2336,6 +2350,7 @@ a.sRow:hover .sTh {
 .sRowAct {
   display: flex;
   justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 /* ---------- première ouverture ---------- */
@@ -2612,6 +2627,84 @@ a.sRow:hover .sTh {
   color: var(--ink-4);
 }
 
+/* L'écran de publication remplace la grille de photos : une fois confirmée,
+   il n'y a plus rien à regarder ni à annuler, juste à attendre la fin. */
+.sdPublishing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 90px 24px;
+  text-align: center;
+}
+.sdPublishingSpinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--brand);
+  animation: spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sdPublishingSpinner {
+    animation: none;
+  }
+}
+.sdPublishingText {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.sdPublishingHint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+}
+.sdConfirmActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 4px;
+}
+.sdConfirmActions > button {
+  flex: 1;
+}
+
+.sDangerZone {
+  margin: 46px 0 8px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.sDangerLink {
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.sDangerLink:hover {
+  color: #c0392b;
+}
+.sDangerConfirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sDangerConfirm p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  max-width: 480px;
+}
+.sDangerActions {
+  display: flex;
+  gap: 10px;
+}
+
 .sdGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
@@ -2637,9 +2730,6 @@ a.sRow:hover .sTh {
 }
 .sdPhOn {
   box-shadow: 0 0 0 3px var(--brand);
-}
-.sdPhPending {
-  opacity: 0.34;
 }
 .sdPhCheck {
   position: absolute;
@@ -2741,38 +2831,6 @@ a.sRow:hover .sTh {
 }
 .sdChipDanger:hover {
   background: #fdecea;
-}
-
-.sdProgLine {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 9px;
-}
-.sdProgLine b {
-  font-size: 1rem;
-  font-weight: 500;
-  letter-spacing: -0.018em;
-}
-.sdProgLine span {
-  font-size: 0.94rem;
-  color: var(--ink-4);
-  font-variant-numeric: tabular-nums;
-}
-.sdProg {
-  display: block;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--fill-2);
-  overflow: hidden;
-}
-.sdProgFill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ff6b2c, #f2500f);
-  transition: width 0.3s ease;
 }
 
 .sdShare {
@@ -3287,18 +3345,4 @@ a.sdClient:hover {
   border-radius: 999px;
   background: linear-gradient(90deg, #ff6b2c, #f2500f);
   transition: width 0.3s ease;
-}
-
-/* Le transfert dans la barre d'une sortie : une ligne sous l'action, pas un
-   écran d'attente à la place. */
-.sdTransfer {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-top: 13px;
-}
-.sdTransferText {
-  font-size: 0.9rem;
-  color: var(--ink-4);
-  font-variant-numeric: tabular-nums;
 }

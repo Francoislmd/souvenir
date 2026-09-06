@@ -14,6 +14,7 @@ build/
 .env
 .env.local
 .env.*.local
+*avant-migration-r2
 
 # corbeille de travail : le pont des sessions Claude n'a pas le droit de
 # supprimer, il déplace ici — à vider à la main de temps en temps.
