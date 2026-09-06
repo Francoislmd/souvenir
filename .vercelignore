@@ -1,0 +1,28 @@
+# Ce que le déploiement n'a pas à envoyer.
+#
+# Sans ce fichier, `vercel --prod` téléverse tout ce que git ne suit pas
+# explicitement — y compris `_to_delete/`, le dossier où les sessions Claude
+# déplacent ce qu'elles ne peuvent pas supprimer (le pont n'a pas le droit
+# d'effacer). Un cache webpack de 777 Mo s'y trouvait : le déploiement
+# échouait sur « File size limit exceeded (100 MB) », sans rapport avec le
+# code.
+
+# dépendances et sorties de build
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+build/
+
+# env : les variables de production vivent dans Vercel
+.env
+.env.local
+.env.*.local
+
+# brouillons et corbeille de travail
+_to_delete/
+Claude outputs/
+_tmp_*
+*.log
+.DS_Store

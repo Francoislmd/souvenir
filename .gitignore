@@ -15,6 +15,12 @@ build/
 .env.local
 .env.*.local
 
+# corbeille de travail : le pont des sessions Claude n'a pas le droit de
+# supprimer, il déplace ici — à vider à la main de temps en temps.
+_to_delete/
+Claude outputs/
+_tmp_*
+
 # misc
 .DS_Store
 *.log
