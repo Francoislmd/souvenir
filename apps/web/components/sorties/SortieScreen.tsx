@@ -7,10 +7,10 @@ import QRCode from "qrcode";
 import styles from "@/app/(operator)/operator.module.css";
 import { formatEuros } from "@/lib/format";
 import { useToast } from "@/components/operator/ToastProvider";
-import { PhotoDropZone, type PhotoDropZoneHandle, type UploadProgress } from "@/components/photos/PhotoDropZone";
+import { PhotoDropZone, type PhotoDropZoneHandle } from "@/components/photos/PhotoDropZone";
+import { useUploadQueue } from "@/components/photos/UploadQueueProvider";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
-import { deleteUploadItemsByPhotoIds, getUploadItemsForSortie } from "@/lib/idb";
 
 export interface ScreenPhoto {
   id: string;
@@ -42,9 +42,10 @@ function CheckIcon() {
  * L'ancien découpage (fiche sortie puis page photos) faisait de l'action
  * principale d'un écran « aller sur l'autre », et affichait un bouton
  * primaire désactivé tant que la sortie n'était pas du jour. Ici il n'y a
- * jamais de bouton grisé : pendant l'envoi la barre basse ne montre que
- * l'avancement, et une sortie nominative sans client dit ce qui manque au
- * lieu de proposer une action impossible.
+ * jamais de bouton grisé — ni d'écran qui attend : le dépôt est instantané
+ * (les vignettes viennent des fichiers déjà sur l'appareil), l'envoi tourne en
+ * tâche de fond dans tout l'espace pro, et publier avant la fin du transfert
+ * programme l'envoi au lieu de faire patienter.
  */
 export function SortieScreen({
   sortieId,
@@ -67,48 +68,21 @@ export function SortieScreen({
 }) {
   const router = useRouter();
   const toast = useToast();
+  const upload = useUploadQueue();
+  const state = upload.forSortie(sortieId);
+  const scheduled = upload.scheduledFor(sortieId);
 
   const [photos, setPhotos] = useState<ScreenPhoto[]>(initialPhotos);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<UploadProgress>({ sent: 0, total: 0, ratio: 0, finalizing: 0, failed: 0, pending: [] });
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
-  // Pilote le dépôt depuis n'importe quel bouton de l'écran : ouvrir le
-  // sélecteur, relancer les photos abandonnées, relire la file locale.
+  // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
   const dropZone = useRef<PhotoDropZoneHandle | null>(null);
-
-  // Aperçu local instantané (le fichier est déjà sur l'appareil) — sert de
-  // repli tant que la vraie miniature n'est pas prête côté serveur.
-  const [localPreviews, setLocalPreviews] = useState<Map<string, string>>(new Map());
-  const localPreviewsRef = useRef<Map<string, string>>(new Map());
-
-  const refreshLocalPreviews = useCallback(async () => {
-    const items = await getUploadItemsForSortie(sortieId);
-    const next = new Map<string, string>();
-    for (const item of items) {
-      if (!item.photoId) continue;
-      const existing = localPreviewsRef.current.get(item.photoId);
-      next.set(item.photoId, existing ?? URL.createObjectURL(item.file));
-    }
-    localPreviewsRef.current.forEach((url, photoId) => {
-      if (!next.has(photoId)) URL.revokeObjectURL(url);
-    });
-    localPreviewsRef.current = next;
-    setLocalPreviews(new Map(next));
-  }, [sortieId]);
-
-  useEffect(() => {
-    void refreshLocalPreviews();
-  }, [refreshLocalPreviews]);
-
-  useEffect(() => {
-    const urls = localPreviewsRef.current;
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, []);
+  // Pendant une attribution ou une suppression, la relecture de fond ne doit
+  // pas réécrire par-dessus l'affichage optimiste.
+  const mutating = useRef(false);
 
   const fetchPhotos = useCallback(async (): Promise<ScreenPhoto[]> => {
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
@@ -117,50 +91,31 @@ export function SortieScreen({
     return data.photos.map((p) => ({ id: p.id, ownerId: p.ownerId, thumbUrl: p.thumbUrl }));
   }, [sortieId]);
 
-  // Dès que les fiches existent côté serveur, la grille se remplit — sans
-  // attendre l'envoi des octets ni les miniatures.
-  const onAllRegistered = useCallback(async () => {
-    setPhotos(await fetchPhotos());
-    void refreshLocalPreviews();
-  }, [fetchPhotos, refreshLocalPreviews]);
-
-  // La file n'a plus rien à faire : on resynchronise ce que le serveur compte
-  // (la liste des sorties affiche un nombre de photos rendu côté serveur, il
-  // restait périmé après un dépôt comme après une suppression).
-  const onSettled = useCallback(async () => {
-    setPhotos(await fetchPhotos());
-    void refreshLocalPreviews();
-    router.refresh();
-  }, [fetchPhotos, refreshLocalPreviews, router]);
-
-  // Les miniatures arrivent en tâche de fond pendant que l'opérateur regarde
-  // déjà ses photos — on complète discrètement, sans écran de chargement.
+  // Une seule boucle de rattrapage : elle tourne pendant que la file travaille
+  // (les fiches et les miniatures arrivent au fil de l'eau) et tant qu'une
+  // photo n'a pas sa miniature. Rien n'attend jamais son tour à l'écran.
+  const needsCatchUp = state.working || photos.some((p) => !p.thumbUrl);
   useEffect(() => {
-    if (photos.length === 0 || photos.every((p) => p.thumbUrl)) return;
+    if (!needsCatchUp) return;
     let cancelled = false;
     const timer = setInterval(() => {
       void (async () => {
+        if (mutating.current) return;
         const fresh = await fetchPhotos();
-        if (cancelled) return;
-        const byId = new Map(fresh.map((p) => [p.id, p]));
+        if (cancelled || mutating.current) return;
         setPhotos((prev) => {
-          let changed = false;
-          const next = prev.map((p) => {
-            if (p.thumbUrl) return p;
-            const match = byId.get(p.id);
-            if (!match?.thumbUrl) return p;
-            changed = true;
-            return { ...p, thumbUrl: match.thumbUrl };
-          });
-          return changed ? next : prev;
+          if (prev.length === fresh.length && prev.every((p, i) => p.id === fresh[i]?.id && p.thumbUrl === fresh[i]?.thumbUrl && p.ownerId === fresh[i]?.ownerId)) {
+            return prev;
+          }
+          return fresh;
         });
       })();
-    }, 3000);
+    }, 2500);
     return () => {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [photos, fetchPhotos]);
+  }, [needsCatchUp, fetchPhotos]);
 
   useEffect(() => {
     if (!published || !shareUrl || qrDataUrl) return;
@@ -181,6 +136,7 @@ export function SortieScreen({
     const ids = new Set(selected);
     if (ids.size === 0) return;
     const previous = photos;
+    mutating.current = true;
     // Optimiste : les vignettes changent de main tout de suite, on corrige si l'appel échoue.
     setPhotos((prev) => prev.map((p) => (ids.has(p.id) ? { ...p, ownerId } : p)));
     setSelected(new Set());
@@ -193,6 +149,7 @@ export function SortieScreen({
         }).then((res) => res.ok),
       ),
     );
+    mutating.current = false;
     if (results.some((ok) => !ok)) {
       setPhotos(previous);
       toast("L'attribution a échoué — réessayez.");
@@ -205,26 +162,36 @@ export function SortieScreen({
     const ids = Array.from(selected);
     if (ids.length === 0) return;
     const previous = photos;
+    mutating.current = true;
     setPhotos((prev) => prev.filter((p) => !selected.has(p.id)));
     setSelected(new Set());
     setConfirmDelete(false);
     const results = await Promise.all(ids.map((id) => fetch(`/api/photos/${id}`, { method: "DELETE" }).then((res) => res.ok)));
     if (results.some((ok) => !ok)) {
+      mutating.current = false;
       setPhotos(previous);
       toast("La suppression a échoué pour certaines photos — réessayez.");
       return;
     }
-    // Une photo supprimée doit aussi disparaître de la file locale : sinon
-    // elle continue d'être comptée dans l'avancement, et son aperçu local
-    // survit à sa suppression.
-    await deleteUploadItemsByPhotoIds(sortieId, ids);
-    dropZone.current?.sync();
-    void refreshLocalPreviews();
+    // Une photo supprimée doit aussi disparaître de la file locale : sinon elle
+    // continue d'être comptée dans l'avancement et son aperçu local survit à sa
+    // suppression.
+    await upload.forgetPhotos(sortieId, ids);
+    mutating.current = false;
+    // La liste des sorties affiche un nombre de photos rendu côté serveur : il
+    // restait périmé après une suppression comme après un dépôt.
     router.refresh();
   }
 
   async function publish(): Promise<void> {
     if (busy) return;
+    // Publier n'attend pas la fin du transfert : la demande est enregistrée et
+    // part toute seule dès que la dernière photo est prête.
+    if (state.working) {
+      upload.schedulePublish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now() });
+      toast(isGroup ? "Publication programmée" : "Envoi programmé");
+      return;
+    }
     setBusy(true);
     const endpoint = isGroup ? `/api/sorties/${sortieId}/publish` : `/api/sorties/${sortieId}/send`;
     const res = await fetch(endpoint, { method: "POST" });
@@ -261,21 +228,27 @@ export function SortieScreen({
     await copyLink();
   }
 
-  // Deux temps distincts, dits séparément : les octets qui montent (ce que
-  // l'opérateur attend vraiment) puis les aperçus que le serveur termine.
-  const sending = progress.total > 0 && progress.sent < progress.total;
-  const preparing = !sending && progress.finalizing > 0;
-  const working = sending || preparing;
-  const pending = new Set(progress.pending);
-  const empty = photos.length === 0 && !working;
+  // Les photos déposées à l'instant s'affichent avant tout aller-retour réseau :
+  // le fichier est déjà sur l'appareil, sa vignette aussi.
+  const known = new Set(photos.map((p) => p.id));
+  const fresh = state.items.filter((item) => item.status !== "failed" && (!item.photoId || !known.has(item.photoId)));
+  const localByPhoto = new Map<string, string>();
+  for (const item of state.items) {
+    if (!item.photoId) continue;
+    const url = upload.previewUrl(item.id);
+    if (url) localByPhoto.set(item.photoId, url);
+  }
+
+  const photoCount = photos.length + fresh.length;
+  const empty = photoCount === 0;
   const selectable = !published;
 
   const grid = (
     <div className={`${styles.sdGrid} ${selected.size > 0 ? styles.sdGridPicking : ""}`}>
       {photos.map((p) => {
-        const src = p.thumbUrl ?? localPreviews.get(p.id) ?? null;
+        const src = p.thumbUrl ?? localByPhoto.get(p.id) ?? null;
         const on = selected.has(p.id);
-        const waiting = pending.has(p.id);
+        const waiting = state.pending.has(p.id);
         return (
           <span
             key={p.id}
@@ -306,25 +279,46 @@ export function SortieScreen({
           </span>
         );
       })}
+      {fresh.map((item) => {
+        const src = upload.previewUrl(item.id);
+        return (
+          <span key={item.id} className={`${styles.sdPh} ${styles.sdPhPending}`} style={{ cursor: "default" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {src ? <img src={src} alt="" draggable={false} /> : null}
+          </span>
+        );
+      })}
     </div>
   );
 
   // Une photo abandonnée après plusieurs tentatives se dit, et se rattrape —
-  // avant, la file réessayait indéfiniment et la barre ne partait jamais.
+  // avant, la file réessayait indéfiniment sans jamais rien annoncer.
   const failedNotice =
-    progress.failed > 0 ? (
+    state.failed > 0 ? (
       <p className={styles.sdNote}>
-        {progress.failed} photo{progress.failed > 1 ? "s" : ""} n&rsquo;{progress.failed > 1 ? "ont" : "a"} pas pu être envoyée
-        {progress.failed > 1 ? "s" : ""}.{" "}
-        <button
-          type="button"
-          className={`${styles.sdChip} ${styles.sdChipGhost}`}
-          onClick={() => dropZone.current?.retryFailed()}
-        >
+        {state.failed} photo{state.failed > 1 ? "s" : ""} n&rsquo;{state.failed > 1 ? "ont" : "a"} pas pu être envoyée
+        {state.failed > 1 ? "s" : ""}.{" "}
+        <button type="button" className={`${styles.sdChip} ${styles.sdChipGhost}`} onClick={() => upload.retryFailed(sortieId)}>
           Réessayer
         </button>
       </p>
     ) : null;
+
+  // Discret, sous la ligne d'action : l'envoi se voit, il n'empêche rien.
+  const transferLine = state.working ? (
+    <div className={styles.sdTransfer}>
+      <span className={styles.sdProg}>
+        <span className={styles.sdProgFill} style={{ width: `${Math.round(state.ratio * 100)}%` }} />
+      </span>
+      <span className={styles.sdTransferText}>
+        {state.sent < state.total
+          ? `Envoi en cours · ${state.sent} sur ${state.total} · ${Math.round(state.ratio * 100)} %`
+          : `Préparation des aperçus · ${state.done} sur ${state.total}`}
+        {" — "}
+        vous pouvez continuer, même sur un autre écran.
+      </span>
+    </div>
+  ) : null;
 
   let bar: React.ReactNode = null;
 
@@ -374,61 +368,46 @@ export function SortieScreen({
         </div>
       </div>
     );
-  } else if (working) {
-    // Pendant l'envoi : pas de bouton grisé, pas de bouton du tout.
-    // La barre suit les octets, pas les photos finies — sur trente photos, une
-    // photo finie ne faisait bouger la barre que d'un trentième, entre deux
-    // elle semblait à l'arrêt.
-    const prepared = progress.total - progress.finalizing;
-    const pct = sending ? Math.round(progress.ratio * 100) : Math.round((prepared / Math.max(1, progress.total)) * 100);
-    bar = (
-      <div className={styles.sdBar}>
-        <div className={styles.sdProgLine}>
-          <b>{sending ? "Envoi des photos" : "Préparation des aperçus"}</b>
-          <span>{sending ? `${progress.sent} sur ${progress.total} · ${pct} %` : `${prepared} sur ${progress.total}`}</span>
-        </div>
-        <span className={styles.sdProg}>
-          <span className={styles.sdProgFill} style={{ width: `${pct}%` }} />
-        </span>
-        <p className={styles.sdNote}>
-          {sending
-            ? "Vous pouvez ranger votre téléphone, l\u2019envoi continue."
-            : "Vos photos sont arrivées. Les aperçus se terminent, vous pourrez publier juste après."}
-        </p>
-        {failedNotice}
-      </div>
-    );
-  } else if (!published && photos.length > 0) {
+  } else if (!published && photoCount > 0) {
     const needsClients = !isGroup && clients.length === 0;
     bar = (
       <div className={styles.sdBar}>
         <div className={styles.sdBarIn}>
           <span className={styles.sdBarText}>
             <b>
-              {photos.length} photo{photos.length > 1 ? "s" : ""} déposée{photos.length > 1 ? "s" : ""}.
+              {photoCount} photo{photoCount > 1 ? "s" : ""} déposée{photoCount > 1 ? "s" : ""}.
             </b>{" "}
             <span>
-              {needsClients
-                ? "Ajoutez au moins un client pour les envoyer."
-                : isGroup
-                  ? "Vos clients les retrouveront par créneau."
-                  : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`}
+              {scheduled
+                ? isGroup
+                  ? "La galerie sera publiée dès la fin de l'envoi."
+                  : "Vos clients les recevront dès la fin de l'envoi."
+                : needsClients
+                  ? "Ajoutez au moins un client pour les envoyer."
+                  : isGroup
+                    ? "Vos clients les retrouveront par créneau."
+                    : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`}
             </span>
           </span>
           <span className={styles.sdBarActions}>
-              <button type="button" className={styles.sdChip} onClick={() => dropZone.current?.open()}>
+            <button type="button" className={styles.sdChip} onClick={() => dropZone.current?.open()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <path d="M12 5.8v12.4M5.8 12h12.4" />
               </svg>
               <span className={styles.sdChipLabel}>Ajouter des photos</span>
             </button>
-            {needsClients ? null : (
+            {scheduled ? (
+              <button type="button" className={`${styles.sdChip} ${styles.sdChipGhost}`} onClick={() => upload.cancelPublish(sortieId)}>
+                Annuler l&rsquo;envoi programmé
+              </button>
+            ) : needsClients ? null : (
               <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void publish()} disabled={busy}>
                 {busy ? "Publication…" : isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
               </button>
             )}
           </span>
         </div>
+        {transferLine}
         {failedNotice}
       </div>
     );
@@ -452,7 +431,7 @@ export function SortieScreen({
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                En ligne · {photos.length} photo{photos.length > 1 ? "s" : ""}
+                En ligne · {photoCount} photo{photoCount > 1 ? "s" : ""}
               </span>
               <span className={styles.sdShareT}>Le lien de la galerie</span>
               <span className={styles.sdShareH}>Montrez le code au retour, ou envoyez le lien.</span>
@@ -471,14 +450,7 @@ export function SortieScreen({
 
         {empty ? null : grid}
 
-        <PhotoDropZone
-          sortieId={sortieId}
-          onAllRegistered={onAllRegistered}
-          onProgress={setProgress}
-          onSettled={onSettled}
-          controlRef={dropZone}
-          variant={empty ? "zone" : "silent"}
-        />
+        <PhotoDropZone sortieId={sortieId} controlRef={dropZone} variant={empty ? "zone" : "silent"} />
 
         {empty ? (
           <p className={styles.sdNote}>Rien n&rsquo;est visible par vos clients tant que vous n&rsquo;avez pas publié.</p>

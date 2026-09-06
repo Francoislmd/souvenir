@@ -3,6 +3,7 @@ import { requireOperatorUser } from "@/lib/current-user";
 import { Sidebar } from "@/components/operator/Sidebar";
 import { StripeSyncBanner } from "@/components/operator/StripeSyncBanner";
 import { ToastProvider } from "@/components/operator/ToastProvider";
+import { UploadQueueProvider } from "@/components/photos/UploadQueueProvider";
 import styles from "./operator.module.css";
 
 // viewport-fit=cover pour ce segment uniquement : la barre de navigation
@@ -19,14 +20,19 @@ export default async function OperatorLayout({ children }: { children: React.Rea
 
   return (
     <ToastProvider>
-      <div className={styles.app} id="app-root">
-        <Sidebar operatorName={operator.name} />
+      {/* La file d'envoi des photos est montée ici, pas dans l'écran d'une
+          sortie : l'opérateur dépose ses photos et repart travailler ailleurs
+          dans son espace, le transfert continue. */}
+      <UploadQueueProvider>
+        <div className={styles.app} id="app-root">
+          <Sidebar operatorName={operator.name} />
 
-        <div className={styles.main}>
-          {!operator.stripeOnboarded ? <StripeSyncBanner /> : null}
-          <div className={styles.content}>{children}</div>
+          <div className={styles.main}>
+            {!operator.stripeOnboarded ? <StripeSyncBanner /> : null}
+            <div className={styles.content}>{children}</div>
+          </div>
         </div>
-      </div>
+      </UploadQueueProvider>
     </ToastProvider>
   );
 }

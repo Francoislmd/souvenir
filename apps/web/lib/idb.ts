@@ -61,6 +61,14 @@ export async function updateUploadItem(id: string, patch: Partial<UploadItem>): 
   await db.put("queue", { ...existing, ...patch });
 }
 
+/** Toute la file, sorties confondues : l'envoi tourne dans l'espace pro entier,
+ *  pas seulement sur l'écran de la sortie où les photos ont été déposées. */
+export async function getAllUploadItems(): Promise<UploadItem[]> {
+  const db = await getDb();
+  const all = await db.getAll("queue");
+  return all.sort((a, b) => a.createdAt - b.createdAt);
+}
+
 export async function getUploadItemsForSortie(sortieId: string): Promise<UploadItem[]> {
   const db = await getDb();
   return db.getAllFromIndex("queue", "by-sortie", sortieId);
@@ -88,5 +96,10 @@ export async function deleteUploadItemsByPhotoIds(sortieId: string, photoIds: st
  *  garde en mémoire les fichiers d'origine, plusieurs mégaoctets chacun. */
 export async function purgeFinishedForSortie(sortieId: string): Promise<void> {
   const all = await getUploadItemsForSortie(sortieId);
+  await deleteUploadItems(all.filter((item) => item.status === "done").map((item) => item.id));
+}
+
+export async function purgeFinished(): Promise<void> {
+  const all = await getAllUploadItems();
   await deleteUploadItems(all.filter((item) => item.status === "done").map((item) => item.id));
 }

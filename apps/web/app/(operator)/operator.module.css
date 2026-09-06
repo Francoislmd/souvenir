@@ -3246,3 +3246,59 @@ a.sdClient:hover {
     gap: 0;
   }
 }
+
+/* L'envoi qui continue ailleurs dans l'espace pro. Discret, en bas à gauche,
+   jamais au-dessus de la barre d'action d'un écran de sortie (qui, elle, dit
+   déjà tout de son propre transfert). */
+.upPill {
+  position: fixed;
+  left: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 216px;
+  padding: 12px 15px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(22, 19, 32, 0.1);
+}
+.upPillText {
+  font-size: 0.9rem;
+  color: var(--ink-4);
+}
+.upPillText b {
+  color: var(--ink);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.upPillBar {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fill-2);
+  overflow: hidden;
+}
+.upPillFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff6b2c, #f2500f);
+  transition: width 0.3s ease;
+}
+
+/* Le transfert dans la barre d'une sortie : une ligne sous l'action, pas un
+   écran d'attente à la place. */
+.sdTransfer {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 13px;
+}
+.sdTransferText {
+  font-size: 0.9rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
