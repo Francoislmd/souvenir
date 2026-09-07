@@ -43,10 +43,10 @@ export async function getBoutiquePhotos(
     rawPhotos.map(async (rawP) => {
       const p = backfilled.has(rawP.id) ? { ...rawP, groupPreviewKey: backfilled.get(rawP.id)! } : rawP;
       const unlocked = p.isFreeSample || purchasedSet.has(p.id);
-      // Verrouillée : même filigrane tuilé qu'en mode GROUPE (Photo.groupPreviewKey,
-      // lib/group-watermark.ts) — jamais de flou, et jamais de repli sur
-      // previewKey/thumbKey (aperçus quasi nets) qui exposerait la photo avant
-      // achat. Tant que groupPreviewKey n'est pas prêt, previewUrl reste absent ;
+      // Verrouillée : même aperçu protégé qu'en mode GROUPE (Photo.groupPreviewKey,
+      // lib/group-watermark.ts) — et jamais de repli sur previewKey/thumbKey
+      // (aperçus nets) qui exposerait la photo avant achat. Tant que
+      // groupPreviewKey n'est pas prêt, previewUrl reste absent ;
       // BoutiqueGallery sonde /api/g/[token]/photos toutes les 4s pour rattraper.
       const previewUrl = unlocked
         ? p.previewKey

@@ -11,12 +11,12 @@ export function ensureWatermarkFont(): void {
   fontRegistered = true;
 }
 
-export interface WordLayout {
+export interface RunLayout {
   text: string;
   fontSize: number;
   letterSpacingPx: number;
-  /** Largeur réellement rendue (avec interlettrage), en px. */
-  width: number;
+  /** Longueur réellement rendue du nom (interlettrage compris), en px. */
+  run: number;
 }
 
 function measureNatural(ctx: SKRSContext2D, text: string, fontSize: number): number {
@@ -44,83 +44,56 @@ function dropLastWord(text: string): string | null {
   return words.join(" ");
 }
 
-function letterSpacingFor(finalWidth: number, naturalWidth: number, charCount: number): number {
-  // Règle : interlettrage jamais négatif.
-  return Math.max(0, (finalWidth - naturalWidth) / Math.max(1, charCount));
-}
-
-export interface WordParams {
+export interface RunParams {
   fontRatio: number;
-  tileRatio: number;
-  trackingFactor: number;
-  wordWidthMax: number;
-  wordMaxChars: number;
+  tracking: number;
+  runMax: number;
+  maxChars: number;
 }
 
 /**
- * Corps et tuile constants (fontRatio/tileRatio × largeur image) — jamais
- * dérivés du nom, pour garantir la même maille sur toutes les photos, quel
- * que soit l'opérateur ou la longueur de son nom (retour utilisateur :
- * quadrillage identique partout). Seul le nom s'adapte à la tuile, jamais
- * l'inverse : interlettrage étendu jusqu'à wordWidthMax, puis troncature
- * sur un mot entier + "…", puis réduction du corps en tout dernier
- * recours (seul cas où une photo peut différer des autres — un nom
- * pathologiquement long qui ne tient même pas tronqué). Jamais
- * d'interlettrage négatif.
+ * Le nom écrit d'un trait, à l'horizontale, pour une rangée du filigrane.
+ *
+ * Le corps est FIXE (fontRatio × côté court) : c'est lui qui garantit la même
+ * maille sur toutes les photos, quel que soit l'opérateur — reprise de la
+ * règle arbitrée précédemment ("seul le nom s'adapte, jamais la maille").
+ * Ce qui varie avec le nom, c'est la LONGUEUR de la rangée, ce qui est
+ * inévitable pour du texte horizontal : un nom court écrit plus court se
+ * répète simplement plus souvent dans la largeur.
+ *
+ * Le nom n'est JAMAIS étiré pour atteindre une longueur cible : un nom court
+ * s'écrit court et se répète simplement plus souvent dans la rangée. Étirer
+ * "Ki" sur la moitié de la photo donnait "K     i", illisible comme marque.
+ * L'interlettrage se limite donc à `tracking`, une respiration constante.
+ *
+ * Seule borne : runMax. Au-delà, une occurrence traverserait toute la photo
+ * et le motif disparaîtrait — on tronque alors sur un mot entier + "…", puis
+ * on réduit le corps en tout dernier recours (seul cas où la maille peut
+ * différer d'une photo à l'autre : un nom pathologiquement long).
  */
-export function layoutWord(ctx: SKRSContext2D, rawName: string, imageWidth: number, params: WordParams): WordLayout & { tile: number } {
+export function layoutRun(ctx: SKRSContext2D, rawName: string, basis: number, params: RunParams): RunLayout {
   ensureWatermarkFont();
-  const tile = params.tileRatio * imageWidth;
-  let fontSize = params.fontRatio * imageWidth;
-  let text = truncateToMaxChars(rawName.toUpperCase(), params.wordMaxChars);
+  let fontSize = params.fontRatio * basis;
+  let text = truncateToMaxChars(rawName.trim(), params.maxChars);
+  const ceiling = params.runMax * basis;
 
   for (let iteration = 0; iteration < 40; iteration++) {
     const naturalWidth = measureNatural(ctx, text, fontSize);
-    const targetWidth = naturalWidth * params.trackingFactor;
-    const ceiling = params.wordWidthMax * tile;
     const charCount = Array.from(text).length;
 
-    if (targetWidth <= ceiling) {
-      return { text, fontSize, letterSpacingPx: letterSpacingFor(targetWidth, naturalWidth, charCount), width: targetWidth, tile };
-    }
     if (naturalWidth <= ceiling) {
-      // Le mot tient à interlettrage nul sous le plafond : on plafonne
-      // l'interlettrage à 0 plutôt que de tronquer inutilement.
-      return { text, fontSize, letterSpacingPx: 0, width: naturalWidth, tile };
+      const run = Math.min(ceiling, naturalWidth * params.tracking);
+      return { text, fontSize, letterSpacingPx: Math.max(0, (run - naturalWidth) / Math.max(1, charCount)), run };
     }
 
-    // Tronquer sur un mot entier.
     const shorter = dropLastWord(text);
     if (shorter) {
       text = `${shorter}…`;
       continue;
     }
-
-    // Dernier recours : réduire le corps (seul cas où la maille peut
-    // différer d'une photo à l'autre — nom pathologique, cf. docstring).
     fontSize *= 0.94;
   }
 
   const naturalWidth = measureNatural(ctx, text, fontSize);
-  return { text, fontSize, letterSpacingPx: 0, width: naturalWidth, tile };
-}
-
-export interface MicroParams {
-  microSizeFactor: number;
-  microTracking: number;
-  microWidthMax: number;
-}
-
-export function layoutMicro(ctx: SKRSContext2D, microText: string, nameFontSize: number, nameWidth: number, params: MicroParams): WordLayout {
-  ensureWatermarkFont();
-  const fontSize = params.microSizeFactor * nameFontSize;
-  const naturalWidth = measureNatural(ctx, microText, fontSize);
-  const targetWidth = naturalWidth * params.microTracking;
-  const ceiling = params.microWidthMax * nameWidth;
-  // max(natural, min(target, ceiling)) : respecte le plafond quand
-  // l'interlettrage seul en est la cause, mais n'exige jamais un
-  // interlettrage négatif si la largeur naturelle dépasse déjà le plafond.
-  const finalWidth = Math.max(naturalWidth, Math.min(targetWidth, ceiling));
-  const charCount = Array.from(microText).length;
-  return { text: microText, fontSize, letterSpacingPx: letterSpacingFor(finalWidth, naturalWidth, charCount), width: finalWidth };
+  return { text, fontSize, letterSpacingPx: 0, run: naturalWidth };
 }

@@ -191,11 +191,11 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
 }
 
 /**
- * Photos d'un créneau (écran galerie) — jamais de flou : c'est la
- * différence de fond avec la boutique individuelle (brief §3), le client
- * doit se reconnaître dans le tas. La protection tient au filigrane tuilé
- * (groupPreviewKey, lib/group-watermark.ts) plutôt qu'à un flou — aucune
- * photo n'est offerte ni téléchargeable avant paiement.
+ * Photos d'un créneau (écran galerie) — le client doit se reconnaître dans
+ * le tas (brief §3), donc l'aperçu reste lisible : la protection tient au
+ * nom répété sur une plaque à peine floutée (groupPreviewKey,
+ * lib/group-watermark.ts). Aucune photo n'est offerte ni téléchargeable
+ * avant paiement.
  *
  * Rattrapage : la génération du filigrane à la publication peut échouer
  * pour une poignée de photos (contention CPU, original pas encore répliqué

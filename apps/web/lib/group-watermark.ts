@@ -1,228 +1,154 @@
 import sharp from "sharp";
-import { createCanvas, type SKRSContext2D } from "@napi-rs/canvas";
-import { layoutWord, layoutMicro, ensureWatermarkFont, FONT_FAMILY, WORD_WEIGHT } from "./watermark-typography";
+import { createCanvas } from "@napi-rs/canvas";
+import { layoutRun, ensureWatermarkFont, FONT_FAMILY, WORD_WEIGHT } from "./watermark-typography";
 import { detectFaceZones, type FaceZone } from "./watermark-faces";
 
 /**
  * Réglage de direction artistique — VERROUILLÉ. Ne pas arrondir, ne pas
- * "optimiser" : chaque valeur est arbitrée. Stack imposée : sharp (lecture,
- * rotation EXIF, redimensionnement, métadonnées, encodage mozjpeg) +
- * @napi-rs/canvas (dessin + métriques de texte — sharp ne mesure pas le
- * texte, et librsvg gère mal textLength/letter-spacing).
+ * "optimiser" : chaque valeur a été arbitrée sur des rendus comparés côte à
+ * côte, colonne par colonne, un seul paramètre changeant à la fois.
+ *
+ * La composition, en trois couches :
+ *   1. la photo, nette, jusqu'au bord ;
+ *   2. une PLAQUE insérée d'une marge (bandRatio), à coins arrondis, qui
+ *      floute très légèrement ce qu'elle couvre et l'assombrit d'un voile ;
+ *   3. le nom du professionnel écrit en grand, à l'horizontale, répété en
+ *      rangées décalées d'une demi-longueur.
+ *
+ * Ce qui fait l'objet, c'est le CONTRASTE entre la plaque et la bande nette
+ * qui l'entoure : le bord garde la lumière et le piqué de la photo, le centre
+ * est traité. Sans cette bande, on ne voit qu'une photo barrée ; avec elle,
+ * une photo présentée.
+ *
+ * Stack imposée : sharp (lecture, rotation EXIF, redimensionnement, flou,
+ * découpe, encodage mozjpeg) + @napi-rs/canvas (dessin + métriques de texte —
+ * sharp ne mesure pas le texte, et librsvg gère mal l'interlettrage).
  */
-// Facteur d'échelle du corps et de la tuile ensemble (retour utilisateur :
-// "zoom" plus important — un instance plus grande, moins répétée, pas plus
-// dense). Garder les deux liés préserve le ratio texte/tuile de la règle 1 :
-// un facteur plus grand agrandit tout sans jamais tronquer davantage un nom.
-const SIZE_SCALE = 1.25;
-
 const PARAMS = {
-  // Plus sombre/opaque (retour utilisateur, passes successives : 0.55, 0.70
-  // puis 0.85 jugés encore trop clairs) — reste blanc (#ffffff), confirmé
-  // explicitement, seule l'opacité augmente.
-  opacity: 0.95,
-  angleDeg: -22,
-  fontRatio: 0.0179 * SIZE_SCALE,
-  // Tuile FIXE (retour utilisateur : le quadrillage doit être identique sur
-  // toutes les photos) — ne dépend plus de la longueur du nom. Avant, la
-  // tuile était dérivée du nom (trackingFactor/wordWidthRatio/bornes
-  // min-max), ce qui rendait le motif plus ou moins dense selon
-  // l'opérateur ; maintenant seul le nom s'adapte à la tuile (interlettrage
-  // puis troncature), jamais l'inverse.
-  tileRatio: 0.26 * SIZE_SCALE,
-  trackingFactor: 1.32,
-  wordWidthMax: 0.86,
-  wordWeight: 500,
-  wordMaxChars: 30,
-  microText: "APERÇU",
-  microSizeFactor: 0.46,
-  microTracking: 1.55,
-  microWidthMax: 0.62,
-  microOpacity: 0.62,
-  markRatio: 0.11,
-  markOpacity: 0.85,
+  // --- La plaque ---------------------------------------------------------
+  // Marge nette tout autour, en fraction du côté court. 4 % : assez pour se
+  // lire d'un coup d'œil, assez fin pour ne pas manger la photo.
+  bandRatio: 0.04,
+  // Rayon des coins de la plaque, même unité.
+  radiusRatio: 0.04,
+  // Voile sombre sur la plaque. Est passé de 20 % à 10 % le jour où le flou
+  // a pris le relais de la protection : inutile de ternir une photo qu'on
+  // veut vendre.
+  veil: 0.1,
+  // Écart-type du flou, en fraction du côté court — JAMAIS en pixels fixes :
+  // un rayon fixe rendrait une vignette de 300 px illisible et laisserait un
+  // aperçu de 1000 px net. "À peine flou" : la photo garde son piqué
+  // apparent, le détail exploitable part.
+  blurRatio: 0.003,
+
+  // --- Le nom ------------------------------------------------------------
+  // 0.82 : arbitré en dernier. Le flou étant au minimum, c'est le nom qui
+  // porte la protection. En dessous il s'efface sur un ciel clair ; au-dessus
+  // on regarde le filigrane et plus la sortie.
+  opacity: 0.82,
+  ink: "#ffffff",
+  // Corps FIXE (fraction du côté court) : la maille reste la même sur toutes
+  // les photos et pour tous les opérateurs. Cf. layoutRun.
+  fontRatio: 0.0596,
+  tracking: 1.02,
+  runMax: 0.74,
+  maxChars: 30,
+  // Écart entre deux rangées, en corps. 1.80 : arbitré ("H5") entre une
+  // trame qu'on traverse à l'œil et une trame qui étouffe l'image.
+  rowFactor: 1.8,
+  // Espace horizontal entre deux occurrences, en fraction de la longueur du
+  // nom. Une rangée sur deux est décalée d'une demi-période : l'alignement
+  // en colonnes trahit un filigrane bien plus que sa densité.
+  gapRatio: 0.22,
+
+  // --- Les visages -------------------------------------------------------
+  // Le client doit se reconnaître dans le tas (brief §3) : l'alpha du calque
+  // est retiré en douceur autour des visages détectés. Le flou, lui, n'est
+  // pas atténué — à ce rayon un visage reste parfaitement identifiable.
   faceAttenuation: 0.72,
   faceRadiusScale: 1.3,
   faceFeather: 0.52,
-  // Toujours blanc (retour utilisateur) : plus d'adaptation de teinte selon
-  // la luminance locale.
-  ink: "#ffffff",
+
+  // --- Sortie ------------------------------------------------------------
+  // La vraie garantie n'est pas le filigrane, c'est cette valeur : à 1000 px
+  // de large, ce qu'on peut tirer d'un aperçu ne dépasse pas une story. Ne
+  // pas la remonter.
   previewMaxWidth: 1000,
   jpegQuality: 72,
 } as const;
 
-// Position des deux instances par cellule de maille — quinconce, jamais une
-// grille orthogonale (l'alignement en colonnes trahit le filigrane bien plus
-// que sa densité).
-const MESH_SUBPOSITIONS: [number, number][] = [
-  [0, 0],
-  [0.5, 0.5],
-];
-
-function faceAttenuationAt(faces: FaceZone[], x: number, y: number): number {
-  let multiplier = 1;
-  for (const face of faces) {
-    const d = Math.hypot(x - face.cx, y - face.cy);
-    if (d >= face.radius) continue;
-    const featherStart = PARAMS.faceFeather * face.radius;
-    const localAtten = d <= featherStart ? PARAMS.faceAttenuation : PARAMS.faceAttenuation * (1 - (d - featherStart) / (face.radius - featherStart));
-    multiplier = Math.min(multiplier, 1 - localAtten);
-  }
-  return multiplier;
-}
-
-const MARK_DOT_LOCAL_X = 0.22; // fraction de markSize, relative au centre du badge
-const MARK_DOT_LOCAL_Y = -0.28;
-const MARK_DOT_RADIUS_RATIO = 0.17;
-
 /**
- * Symbole Linktrip miniaturisé : carré arrondi plein (remplissage seul,
- * jamais de contour), avec le point d'accent évidé (destination-out) dans
- * une passe séparée après coup — voir `punchMarkDots` plus bas :
- * @napi-rs/canvas n'applique pas correctement destination-out pour une forme
- * hors du pivot de rotation tant qu'une rotation est active sur le contexte
- * (vérifié : le canal alpha reste inchangé à l'endroit du trou), donc le
- * point ne peut pas être évidé pendant que l'instance est encore tournée.
+ * Le calque posé sur la plaque : le voile sombre, puis le nom en rangées,
+ * puis l'atténuation autour des visages. Rendu à la taille de la plaque, pas
+ * de l'image : le clip aux coins arrondis est fait par sharp au moment du
+ * compositing, avec le même masque que le flou.
  */
-function drawMark(ctx: SKRSContext2D, size: number, color: string): void {
-  ctx.save();
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.roundRect(-size / 2, -size / 2, size, size, size * 0.32);
-  ctx.fill();
-  ctx.restore();
-}
-
-interface MarkDot {
-  x: number;
-  y: number;
-  radius: number;
-}
-
-/** Position du point d'accent dans l'espace du canevas (post-rotation), pour la passe d'évidage différée. */
-function markDotWorldPosition(screenX: number, screenY: number, tile: number, markSize: number, cos: number, sin: number): MarkDot {
-  const localX = markSize * MARK_DOT_LOCAL_X;
-  const localY = -0.175 * tile + markSize * MARK_DOT_LOCAL_Y;
-  return {
-    x: screenX + localX * cos - localY * sin,
-    y: screenY + localX * sin + localY * cos,
-    radius: markSize * MARK_DOT_RADIUS_RATIO,
-  };
-}
-
-/** Évide tous les points d'accent en une seule passe, transform remise à l'identité (cf. drawMark). */
-function punchMarkDots(ctx: SKRSContext2D, dots: MarkDot[]): void {
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = "destination-out";
-  for (const dot of dots) {
-    ctx.beginPath();
-    ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-function buildWatermarkLayer(width: number, height: number, operatorName: string, faces: FaceZone[]): Buffer {
+function buildPlateLayer(plateW: number, plateH: number, basis: number, operatorName: string, faces: FaceZone[], offsetX: number, offsetY: number): Buffer {
   ensureWatermarkFont();
-  const canvas = createCanvas(width, height);
+  const canvas = createCanvas(plateW, plateH);
   const ctx = canvas.getContext("2d");
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
 
-  // La maille est dimensionnée sur le plus petit côté, pas sur la largeur :
-  // toutes les images sortent de sharp à une largeur fixe (previewMaxWidth)
-  // mais avec des hauteurs très différentes selon leur cadrage d'origine.
-  // Or la grille de la galerie affiche chaque vignette dans une case CARRÉE
-  // (object-fit: cover, collective.module.css) — le navigateur y met donc
-  // à l'échelle chaque photo selon son côté le plus court. Baser la tuile
-  // sur la largeur seule faisait paraître le filigrane bien plus "zoomé"
-  // sur les photos au format paysage (mises à l'échelle davantage pour
-  // remplir la case carrée) que sur les photos portrait. En basant la
-  // tuile sur min(largeur, hauteur), sa taille à l'écran dans la vignette
-  // carrée redevient la même quel que soit le cadrage d'origine.
-  const meshBasis = Math.min(width, height);
+  ctx.fillStyle = `rgba(13, 12, 18, ${PARAMS.veil})`;
+  ctx.fillRect(0, 0, plateW, plateH);
 
-  const word = layoutWord(ctx, operatorName, meshBasis, PARAMS);
-  const micro = layoutMicro(ctx, PARAMS.microText, word.fontSize, word.width, PARAMS);
-  const tile = word.tile;
-  const markSize = PARAMS.markRatio * tile;
+  const word = layoutRun(ctx, operatorName, basis, PARAMS);
+  const period = word.run * (1 + PARAMS.gapRatio);
+  const rowHeight = word.fontSize * PARAMS.rowFactor;
 
-  const angleRad = (PARAMS.angleDeg * Math.PI) / 180;
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-  const cx = width / 2;
-  const cy = height / 2;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = PARAMS.ink;
+  ctx.globalAlpha = PARAMS.opacity;
+  ctx.font = `${WORD_WEIGHT} ${word.fontSize}px ${FONT_FAMILY}`;
+  ctx.letterSpacing = `${word.letterSpacingPx}px`;
 
-  // Débord nécessaire pour que la maille, une fois tournée, couvre encore
-  // les coins du canevas.
-  const rotatedW = Math.abs(width * cos) + Math.abs(height * sin);
-  const rotatedH = Math.abs(width * sin) + Math.abs(height * cos);
-  const marginX = Math.ceil((rotatedW - width) / 2) + tile;
-  const marginY = Math.ceil((rotatedH - height) / 2) + tile;
+  const rowCount = Math.ceil(plateH / rowHeight) + 1;
+  const colCount = Math.ceil(plateW / period) + 2;
 
-  const colStart = Math.floor(-marginX / tile) - 1;
-  const colEnd = Math.ceil((width + marginX) / tile) + 1;
-  const rowStart = Math.floor(-marginY / tile) - 1;
-  const rowEnd = Math.ceil((height + marginY) / tile) + 1;
-
-  const markDots: MarkDot[] = [];
-
-  for (let row = rowStart; row <= rowEnd; row++) {
-    for (let col = colStart; col <= colEnd; col++) {
-      for (const [subX, subY] of MESH_SUBPOSITIONS) {
-        const meshX = (col + subX) * tile;
-        const meshY = (row + subY) * tile;
-        const dx = meshX - cx;
-        const dy = meshY - cy;
-        const screenX = cx + dx * cos - dy * sin;
-        const screenY = cy + dx * sin + dy * cos;
-
-        if (screenX < -tile || screenX > width + tile || screenY < -tile || screenY > height + tile) continue;
-
-        const ink = PARAMS.ink;
-        const atten = faceAttenuationAt(faces, screenX, screenY);
-        if (PARAMS.opacity * atten <= 0.002) continue;
-
-        ctx.save();
-        ctx.translate(screenX, screenY);
-        ctx.rotate(angleRad);
-
-        ctx.save();
-        ctx.translate(0, -0.175 * tile);
-        ctx.globalAlpha = PARAMS.opacity * PARAMS.markOpacity * atten;
-        drawMark(ctx, markSize, ink);
-        ctx.restore();
-        markDots.push(markDotWorldPosition(screenX, screenY, tile, markSize, cos, sin));
-
-        ctx.fillStyle = ink;
-        ctx.font = `${WORD_WEIGHT} ${word.fontSize}px ${FONT_FAMILY}`;
-        ctx.letterSpacing = `${word.letterSpacingPx}px`;
-        ctx.globalAlpha = PARAMS.opacity * atten;
-        ctx.fillText(word.text, 0, 0.06 * tile);
-
-        ctx.font = `${WORD_WEIGHT} ${micro.fontSize}px ${FONT_FAMILY}`;
-        ctx.letterSpacing = `${micro.letterSpacingPx}px`;
-        ctx.globalAlpha = PARAMS.opacity * PARAMS.microOpacity * atten;
-        ctx.fillText(micro.text, 0, 0.135 * tile);
-
-        ctx.restore();
-      }
+  for (let row = 0; row < rowCount; row++) {
+    // Une rangée sur deux décalée d'une demi-période — jamais de colonnes.
+    const shift = row % 2 === 0 ? 0 : -period / 2;
+    const y = (row + 0.5) * rowHeight;
+    for (let col = -1; col < colCount; col++) {
+      ctx.fillText(word.text, col * period + shift, y);
     }
   }
 
-  punchMarkDots(ctx, markDots);
+  // Atténuation autour des visages : on retire de l'alpha déjà posé plutôt
+  // que de moduler chaque occurrence. Une rangée traverse toute la photo ;
+  // moduler l'occurrence entière ferait clignoter des lignes complètes.
+  if (faces.length > 0) {
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "destination-out";
+    for (const face of faces) {
+      const cx = face.cx - offsetX;
+      const cy = face.cy - offsetY;
+      const gradient = ctx.createRadialGradient(cx, cy, face.radius * PARAMS.faceFeather, cx, cy, face.radius);
+      gradient.addColorStop(0, `rgba(0, 0, 0, ${PARAMS.faceAttenuation})`);
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(cx, cy, face.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+  }
 
   return canvas.toBuffer("image/png");
 }
 
+/** Masque plein aux coins arrondis, à la taille de la plaque (blend dest-in). */
+function roundedMask(width: number, height: number, radius: number): Buffer {
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" ry="${radius}" fill="#fff"/></svg>`,
+  );
+}
+
 /**
  * Aperçu de galerie de groupe : la seule protection des photos avant
- * paiement (brief §3 : jamais de flou, le client doit se reconnaître). Le
- * filigrane porte le nom du professionnel et le symbole Linktrip, atténué
- * localement autour des visages détectés pour rester lisible sans jamais
- * couvrir un visage entier.
+ * paiement. Le client doit se reconnaître dans le tas (brief §3), donc la
+ * photo reste lisible — d'où un flou volontairement minime, compensé par un
+ * nom bien présent. Voir PARAMS pour l'arbitrage complet.
  */
 export async function generateGroupPreview(original: Buffer, operatorName: string): Promise<Buffer> {
   const { data: rgb, info } = await sharp(original)
@@ -235,15 +161,55 @@ export async function generateGroupPreview(original: Buffer, operatorName: strin
 
   const { width, height, channels } = info;
 
+  // La maille est dimensionnée sur le côté court, pas sur la largeur : la
+  // grille de la galerie affiche chaque vignette dans une case CARRÉE
+  // (object-fit: cover), le navigateur met donc chaque photo à l'échelle de
+  // son côté le plus court. Baser la maille sur la largeur ferait paraître
+  // le filigrane bien plus "zoomé" sur les paysages que sur les portraits.
+  const basis = Math.min(width, height);
+
+  const margin = Math.round(PARAMS.bandRatio * basis);
+  const plateW = width - 2 * margin;
+  const plateH = height - 2 * margin;
+
+  // Photo minuscule : la plaque n'a plus de sens, on rend la photo telle
+  // quelle plutôt que de produire un aperçu cassé.
+  if (plateW < 8 || plateH < 8) {
+    return sharp(rgb, { raw: { width, height, channels } })
+      .jpeg({ quality: PARAMS.jpegQuality, mozjpeg: true, chromaSubsampling: "4:4:4" })
+      .toBuffer();
+  }
+
   const faces = await detectFaceZones(rgb, width, height, channels, PARAMS.faceRadiusScale).catch((error: unknown) => {
     console.error("[group-watermark] face detection failed, continuing without attenuation", error);
     return [] as FaceZone[];
   });
 
-  const layer = buildWatermarkLayer(width, height, operatorName, faces);
+  const radius = PARAMS.radiusRatio * basis;
+  const mask = roundedMask(plateW, plateH, radius);
+  const sigma = Math.max(0.3, PARAMS.blurRatio * basis);
+
+  // La plaque : la portion centrale de la photo, floutée, puis découpée aux
+  // coins arrondis. Le flou est appliqué AVANT le texte pour que le nom reste
+  // parfaitement net sur un fond adouci.
+  const blurredPlate = await sharp(rgb, { raw: { width, height, channels } })
+    .extract({ left: margin, top: margin, width: plateW, height: plateH })
+    .blur(sigma)
+    .ensureAlpha()
+    .composite([{ input: mask, blend: "dest-in" }])
+    .png()
+    .toBuffer();
+
+  const layer = await sharp(buildPlateLayer(plateW, plateH, basis, operatorName, faces, margin, margin))
+    .composite([{ input: mask, blend: "dest-in" }])
+    .png()
+    .toBuffer();
 
   return sharp(rgb, { raw: { width, height, channels } })
-    .composite([{ input: layer, top: 0, left: 0 }])
+    .composite([
+      { input: blurredPlate, top: margin, left: margin },
+      { input: layer, top: margin, left: margin },
+    ])
     .jpeg({ quality: PARAMS.jpegQuality, mozjpeg: true, chromaSubsampling: "4:4:4" })
     .toBuffer();
 }
