@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:email": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/send-test-email.ts",
-    "purge:storage": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/purge-storage.ts"
+    "purge:storage": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/purge-storage.ts",
+    "watermarks:regenerate": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/regenerate-watermarks.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
