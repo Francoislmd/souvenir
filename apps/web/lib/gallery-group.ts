@@ -18,6 +18,7 @@ export interface GroupDaySummary {
 export interface GroupSlotSummary {
   id: string;
   label: string; // heure, "11 h 00"
+  rangeLabel: string; // "De 9 h 00 à 11 h 00" — voir rangeLabelsFor
   hourBucket: "morning" | "afternoon" | "evening";
   activity: string; // reprise de la sortie parente — un jour peut mélanger plusieurs activités
   activityKey: string; // slug stable pour le filtre
@@ -149,6 +150,39 @@ export async function getOperatorGroupDays(shareToken: string): Promise<{ operat
 }
 
 /**
+ * Le client ne sait pas à quelle heure exacte son groupe est parti : il sait
+ * qu'il est parti « vers 9 h » et rentré « vers 11 h ». On lui montre donc
+ * une plage, pas un instant — la plage allant du départ de son créneau au
+ * départ du suivant, ce qui couvre exactement le temps qu'il a passé dehors.
+ *
+ * Le calcul se fait activité par activité : un même jour peut mélanger du
+ * rafting et du canyoning, et enchaîner les deux dans une seule suite
+ * donnerait des plages qui n'ont existé pour personne.
+ */
+interface SlotTiming {
+  id: string;
+  label: string;
+  activityKey: string;
+}
+
+function rangeLabelsFor(slots: SlotTiming[]): Map<string, string> {
+  const out = new Map<string, string>();
+  const byActivity = new Map<string, SlotTiming[]>();
+  for (const slot of slots) {
+    const list = byActivity.get(slot.activityKey);
+    if (list) list.push(slot);
+    else byActivity.set(slot.activityKey, [slot]);
+  }
+  byActivity.forEach((list) => {
+    list.forEach((slot, i) => {
+      const next = list[i + 1];
+      out.set(slot.id, next ? `De ${slot.label} à ${next.label}` : `À partir de ${slot.label}`);
+    });
+  });
+  return out;
+}
+
+/**
  * Créneaux d'un jour donné (écran 2), tous services confondus — aucune
  * distinction achetée/verrouillée à ce stade, juste de quoi choisir son
  * créneau. Chaque créneau porte l'activité de sa sortie d'origine, un même
@@ -174,7 +208,7 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
   const matching = operator.sorties.filter((sortie) => dateKeyFor(sortie.startsAt) === dateKey);
   if (matching.length === 0) return null;
 
-  const slots: GroupSlotSummary[] = matching
+  const flat = matching
     .flatMap((sortie) => sortie.slots.map((slot) => ({ slot, sortie })))
     .sort((a, b) => a.slot.startsAt.getTime() - b.slot.startsAt.getTime())
     .map(({ slot, sortie }) => ({
@@ -186,6 +220,9 @@ export async function getSlotsForDate(shareToken: string, dateKey: string): Prom
       guide: slot.guide,
       photoCount: slot._count.photos,
     }));
+
+  const ranges = rangeLabelsFor(flat);
+  const slots: GroupSlotSummary[] = flat.map((slot) => ({ ...slot, rangeLabel: ranges.get(slot.id) ?? slot.label }));
 
   return { dateLabel: formatDateFr(matching[0]!.startsAt).toLowerCase(), slots };
 }

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { getBoutiquePhotos } from "@/lib/gallery";
+import { formatSortieTitle, formatWhenFr } from "@/lib/format";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { BoutiqueGallery } from "@/components/gallery/BoutiqueGallery";
 import styles from "./boutique.module.css";
@@ -9,10 +10,6 @@ import styles from "./boutique.module.css";
 // Page publique, non authentifiée — doit toujours refléter les derniers prix
 // et la dernière couleur choisis dans Réglages (critère d'acceptation #7).
 export const dynamic = "force-dynamic";
-
-function formatDateFr(d: Date): string {
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
-}
 
 export default async function GalleryPage({ params }: { params: { token: string } }) {
   const participant = await prisma.participant.findUnique({
@@ -30,21 +27,27 @@ export default async function GalleryPage({ params }: { params: { token: string 
 
   const operator = participant.sortie.operator;
   const bought = participant.order?.status === "succeeded";
-  const purchasedIds = participant.order?.status === "succeeded" ? participant.order.photoIds : [];
-  const purchasedSet = new Set(purchasedIds);
+  const purchasedIds = bought ? participant.order!.photoIds : [];
 
-  const photos = await getBoutiquePhotos({ id: participant.id, sortieId: participant.sortieId, slotId: participant.slotId }, purchasedSet, operator.name);
+  const photos = await getBoutiquePhotos(
+    { id: participant.id, sortieId: participant.sortieId, slotId: participant.slotId },
+    new Set(purchasedIds),
+    operator.name,
+  );
 
   const reducedOfferActive = !!participant.reducedOfferExpiresAt && participant.reducedOfferExpiresAt > new Date();
-  const dateLabel = `Sortie du ${formatDateFr(participant.sortie.startsAt)}${participant.sortie.place ? ` · ${participant.sortie.place}` : ""}`;
 
   return (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
-      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} dateLabel={dateLabel} />
+      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
       <BoutiqueGallery
         token={participant.token}
         participantId={participant.id}
-        clientFirstName={participant.name.split(/\s+/)[0] ?? participant.name}
+        // Le titre dit de quelle sortie il s'agit — c'est ce que le client
+        // vérifie en premier, et ça marche aussi bien pour une galerie
+        // nominative que pour un lien de groupe, où il n'y a pas de prénom.
+        title={formatSortieTitle(participant.sortie.activity, participant.sortie.place)}
+        when={formatWhenFr(participant.sortie.startsAt)}
         photos={photos}
         pricing={{
           pricePhotoCents: operator.pricePhotoCents,

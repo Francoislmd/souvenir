@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOperatorGroupDays } from "@/lib/gallery-group";
+import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { GroupGallery } from "@/components/gallery/GroupGallery";
 import styles from "./collective.module.css";
 
 // Page publique, non authentifiée, protégée par le shareToken non devinable
 // — un seul lien par opérateur, réutilisé par toutes ses sorties GROUPE : le
-// client y choisit son jour, puis son créneau. Doit toujours refléter les
+// client y choisit son créneau, puis ses photos. Doit toujours refléter les
 // derniers créneaux publiés et les derniers prix/couleur choisis dans
 // Réglages (même raison que la boutique individuelle). Le header
 // X-Robots-Tag: noindex est posé par next.config.mjs sur /g/s/:path*, et la
@@ -26,10 +27,9 @@ export default async function GroupGalleryPage({ params }: { params: { shareToke
 
   return (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
       <GroupGallery
         shareToken={params.shareToken}
-        operatorName={operator.name}
-        logoUrl={operator.logoUrl}
         days={data.days}
         pricing={{
           pricePhotoCents: operator.pricePhotoCents,

@@ -33,7 +33,7 @@ export async function getBoutiquePhotos(
   // générer groupPreviewKey pour une poignée de photos (même mécanisme que
   // lib/gallery-group.ts) ; cette route étant sondée toutes les 4s par
   // BoutiqueGallery tant qu'il manque un aperçu, on retente ici à chaque appel.
-  const missing = rawPhotos.filter((p) => !p.groupPreviewKey && !p.isFreeSample && !purchasedSet.has(p.id));
+  const missing = rawPhotos.filter((p) => !p.groupPreviewKey && !purchasedSet.has(p.id));
   const backfilled = await backfillGroupPreviews(
     missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
     operatorName,
@@ -42,8 +42,11 @@ export async function getBoutiquePhotos(
   return Promise.all(
     rawPhotos.map(async (rawP) => {
       const p = backfilled.has(rawP.id) ? { ...rawP, groupPreviewKey: backfilled.get(rawP.id)! } : rawP;
-      const unlocked = p.isFreeSample || purchasedSet.has(p.id);
-      // Verrouillée : même aperçu protégé qu'en mode GROUPE (Photo.groupPreviewKey,
+      // Plus de photo offerte : seul le paiement déverrouille. Les photos
+      // marquées isFreeSample par un envoi antérieur redeviennent des
+      // photos comme les autres — filigranées, et achetables.
+      const unlocked = purchasedSet.has(p.id);
+      // Verrouillée : aperçu protégé (Photo.groupPreviewKey,
       // lib/group-watermark.ts) — et jamais de repli sur previewKey/thumbKey
       // (aperçus nets) qui exposerait la photo avant achat. Tant que
       // groupPreviewKey n'est pas prêt, previewUrl reste absent ;
@@ -60,9 +63,8 @@ export async function getBoutiquePhotos(
       return {
         id: p.id,
         previewUrl,
-        // Jamais d'original pour une photo non achetée et non offerte (critère d'acceptation #4).
+        // Jamais d'original pour une photo non achetée (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
-        isFreeSample: p.isFreeSample,
         isVideo: p.isVideo,
       };
     }),

@@ -27,7 +27,6 @@ export async function createOrUpdatePaymentIntent(params: {
       : {
           sortieId: participant.sortieId,
           status: "READY",
-          isFreeSample: false,
           OR: [{ ownerId: participant.id }, { ownerId: null }],
         },
     select: { id: true },

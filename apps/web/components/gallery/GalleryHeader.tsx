@@ -1,18 +1,20 @@
-import styles from "@/app/g/[token]/boutique.module.css";
+import styles from "@/components/gallery/gallery.module.css";
 
-export function GalleryHeader({
-  operatorName,
-  logoUrl,
-  dateLabel,
-}: {
-  operatorName: string;
-  logoUrl?: string | null;
-  dateLabel: string;
-}) {
+/**
+ * Le logo du prestataire et son nom. Rien d'autre.
+ *
+ * La version précédente posait ici quatre liens de navigation — « Nos
+ * sorties / Mes photos / Tarifs / Aide » — un bouton compte et un panier.
+ * Aucun ne menait nulle part : ce produit n'a ni pages secondaires ni compte
+ * client. Sur la page où quelqu'un s'apprête à taper son numéro de carte,
+ * des liens morts ne sont pas de l'encombrement, c'est un problème de
+ * confiance.
+ */
+export function GalleryHeader({ operatorName, logoUrl }: { operatorName: string; logoUrl?: string | null }) {
   return (
     <div className={styles.top}>
-      <div className={styles["top-in"]}>
-        <span className={styles.oplogo}>
+      <div className={styles.topIn}>
+        <span className={styles.logo}>
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoUrl} alt="" />
@@ -20,42 +22,7 @@ export function GalleryHeader({
             operatorName.slice(0, 2).toUpperCase()
           )}
         </span>
-        <div>
-          <span className={styles.opname}>{operatorName}</span>
-          <span className={styles.opdate}>{dateLabel}</span>
-        </div>
-      </div>
-
-      {/* Desktop uniquement (≥821px, masqué en CSS sous ce seuil) — décoratif :
-          ce produit n'a ni pages secondaires ni compte client (cf CLAUDE.md
-          §3), ces liens ne mènent donc nulle part. */}
-      <nav className={styles.nav}>
-        <a href="#" className={styles.navLink}>
-          Nos sorties
-        </a>
-        <a href="#" className={`${styles.navLink} ${styles.navLinkActive}`}>
-          Mes photos
-        </a>
-        <a href="#" className={styles.navLink}>
-          Tarifs
-        </a>
-        <a href="#" className={styles.navLink}>
-          Aide
-        </a>
-      </nav>
-      <div className={styles.actions}>
-        <button type="button" className={styles.iconBtn} aria-label="Mon compte">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="8" r="3.6" />
-            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
-          </svg>
-        </button>
-        <button type="button" className={styles.iconBtn} aria-label="Panier">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 7h14l-1.2 12.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z" />
-            <path d="M9 7V5.5a3 3 0 0 1 6 0V7" />
-          </svg>
-        </button>
+        <span className={styles.name}>{operatorName}</span>
       </div>
     </div>
   );

@@ -15,6 +15,18 @@ export async function getOriginalSignedUrl(key: string): Promise<string | null> 
   return data.signedUrl;
 }
 
+/**
+ * Télécharge un original en mémoire. Sert au téléchargement groupé
+ * (app/api/g/[token]/zip) : on passe par le service role plutôt que par une
+ * URL signée pour éviter un aller-retour réseau supplémentaire par photo.
+ * L'appelant ne doit jamais en garder plus d'un à la fois en mémoire.
+ */
+export async function downloadOriginal(key: string): Promise<Uint8Array | null> {
+  const { data, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(key);
+  if (error || !data) return null;
+  return new Uint8Array(await data.arrayBuffer());
+}
+
 export async function deleteStorageObjects(bucket: string, keys: string[]): Promise<void> {
   if (keys.length === 0) return;
   await supabaseAdmin.storage.from(bucket).remove(keys);

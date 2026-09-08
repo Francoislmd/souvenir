@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "@/app/g/[token]/boutique.module.css";
-import { quote, applyReducedOffer, type PricingConfig } from "@/lib/pricing";
-import { formatEuros } from "@/lib/format";
+import styles from "@/components/gallery/gallery.module.css";
+import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
+import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
+import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
 import {
   gtmEvent,
@@ -23,14 +24,25 @@ export interface BoutiquePhoto {
   id: string;
   previewUrl: string | null;
   originalUrl: string | null;
-  isFreeSample: boolean;
   isVideo: boolean;
 }
 
+/**
+ * La galerie d'un participant : ses photos, un prix, un bouton.
+ *
+ * Ce client verra cette page une fois, deux minutes, sur son téléphone,
+ * mouillé, sur un parking, ses amis qui attendent. Il se pose trois
+ * questions et pas une de plus : est-ce que ce sont mes photos ? combien ?
+ * comment je les récupère ? La version précédente lui proposait en plus un
+ * carrousel, une pellicule sous le carrousel, un bouton « je veux
+ * celle-ci », un choix de formule et une relance — cinq endroits pour la
+ * même décision.
+ */
 export function BoutiqueGallery({
   token,
   participantId,
-  clientFirstName,
+  title,
+  when,
   photos: initialPhotos,
   pricing,
   packOnly,
@@ -43,7 +55,10 @@ export function BoutiqueGallery({
 }: {
   token: string;
   participantId: string;
-  clientFirstName: string;
+  /** « Rafting, Basse Ardèche » — l'activité et le lieu. */
+  title: string;
+  /** « Samedi 5 septembre, 9 h 30 ». */
+  when: string;
   photos: BoutiquePhoto[];
   pricing: PricingConfig;
   packOnly: boolean;
@@ -57,7 +72,9 @@ export function BoutiqueGallery({
 }) {
   const router = useRouter();
   const [photos, setPhotos] = useState(initialPhotos);
-  const purchasable = useMemo(() => photos.filter((p) => !p.isFreeSample), [photos]);
+  const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; photoIds: string[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   /* ── Mesure e-commerce (GA4 via GTM) ──────────────────────────────
      La galerie EST la boutique : chaque photo est un article, la sélection
@@ -76,7 +93,7 @@ export function BoutiqueGallery({
         item_name: p.isVideo ? "Vidéo de sortie" : "Photo de sortie",
         item_category: p.isVideo ? "video" : "photo",
         // Le prix unitaire ne dépend pas de la photo : c'est le tarif du pro.
-        price: p.isFreeSample ? 0 : toEuros(pricing.pricePhotoCents),
+        price: toEuros(pricing.pricePhotoCents),
         quantity: 1,
         index: i,
       })),
@@ -99,8 +116,6 @@ export function BoutiqueGallery({
     gtmEvent("gallery_open", {
       ...gtmContext,
       photos_total: photos.length,
-      photos_free: photos.length - purchasable.length,
-      photos_paid: purchasable.length,
       pack_only: packOnly,
       reduced_offer: reducedOfferActive,
       already_bought: bought,
@@ -108,7 +123,7 @@ export function BoutiqueGallery({
 
     if (!bought) {
       trackViewItemList({
-        items: toItems(purchasable),
+        items: toItems(photos),
         listId: "gallery_participant",
         listName: "Galerie participant",
         extra: gtmContext,
@@ -156,150 +171,49 @@ export function BoutiqueGallery({
     };
   }, [token, bought, photos]);
 
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [cur, setCur] = useState(0);
-  const curRef = useRef(0);
-
-  // Pack uniquement (Réglages) : pas de sélection à la carte, le client
-  // achète tout le lot — on la maintient toujours pleine.
-  useEffect(() => {
-    if (!packOnly) return;
-    setSelected(new Set(purchasable.map((p) => p.id)));
-  }, [packOnly, purchasable]);
-
-  const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string } | null>(null);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const deckRef = useRef<HTMLDivElement>(null);
-
-  function showToast(msg: string): void {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2400);
-  }
-
-  const q = quote(selected.size, purchasable.length, pricing);
-  const totalCents = reducedOfferActive ? applyReducedOffer(q.totalCents) : q.totalCents;
-
-  // Le filigrane reste tant que l'achat n'est pas payé — la sélection
-  // (avant paiement) ne doit jamais dévoiler la photo en clair.
-  function isLocked(photo: BoutiquePhoto): boolean {
-    return !photo.isFreeSample;
-  }
-
-  function toggle(photoId: string): void {
-    if (packOnly) return;
-    const photo = photos.find((p) => p.id === photoId);
-    if (!photo) return;
-    if (photo.isFreeSample) {
-      showToast("Celle-ci est déjà à vous");
-      return;
-    }
-    const isRemoving = selected.has(photoId);
-    const track = isRemoving ? trackRemoveFromCart : trackAddToCart;
-    track({ items: toItems([photo]), valueCents: pricing.pricePhotoCents, extra: gtmContext });
-
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(photoId)) next.delete(photoId);
-      else next.add(photoId);
-      return next;
-    });
-  }
-
-  /** Delta panier pour les raccourcis de sélection en masse. */
-  function trackBulkSelection(nextIds: string[], source: string): void {
-    const added = nextIds.filter((id) => !selected.has(id));
-    const removed = Array.from(selected).filter((id) => !nextIds.includes(id));
+  function trackSelection(added: string[], removed: string[], source: string): void {
     if (added.length > 0) {
-      trackAddToCart({
-        items: itemsFor(added),
-        valueCents: added.length * pricing.pricePhotoCents,
-        extra: { ...gtmContext, selection_source: source },
-      });
+      trackAddToCart({ items: itemsFor(added), valueCents: added.length * pricing.pricePhotoCents, extra: { ...gtmContext, selection_source: source } });
     }
     if (removed.length > 0) {
-      trackRemoveFromCart({
-        items: itemsFor(removed),
-        valueCents: removed.length * pricing.pricePhotoCents,
-        extra: { ...gtmContext, selection_source: source },
-      });
+      trackRemoveFromCart({ items: itemsFor(removed), valueCents: removed.length * pricing.pricePhotoCents, extra: { ...gtmContext, selection_source: source } });
     }
   }
 
-  function selectN(n: number): void {
-    const next = new Set<string>();
-    for (const p of purchasable.slice(0, n)) next.add(p.id);
-    trackBulkSelection(Array.from(next), `quick_${n}`);
-    setSelected(next);
-  }
-
-  function selectAll(): void {
-    const ids = purchasable.map((p) => p.id);
-    trackBulkSelection(ids, "select_all");
-    gtmEvent("select_all_photos", { ...gtmContext, photos_paid: ids.length });
-    setSelected(new Set(ids));
-  }
-
-  // scrollTo sur le conteneur (plutôt que el.scrollIntoView) — scrollIntoView
-  // remonte la chaîne des ancêtres scrollables pour l'axe vertical, et .deck
-  // ne contraint que overflow-x : au clic sur une flèche, le navigateur
-  // pouvait aussi faire défiler la PAGE pour "révéler" la diapo, ce qui
-  // envoyait l'image (et les flèches, posées dessus) sous le header sticky.
-  function goTo(i: number): void {
-    curRef.current = i;
-    setCur(i);
-    const deck = deckRef.current;
-    const el = deck?.children[i] as HTMLElement | undefined;
-    if (deck && el) deck.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
-  }
-
-  // Navigation clavier de la visionneuse (desktop) — ignorée si le focus est
-  // dans un champ de saisie. curRef (plutôt que `cur` en dépendance) évite
-  // qu'une pression rapide et répétée relise une valeur de fermeture
-  // obsolète avant le re-render.
-  useEffect(() => {
-    if (bought || photos.length === 0) return;
-    function onKeyDown(e: KeyboardEvent): void {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (e.key === "ArrowLeft") goTo((curRef.current - 1 + photos.length) % photos.length);
-      if (e.key === "ArrowRight") goTo((curRef.current + 1) % photos.length);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [bought, photos.length]);
-
-  async function openSheet(): Promise<void> {
-    setCheckoutError(null);
+  async function openCheckout(photoIds: string[]): Promise<void> {
+    if (photoIds.length === 0) return;
+    setError(null);
+    setBusy(true);
     trackBeginCheckout({
-      items: itemsFor(selected),
-      valueCents: totalCents,
-      extra: { ...gtmContext, photos_selected: selected.size, reduced_offer: reducedOfferActive },
+      items: itemsFor(photoIds),
+      valueCents: 0,
+      extra: { ...gtmContext, photos_selected: photoIds.length, reduced_offer: reducedOfferActive },
     });
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantId, photoIds: Array.from(selected) }),
+        body: JSON.stringify({ participantId, photoIds }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        setCheckoutError(data.error === "stripe_not_ready" ? "Les paiements ne sont pas encore activés." : "Le paiement n'est pas disponible pour le moment.");
+        setError(data.error === "stripe_not_ready" ? "Les paiements ne sont pas encore activés." : "Le paiement n'est pas disponible pour le moment.");
         return;
       }
       const data = (await res.json()) as { clientSecret: string; amountCents: number };
       // Le PaymentIntent est créé et la feuille Stripe s'ouvre : à ce stade le
       // client a bien atteint le formulaire de paiement.
-      trackAddPaymentInfo({
-        items: itemsFor(selected),
-        valueCents: data.amountCents,
-        paymentType: "stripe",
-        extra: gtmContext,
+      trackAddPaymentInfo({ items: itemsFor(photoIds), valueCents: data.amountCents, paymentType: "stripe", extra: gtmContext });
+      setCheckout({
+        clientSecret: data.clientSecret,
+        amountCents: data.amountCents,
+        label: photoIds.length >= photos.length ? allLabel(photos.length) : `${photoIds.length} photo${photoIds.length > 1 ? "s" : ""}`,
+        photoIds,
       });
-      setCheckout({ clientSecret: data.clientSecret, amountCents: data.amountCents, label: q.label || "Vos photos" });
     } catch {
-      setCheckoutError("Le réseau a coupé — réessayez.");
+      setError("Le réseau a coupé — réessayez.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -309,14 +223,9 @@ export function BoutiqueGallery({
     // rechargée ou l'événement rejoué.
     trackPurchase({
       transactionId: participantId,
-      items: itemsFor(selected),
-      valueCents: checkout?.amountCents ?? totalCents,
-      extra: {
-        ...gtmContext,
-        photos_purchased: selected.size,
-        reduced_offer: reducedOfferActive,
-        pack_only: packOnly,
-      },
+      items: itemsFor(checkout?.photoIds ?? []),
+      valueCents: checkout?.amountCents ?? 0,
+      extra: { ...gtmContext, photos_purchased: checkout?.photoIds.length ?? 0, reduced_offer: reducedOfferActive, pack_only: packOnly },
     });
 
     setCheckout(null);
@@ -330,233 +239,106 @@ export function BoutiqueGallery({
 
   if (bought) {
     const purchasedSet = new Set(purchasedIds);
-    const visible = photos.filter((p) => p.isFreeSample || purchasedSet.has(p.id));
+    const yours = photos.filter((p) => purchasedSet.has(p.id));
     return (
-      <div className={styles.done}>
-        <div className={styles.ring}>
-          <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-        </div>
-        <h2>Elles sont à vous</h2>
-        <p>
-          {visible.length} photo{visible.length > 1 ? "s" : ""} en pleine résolution. Téléchargez-les depuis cette page.
-        </p>
-        <div className={styles.grid}>
-          {visible.map((p) => (
-            <div key={p.id} className={styles.cell}>
-              {p.originalUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.originalUrl} alt="" className={styles["cell-img"]} />
-              ) : null}
+      <>
+        <div className={styles.done}>
+          <div className={styles.doneHead}>
+            <span className={styles.ok} aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
+            <div className={styles.doneText}>
+              <h1>C&rsquo;est à vous</h1>
+              <p className={styles.sub}>
+                {title}, {when.toLowerCase()}
+              </p>
+              <p className={styles.hint}>
+                {yours.length} photo{yours.length > 1 ? "s" : ""} en pleine résolution, sans filigrane.
+              </p>
             </div>
-          ))}
-        </div>
-        {googleReviewUrl ? (
-          <div className={styles.rev}>
-            <div className={styles.stars}>★★★★★</div>
-            <h3>Vous avez aimé votre sortie ?</h3>
-            <p>Un avis Google prend 30 secondes et aide énormément une petite structure.</p>
-            <a
-              href={googleReviewUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => gtmEvent("review_click", { ...gtmContext, platform: "google" })}
-            >
-              Laisser un avis
+            {/* La promesse de l'écran, enfin tenue : un seul geste. Avant, la
+                page écrivait trois fois « téléchargement immédiat » et
+                n'offrait aucun téléchargement — il fallait appuyer longuement
+                sur chaque photo, une par une. */}
+            <a className={styles.cta} href={`/api/g/${token}/zip`} style={{ marginTop: 20 }}>
+              <DownloadIcon />
+              Tout télécharger
             </a>
           </div>
-        ) : null}
-      </div>
+
+          <div className={styles.doneGrid}>
+            {yours.map((p) => (
+              <span key={p.id} className={styles.doneTile}>
+                {p.originalUrl ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.originalUrl} alt="" />
+                    <a className={styles.save} href={`${p.originalUrl}&download=`} aria-label="Télécharger cette photo">
+                      <DownloadIcon size={15} />
+                    </a>
+                  </>
+                ) : null}
+              </span>
+            ))}
+          </div>
+
+          {googleReviewUrl ? (
+            <div className={styles.card}>
+              <span className={styles.cardText}>
+                <span className={styles.cardT}>Vous avez aimé votre sortie ?</span>
+                <span className={styles.cardD}>Un avis Google prend trente secondes et change beaucoup pour une petite structure.</span>
+              </span>
+              <a
+                className={styles.quiet}
+                href={googleReviewUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => gtmEvent("review_click", { ...gtmContext, platform: "google" })}
+              >
+                Laisser un avis
+              </a>
+            </div>
+          ) : null}
+        </div>
+
+        <p className={styles.legal}>
+          Vos photos restent disponibles 90 jours, puis sont supprimées. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a>.
+        </p>
+        <div className={styles.powered}>
+          Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className={styles.g3}>
-      <div className={styles.hi}>
-        <h1>{clientFirstName}, vos photos sont là</h1>
-        <p>
-          {photos.length - purchasable.length > 0 ? <b>{photos.length - purchasable.length} offertes</b> : null}
-          {photos.length - purchasable.length > 0 ? " · " : ""}
-          {purchasable.length} à débloquer
-        </p>
+    <>
+      <div className={styles.head}>
+        <h1>{title}</h1>
+        <p className={styles.sub}>{when}</p>
+        <p className={styles.hint}>{packOnly ? "Toutes vos photos, en une fois." : "Touchez celles que vous voulez, ou prenez tout."}</p>
       </div>
 
-      {!packOnly && selected.size > 0 ? (
-        <div className={styles.count}>
-          <span className={styles.c}>
-            {selected.size} photo{selected.size > 1 ? "s" : ""} choisie{selected.size > 1 ? "s" : ""}
-          </span>
-          <span className={styles.sp} />
-          <button className={styles.clr} onClick={() => setSelected(new Set())}>
-            Tout enlever
-          </button>
-        </div>
-      ) : null}
+      <PhotoPicker
+        photos={photos}
+        pricing={pricing}
+        packOnly={packOnly}
+        allLabel={allLabel}
+        unitSuffix="l'unité"
+        error={error}
+        busy={busy}
+        discount={reducedOfferActive ? applyReducedOffer : undefined}
+        onCheckout={(ids) => void openCheckout(ids)}
+        onSelectionChange={trackSelection}
+      />
 
-      <div className={styles.deckWrap}>
-        <div className={styles.deck} ref={deckRef}>
-          {photos.map((photo, i) => {
-            const locked = isLocked(photo);
-            const on = selected.has(photo.id);
-            return (
-              <div
-                key={photo.id}
-                className={`${styles.slide} ${on ? styles.on : ""}`}
-                onClick={() => {
-                  setCur(i);
-                  toggle(photo.id);
-                }}
-              >
-                {photo.previewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photo.previewUrl} alt="" className={styles["slide-img"]} />
-                ) : null}
-                {locked ? (
-                  <span className={styles.lock} aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="5" y="11" width="14" height="10" rx="2" />
-                      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                    </svg>
-                  </span>
-                ) : null}
-                {photo.isFreeSample ? <span className={styles.tag}>Offerte</span> : null}
-                <span className={styles.grad} />
-                <span className={styles.num}>
-                  {i + 1} / {photos.length}
-                </span>
-                <span className={styles.chosen}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                  Choisie
-                </span>
-                <button
-                  type="button"
-                  aria-label="Agrandir"
-                  className={styles.zoom}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightbox(i);
-                  }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round">
-                    <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
-                  </svg>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        {photos.length > 1 ? (
-          <>
-            <button type="button" className={`${styles.navArrow} ${styles.prev}`} aria-label="Photo précédente" onClick={() => goTo((curRef.current - 1 + photos.length) % photos.length)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 5l-7 7 7 7" />
-              </svg>
-            </button>
-            <button type="button" className={`${styles.navArrow} ${styles.next}`} aria-label="Photo suivante" onClick={() => goTo((curRef.current + 1) % photos.length)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        ) : null}
-      </div>
-
-      {!packOnly ? (
-        <WantButton photo={photos[cur]} selected={photos[cur] ? selected.has(photos[cur].id) : false} pricePhotoCents={pricing.pricePhotoCents} onToggle={() => photos[cur] && toggle(photos[cur].id)} />
-      ) : null}
-
-      <div className={styles.film}>
-        {photos.map((photo, i) => {
-          const on = selected.has(photo.id);
-          return (
-            <button
-              key={photo.id}
-              type="button"
-              className={`${styles.fr} ${on ? styles.on : ""} ${i === cur ? styles.cur : ""}`}
-              onClick={() => goTo(i)}
-            >
-              {photo.previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.previewUrl} alt="" className={styles["fr-img"]} />
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className={styles.buyCol}>
-        <div className={styles.offers}>
-          <div className={styles.lbl}>Votre formule</div>
-          {!packOnly ? (
-            <OfferRow
-              active={selected.size === 1}
-              title="À la photo"
-              hint="Vous ne prenez que celles que vous aimez"
-              price={pricing.pricePhotoCents}
-              unit="la photo"
-              onClick={() => selectN(1)}
-            />
-          ) : null}
-          <OfferRow
-            active={selected.size === purchasable.length && purchasable.length > 0}
-            best
-            title="Toutes vos photos"
-            hint={`${purchasable.length} photos`}
-            price={pricing.priceAllCents}
-            unit={purchasable.length > 0 ? `${formatEuros(Math.round(pricing.priceAllCents / purchasable.length))} la photo` : ""}
-            onClick={selectAll}
-          />
-
-          <Nudge selectedCount={selected.size} paidTotal={purchasable.length} pricing={pricing} onSelectAll={selectAll} />
-        </div>
-
-        {checkoutError ? <p style={{ margin: 0, fontSize: ".85rem", color: "#dc2626" }}>{checkoutError}</p> : null}
-
-        <div className={`${styles.buybar} ${selected.size > 0 ? styles.on : ""}`}>
-          <div className={styles["bb-l"]}>
-            <span className={styles.n}>{q.label}</span>
-            <span className={styles.sp} />
-            {q.fullCents > totalCents ? <span className={styles.old}>{formatEuros(q.fullCents)}</span> : null}
-            <span className={styles.tot}>{formatEuros(totalCents)}</span>
-          </div>
-          <button type="button" className={styles.pay} onClick={openSheet} disabled={selected.size === 0}>
-            Récupérer mes photos
-          </button>
-        </div>
-
-        {googleReviewUrl ? (
-          <div className={styles.free}>
-            <div className={styles.ic}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E8460C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 17.8 6.2 21l1.1-6.5L2.6 9.9l6.5-.9L12 3l2.9 6 6.5.9-4.7 4.6 1.1 6.5z" />
-              </svg>
-            </div>
-            <div>
-              <div className={styles.ft}>Un avis Google, ça compte énormément</div>
-              <div className={styles.fh}>Aidez cette petite structure — 30 secondes, ça change beaucoup pour elle.</div>
-              <a href={googleReviewUrl} target="_blank" rel="noreferrer">
-                Laisser un avis →
-              </a>
-            </div>
-          </div>
-        ) : null}
-
-        <div className={styles.trust}>
-          <TrustLine text="Téléchargement immédiat, en pleine résolution, sans filigrane." />
-          <TrustLine text="Paiement sécurisé. Aucun compte à créer." />
-          <TrustLine text="Votre lien reste actif 90 jours." />
-        </div>
-      </div>
-
-      <div className={styles.legal}>
-        Vos photos sont conservées 90 jours puis supprimées automatiquement. Vous pouvez demander leur suppression
-        immédiate à tout moment — <a href={`/g/${token}/supprimer`}>supprimer mes photos</a>.
-      </div>
-
-      <div className={styles.poweredBy}>
+      <p className={styles.legal}>
+        Vos photos sont conservées 90 jours puis supprimées automatiquement. Vous pouvez demander leur suppression immédiate à tout moment —{" "}
+        <a href={`/g/${token}/supprimer`}>supprimer mes photos</a>.
+      </p>
+      <div className={styles.powered}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
       </div>
 
@@ -569,146 +351,10 @@ export function BoutiqueGallery({
           onClose={() => setCheckout(null)}
         />
       ) : null}
-
-      {lightbox !== null ? (
-        <div className={styles.box} onClick={() => setLightbox(null)}>
-          <div className={styles["box-ph"]}>
-            {photos[lightbox]?.previewUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photos[lightbox]!.previewUrl!} alt="" className={styles["box-img"]} />
-            ) : null}
-            {photos[lightbox] && isLocked(photos[lightbox]!) ? (
-              <span className={styles.lock} aria-hidden="true">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="5" y="11" width="14" height="10" rx="2" />
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                </svg>
-              </span>
-            ) : null}
-          </div>
-          <button className={styles.cl} aria-label="Fermer">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-          <div className={styles.hint}>Touchez pour fermer</div>
-        </div>
-      ) : null}
-
-      <div className={`${styles.toast} ${toast ? styles.on : ""}`}>{toast}</div>
-    </div>
+    </>
   );
 }
 
-function WantButton({
-  photo,
-  selected,
-  pricePhotoCents,
-  onToggle,
-}: {
-  photo: BoutiquePhoto | undefined;
-  selected: boolean;
-  pricePhotoCents: number;
-  onToggle: () => void;
-}) {
-  if (!photo) return null;
-  if (photo.isFreeSample) {
-    return (
-      <button type="button" className={`${styles.want} ${styles.free}`}>
-        Celle-ci est déjà à vous
-      </button>
-    );
-  }
-  if (selected) {
-    return (
-      <button type="button" className={`${styles.want} ${styles.picked}`} onClick={onToggle}>
-        Choisie · appuyez pour retirer
-      </button>
-    );
-  }
-  return (
-    <button type="button" className={styles.want} onClick={onToggle}>
-      Je veux celle-là · {formatEuros(pricePhotoCents)}
-    </button>
-  );
-}
-
-function OfferRow({
-  active,
-  best,
-  title,
-  hint,
-  price,
-  unit,
-  onClick,
-}: {
-  active: boolean;
-  best?: boolean;
-  title: string;
-  hint: string;
-  price: number;
-  unit: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className={`${styles.of} ${active ? styles.on : ""}`} onClick={onClick}>
-      {best ? <span className={styles.best}>Le plus pris</span> : null}
-      <span className={styles.rad}>
-        <i />
-      </span>
-      <span className={styles.oi}>
-        <span className={styles.ot}>{title}</span>
-        <span className={styles.oh}>{hint}</span>
-      </span>
-      <span className={styles.opz}>
-        <span className={styles.pz}>{formatEuros(price)}</span>
-        <span className={styles.unit}>{unit}</span>
-      </span>
-    </button>
-  );
-}
-
-function Nudge({
-  selectedCount,
-  paidTotal,
-  pricing,
-  onSelectAll,
-}: {
-  selectedCount: number;
-  paidTotal: number;
-  pricing: PricingConfig;
-  onSelectAll: () => void;
-}) {
-  if (selectedCount === 0 || selectedCount >= paidTotal) return null;
-  const q = quote(selectedCount, paidTotal, pricing);
-
-  if (q.totalCents >= pricing.priceAllCents) {
-    return (
-      <div className={styles.nudge}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}>
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-        <div>
-          <div className={styles.nt}>Prenez tout, c&rsquo;est moins cher</div>
-          <div className={styles.nh}>
-            Vos {selectedCount} photos coûtent {formatEuros(q.totalCents)}. Toutes reviennent à {formatEuros(pricing.priceAllCents)}.
-          </div>
-          <button onClick={onSelectAll}>Tout prendre pour {formatEuros(pricing.priceAllCents)}</button>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-function TrustLine({ text }: { text: string }) {
-  return (
-    <div className={styles.tr}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 6 9 17l-5-5" />
-      </svg>
-      {text}
-    </div>
-  );
+function allLabel(count: number): string {
+  return count === 1 ? "Votre photo" : `Les ${count} photos`;
 }

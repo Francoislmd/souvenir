@@ -1,0 +1,800 @@
+/* Feuille unique des écrans client (boutique individuelle et galerie de
+   groupe). Une seule, parce que les deux parcours montrent exactement la
+   même chose au client : des photos, un prix, un bouton. Le peu qui diffère
+   — le choix du créneau — est en bas de ce fichier.
+
+   Le cadre de page (.page) reste dans les feuilles des routes : c'est lui
+   qui porte --op, la couleur du prestataire. */
+
+/* ── L'en-tête ─────────────────────────────────────────────────────────
+   Le logo, le nom, rien d'autre. La version précédente y posait quatre
+   liens de navigation qui ne menaient nulle part, un bouton compte et un
+   panier : sur la page où quelqu'un s'apprête à taper son numéro de carte,
+   ce n'était pas de l'encombrement mais un problème de confiance. */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(251, 250, 249, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.topIn {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 13px 20px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--op);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.name {
+  font-size: 0.97rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Le titre : ce que le client vérifie en premier ────────────────────
+   L'activité et le lieu, puis le créneau. Ça marche aussi bien pour une
+   galerie nominative que pour un lien de groupe, où il n'y a pas de prénom
+   à afficher. */
+.head {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 22px 20px 16px;
+}
+.head h1 {
+  margin: 0;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.56rem;
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 1.15;
+}
+.sub {
+  margin: 9px 0 0;
+  font-size: 0.97rem;
+  color: var(--ink-2);
+}
+.hint {
+  margin: 6px 0 0;
+  font-size: 0.94rem;
+  color: var(--ink-4);
+  line-height: 1.5;
+}
+
+/* ── La grille ─────────────────────────────────────────────────────────
+   Un seul geste sur une vignette : toucher choisit. Le bouton « agrandir »
+   n'apparaît qu'au survol, donc jamais sur un écran tactile, où deux
+   actions sur le même objet obligeraient à viser. */
+.grid {
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 20px;
+}
+.tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--line-2);
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.07);
+  cursor: pointer;
+  transition: box-shadow 0.14s, transform 0.14s;
+  -webkit-touch-callout: none;
+}
+.tile:active {
+  transform: scale(0.985);
+}
+.tileOn {
+  box-shadow: 0 0 0 3px var(--op);
+}
+.tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--op);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: 0.14s;
+}
+.tileOn .check {
+  opacity: 1;
+  transform: none;
+}
+.zoom {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(13, 12, 18, 0.5);
+  color: #fff;
+  display: none;
+  place-items: center;
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover .zoom {
+    display: grid;
+  }
+}
+
+/* Réservé sous la barre d'achat, qui est posée par-dessus la page. */
+.pad {
+  height: 158px;
+}
+
+/* ── La barre d'achat ──────────────────────────────────────────────────
+   Un seul endroit pour décider, toujours au même endroit, jamais
+   désactivé : sans rien choisir, elle propose déjà ce que presque tout le
+   monde prend. */
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -1px 0 rgba(22, 19, 32, 0.07);
+}
+.barIn {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 14px 20px calc(22px + env(safe-area-inset-bottom));
+}
+.barRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 11px;
+}
+.barText {
+  flex: 1;
+}
+.barLabel {
+  display: block;
+  font-size: 0.97rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+/* Sur téléphone, la relance « soit 6 € de plus » vit sous le bouton (.more).
+   Sur ordinateur il y a la place pour la poser en seconde ligne, à gauche —
+   d'où deux nœuds plutôt qu'un, chacun caché sur l'autre format. */
+.barSub {
+  display: none;
+}
+.barSide {
+  flex: 0 0 auto;
+  font-size: 0.94rem;
+  color: var(--ink-4);
+}
+.clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 400;
+  color: var(--ink-4);
+  cursor: pointer;
+}
+.clear:hover {
+  color: var(--ink-2);
+}
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: 0;
+  font-family: inherit;
+  font-size: 1.06rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #fff;
+  background: var(--op);
+  box-shadow: 0 1px 2px rgba(20, 19, 32, 0.14), 0 6px 16px -6px rgba(20, 19, 32, 0.25);
+  cursor: pointer;
+}
+.cta:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* Le seul argument de vente de l'écran, et il est vrai : le moteur de prix
+   plafonne le total au prix du lot. Écrit une fois, sous le bouton. */
+.more {
+  margin: 11px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.more b {
+  font-weight: 600;
+  color: var(--ink);
+}
+.moreBtn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--op);
+  cursor: pointer;
+}
+.error {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: #dc2626;
+}
+
+/* ── Une photo en grand ────────────────────────────────────────────────*/
+.box {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #0d0c12;
+  display: flex;
+  flex-direction: column;
+}
+.boxTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  flex: 0 0 auto;
+}
+.boxCount {
+  flex: 1;
+  font-size: 0.94rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+.boxClose {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.boxPh {
+  flex: 1;
+  min-height: 0;
+  margin: 0 16px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.boxPh img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.boxFoot {
+  flex: 0 0 auto;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+.boxNote {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── C'est à vous ──────────────────────────────────────────────────────*/
+.done {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 26px 20px 40px;
+}
+.doneHead {
+  text-align: center;
+}
+.ok {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.doneText {
+  min-width: 0;
+}
+.doneHead h1 {
+  margin: 16px 0 0;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.56rem;
+  font-weight: 600;
+  letter-spacing: -0.032em;
+}
+.doneGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 22px 0 0;
+}
+.doneTile {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--line-2);
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.07);
+}
+.doneTile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.save {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+}
+.card {
+  margin: 24px 0 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.cardT {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.cardD {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  margin-top: 13px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--line-2);
+  cursor: pointer;
+}
+
+/* ── Bas de page ───────────────────────────────────────────────────────*/
+.legal {
+  max-width: 920px;
+  margin: 20px auto 0;
+  padding: 0 20px;
+  font-size: 0.81rem;
+  color: var(--ink-4);
+  line-height: 1.6;
+}
+.legal a,
+.legal button {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.powered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 26px 20px 34px;
+  font-size: 0.78rem;
+  color: var(--ink-4);
+}
+
+/* ── La feuille de paiement ────────────────────────────────────────────*/
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bd {
+  position: absolute;
+  inset: 0;
+  background: rgba(22, 19, 32, 0.44);
+}
+.pn {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 26px 26px 0 0;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom));
+  box-shadow: 0 -18px 44px rgba(20, 19, 32, 0.16);
+}
+.grab {
+  display: block;
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: #e6e3ea;
+  margin: 0 auto 20px;
+}
+.sum {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.sum span {
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.24rem;
+  font-weight: 600;
+  letter-spacing: -0.028em;
+}
+.sum b {
+  font-size: 1.36rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.fld {
+  margin-bottom: 16px;
+}
+.fld label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.inp {
+  width: 100%;
+  height: 52px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.inp:focus {
+  outline: 2px solid var(--op);
+  outline-offset: -1px;
+}
+.inpErr {
+  border-color: #dc2626;
+}
+.why {
+  margin-top: 7px;
+  font-size: 0.84rem;
+  color: var(--ink-4);
+  line-height: 1.5;
+}
+.cancel {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.fine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 14px;
+  font-size: 0.84rem;
+  color: var(--ink-4);
+}
+
+/* ── Le lien de groupe : un écran, pas trois ───────────────────────────
+   Le jour est déjà sur aujourd'hui, puisqu'on scanne le QR au retour et pas
+   trois semaines plus tard. Les créneaux sont juste en dessous. */
+.chips {
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+.chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--line-2);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 0.97rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chipOn {
+  background: var(--ink);
+  color: #fff;
+}
+.slots {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 15px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.slotRow:last-child {
+  border-bottom: 0;
+}
+.slotIn {
+  flex: 1;
+}
+.slotH {
+  display: block;
+  font-size: 1.03rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.slotN {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+}
+.note {
+  max-width: 920px;
+  margin: 26px auto 0;
+  padding: 0 20px;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+  line-height: 1.55;
+}
+.empty {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px 20px;
+  font-size: 0.94rem;
+  color: var(--ink-3);
+  line-height: 1.55;
+}
+
+/* ── Ordinateur ────────────────────────────────────────────────────────
+   Mêmes écrans, plus larges : quatre colonnes, et la barre d'achat devient
+   une ligne. Aucune navigation ne réapparaît. */
+@media (min-width: 821px) {
+  .topIn {
+    padding: 0 40px;
+    height: 70px;
+    gap: 12px;
+  }
+  .logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+  }
+  .name {
+    font-size: 1rem;
+  }
+  .head {
+    padding: 34px 40px 26px;
+  }
+  .head h1 {
+    font-size: 1.88rem;
+    line-height: 1.14;
+  }
+  .sub {
+    margin-top: 10px;
+    font-size: 1rem;
+  }
+  .hint {
+    font-size: 0.97rem;
+  }
+  .grid,
+  .doneGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .grid {
+    padding: 0 40px;
+  }
+  .pad {
+    height: 120px;
+  }
+  .barIn {
+    padding: 0 40px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .barRow {
+    flex: 1;
+    margin: 0;
+    align-items: center;
+    gap: 20px;
+  }
+  .barLabel {
+    font-size: 1.03rem;
+  }
+  .barSub {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.9rem;
+    color: var(--ink-4);
+  }
+  .barSide {
+    display: none;
+  }
+  .cta {
+    width: auto;
+    padding: 0 26px;
+  }
+  .more {
+    display: none;
+  }
+  .clear {
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: var(--line-2);
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .done {
+    padding: 34px 40px 40px;
+  }
+  .doneHead {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+  }
+  .ok {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+  }
+  .doneText {
+    flex: 1;
+  }
+  .doneHead h1 {
+    margin: 0;
+    font-size: 1.62rem;
+  }
+  .doneHead .cta {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+  .legal,
+  .note,
+  .chips,
+  .slots,
+  .empty {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+  .card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 30px;
+    padding: 24px 0 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: none;
+  }
+  .cardText {
+    flex: 1;
+  }
+  .quiet {
+    margin-top: 0;
+  }
+}

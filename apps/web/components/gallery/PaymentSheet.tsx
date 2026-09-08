@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe-client";
 import { formatEuros } from "@/lib/format";
-import styles from "@/app/g/[token]/boutique.module.css";
+import styles from "@/components/gallery/gallery.module.css";
+import { LockIcon } from "@/components/gallery/icons";
 
-function PaymentForm({ onSuccess, onClose }: { onSuccess: () => void; onClose: () => void }) {
+function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number; onSuccess: () => void; onClose: () => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -46,12 +47,15 @@ function PaymentForm({ onSuccess, onClose }: { onSuccess: () => void; onClose: (
 
   return (
     <>
+      {/* Apple Pay et Google Pay arrivent en tête de l'accordéon quand
+          l'appareil les propose : sur un parking, mouillé, c'est la
+          différence entre payer et renoncer. */}
       <PaymentElement options={{ layout: "accordion" }} />
-      {error ? <p style={{ marginTop: 12, fontSize: ".85rem", color: "#dc2626" }}>{error}</p> : null}
-      <button type="button" onClick={submit} disabled={loading} className={styles.pay} style={{ marginTop: 16 }}>
-        {loading ? "Paiement en cours…" : "Payer"}
+      {error ? <p className={styles.error} style={{ marginTop: 12 }}>{error}</p> : null}
+      <button type="button" onClick={submit} disabled={loading} className={styles.cta} style={{ marginTop: 16 }}>
+        {loading ? "Paiement en cours…" : `Payer ${formatEuros(amountCents)}`}
       </button>
-      <button type="button" onClick={onClose} style={{ marginTop: 8, width: "100%", padding: "8px 0", textAlign: "center", fontSize: ".85rem", fontWeight: 500, color: "var(--ink-3)" }}>
+      <button type="button" onClick={onClose} className={styles.cancel}>
         Annuler
       </button>
     </>
@@ -77,16 +81,18 @@ export function PaymentSheet({
     <div className={styles.sheet}>
       <div className={styles.bd} onClick={onClose} />
       <div className={styles.pn}>
-        <div className={styles.grab} />
-        <h3>Paiement</h3>
+        <span className={styles.grab} />
         <div className={styles.sum}>
           <span>{label}</span>
           <b>{formatEuros(amountCents)}</b>
         </div>
         <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-          <PaymentForm onSuccess={onSuccess} onClose={onClose} />
+          <PaymentForm amountCents={amountCents} onSuccess={onSuccess} onClose={onClose} />
         </Elements>
-        <div className={styles.fine}>Paiement traité de façon sécurisée.</div>
+        <div className={styles.fine}>
+          <LockIcon />
+          Paiement sécurisé par Stripe · aucun compte à créer
+        </div>
       </div>
     </div>
   );
