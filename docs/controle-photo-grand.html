@@ -1,3 +1,31 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrôle — photo en grand</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}button{font:inherit;color:inherit}
+.page {
+  --op-soft: color-mix(in srgb, var(--op) 10%, #fff);
+  --ink: #161320;
+  --ink-2: #413c4e;
+  --ink-3: #726c80;
+  --ink-4: #a6a0b2;
+  --line: #ece9ef;
+  --line-2: #f4f2f6;
+  --bg: #fbfaf9;
+  --ok: #16a34a;
+  --ok-soft: #eaf7ef;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.page * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+
 /* Feuille unique des écrans client (boutique individuelle et galerie de
    groupe). Une seule, parce que les deux parcours montrent exactement la
    même chose au client : des photos, un prix, un bouton. Le peu qui diffère
@@ -66,7 +94,7 @@
 }
 .head h1 {
   margin: 0;
-  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif;
   font-size: 1.56rem;
   font-weight: 600;
   letter-spacing: -0.032em;
@@ -377,7 +405,7 @@
 }
 .doneHead h1 {
   margin: 16px 0 0;
-  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif;
   font-size: 1.56rem;
   font-weight: 600;
   letter-spacing: -0.032em;
@@ -526,7 +554,7 @@
   margin-bottom: 20px;
 }
 .sum span {
-  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif;
   font-size: 1.24rem;
   font-weight: 600;
   letter-spacing: -0.028em;
@@ -872,3 +900,16 @@
     margin-top: 0;
   }
 }
+
+</style></head><body>
+<div class="page" style="--op:#2fb7a0">
+  <div class="box">
+    <div class="boxTop"><span class="boxCount">3 sur 7</span><button class="boxClose">✕</button></div>
+    <div class="boxPh"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='1200' height='800' fill='%23456a86'/><rect x='6' y='6' width='1188' height='788' fill='none' stroke='%23ffdd55' stroke-width='12'/><circle cx='60' cy='60' r='34' fill='%23ffdd55'/><circle cx='1140' cy='740' r='34' fill='%23ffdd55'/><text x='600' y='430' font-family='sans-serif' font-size='90' fill='%23ffffff' text-anchor='middle'>photo entière ?</text></svg>" alt=""></div>
+    <div class="boxFoot">
+      <button class="cta">✓ Choisir cette photo · 5 €</button>
+      <p class="boxNote">Le filigrane disparaît après le paiement.</p>
+    </div>
+  </div>
+</div>
+</body></html>
