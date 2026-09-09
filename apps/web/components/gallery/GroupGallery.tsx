@@ -100,7 +100,7 @@ export function GroupGallery({
         <h1>{slot.activity}</h1>
         <p className={styles.sub}>
           {dayLabel ? `${dayLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
-          {slot.rangeLabel.toLowerCase()}
+          {slot.label}
         </p>
         <p className={styles.hint}>
           {packOnly ? "Toutes les photos du créneau, en une fois." : "Touchez celles où vous êtes, ou prenez tout."}{" "}

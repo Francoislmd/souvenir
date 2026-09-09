@@ -12,6 +12,12 @@ import type { GroupDaySummary, GroupSlotSummary } from "@/lib/gallery-group";
  * sortie, sur le parking, pas trois semaines plus tard : le jour est déjà
  * connu. Il devient donc une pastille, préréglée sur le plus récent, et les
  * créneaux sont juste en dessous.
+ *
+ * Une ligne = une heure de départ, puis l'activité. On affichait avant une
+ * plage (« De 9 h 00 à 11 h 00 », « À partir de 11 h 00 ») : deux formats
+ * différents dans la même liste, des heures qui ne commencent pas au même
+ * endroit, et une phrase à lire là où une heure suffit. L'heure est donc
+ * seule, en colonne, alignée sur des chiffres de même largeur.
  */
 export function SessionRetrieval({
   shareToken,
@@ -91,13 +97,22 @@ export function SessionRetrieval({
         <div className={styles.slots}>
           {slots.map((slot) => (
             <button key={slot.id} type="button" className={styles.slotRow} onClick={() => onPick(slot, activeDay?.dateLabel ?? "")}>
-              <span className={styles.slotIn}>
-                <span className={styles.slotH}>{slot.rangeLabel}</span>
-                <span className={styles.slotN}>
-                  {slot.activity} · {slot.photoCount} photo{slot.photoCount > 1 ? "s" : ""}
-                </span>
+              <span className={styles.slotH}>{slot.label}</span>
+              <span className={styles.slotA}>{slot.activity}</span>
+              <span className={styles.slotN}>
+                {slot.photoCount} photo{slot.photoCount > 1 ? "s" : ""}
               </span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ink-4)", flex: "0 0 auto" }}>
+              <svg
+                className={styles.slotGo}
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M9.5 5 16 12l-6.5 7" />
               </svg>
             </button>

@@ -1,3 +1,36 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrôle — liste des créneaux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+button{font:inherit;color:inherit}
+.page {
+  --op-soft: color-mix(in srgb, var(--op) 10%, #fff);
+  --ink: #161320;
+  --ink-2: #413c4e;
+  --ink-3: #726c80;
+  --ink-4: #a6a0b2;
+  --line: #ece9ef;
+  --line-2: #f4f2f6;
+  --bg: #fbfaf9;
+  --ok: #16a34a;
+  --ok-soft: #eaf7ef;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.page * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+
 /* Feuille unique des écrans client (boutique individuelle et galerie de
    groupe). Une seule, parce que les deux parcours montrent exactement la
    même chose au client : des photos, un prix, un bouton. Le peu qui diffère
@@ -66,7 +99,7 @@
 }
 .head h1 {
   margin: 0;
-  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif;
   font-size: 1.56rem;
   font-weight: 600;
   letter-spacing: -0.032em;
@@ -362,7 +395,7 @@
 }
 .doneHead h1 {
   margin: 16px 0 0;
-  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif;
   font-size: 1.56rem;
   font-weight: 600;
   letter-spacing: -0.032em;
@@ -511,7 +544,7 @@
   margin-bottom: 20px;
 }
 .sum span {
-  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif;
   font-size: 1.24rem;
   font-weight: 600;
   letter-spacing: -0.028em;
@@ -857,3 +890,25 @@
     margin-top: 0;
   }
 }
+
+</style></head>
+<body>
+<div class="page" style="--op:#e2603a">
+  <header class="top"><div class="topIn"><span class="logo">DS</span><span class="name">Deeptown School Surf</span></div></header>
+  <div class="head"><h1>Quel créneau ?</h1><p class="hint">Choisissez l’heure à laquelle vous êtes parti. Vos photos sont dedans.</p></div>
+  <div class="chips"><button type="button" class="chip ">Hier</button>
+<button type="button" class="chip ">Lun. 7</button>
+<button type="button" class="chip chipOn">Dim. 6</button>
+<button type="button" class="chip ">Sam. 5</button>
+<button type="button" class="chip ">Jeu. 3</button>
+<button type="button" class="chip ">Mar. 1</button></div>
+  <div class="slots"><button type="button" class="slotRow"><span class="slotH">01 h 00</span><span class="slotA">Canyoning</span><span class="slotN">7 photos</span><svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button>
+<button type="button" class="slotRow"><span class="slotH">08 h 00</span><span class="slotA">Rafting</span><span class="slotN">6 photos</span><svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button>
+<button type="button" class="slotRow"><span class="slotH">11 h 30</span><span class="slotA">Canyoning</span><span class="slotN">14 photos</span><svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button>
+<button type="button" class="slotRow"><span class="slotH">14 h 00</span><span class="slotA">Via ferrata</span><span class="slotN">3 photos</span><svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button>
+<button type="button" class="slotRow"><span class="slotH">17 h 45</span><span class="slotA">Rafting</span><span class="slotN">21 photos</span><svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button></div>
+  <p class="note">Un doute sur l’horaire ? Ouvrez le créneau le plus proche : vous reconnaîtrez vos photos tout de suite.</p>
+  <div class="legal">Une photo de vous que vous ne voulez pas ici ? <a href="#">Demandez son retrait</a>, sans justification.</div>
+  <div class="powered">Propulsé par <b>linktrip</b></div>
+</div>
+</body></html>
