@@ -162,8 +162,16 @@
 .tile:active {
   transform: scale(0.985);
 }
-.tileOn {
-  box-shadow: 0 0 0 3px var(--op);
+/* Choisie : la pastille se remplit et la photo s'éclaircit d'un souffle.
+   Le cadre de 3 px qui entourait la vignette a été retiré : sur téléphone,
+   où la photo occupe presque tout l'écran, il se lisait comme un défaut
+   d'affichage plutôt que comme un choix. */
+.tileOn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.14);
 }
 .tile img {
   position: absolute;
@@ -175,40 +183,56 @@
   user-select: none;
   -webkit-user-drag: none;
 }
+/* La pastille est là dès le départ, vide : c'est elle qui dit que la photo
+   se touche. Sur un écran tactile, aucun survol ne peut le faire deviner. */
 .check {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
+  z-index: 2;
+  top: 9px;
+  right: 9px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
-  background: var(--op);
+  background: rgba(13, 12, 18, 0.34);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.92);
   color: #fff;
   display: grid;
   place-items: center;
+  transition: background 0.14s;
+}
+.check svg {
   opacity: 0;
-  transform: scale(0.7);
-  transition: 0.14s;
 }
 .tileOn .check {
-  opacity: 1;
-  transform: none;
+  background: var(--op);
+  box-shadow: none;
 }
+.tileOn .check svg {
+  opacity: 1;
+}
+/* Voir la photo en grand. Sur écran tactile le bouton est toujours là :
+   sans survol, rien d'autre ne pourrait l'annoncer, et la photo en grand
+   était jusqu'ici hors de portée sur téléphone. Au pointeur, il continue
+   d'apparaître au survol, pour ne pas charger la grille. */
 .zoom {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
-  width: 30px;
-  height: 30px;
+  z-index: 2;
+  left: 9px;
+  bottom: 9px;
+  width: 34px;
+  height: 34px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 11px;
   background: rgba(13, 12, 18, 0.5);
   color: #fff;
-  display: none;
+  display: grid;
   place-items: center;
   cursor: pointer;
 }
 @media (hover: hover) and (pointer: fine) {
+  .zoom {
+    display: none;
+  }
   .tile:hover .zoom {
     display: grid;
   }

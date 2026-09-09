@@ -1,0 +1,38 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choisir une photo sur téléphone — propositions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Bricolage+Grotesque:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:#f1eff3;font-family:Inter,system-ui,sans-serif;color:#161320;padding:34px 24px 60px}
+h1{font-family:"Bricolage Grotesque",Inter,sans-serif;font-size:1.62rem;letter-spacing:-.03em;margin:0 0 8px}
+.lead{margin:0 0 30px;color:#726c80;font-size:.97rem;max-width:78ch;line-height:1.6}
+.cols{display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start}
+.col{width:392px}
+h2{font-family:"Bricolage Grotesque",Inter,sans-serif;font-size:1.06rem;letter-spacing:-.02em;margin:0 0 4px}
+.say{margin:0 0 14px;font-size:.9rem;color:#726c80;line-height:1.5;min-height:4.4em}
+.note{margin:14px 2px 0;font-size:.86rem;color:#726c80;line-height:1.55}
+iframe{width:390px;height:800px;border:1px solid #ddd8e3;border-radius:26px;background:#fbfaf9;display:block}
+</style></head><body>
+<h1>Choisir une photo, sur téléphone</h1>
+<p class="lead">Le cadre vert autour de la photo choisie disparaît dans les trois propositions. Chacune répond aussi au plein écran, qui n'était atteignable qu'à la souris. Les cadres sont manipulables : la deuxième photo est déjà choisie, faites défiler pour comparer les deux états.</p>
+<div class="cols">
+  <section class="col">
+    <h2>Option A · Le bouton sous la photo</h2>
+    <p class="say">La photo ne porte plus rien. Le bouton dessous dit le prix, puis « Choisie ». Toucher la photo l'ouvre en grand.</p>
+    <iframe src="selection-mobile-phone.html?opt=a" title="Option A"></iframe>
+    <p class="note">Le plus explicite : le prix est sous les yeux au moment de décider, et l'état choisi se lit sans code couleur à interpréter. Coût : un bouton de plus au-dessus de la barre.</p>
+  </section>
+  <section class="col">
+    <h2>Option B · La coche seule</h2>
+    <p class="say">Le cadre laisse place à une pastille : vide, puis cochée. Toucher la photo choisit, la loupe en bas ouvre en grand.</p>
+    <iframe src="selection-mobile-phone.html?opt=b" title="Option B"></iframe>
+    <p class="note">Le plus sobre, et le geste reste celui de la grille sur ordinateur. La pastille vide doit être assez visible pour dire « touchez-moi », sans manger la photo.</p>
+  </section>
+  <section class="col">
+    <h2>Option C · Deux actions sous la photo</h2>
+    <p class="say">Sous la photo, une case à cocher et un lien vers le plein écran. Rien n'est posé sur l'image, aucun geste n'est caché.</p>
+    <iframe src="selection-mobile-phone.html?opt=c" title="Option C"></iframe>
+    <p class="note">Le plus lisible pour qui n'a jamais vu de galerie, mais deux commandes pour une photo, et la ligne mange la hauteur qui manque déjà.</p>
+  </section>
+</div>
+</body></html>

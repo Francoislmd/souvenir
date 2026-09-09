@@ -179,13 +179,12 @@ export function PhotoPicker({
                 <img src={photo.previewUrl} alt="" loading={i < 2 ? "eager" : "lazy"} decoding="async" />
               ) : null}
               <span className={styles.check} aria-hidden="true">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               </span>
               <button
                 type="button"
-                tabIndex={-1}
                 aria-label="Voir en grand"
                 className={styles.zoom}
                 onClick={(e) => {
