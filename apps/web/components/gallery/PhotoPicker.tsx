@@ -137,9 +137,21 @@ export function PhotoPicker({
 
   const swipeFrom = useRef<{ x: number; y: number } | null>(null);
 
+  // Sur téléphone, la grille devient un rail : une photo par écran, calée au
+  // doigt (scroll-snap, feuille de style). Le pas d'un cran vaut exactement
+  // la largeur visible du rail — la photo occupe la largeur moins les deux
+  // retraits, et l'espacement vaut ces deux retraits. D'où ce calcul, qui ne
+  // dépend d'aucune mesure de vignette.
+  const [at, setAt] = useState(0);
+  function onRailScroll(e: React.UIEvent<HTMLDivElement>): void {
+    const rail = e.currentTarget;
+    if (rail.scrollWidth <= rail.clientWidth) return; // grille : rien à suivre
+    setAt(Math.min(total - 1, Math.max(0, Math.round(rail.scrollLeft / rail.clientWidth))));
+  }
+
   return (
     <>
-      <div className={styles.grid}>
+      <div className={styles.grid} onScroll={onRailScroll}>
         {photos.map((photo, i) => {
           const on = selected.has(photo.id);
           return (
@@ -161,7 +173,7 @@ export function PhotoPicker({
             >
               {photo.previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.previewUrl} alt="" />
+                <img src={photo.previewUrl} alt="" loading={i < 2 ? "eager" : "lazy"} decoding="async" />
               ) : null}
               <span className={styles.check} aria-hidden="true">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
@@ -186,6 +198,25 @@ export function PhotoPicker({
           );
         })}
       </div>
+
+      {/* Où l'on en est dans le rail. Masqué sur ordinateur, où la grille
+          montre tout d'un coup. Au-delà de huit photos, une rangée de points
+          n'est plus lisible ni cliquable : le compte prend le relais. */}
+      {total > 1 ? (
+        <div className={styles.railPos} aria-hidden="true">
+          {total <= 8 ? (
+            <div className={styles.dots}>
+              {photos.map((photo, i) => (
+                <i key={photo.id} className={i === at ? styles.dotOn : undefined} />
+              ))}
+            </div>
+          ) : (
+            <p className={styles.count}>
+              {at + 1} sur {total}
+            </p>
+          )}
+        </div>
+      ) : null}
 
       <div className={styles.bar}>
         <div className={styles.barIn}>

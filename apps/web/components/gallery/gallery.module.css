@@ -84,21 +84,64 @@
   line-height: 1.5;
 }
 
-/* ── La grille ─────────────────────────────────────────────────────────
+/* ── Les photos ────────────────────────────────────────────────────────
    Un seul geste sur une vignette : toucher choisit. Le bouton « agrandir »
    n'apparaît qu'au survol, donc jamais sur un écran tactile, où deux
-   actions sur le même objet obligeraient à viser. */
+   actions sur le même objet obligeraient à viser.
+
+   Sur téléphone, ce n'est pas une grille mais un rail : une photo par
+   écran, calée au doigt. À deux colonnes sur 390 px, une vignette faisait
+   165 px de large — on n'y reconnaît personne, et le client ouvrait chaque
+   photo une par une. Ici la première photo remplit l'écran.
+
+   L'espacement vaut exactement les deux retraits latéraux (2 × 20 px) :
+   la photo suivante s'arrête donc pile au bord, sans dépasser, et un cran
+   de défilement vaut la largeur visible du rail (ce dont dépend le calcul
+   de la photo en cours, PhotoPicker.onRailScroll). Toucher à ces deux
+   valeurs sans toucher à l'autre décale le repère de position. */
 .grid {
   max-width: 920px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  display: flex;
+  gap: 40px;
   padding: 0 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.grid::-webkit-scrollbar {
+  display: none;
+}
+.railPos {
+  padding: 14px 20px 0;
+}
+.dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+}
+.dots .dotOn {
+  background: var(--ink);
+}
+.count {
+  margin: 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
 }
 .tile {
   position: relative;
   display: block;
+  flex: 0 0 100%;
+  scroll-snap-align: center;
   width: 100%;
   padding: 0;
   border: 0;
@@ -789,7 +832,15 @@
     gap: 14px;
   }
   .grid {
+    display: grid;
     padding: 0 40px;
+    overflow-x: visible;
+  }
+  .tile {
+    flex: initial;
+  }
+  .railPos {
+    display: none;
   }
   .pad {
     height: 120px;
