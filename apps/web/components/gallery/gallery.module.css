@@ -334,6 +334,40 @@
   height: 100%;
   object-fit: contain;
 }
+/* Passer d'une photo à l'autre : les flèches sont posées sur le cadre, à
+   portée de pouce sur téléphone, et doublées par le glissement au doigt et
+   les touches du clavier. Elles disparaissent quand il n'y a qu'une photo. */
+.boxNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  /* Même pastille que la croix de fermeture : un fond sombre serait
+     invisible sur le fond noir de la visionneuse. */
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.boxNav:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .boxNav:hover {
+    background: rgba(255, 255, 255, 0.26);
+  }
+}
+.boxPrev {
+  left: 10px;
+}
+.boxNext {
+  right: 10px;
+}
 /* Colonne centrée : sur ordinateur le bouton passe en largeur automatique
    (voir la barre d'achat) et se retrouvait calé à gauche, sous une phrase
    centrée. Les deux partagent désormais le même axe. */
@@ -832,6 +866,16 @@
   .empty {
     padding-left: 40px;
     padding-right: 40px;
+  }
+  .boxNav {
+    width: 48px;
+    height: 48px;
+  }
+  .boxPrev {
+    left: 16px;
+  }
+  .boxNext {
+    right: 16px;
   }
   /* La liste reste calée sur le titre, mais ne s'étire pas sur toute la
      largeur : une heure, un mot et un compte n'ont pas besoin de 840 px,

@@ -127,6 +127,16 @@ export function PhotoPicker({
   const zoomed = zoom !== null ? photos[zoom] : undefined;
   const zoomedOn = zoomed ? selected.has(zoomed.id) : false;
 
+  // Le même chemin pour les trois gestes : les touches du clavier, les
+  // flèches posées sur la photo et le glissement au doigt. La visionneuse
+  // boucle — arriver au bout d'un créneau de sept photos et se retrouver
+  // bloqué sur un bouton mort n'aide personne.
+  function step(delta: number): void {
+    setZoom((at) => (at === null ? at : (at + delta + total) % total));
+  }
+
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
+
   return (
     <>
       <div className={styles.grid}>
@@ -225,10 +235,42 @@ export function PhotoPicker({
               </svg>
             </button>
           </div>
-          <div className={styles.boxPh}>
+          <div
+            className={styles.boxPh}
+            onTouchStart={(e) => {
+              const t = e.changedTouches[0];
+              swipeFrom.current = t ? { x: t.clientX, y: t.clientY } : null;
+            }}
+            onTouchEnd={(e) => {
+              const from = swipeFrom.current;
+              const t = e.changedTouches[0];
+              swipeFrom.current = null;
+              if (!from || !t) return;
+              const dx = t.clientX - from.x;
+              // Seuil et comparaison à la verticale : sans ça, un doigt qui
+              // descend légèrement de travers changerait de photo.
+              if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(t.clientY - from.y)) return;
+              step(dx < 0 ? 1 : -1);
+            }}
+          >
             {zoomed.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={zoomed.previewUrl} alt="" />
+            ) : null}
+
+            {total > 1 ? (
+              <>
+                <button type="button" className={`${styles.boxNav} ${styles.boxPrev}`} aria-label="Photo précédente" onClick={() => step(-1)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 5 8 12l6.5 7" />
+                  </svg>
+                </button>
+                <button type="button" className={`${styles.boxNav} ${styles.boxNext}`} aria-label="Photo suivante" onClick={() => step(1)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9.5 5 16 12l-6.5 7" />
+                  </svg>
+                </button>
+              </>
             ) : null}
           </div>
           <div className={styles.boxFoot}>

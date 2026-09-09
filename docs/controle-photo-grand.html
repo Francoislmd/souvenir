@@ -362,6 +362,40 @@
   height: 100%;
   object-fit: contain;
 }
+/* Passer d'une photo à l'autre : les flèches sont posées sur le cadre, à
+   portée de pouce sur téléphone, et doublées par le glissement au doigt et
+   les touches du clavier. Elles disparaissent quand il n'y a qu'une photo. */
+.boxNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  /* Même pastille que la croix de fermeture : un fond sombre serait
+     invisible sur le fond noir de la visionneuse. */
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.boxNav:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .boxNav:hover {
+    background: rgba(255, 255, 255, 0.26);
+  }
+}
+.boxPrev {
+  left: 10px;
+}
+.boxNext {
+  right: 10px;
+}
 /* Colonne centrée : sur ordinateur le bouton passe en largeur automatique
    (voir la barre d'achat) et se retrouvait calé à gauche, sous une phrase
    centrée. Les deux partagent désormais le même axe. */
@@ -861,6 +895,16 @@
     padding-left: 40px;
     padding-right: 40px;
   }
+  .boxNav {
+    width: 48px;
+    height: 48px;
+  }
+  .boxPrev {
+    left: 16px;
+  }
+  .boxNext {
+    right: 16px;
+  }
   /* La liste reste calée sur le titre, mais ne s'étire pas sur toute la
      largeur : une heure, un mot et un compte n'ont pas besoin de 840 px,
      et l'oeil ferait le trajet à vide. */
@@ -905,7 +949,11 @@
 <div class="page" style="--op:#2fb7a0">
   <div class="box">
     <div class="boxTop"><span class="boxCount">3 sur 7</span><button class="boxClose">✕</button></div>
-    <div class="boxPh"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='1200' height='800' fill='%23456a86'/><rect x='6' y='6' width='1188' height='788' fill='none' stroke='%23ffdd55' stroke-width='12'/><circle cx='60' cy='60' r='34' fill='%23ffdd55'/><circle cx='1140' cy='740' r='34' fill='%23ffdd55'/><text x='600' y='430' font-family='sans-serif' font-size='90' fill='%23ffffff' text-anchor='middle'>photo entière ?</text></svg>" alt=""></div>
+    <div class="boxPh">
+      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='1200' height='800' fill='%23456a86'/><rect x='6' y='6' width='1188' height='788' fill='none' stroke='%23ffdd55' stroke-width='12'/><circle cx='60' cy='60' r='34' fill='%23ffdd55'/><circle cx='1140' cy='740' r='34' fill='%23ffdd55'/><text x='600' y='430' font-family='sans-serif' font-size='90' fill='%23ffffff' text-anchor='middle'>photo entière ?</text></svg>" alt="">
+      <button class="boxNav boxPrev"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'><path d='M14.5 5 8 12l6.5 7'/></svg></button>
+      <button class="boxNav boxNext"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'><path d='M9.5 5 16 12l-6.5 7'/></svg></button>
+    </div>
     <div class="boxFoot">
       <button class="cta">✓ Choisir cette photo · 5 €</button>
       <p class="boxNote">Le filigrane disparaît après le paiement.</p>
