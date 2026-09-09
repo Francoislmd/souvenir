@@ -80,10 +80,10 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // Variante email : flou (pixels, pas CSS — les clients mail l'ignorent) et
     // cadenas incrusté dans le JPEG plutôt qu'en overlay CSS, que Gmail (et la
     // plupart des clients mail) supprime des styles inline. La galerie web,
-    // elle, n'a plus de flou : aperçu verrouillé = même filigrane tuilé qu'en
-    // mode GROUPE (Photo.groupPreviewKey, lib/group-watermark.ts), affiché net
-    // avec un cadenas en overlay CSS (BoutiqueGallery) — jamais de photo qui
-    // se dévoile en un clic devtools.
+    // elle, n'a plus de flou global : aperçu verrouillé = même filigrane
+    // diagonal qu'en mode GROUPE (Photo.groupPreviewKey,
+    // lib/group-watermark.ts), qui porte déjà son propre cadenas incrusté —
+    // jamais de photo qui se dévoile en un clic devtools.
     const lockBadge = await sharp(Buffer.from(LOCK_BADGE_SVG)).resize(112, 112).png().toBuffer();
     const blurEmailBuffer = await base()
       .resize({ width: 960 })
