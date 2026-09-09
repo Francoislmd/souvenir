@@ -177,8 +177,6 @@ export function PhotoPicker({
         })}
       </div>
 
-      <div className={styles.pad} />
-
       <div className={styles.bar}>
         <div className={styles.barIn}>
           {error ? <p className={styles.error}>{error}</p> : null}

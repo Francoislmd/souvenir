@@ -131,6 +131,10 @@ export function GroupGallery({
       <div className={styles.powered}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
       </div>
+      {/* La barre d'achat est posée par-dessus la page : la réserve de place
+          va donc après TOUT le contenu, mentions comprises. Placée avant, elle
+          laissait le dernier paragraphe passer sous la barre. */}
+      <div className={styles.pad} />
 
       {pendingIds ? (
         <EmailSheet

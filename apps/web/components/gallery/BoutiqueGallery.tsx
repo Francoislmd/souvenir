@@ -341,6 +341,9 @@ export function BoutiqueGallery({
       <div className={styles.powered}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
       </div>
+      {/* Réserve de place sous la barre d'achat, qui flotte au-dessus de la
+          page : elle doit suivre les mentions, sinon elles passent dessous. */}
+      <div className={styles.pad} />
 
       {checkout ? (
         <PaymentSheet
