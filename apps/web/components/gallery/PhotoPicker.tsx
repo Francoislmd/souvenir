@@ -137,16 +137,19 @@ export function PhotoPicker({
 
   const swipeFrom = useRef<{ x: number; y: number } | null>(null);
 
-  // Sur téléphone, la grille devient un rail : une photo par écran, calée au
-  // doigt (scroll-snap, feuille de style). Le pas d'un cran vaut exactement
-  // la largeur visible du rail — la photo occupe la largeur moins les deux
-  // retraits, et l'espacement vaut ces deux retraits. D'où ce calcul, qui ne
-  // dépend d'aucune mesure de vignette.
+  // Sur téléphone, la grille devient un rail : une photo à la fois, calée au
+  // doigt (scroll-snap, feuille de style). Le pas se mesure sur la vignette
+  // elle-même plutôt que de recopier les valeurs du CSS : sa largeur tient à
+  // un pourcentage, et la retoucher ne doit pas décaler le repère.
   const [at, setAt] = useState(0);
   function onRailScroll(e: React.UIEvent<HTMLDivElement>): void {
     const rail = e.currentTarget;
     if (rail.scrollWidth <= rail.clientWidth) return; // grille : rien à suivre
-    setAt(Math.min(total - 1, Math.max(0, Math.round(rail.scrollLeft / rail.clientWidth))));
+    const first = rail.firstElementChild as HTMLElement | null;
+    const gap = Number.parseFloat(getComputedStyle(rail).columnGap) || 0;
+    const step = first ? first.offsetWidth + gap : rail.clientWidth;
+    if (step <= 0) return;
+    setAt(Math.min(total - 1, Math.max(0, Math.round(rail.scrollLeft / step))));
   }
 
   return (

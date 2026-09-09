@@ -89,24 +89,27 @@
    n'apparaît qu'au survol, donc jamais sur un écran tactile, où deux
    actions sur le même objet obligeraient à viser.
 
-   Sur téléphone, ce n'est pas une grille mais un rail : une photo par
-   écran, calée au doigt. À deux colonnes sur 390 px, une vignette faisait
-   165 px de large — on n'y reconnaît personne, et le client ouvrait chaque
-   photo une par une. Ici la première photo remplit l'écran.
+   Sur téléphone, ce n'est pas une grille mais un rail : une photo à la
+   fois, calée au doigt. À deux colonnes sur 390 px, une vignette faisait
+   165 px de large — on n'y reconnaît personne.
 
-   L'espacement vaut exactement les deux retraits latéraux (2 × 20 px) :
-   la photo suivante s'arrête donc pile au bord, sans dépasser, et un cran
-   de défilement vaut la largeur visible du rail (ce dont dépend le calcul
-   de la photo en cours, PhotoPicker.onRailScroll). Toucher à ces deux
-   valeurs sans toucher à l'autre décale le repère de position. */
+   La photo ne prend PAS toute la largeur : le début de la suivante
+   dépasse à droite. C'est la seule chose qui dise qu'il y en a d'autres,
+   et elle le dit sans indicateur à lire.
+
+   La hauteur est plafonnée à ce qui reste sous le titre et au-dessus de
+   la barre d'achat (unité svh, donc barres du navigateur comprises) :
+   une photo qui passe sous la barre donne une page tronquée, et sur les
+   petits téléphones le format 3/4 ne tient pas. */
 .grid {
   max-width: 920px;
   margin: 0 auto;
   display: flex;
-  gap: 40px;
+  gap: 10px;
   padding: 0 20px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-padding-left: 20px;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
@@ -140,12 +143,14 @@
 .tile {
   position: relative;
   display: block;
-  flex: 0 0 100%;
-  scroll-snap-align: center;
+  flex: 0 0 86%;
+  scroll-snap-align: start;
   width: 100%;
   padding: 0;
   border: 0;
   aspect-ratio: 3 / 4;
+  max-height: calc(100vh - 344px);
+  max-height: calc(100svh - 344px);
   border-radius: 14px;
   overflow: hidden;
   background: var(--line-2);
@@ -838,6 +843,8 @@
   }
   .tile {
     flex: initial;
+    max-height: none;
+    scroll-snap-align: none;
   }
   .railPos {
     display: none;
