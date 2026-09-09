@@ -1,7 +1,6 @@
 import sharp from "sharp";
 import { createCanvas, type SKRSContext2D } from "@napi-rs/canvas";
 import { layoutRun, ensureWatermarkFont, FONT_FAMILY, WORD_WEIGHT } from "./watermark-typography";
-import { detectFaceZones, type FaceZone } from "./watermark-faces";
 
 /**
  * Réglage de direction artistique — VERROUILLÉ. Ne pas arrondir, ne pas
@@ -15,6 +14,12 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
  *      en rangées décalées d'une demi-période ;
  *   4. un cadenas au centre, dans une pastille encre.
  *
+ * Le traitement est le MÊME sur toutes les photos, sans exception : c'est ce
+ * qui le fait lire comme une signature de marque et pas comme un accident de
+ * rendu. Toute règle qui ferait varier une photo par rapport à ses voisines
+ * (atténuation locale, taille dépendant du cadrage) a été retirée — voir
+ * `basis` et l'historique de l'atténuation des visages plus bas.
+ *
  * Version du 09/09/2026 (option "C") : la plaque arrondie insérée d'une marge
  * a été retirée au profit d'un traitement plein cadre. Ce qui fait l'objet
  * n'est plus le contraste entre une plaque et une bande nette, c'est la trame
@@ -27,6 +32,14 @@ import { detectFaceZones, type FaceZone } from "./watermark-faces";
  * encodage mozjpeg) + @napi-rs/canvas (dessin + métriques de texte — sharp ne
  * mesure pas le texte, et librsvg gère mal l'interlettrage).
  */
+/**
+ * Le format de la case dans laquelle la galerie affiche une vignette
+ * (`aspect-ratio: 3 / 4` + `object-fit: cover`, gallery.module.css). Il entre
+ * dans le calcul de `basis` : si ce format change là-bas, il change ici, sinon
+ * le filigrane redevient plus gros sur les paysages que sur les portraits.
+ */
+const TILE_ASPECT = 3 / 4;
+
 const PARAMS = {
   // --- Le traitement de fond ---------------------------------------------
   // Voile sombre uniforme. 12 % : assez pour que le nom blanc tienne sur un
@@ -76,14 +89,6 @@ const PARAMS = {
   // Diamètre de la pastille, en fraction du côté court.
   lockRatio: 0.16,
   lockVeil: 0.55,
-
-  // --- Les visages -------------------------------------------------------
-  // Le client doit se reconnaître dans le tas (brief §3), donc l'alpha du
-  // calque est retiré en douceur autour des visages détectés. Le flou, lui,
-  // n'est pas atténué — à ce rayon un visage reste parfaitement identifiable.
-  faceAttenuation: 0.6,
-  faceRadiusScale: 1.3,
-  faceFeather: 0.52,
 
   // --- Sortie ------------------------------------------------------------
   // La vraie garantie n'est pas le filigrane, c'est cette valeur : à 1000 px
@@ -140,11 +145,18 @@ function drawLock(ctx: SKRSContext2D, cx: number, cy: number, size: number): voi
 
 /**
  * Le calque posé sur la photo : le voile sombre, puis le nom en rangées
- * inclinées, puis l'atténuation autour des visages, puis le cadenas — dans cet
- * ordre. Le cadenas vient après l'atténuation pour rester entier même quand un
- * visage est détecté au centre de la photo.
+ * inclinées, puis le cadenas.
+ *
+ * Il n'y a plus d'atténuation autour des visages (elle existait du 07 au
+ * 09/09/2026) : blazeface prenait un kayak sur du sable pour un visage et
+ * effaçait un rond de filigrane au milieu de la photo, ce qui se lit comme un
+ * bug d'affichage. Même juste, elle trouait le filigrane différemment sur
+ * chaque photo, contre l'homogénéité voulue. Le client se reconnaît quand même
+ * (brief §3) : à 55 % d'opacité la trame tamponne la photo, elle ne la cache
+ * pas. Effet de bord bienvenu : plus de TF.js dans le rendu, donc une
+ * publication nettement plus rapide et sans contention CPU.
  */
-function buildLayer(width: number, height: number, basis: number, operatorName: string, faces: FaceZone[]): Buffer {
+function buildLayer(width: number, height: number, basis: number, operatorName: string): Buffer {
   ensureWatermarkFont();
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
@@ -186,27 +198,6 @@ function buildLayer(width: number, height: number, basis: number, operatorName: 
   }
   ctx.restore();
 
-  // Atténuation autour des visages : on retire de l'alpha déjà posé plutôt
-  // que de moduler chaque occurrence. Une rangée traverse toute la photo ;
-  // moduler l'occurrence entière ferait clignoter des lignes complètes.
-  if (faces.length > 0) {
-    ctx.globalAlpha = 1;
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.globalCompositeOperation = "destination-out";
-    for (const face of faces) {
-      const gradient = ctx.createRadialGradient(face.cx, face.cy, face.radius * PARAMS.faceFeather, face.cx, face.cy, face.radius);
-      gradient.addColorStop(0, `rgba(0, 0, 0, ${PARAMS.faceAttenuation})`);
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(face.cx, face.cy, face.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalCompositeOperation = "source-over";
-  }
-
   ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
@@ -232,12 +223,23 @@ export async function generateGroupPreview(original: Buffer, operatorName: strin
 
   const { width, height, channels } = info;
 
-  // La maille est dimensionnée sur le côté court, pas sur la largeur : la
-  // grille de la galerie affiche chaque vignette dans une case CARRÉE
-  // (object-fit: cover), le navigateur met donc chaque photo à l'échelle de
-  // son côté le plus court. Baser la maille sur la largeur ferait paraître
-  // le filigrane bien plus "zoomé" sur les paysages que sur les portraits.
-  const basis = Math.min(width, height);
+  // La référence de taille, celle qui décide du corps du texte, de la maille
+  // et du cadenas. Elle est calculée pour que le filigrane paraisse de la MÊME
+  // taille sur toutes les vignettes de la galerie, quel que soit le cadrage de
+  // la photo — c'est le seul critère qui compte, les aperçus se regardent
+  // côte à côte dans une grille.
+  //
+  // La grille affiche chaque photo dans une case 3/4 en `object-fit: cover`
+  // (gallery.module.css) : le navigateur applique donc le facteur
+  // max(caseL/photoL, caseH/photoH). Pour que le rendu à l'écran soit constant,
+  // la maille doit suivre l'inverse de ce facteur, ce qui donne
+  // min(largeur ÷ 0,75 ; hauteur).
+  //
+  // Le côté court seul (ce qu'on faisait jusqu'au 09/09/2026) ne marche que si
+  // la case est carrée : sur une case 3/4, un portrait 1000×1333 se réduisait
+  // bien plus qu'un paysage 1000×667, et son filigrane paraissait un tiers
+  // plus petit dans la même grille.
+  const basis = Math.min(width / TILE_ASPECT, height);
 
   // Photo minuscule : la trame n'a plus de sens, on rend la photo telle
   // quelle plutôt que de produire un aperçu cassé.
@@ -247,15 +249,9 @@ export async function generateGroupPreview(original: Buffer, operatorName: strin
       .toBuffer();
   }
 
-  // La détection tourne sur les pixels NETS : le flou est appliqué ensuite, et
-  // le texte est dessiné sur le calque, donc au-dessus de tout — le nom reste
-  // parfaitement net sur un fond adouci.
-  const faces = await detectFaceZones(rgb, width, height, channels, PARAMS.faceRadiusScale).catch((error: unknown) => {
-    console.error("[group-watermark] face detection failed, continuing without attenuation", error);
-    return [] as FaceZone[];
-  });
-
-  const layer = buildLayer(width, height, basis, operatorName, faces);
+  // Le flou est appliqué à la photo, le texte est dessiné sur le calque posé
+  // par-dessus : le nom reste donc parfaitement net sur un fond adouci.
+  const layer = buildLayer(width, height, basis, operatorName);
 
   return sharp(rgb, { raw: { width, height, channels } })
     .blur(Math.max(0.3, PARAMS.blurRatio * basis))
