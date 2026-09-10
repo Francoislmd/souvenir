@@ -144,7 +144,8 @@ souvenir/
 │   │   │   ├── g/[token]/          # galerie individuelle (mode INDIVIDUEL) — pas de compte, token = seul secret
 │   │   │   │   └── confidentialite/, desinscription/, supprimer/
 │   │   │   ├── s/[slug]/          # boutique (mode GROUPE) — servie sur store.linktrip.co/{slug}
-│   │   │   │   └── [code]/         # une sortie = une boutique : créneau → photos (+ /retrait)
+│   │   │   │   ├── [code]/         # même boutique, ouverte sur le jour de cette sortie
+│   │   │   │   └── retrait/        # demander le retrait d'une photo, sans justification
 │   │   │   ├── sitemap.ts, robots.ts   # landing + pages légales uniquement, le reste est exclu
 │   │   │   └── api/
 │   │   │       ├── webhooks/stripe/        # payment_intent.*, charge.refunded, charge.dispute.*, account.updated
@@ -153,7 +154,7 @@ souvenir/
 │   │   │       ├── cron/automations/       # relances email/WhatsApp — Vercel Cron, secured by CRON_SECRET
 │   │   │       ├── cron/gdpr-purge/        # purge RGPD — Vercel Cron, secured by CRON_SECRET
 │   │   │       ├── sorties/, participants/, photos/, operator/
-│   │   │       └── g/[token]/, store/[slug]/[code]/  # endpoints publics des galeries (poll, achats, retrait)
+│   │   │       └── g/[token]/, store/[slug]/  # endpoints publics des galeries (jours, poll, achats, retrait)
 │   │   ├── sentry.client.config.ts, sentry.server.config.ts, sentry.edge.config.ts, instrumentation.ts
 │   │   ├── components/
 │   │   └── lib/                    # stripe.ts, twilio.ts, supabase-server.ts, analytics.ts, gdpr.ts, order-fulfillment.ts, order-refunds.ts, automations.ts…
@@ -163,7 +164,11 @@ souvenir/
 
 - **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie individuelle (`/g/[token]`) ou, en mode GROUPE, via l'adresse de la boutique de sa sortie. `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
 
-**Adresse des boutiques GROUPE** : `store.linktrip.co/{operator.slug}/{sortie.shareCode}`. Le slug est lisible et devinable, assumé, c'est une vitrine de marque ; le secret est le `shareCode`, six caractères, unique par opérateur, et sa portée s'arrête à UNE sortie (avant, un jeton unique par opérateur ouvrait 90 jours d'historique). `store.linktrip.co/{slug}` seul ne mène nulle part et renvoie sur `linktrip.co` (redirection temporaire) : on n'y arrive qu'en tronquant une URL, l'adresse complète est remise à la fin de la sortie. La traduction sous-domaine → chemin interne `/s/{slug}/{code}` se fait dans `middleware.ts`, qui y pose aussi le `X-Robots-Tag: noindex` ; sans `NEXT_PUBLIC_STORE_URL` (local, previews) les boutiques se servent depuis le domaine principal sur `/s/...`. Le code est créé avec la sortie GROUPE, et à la volée pour les sorties antérieures (`lib/store.ts`, `ensureShareCode`), jamais réémis : un QR code imprimé doit continuer de marcher.
+**Adresse des boutiques GROUPE** : `store.linktrip.co/{operator.slug}`, une adresse permanente par opérateur, réutilisée par toutes ses sorties. 🔒 **La boutique est publique** : le slug est lisible et devinable, et n'importe qui l'ouvre sans code. Ce qui protège les clients tient donc entièrement aux aperçus filigranés, au `noindex` et au lien « demander le retrait », joignable depuis chaque écran et qui n'exige rien. Décidé le 10/09/2026 après avoir essayé l'inverse (un code court par sortie, seul secret) : ne pas rediscuter, c'est un choix produit assumé.
+
+`store.linktrip.co/{slug}/{sortie.shareCode}` reste servi, mais le code n'est plus un secret : il ne fait qu'ouvrir la boutique sur le jour de cette sortie, pour le QR code affiché à la fin de la journée. Il est créé avec la sortie GROUPE, et à la volée pour les sorties antérieures (`lib/store.ts`, `ensureShareCode`), jamais réémis : un QR code imprimé doit continuer de marcher.
+
+La traduction sous-domaine → chemin interne `/s/{slug}` se fait dans `middleware.ts`, qui y pose aussi le `X-Robots-Tag: noindex` ; sans `NEXT_PUBLIC_STORE_URL` (local, previews) les boutiques se servent depuis le domaine principal sur `/s/...`.
 - **Storage** : buckets Supabase `originals` (privé) et `previews` (aperçus/miniatures/flous — voir `lib/storage.ts`).
 - **Accès DB** : Prisma côté serveur uniquement (server components / route handlers / worker). Pas de requête Supabase côté client.
 - **SEO** : `app/sitemap.ts` et `app/robots.ts` n'exposent que la landing et les 4 pages légales — galeries, boutiques, espace opérateur et auth sont explicitement exclus (`Disallow` + header `X-Robots-Tag: noindex` sur `/g/:path*` et `/s/:path*`, posé dans `next.config.mjs`, et sur le sous-domaine par `middleware.ts`).

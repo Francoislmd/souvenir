@@ -3,32 +3,41 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "@/components/gallery/collective.module.css";
-import type { GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
+import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
-// Sans justification, sans preuve d'identité — le code de la sortie suffit
-// (brief §5.3). Accessible depuis les deux liens "Demander le retrait" de la
-// boutique (critère d'acceptation #8).
-//
-// Deux étapes et non trois : le code désigne déjà la sortie, donc le jour est
-// connu. Le retrait ne porte que sur les photos de cette sortie, jamais sur
-// l'historique de l'opérateur.
+type Step = "days" | "slots" | "photos";
+
+// Sans justification, sans preuve d'identité (brief §5.3). La boutique étant
+// ouverte à qui connaît le nom du prestataire, ce lien est le seul recours de
+// quelqu'un qui ne veut pas y figurer : il doit rester atteignable depuis
+// chaque écran, et ne jamais rien demander.
 export function WithdrawPhotoPicker({
   basePath,
   apiBase,
   operatorName,
-  dateLabel,
-  slots,
+  days,
 }: {
   basePath: string;
   apiBase: string;
   operatorName: string;
-  dateLabel: string;
-  slots: GroupSlotSummary[];
+  days: GroupDaySummary[];
 }) {
-  const [step, setStep] = useState<"slots" | "photos">("slots");
+  const [step, setStep] = useState<Step>("days");
+  const [activeDay, setActiveDay] = useState<GroupDaySummary | null>(null);
+  const [slots, setSlots] = useState<GroupSlotSummary[]>([]);
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+
+  async function openDay(day: GroupDaySummary): Promise<void> {
+    setActiveDay(day);
+    setStep("slots");
+    const res = await fetch(`${apiBase}/days/${encodeURIComponent(day.dateKey)}/slots`);
+    if (res.ok) {
+      const data = (await res.json()) as { dateLabel: string; slots: GroupSlotSummary[] };
+      setSlots(data.slots);
+    }
+  }
 
   async function openSlot(id: string): Promise<void> {
     setConfirmedId(null);
@@ -50,12 +59,38 @@ export function WithdrawPhotoPicker({
     }
   }
 
-  if (step === "slots") {
+  if (step === "days") {
     return (
       <>
         <div className={styles.hi}>
           <h1>Demander le retrait d&rsquo;une photo</h1>
-          <p>Choisissez le créneau où se trouve la photo. Elle disparaît de la galerie immédiatement, pour tout le monde.</p>
+          <p>Choisissez le jour, puis le créneau où se trouve la photo. Elle disparaît de la galerie immédiatement, pour tout le monde.</p>
+        </div>
+        <div className={styles.slots}>
+          {days.map((day) => (
+            <button key={day.dateKey} type="button" className={styles.slot} onClick={() => void openDay(day)}>
+              <span className={styles.info}>
+                <span className={styles.h}>{day.dateLabel}</span>
+              </span>
+              <span className={styles.n}>
+                {day.sessionCount} créneau{day.sessionCount > 1 ? "x" : ""}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className={styles.legal}>
+          <Link href={basePath}>Revenir aux photos</Link>
+        </div>
+      </>
+    );
+  }
+
+  if (step === "slots") {
+    return (
+      <>
+        <div className={styles.hi}>
+          <h1>Choisissez le créneau</h1>
+          <p>{activeDay?.dateLabel}</p>
         </div>
         <div className={styles.slots}>
           {slots.map((slot) => (
@@ -69,8 +104,9 @@ export function WithdrawPhotoPicker({
           ))}
         </div>
         <div className={styles.legal}>
-          {dateLabel ? <p>{dateLabel.replace(/^./, (c) => c.toUpperCase())}</p> : null}
-          <Link href={basePath}>Revenir aux photos</Link>
+          <button type="button" onClick={() => setStep("days")}>
+            ← Changer de jour
+          </button>
         </div>
       </>
     );
@@ -80,7 +116,7 @@ export function WithdrawPhotoPicker({
     <>
       <div className={styles.hi}>
         <h1>Touchez une photo pour la retirer</h1>
-        <p>Le masquage est immédiat et définitif. Aucune justification n&rsquo;est demandée.</p>
+        <p>Le retrait est définitif. Aucune justification ne vous est demandée.</p>
       </div>
       <div className={styles.grid}>
         {photos.map((photo) => (

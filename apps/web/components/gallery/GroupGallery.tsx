@@ -10,38 +10,40 @@ import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
 import { LockIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
-import type { GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
+import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
 /**
- * La boutique d'une sortie : un QR code affiché à la base, scanné au retour.
- * Deux écrans seulement, choisir son créneau puis choisir ses photos. Le
- * second est exactement celui de la boutique individuelle (PhotoPicker) : le
- * client n'a aucune raison de voir deux interfaces différentes pour le même
- * geste.
+ * La boutique d'un opérateur : un QR code affiché à la base, scanné au
+ * retour. Deux écrans seulement, choisir son créneau puis choisir ses photos.
+ * Le second est exactement celui de la boutique individuelle (PhotoPicker) :
+ * le client n'a aucune raison de voir deux interfaces différentes pour le
+ * même geste.
  *
  * `basePath` est le chemin tel que le navigateur le voit (il diffère selon
  * qu'on est sur store.linktrip.co ou sur le domaine principal, cf.
  * lib/store.ts) ; `apiBase` est identique partout, /api n'étant jamais
- * réécrit.
+ * réécrit. `initialDateKey` n'est posé que lorsqu'on arrive par le lien
+ * d'une sortie précise.
  */
 export function GroupGallery({
   basePath,
   apiBase,
   appUrl,
-  dateLabel,
-  slots,
+  days,
+  initialDateKey,
   pricing,
   packOnly,
 }: {
   basePath: string;
   apiBase: string;
   appUrl: string;
-  dateLabel: string;
-  slots: GroupSlotSummary[];
+  days: GroupDaySummary[];
+  initialDateKey?: string;
   pricing: PricingConfig;
   packOnly: boolean;
 }) {
   const [slot, setSlot] = useState<GroupSlotSummary | null>(null);
+  const [dayLabel, setDayLabel] = useState("");
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pendingIds, setPendingIds] = useState<string[] | null>(null);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
@@ -54,8 +56,9 @@ export function GroupGallery({
     setPhotos(data.photos);
   }
 
-  function pick(picked: GroupSlotSummary): void {
+  function pick(picked: GroupSlotSummary, label: string): void {
     setSlot(picked);
+    setDayLabel(label);
     setPhotos([]);
     void load(picked.id);
   }
@@ -92,7 +95,7 @@ export function GroupGallery({
   if (!slot) {
     return (
       <>
-        <SessionRetrieval dateLabel={dateLabel} slots={slots} onPick={pick} />
+        <SessionRetrieval apiBase={apiBase} days={days} initialDateKey={initialDateKey} onPick={pick} />
         <div className={styles.legal}>
           Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
         </div>
@@ -110,7 +113,7 @@ export function GroupGallery({
       <div className={styles.head}>
         <h1>{slot.activity}</h1>
         <p className={styles.sub}>
-          {dateLabel ? `${dateLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
+          {dayLabel ? `${dayLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
           {slot.label}
         </p>
         <p className={styles.hint}>

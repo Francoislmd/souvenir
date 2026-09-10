@@ -80,66 +80,78 @@ export function storeUrl(slug: string, code: string): string {
  * Les appels d'API, eux, sont identiques sur les deux hôtes : /api/... n'est
  * jamais réécrit.
  */
-export function publicStorePath(slug: string, code: string): string {
+export function publicStorePath(slug: string, code?: string): string {
   const onStoreHost = (headers().get("host") ?? "").split(":")[0]!.startsWith("store.");
-  const tail = `/${slug}/${code}`;
+  const tail = code ? `/${slug}/${code}` : `/${slug}`;
   return onStoreHost ? tail : `/s${tail}`;
 }
 
-export function apiStoreBase(slug: string, code: string): string {
-  return `/api/store/${slug}/${code}`;
+/**
+ * Les appels d'API portent sur l'opérateur, jamais sur la sortie : le code
+ * n'est plus un secret, seulement un raccourci vers le bon jour.
+ */
+export function apiStoreBase(slug: string): string {
+  return `/api/store/${slug}`;
 }
 
-export interface ResolvedStore {
-  operator: {
-    id: string;
-    name: string;
-    slug: string;
-    logoUrl: string | null;
-    brandColor: string;
-    pricePhotoCents: number;
-    priceAllCents: number;
-    packOnly: boolean;
-    activities: string[];
+export interface StoreOperator {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  brandColor: string;
+  pricePhotoCents: number;
+  priceAllCents: number;
+  packOnly: boolean;
+}
+
+function toStoreOperator(o: {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  brandColor: string;
+  pricePhotoCents: number;
+  priceAllCents: number;
+  packOnly: boolean;
+}): StoreOperator {
+  return {
+    id: o.id,
+    name: o.name,
+    slug: o.slug,
+    logoUrl: o.logoUrl,
+    brandColor: o.brandColor,
+    pricePhotoCents: o.pricePhotoCents,
+    priceAllCents: o.priceAllCents,
+    packOnly: o.packOnly,
   };
-  sortie: {
-    id: string;
-    activity: string;
-    place: string | null;
-    startsAt: Date;
-  };
+}
+
+/** L'opérateur d'une boutique, par son slug. Null si le slug n'existe pas. */
+export async function resolveOperator(slug: string): Promise<StoreOperator | null> {
+  const normalized = slug.trim().toLowerCase();
+  if (!normalized) return null;
+  const operator = await prisma.operator.findUnique({ where: { slug: normalized } });
+  return operator ? toStoreOperator(operator) : null;
 }
 
 /**
- * Résout un couple slug + code en sortie publiée. Renvoie null dans tous les
- * cas d'échec, sans distinguer « slug inconnu » de « code faux » : un
- * message d'erreur qui fait la différence transforme le code en devinette.
+ * La sortie désignée par un code, dans la boutique d'un opérateur. Sert
+ * uniquement à savoir sur quel jour ouvrir la boutique : le code n'ouvre plus
+ * rien à lui seul, la boutique est publique.
  */
-export async function resolveStore(slug: string, code: string): Promise<ResolvedStore | null> {
-  const normalizedSlug = slug.trim().toLowerCase();
-  const normalizedCode = code.trim().toLowerCase();
-  if (!normalizedSlug || !normalizedCode) return null;
-
-  const operator = await prisma.operator.findUnique({ where: { slug: normalizedSlug } });
+export async function resolveSortieByCode(slug: string, code: string): Promise<{ operator: StoreOperator; startsAt: Date } | null> {
+  const operator = await resolveOperator(slug);
   if (!operator) return null;
+
+  const normalizedCode = code.trim().toLowerCase();
+  if (!normalizedCode) return null;
 
   const sortie = await prisma.sortie.findFirst({
     where: { operatorId: operator.id, shareCode: normalizedCode, mode: "GROUPE" },
+    select: { startsAt: true },
   });
   if (!sortie) return null;
 
-  return {
-    operator: {
-      id: operator.id,
-      name: operator.name,
-      slug: operator.slug,
-      logoUrl: operator.logoUrl,
-      brandColor: operator.brandColor,
-      pricePhotoCents: operator.pricePhotoCents,
-      priceAllCents: operator.priceAllCents,
-      packOnly: operator.packOnly,
-      activities: operator.activities,
-    },
-    sortie: { id: sortie.id, activity: sortie.activity, place: sortie.place, startsAt: sortie.startsAt },
-  };
+  return { operator, startsAt: sortie.startsAt };
 }
