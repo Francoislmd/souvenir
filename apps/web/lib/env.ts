@@ -30,7 +30,17 @@ const envSchema = z.object({
   // Le sous-domaine des boutiques (store.linktrip.co). Facultative : en local
   // et sur les previews Vercel il n'y a pas de sous-domaine, les boutiques se
   // servent alors depuis NEXT_PUBLIC_APP_URL sur /s/{slug}/{code}.
-  NEXT_PUBLIC_STORE_URL: z.string().url().optional(),
+  //
+  // Passe par le préprocesseur comme les autres variables facultatives à
+  // format contraint : la clé posée mais laissée vide (c'est ce que donne
+  // .env.example recopié tel quel, et une variable Vercel créée sans valeur)
+  // est une chaîne vide, que `.url()` refuse. Le parse échouant au chargement
+  // du module, TOUTE page rendue côté serveur tombe en 500, pas seulement les
+  // boutiques.
+  NEXT_PUBLIC_STORE_URL: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().url().optional(),
+  ),
   CRON_SECRET: z.string().min(20),
   // Mesure d'audience — optionnelles : sans elles, aucune balise n'est chargée
   // (utile en local et sur les previews Vercel, qui ne doivent pas polluer GA4).
