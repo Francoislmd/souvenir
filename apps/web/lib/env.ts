@@ -27,6 +27,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url(),
+  // Le sous-domaine des boutiques (store.linktrip.co). Facultative : en local
+  // et sur les previews Vercel il n'y a pas de sous-domaine, les boutiques se
+  // servent alors depuis NEXT_PUBLIC_APP_URL sur /s/{slug}/{code}.
+  NEXT_PUBLIC_STORE_URL: z.string().url().optional(),
   CRON_SECRET: z.string().min(20),
   // Mesure d'audience — optionnelles : sans elles, aucune balise n'est chargée
   // (utile en local et sur les previews Vercel, qui ne doivent pas polluer GA4).

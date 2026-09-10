@@ -2,36 +2,38 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import styles from "@/app/g/s/[shareToken]/collective.module.css";
-import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
+import styles from "@/components/gallery/collective.module.css";
+import type { GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
-type Step = "days" | "slots" | "photos";
-
-// Sans justification, sans preuve d'identité — le shareToken de l'opérateur
-// suffit (brief §5.3). Accessible depuis les deux liens "Demander le
-// retrait" de /g/s/[shareToken] (critère d'acceptation #8).
-export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; days: GroupDaySummary[] }) {
-  const [step, setStep] = useState<Step>("days");
-  const [activeDay, setActiveDay] = useState<GroupDaySummary | null>(null);
-  const [slots, setSlots] = useState<GroupSlotSummary[]>([]);
+// Sans justification, sans preuve d'identité — le code de la sortie suffit
+// (brief §5.3). Accessible depuis les deux liens "Demander le retrait" de la
+// boutique (critère d'acceptation #8).
+//
+// Deux étapes et non trois : le code désigne déjà la sortie, donc le jour est
+// connu. Le retrait ne porte que sur les photos de cette sortie, jamais sur
+// l'historique de l'opérateur.
+export function WithdrawPhotoPicker({
+  basePath,
+  apiBase,
+  operatorName,
+  dateLabel,
+  slots,
+}: {
+  basePath: string;
+  apiBase: string;
+  operatorName: string;
+  dateLabel: string;
+  slots: GroupSlotSummary[];
+}) {
+  const [step, setStep] = useState<"slots" | "photos">("slots");
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
 
-  async function openDay(day: GroupDaySummary): Promise<void> {
-    setActiveDay(day);
-    setStep("slots");
-    const res = await fetch(`/api/g/s/${shareToken}/days/${encodeURIComponent(day.dateKey)}/slots`);
-    if (res.ok) {
-      const data = (await res.json()) as { dateLabel: string; slots: GroupSlotSummary[] };
-      setSlots(data.slots);
-    }
-  }
-
   async function openSlot(id: string): Promise<void> {
     setConfirmedId(null);
     setStep("photos");
-    const res = await fetch(`/api/g/s/${shareToken}/slots/${id}/photos`);
+    const res = await fetch(`${apiBase}/slots/${id}/photos`);
     if (res.ok) {
       const data = (await res.json()) as { photos: GroupPhoto[] };
       setPhotos(data.photos);
@@ -40,7 +42,7 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
 
   async function confirmHide(photoId: string): Promise<void> {
     setPending(photoId);
-    const res = await fetch(`/api/g/s/${shareToken}/photos/${photoId}/hide`, { method: "POST" });
+    const res = await fetch(`${apiBase}/photos/${photoId}/hide`, { method: "POST" });
     setPending(null);
     if (res.ok) {
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
@@ -48,38 +50,12 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
     }
   }
 
-  if (step === "days") {
-    return (
-      <>
-        <div className={styles.hi}>
-          <h1>Demander le retrait d&rsquo;une photo</h1>
-          <p>Choisissez le jour, puis le créneau où se trouve la photo — elle sera masquée immédiatement, pour tout le monde.</p>
-        </div>
-        <div className={styles.slots}>
-          {days.map((day) => (
-            <button key={day.dateKey} type="button" className={styles.slot} onClick={() => void openDay(day)}>
-              <span className={styles.info}>
-                <span className={styles.h}>{day.dateLabel}</span>
-              </span>
-              <span className={styles.n}>
-                {day.sessionCount} créneau{day.sessionCount > 1 ? "x" : ""}
-              </span>
-            </button>
-          ))}
-        </div>
-        <div className={styles.legal}>
-          <Link href={`/g/s/${shareToken}`}>← Retour à la galerie</Link>
-        </div>
-      </>
-    );
-  }
-
   if (step === "slots") {
     return (
       <>
         <div className={styles.hi}>
-          <h1>Choisissez le créneau</h1>
-          <p>{activeDay?.dateLabel}</p>
+          <h1>Demander le retrait d&rsquo;une photo</h1>
+          <p>Choisissez le créneau où se trouve la photo. Elle disparaît de la galerie immédiatement, pour tout le monde.</p>
         </div>
         <div className={styles.slots}>
           {slots.map((slot) => (
@@ -93,9 +69,8 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
           ))}
         </div>
         <div className={styles.legal}>
-          <button type="button" onClick={() => setStep("days")}>
-            ← Changer de jour
-          </button>
+          {dateLabel ? <p>{dateLabel.replace(/^./, (c) => c.toUpperCase())}</p> : null}
+          <Link href={basePath}>Revenir aux photos</Link>
         </div>
       </>
     );
@@ -120,7 +95,7 @@ export function WithdrawPhotoPicker({ shareToken, days }: { shareToken: string; 
           </div>
         ))}
       </div>
-      {confirmedId ? <div className={styles.legal}>Photo retirée — l&rsquo;opérateur a été prévenu.</div> : null}
+      {confirmedId ? <div className={styles.legal}>Photo retirée. {operatorName} en a été informé.</div> : null}
       <div className={styles.legal}>
         <button type="button" onClick={() => setStep("slots")}>
           Changer de créneau

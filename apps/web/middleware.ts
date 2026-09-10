@@ -1,7 +1,41 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Les boutiques vivent sur leur propre sous-domaine : store.linktrip.co/{slug}/{code}.
+// Next ne connaît que le chemin interne /s/{slug}/{code} — la traduction se
+// fait ici, à l'entrée. Un sous-domaine plutôt qu'un chemin à la racine du
+// site, sinon le premier segment d'URL entrerait en concurrence avec les
+// pages marketing (/produit, /tarifs, /activites…) et un opérateur nommé
+// "Tarifs" volerait une page du site.
+const STORE_HOST_PREFIX = "store.";
+
+// Ce qui ne doit jamais être pris pour un slug d'opérateur.
+const STORE_PASSTHROUGH = /^\/(?:_next|api|favicon\.ico|robots\.txt|sitemap\.xml)(?:\/|$)/;
+
+function storeRewrite(request: NextRequest): NextResponse | null {
+  const host = (request.headers.get("host") ?? "").split(":")[0]!;
+  if (!host.startsWith(STORE_HOST_PREFIX)) return null;
+
+  const { pathname } = request.nextUrl;
+  if (STORE_PASSTHROUGH.test(pathname) || /\.[a-z0-9]+$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
+  const url = request.nextUrl.clone();
+  url.pathname = `/s${pathname}`;
+  const rewritten = NextResponse.rewrite(url);
+  // Le header noindex de next.config.mjs est posé sur le chemin d'ENTRÉE
+  // (/{slug}/{code}), pas sur la cible de la réécriture : il ne s'appliquerait
+  // pas ici. Une boutique porte des visages de clients, elle ne doit jamais
+  // finir dans un index de moteur de recherche.
+  rewritten.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return rewritten;
+}
+
 export async function middleware(request: NextRequest) {
+  const store = storeRewrite(request);
+  if (store) return store;
+
   // Un seul objet réponse pour toute la requête : Supabase pose parfois
   // plusieurs cookies d'affilée lors d'un rafraîchissement de session
   // (access + refresh token). Recréer `response` à chaque set()/remove()

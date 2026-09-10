@@ -32,11 +32,6 @@ model Operator {
   whatsappNumber  String?
   activities      String[] @default([]) // ids @souvenir/web:lib/onboarding/activities.ts — choisis à l'inscription, modifiables en réglages
 
-  // Un seul lien de groupe par opérateur, réutilisé par toutes ses sorties
-  // GROUPE — le client y choisit son jour (Sortie) puis son créneau (Slot).
-  // Généré une fois, à la création de la première sortie GROUPE.
-  shareToken String? @unique
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -76,12 +71,21 @@ model Sortie {
   mode    SortieMode @default(INDIVIDUEL)
   purgeAt DateTime? // GROUPE uniquement — fixé à la publication (startsAt + 90j)
 
+  // GROUPE uniquement — l'adresse publique de la sortie :
+  // store.linktrip.co/{operator.slug}/{shareCode}. Le slug est lisible et
+  // devinable ; le code court est le seul secret, et il ne donne accès qu'à
+  // CETTE sortie, jamais à l'historique de l'opérateur. Généré à la création
+  // de la sortie (ou à la volée pour les sorties antérieures), jamais réémis :
+  // un QR code déjà imprimé doit continuer de marcher.
+  shareCode String?
+
   operator       Operator        @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   participants   Participant[]
   photos         Photo[]
   slots          Slot[]
   processingJobs ProcessingJob[]
 
+  @@unique([operatorId, shareCode])
   @@index([operatorId])
   @@index([operatorId, startsAt])
   @@index([purgeAt])

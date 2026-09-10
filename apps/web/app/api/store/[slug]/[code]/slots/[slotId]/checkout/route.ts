@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { deriveChannel } from "@/lib/channel";
 import { createOrUpdatePaymentIntent, CheckoutError } from "@/lib/checkout";
+import { resolveStore } from "@/lib/store";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,7 +16,7 @@ const schema = z.object({
 // l'identité du client en mode GROUPE (brief §3.3). Un Participant est créé
 // à la volée, rattaché au slot plutôt qu'à des photos possédées en propre,
 // pour réutiliser tel quel le pipeline de paiement existant.
-export async function POST(request: Request, { params }: { params: { shareToken: string; slotId: string } }): Promise<Response> {
+export async function POST(request: Request, { params }: { params: { slug: string; code: string; slotId: string } }): Promise<Response> {
   try {
     const body = await request.json();
     const parsed = schema.safeParse(body);
@@ -23,11 +24,11 @@ export async function POST(request: Request, { params }: { params: { shareToken:
       return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
     }
 
-    const operator = await prisma.operator.findUnique({ where: { shareToken: params.shareToken } });
-    if (!operator) {
+    const store = await resolveStore(params.slug, params.code);
+    if (!store) {
       return Response.json({ error: "not_found" }, { status: 404 });
     }
-    const slot = await prisma.slot.findFirst({ where: { id: params.slotId, sortie: { operatorId: operator.id, mode: "GROUPE" } } });
+    const slot = await prisma.slot.findFirst({ where: { id: params.slotId, sortieId: store.sortie.id } });
     if (!slot) {
       return Response.json({ error: "not_found" }, { status: 404 });
     }
@@ -52,14 +53,14 @@ export async function POST(request: Request, { params }: { params: { shareToken:
       photoIds: parsed.data.photoIds,
     });
 
-    await track("group_order_created", { operatorId: operator.id, participantId: participant.id, meta: { slotId: slot.id } });
+    await track("group_order_created", { operatorId: store.operator.id, participantId: participant.id, meta: { slotId: slot.id } });
 
     return Response.json({ participantId: participant.id, token: participant.token, clientSecret, amountCents }, { status: 200 });
   } catch (error) {
     if (error instanceof CheckoutError) {
       return Response.json({ error: error.code }, { status: error.code === "not_found" ? 404 : 409 });
     }
-    console.error("[API /api/g/s/[shareToken]/slots/[slotId]/checkout]", error);
+    console.error("[API /api/store/[slug]/[code]/slots/[slotId]/checkout]", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

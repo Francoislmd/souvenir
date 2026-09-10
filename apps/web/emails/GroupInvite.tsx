@@ -104,5 +104,5 @@ GroupInvite.PreviewProps = {
   activity: "Canyoning",
   sortieDate: "22 juillet",
   sortiePlace: "Angon",
-  galleryUrl: "https://linktrip.co/g/s/abc123",
+  galleryUrl: "https://store.linktrip.co/ecole-de-surf-hossegor/k7m2pq",
 } satisfies GroupInviteProps;

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
+import { ensureShareCode } from "@/lib/store";
 
 const schema = z.object({
   activity: z.string().min(1),
@@ -25,16 +26,6 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
     }
 
-    // Un seul lien de groupe par opérateur, réutilisé par toutes ses sorties
-    // GROUPE — le client y choisit son jour puis son créneau. Généré une
-    // fois, à la volée, à la première sortie GROUPE de cet opérateur.
-    if (parsed.data.mode === "GROUPE" && !dbUser.operator.shareToken) {
-      await prisma.operator.update({
-        where: { id: dbUser.operatorId },
-        data: { shareToken: crypto.randomUUID() },
-      });
-    }
-
     const sortie = await prisma.sortie.create({
       data: {
         operatorId: dbUser.operatorId,
@@ -46,6 +37,13 @@ export async function POST(request: Request): Promise<Response> {
         mode: parsed.data.mode,
       },
     });
+
+    // Une sortie GROUPE a sa propre boutique, store.linktrip.co/{slug}/{code} :
+    // le code naît avec elle, pour que le QR code soit affichable sans attendre
+    // la publication des photos.
+    if (sortie.mode === "GROUPE") {
+      await ensureShareCode(sortie);
+    }
 
     await track("sortie_created", { operatorId: dbUser.operatorId, meta: { sortieId: sortie.id } });
 

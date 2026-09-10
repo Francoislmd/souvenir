@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contrôle copy : boutique store.linktrip.co</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#e9e7ea;font-family:'Space Grotesk',system-ui,sans-serif}
+.frame{width:412px;margin:24px auto;background:#fbfaf9;border-radius:22px;overflow:hidden;border:1px solid #d9d5dd}
+.caption{width:412px;margin:0 auto 8px;font:500 12px/1.4 'Space Grotesk',sans-serif;color:#413c4e}
+.page {
+  --op-soft: color-mix(in srgb, var(--op) 10%, #fff);
+  --ink: #161320;
+  --ink-2: #413c4e;
+  --ink-3: #726c80;
+  --ink-4: #a6a0b2;
+  --line: #ece9ef;
+  --line-2: #f4f2f6;
+  --bg: #fbfaf9;
+  --ok: #16a34a;
+  --ok-soft: #eaf7ef;
+
+  min-height: 380px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.page * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(251, 250, 249, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.topIn {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 13px 20px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--op);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.name {
+  font-size: 0.97rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.head {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 22px 20px 16px;
+}
+.head h1 {
+  margin: 0;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.56rem;
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 1.15;
+}
+.sub {
+  margin: 9px 0 0;
+  font-size: 0.97rem;
+  color: var(--ink-2);
+}
+.hint {
+  margin: 6px 0 0;
+  font-size: 0.94rem;
+  color: var(--ink-4);
+  line-height: 1.5;
+}
+.note {
+  max-width: 920px;
+  margin: 26px auto 0;
+  padding: 0 20px;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+  line-height: 1.55;
+}
+.powered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 26px 20px 34px;
+  font-size: 0.78rem;
+  color: var(--ink-4);
+}
+.slots {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.slotRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  padding: 16px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+.slotRow + .slotRow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  border-top: 1px solid var(--line);
+}
+.slotRow:active {
+  background: var(--line-2);
+}
+.slotRow:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+.slotH {
+  flex: 0 0 auto;
+  min-width: 74px;
+  font-size: 1.06rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  font-variant-numeric: tabular-nums;
+}
+.slotA {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.03rem;
+  letter-spacing: -0.018em;
+  color: var(--ink-2);
+}
+.slotN {
+  flex: 0 0 auto;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.slotGo {
+  flex: 0 0 auto;
+  color: var(--ink-4);
+}
+.legal {
+  max-width: 920px;
+  margin: 20px auto 0;
+  padding: 0 20px;
+  font-size: 0.81rem;
+  color: var(--ink-4);
+  line-height: 1.6;
+}
+.legal a,
+.legal button {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+h1{font-size:1.55rem;letter-spacing:-0.03em;font-weight:600}
+</style></head><body>
+<p class="caption">…/k7m2pq · scanné avant la publication des photos</p>
+<div class="frame"><div class="page" style="--op:#FF5A1F"><div class="top"><div class="topIn"><span class="logo">EC</span><span class="name">École de surf Hossegor</span></div></div><div class="head"><h1>Les photos ne sont pas encore en ligne</h1><p class="hint">École de surf Hossegor les publie après la sortie. Rouvrez ce lien plus tard, il reste valable.</p></div><div class="powered">Propulsé par <b style="font-weight:600">linktrip</b></div></div></div>
+<p class="caption">…/k7m2pq · choix du créneau</p>
+<div class="frame"><div class="page" style="--op:#FF5A1F"><div class="top"><div class="topIn"><span class="logo">EC</span><span class="name">École de surf Hossegor</span></div></div><div class="head"><h1>Choisissez votre départ</h1><p class="sub">Dimanche 6 septembre</p><p class="hint">Les photos sont classées par heure de départ.</p></div>
+  <div class="slots"><button class="slotRow"><span class="slotH">9 h 00</span><span class="slotA">Surf</span><span class="slotN">24 photos</span>
+    <svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button><button class="slotRow"><span class="slotH">11 h 00</span><span class="slotA">Surf</span><span class="slotN">31 photos</span>
+    <svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button><button class="slotRow"><span class="slotH">14 h 30</span><span class="slotA">Paddle</span><span class="slotN">18 photos</span>
+    <svg class="slotGo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5 16 12l-6.5 7"/></svg></button></div>
+  <p class="note">Un doute sur l’horaire ? Ouvrez le créneau le plus proche, vous vous reconnaîtrez tout de suite.</p>
+  <div class="legal">Une photo de vous que vous ne voulez pas ici ? <a href="#">Demandez son retrait</a>, sans justification.</div><div class="powered">Propulsé par <b style="font-weight:600">linktrip</b></div></div></div>
+</body></html>

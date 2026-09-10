@@ -143,7 +143,8 @@ souvenir/
 │   │   │   ├── signup/
 │   │   │   ├── g/[token]/          # galerie individuelle (mode INDIVIDUEL) — pas de compte, token = seul secret
 │   │   │   │   └── confidentialite/, desinscription/, supprimer/
-│   │   │   ├── g/s/[shareToken]/   # galerie de groupe (mode GROUPE) — jour → créneau → photos
+│   │   │   ├── s/[slug]/          # boutique (mode GROUPE) — servie sur store.linktrip.co/{slug}
+│   │   │   │   └── [code]/         # une sortie = une boutique : créneau → photos (+ /retrait)
 │   │   │   ├── sitemap.ts, robots.ts   # landing + pages légales uniquement, le reste est exclu
 │   │   │   └── api/
 │   │   │       ├── webhooks/stripe/        # payment_intent.*, charge.refunded, charge.dispute.*, account.updated
@@ -152,7 +153,7 @@ souvenir/
 │   │   │       ├── cron/automations/       # relances email/WhatsApp — Vercel Cron, secured by CRON_SECRET
 │   │   │       ├── cron/gdpr-purge/        # purge RGPD — Vercel Cron, secured by CRON_SECRET
 │   │   │       ├── sorties/, participants/, photos/, operator/
-│   │   │       └── g/[token]/, g/s/[shareToken]/    # endpoints publics de la galerie (poll, achats, retrait)
+│   │   │       └── g/[token]/, store/[slug]/[code]/  # endpoints publics des galeries (poll, achats, retrait)
 │   │   ├── sentry.client.config.ts, sentry.server.config.ts, sentry.edge.config.ts, instrumentation.ts
 │   │   ├── components/
 │   │   └── lib/                    # stripe.ts, twilio.ts, supabase-server.ts, analytics.ts, gdpr.ts, order-fulfillment.ts, order-refunds.ts, automations.ts…
@@ -160,10 +161,12 @@ souvenir/
 └── packages/db/                    # schema.prisma + client Prisma partagé (source TS brute, pas de build)
 ```
 
-- **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie (`/g/[token]` ou `/g/s/[shareToken]`). `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
+- **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie individuelle (`/g/[token]`) ou, en mode GROUPE, via l'adresse de la boutique de sa sortie. `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
+
+**Adresse des boutiques GROUPE** : `store.linktrip.co/{operator.slug}/{sortie.shareCode}`. Le slug est lisible et devinable, assumé, c'est une vitrine de marque ; le secret est le `shareCode`, six caractères, unique par opérateur, et sa portée s'arrête à UNE sortie (avant, un jeton unique par opérateur ouvrait 90 jours d'historique). `store.linktrip.co/{slug}` seul ne mène nulle part et renvoie sur `linktrip.co` (redirection temporaire) : on n'y arrive qu'en tronquant une URL, l'adresse complète est remise à la fin de la sortie. La traduction sous-domaine → chemin interne `/s/{slug}/{code}` se fait dans `middleware.ts`, qui y pose aussi le `X-Robots-Tag: noindex` ; sans `NEXT_PUBLIC_STORE_URL` (local, previews) les boutiques se servent depuis le domaine principal sur `/s/...`. Le code est créé avec la sortie GROUPE, et à la volée pour les sorties antérieures (`lib/store.ts`, `ensureShareCode`), jamais réémis : un QR code imprimé doit continuer de marcher.
 - **Storage** : buckets Supabase `originals` (privé) et `previews` (aperçus/miniatures/flous — voir `lib/storage.ts`).
 - **Accès DB** : Prisma côté serveur uniquement (server components / route handlers / worker). Pas de requête Supabase côté client.
-- **SEO** : `app/sitemap.ts` et `app/robots.ts` n'exposent que la landing et les 4 pages légales — galeries, espace opérateur et auth sont explicitement exclus (`Disallow` + header `X-Robots-Tag: noindex` sur `/g/:path*`, posé dans `next.config.mjs`).
+- **SEO** : `app/sitemap.ts` et `app/robots.ts` n'exposent que la landing et les 4 pages légales — galeries, boutiques, espace opérateur et auth sont explicitement exclus (`Disallow` + header `X-Robots-Tag: noindex` sur `/g/:path*` et `/s/:path*`, posé dans `next.config.mjs`, et sur le sous-domaine par `middleware.ts`).
 - **Monitoring** : Sentry (`@sentry/nextjs` côté web, `@sentry/node` côté worker), entièrement optionnel — inerte tant que `NEXT_PUBLIC_SENTRY_DSN`/`SENTRY_DSN` ne sont pas définies, l'app démarre sans.
 
 ---

@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { env } from "@/lib/env";
 import { getOperatorUser } from "@/lib/current-user";
 import { sendGroupInviteEmail } from "@/lib/email";
+import { ensureShareCode, storeUrl } from "@/lib/store";
 
 const schema = z.object({
   emails: z.array(z.string().email()).min(1).max(200),
@@ -33,11 +33,12 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       where: { id: params.sortieId, operatorId: dbUser.operatorId },
       include: { operator: true },
     });
-    if (!sortie || sortie.mode !== "GROUPE" || !sortie.operator.shareToken) {
+    if (!sortie || sortie.mode !== "GROUPE") {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/s/${sortie.operator.shareToken}`;
+    const code = await ensureShareCode(sortie);
+    const galleryUrl = storeUrl(sortie.operator.slug, code);
     const emails = Array.from(new Set(parsed.data.emails.map((e) => e.trim().toLowerCase())));
 
     let sent = 0;

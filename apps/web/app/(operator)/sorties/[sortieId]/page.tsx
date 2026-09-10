@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getPreviewUrl } from "@/lib/storage";
 import { bucketSortie } from "@/lib/sorties";
-import { env } from "@/lib/env";
+import { ensureShareCode, storeUrl } from "@/lib/store";
 import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
 function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
@@ -31,6 +31,10 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
   if (!sortie) notFound();
 
   const isGroup = sortie.mode === "GROUPE";
+  // Les sorties GROUPE créées avant le passage à store.linktrip.co n'ont pas
+  // encore de code : on le leur donne à la première ouverture de leur fiche,
+  // plutôt qu'en migration de base.
+  const shareUrl = isGroup ? storeUrl(dbUser.operator.slug, await ensureShareCode(sortie)) : null;
   const clients: ScreenClient[] = sortie.participants.map((p) => ({
     id: p.id,
     name: p.name,
@@ -48,7 +52,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       meta={metaLine(sortie.startsAt, bucketSortie(sortie.startsAt), sortie.guide, sortie.participants.length)}
       isGroup={isGroup}
       published={sortie.status === "SENT"}
-      shareUrl={isGroup && dbUser.operator.shareToken ? `${env.NEXT_PUBLIC_APP_URL}/g/s/${dbUser.operator.shareToken}` : null}
+      shareUrl={shareUrl}
       clients={clients}
       initialPhotos={sortie.photos.map((p) => ({
         id: p.id,

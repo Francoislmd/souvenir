@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
@@ -11,43 +10,52 @@ import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
 import { LockIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
-import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
+import type { GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
 /**
- * Le lien de groupe : un QR code affiché à la base, scanné au retour. Deux
- * écrans seulement — choisir son créneau, puis choisir ses photos. Le second
- * est exactement celui de la boutique individuelle (PhotoPicker) : le client
- * n'a aucune raison de voir deux interfaces différentes pour le même geste.
+ * La boutique d'une sortie : un QR code affiché à la base, scanné au retour.
+ * Deux écrans seulement, choisir son créneau puis choisir ses photos. Le
+ * second est exactement celui de la boutique individuelle (PhotoPicker) : le
+ * client n'a aucune raison de voir deux interfaces différentes pour le même
+ * geste.
+ *
+ * `basePath` est le chemin tel que le navigateur le voit (il diffère selon
+ * qu'on est sur store.linktrip.co ou sur le domaine principal, cf.
+ * lib/store.ts) ; `apiBase` est identique partout, /api n'étant jamais
+ * réécrit.
  */
 export function GroupGallery({
-  shareToken,
-  days,
+  basePath,
+  apiBase,
+  appUrl,
+  dateLabel,
+  slots,
   pricing,
   packOnly,
 }: {
-  shareToken: string;
-  days: GroupDaySummary[];
+  basePath: string;
+  apiBase: string;
+  appUrl: string;
+  dateLabel: string;
+  slots: GroupSlotSummary[];
   pricing: PricingConfig;
   packOnly: boolean;
 }) {
-  const router = useRouter();
   const [slot, setSlot] = useState<GroupSlotSummary | null>(null);
-  const [dayLabel, setDayLabel] = useState("");
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pendingIds, setPendingIds] = useState<string[] | null>(null);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function load(id: string): Promise<void> {
-    const res = await fetch(`/api/g/s/${shareToken}/slots/${id}/photos`);
+    const res = await fetch(`${apiBase}/slots/${id}/photos`);
     if (!res.ok) return;
     const data = (await res.json()) as { photos: GroupPhoto[] };
     setPhotos(data.photos);
   }
 
-  function pick(picked: GroupSlotSummary, label: string): void {
+  function pick(picked: GroupSlotSummary): void {
     setSlot(picked);
-    setDayLabel(label);
     setPhotos([]);
     void load(picked.id);
   }
@@ -75,15 +83,18 @@ export function GroupGallery({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ participantId: checkout.participantId }),
     }).catch(() => undefined);
-    router.push(`/g/${checkout.token}`);
+    // La galerie personnelle vit sur le domaine principal, pas sur
+    // store.linktrip.co : une navigation Next relative y enverrait le client
+    // sur store.linktrip.co/g/... que le middleware prendrait pour un slug.
+    window.location.href = `${appUrl}/g/${checkout.token}`;
   }
 
   if (!slot) {
     return (
       <>
-        <SessionRetrieval shareToken={shareToken} days={days} onPick={pick} />
+        <SessionRetrieval dateLabel={dateLabel} slots={slots} onPick={pick} />
         <div className={styles.legal}>
-          Une photo de vous que vous ne voulez pas ici ? <Link href={`/g/s/${shareToken}/retrait`}>Demandez son retrait</Link>, sans justification.
+          Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
         </div>
         <div className={styles.powered}>
           Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
@@ -99,11 +110,11 @@ export function GroupGallery({
       <div className={styles.head}>
         <h1>{slot.activity}</h1>
         <p className={styles.sub}>
-          {dayLabel ? `${dayLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
+          {dateLabel ? `${dateLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
           {slot.label}
         </p>
         <p className={styles.hint}>
-          {packOnly ? "Toutes les photos du créneau, en une fois." : "Touchez celles où vous êtes, ou prenez tout."}{" "}
+          {packOnly ? "Toutes les photos du créneau, en une fois." : "Touchez celles où vous êtes, ou prenez le créneau entier."}{" "}
           <button type="button" className={styles.moreBtn} onClick={() => setSlot(null)}>
             Changer de créneau
           </button>
@@ -126,7 +137,7 @@ export function GroupGallery({
 
       <div className={styles.legal}>
         Photos conservées 90 jours puis supprimées automatiquement. Une photo de vous que vous ne voulez pas ici ?{" "}
-        <Link href={`/g/s/${shareToken}/retrait`}>Demandez son retrait</Link>, sans justification.
+        <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
       </div>
       <div className={styles.powered}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
@@ -138,7 +149,7 @@ export function GroupGallery({
 
       {pendingIds ? (
         <EmailSheet
-          shareToken={shareToken}
+          apiBase={apiBase}
           slotId={slot.id}
           photoIds={pendingIds}
           label={pendingIds.length >= photos.length ? allLabel(photos.length) : `${pendingIds.length} photo${pendingIds.length > 1 ? "s" : ""}`}
@@ -176,7 +187,7 @@ function allLabel(count: number): string {
  * (brief §3.3) — et c'est là qu'on le lui dit.
  */
 function EmailSheet({
-  shareToken,
+  apiBase,
   slotId,
   photoIds,
   label,
@@ -184,7 +195,7 @@ function EmailSheet({
   onReady,
   onClose,
 }: {
-  shareToken: string;
+  apiBase: string;
   slotId: string;
   photoIds: string[];
   label: string;
@@ -201,14 +212,14 @@ function EmailSheet({
     const trimmed = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setInvalid(true);
-      setError("Il nous faut votre email pour vous envoyer les photos.");
+      setError("Sans e-mail, nous ne pouvons pas vous envoyer vos photos.");
       return;
     }
     setInvalid(false);
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/g/s/${shareToken}/slots/${slotId}/checkout`, {
+      const res = await fetch(`${apiBase}/slots/${slotId}/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmed, photoIds }),
@@ -222,7 +233,7 @@ function EmailSheet({
       const data = (await res.json()) as { clientSecret: string; amountCents: number; token: string; participantId: string };
       onReady(data);
     } catch {
-      setError("Le réseau a coupé — réessayez.");
+      setError("La connexion a été interrompue. Réessayez.");
       setLoading(false);
     }
   }
@@ -237,7 +248,7 @@ function EmailSheet({
           <b>{formatEuros(amountCents)}</b>
         </div>
         <div className={styles.fld}>
-          <label htmlFor="groupEmail">Votre email</label>
+          <label htmlFor="groupEmail">Votre e-mail</label>
           <input
             id="groupEmail"
             type="email"
@@ -249,7 +260,7 @@ function EmailSheet({
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void submit()}
           />
-          <div className={styles.why}>C&rsquo;est là que nous enverrons vos photos — nous ne savons pas encore qui vous êtes.</div>
+          <div className={styles.why}>Vos photos vous sont envoyées à cette adresse dès le paiement.</div>
         </div>
         {error ? <p className={styles.error}>{error}</p> : null}
         <button type="button" className={styles.cta} onClick={() => void submit()} disabled={loading}>

@@ -31,6 +31,17 @@ const nextConfig = {
     return [
       { source: "/fonctionnement", destination: "/produit#demo", permanent: true },
       { source: "/simulation", destination: "/produit#simulateur", permanent: true },
+      /* La racine du sous-domaine des boutiques ne mène nulle part : sans
+         slug, il n'y a pas d'opérateur, et sans code il n'y a pas de sortie.
+         Renvoi sur le site plutôt qu'une landing marketing servie sous
+         store.linktrip.co, qui existerait alors en double aux yeux de Google.
+         Traité ici et pas dans middleware.ts, dont le matcher exclut "/". */
+      {
+        source: "/",
+        has: [{ type: "host", value: "store.(?<storeDomain>.*)" }],
+        destination: "https://:storeDomain",
+        permanent: false,
+      },
     ];
   },
   async headers() {
@@ -43,6 +54,14 @@ const nextConfig = {
         // complément de robots.ts : un Disallow seul n'empêche pas
         // l'indexation d'une URL déjà liée ailleurs, juste son exploration.
         source: "/g/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // Les boutiques, servies sur le domaine principal (en local, ou en
+        // secours si le sous-domaine tombe). Sur store.linktrip.co le même
+        // header est posé par middleware.ts, qui voit le chemin d'entrée
+        // avant réécriture.
+        source: "/s/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];
