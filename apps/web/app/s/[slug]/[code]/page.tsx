@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { dateKeyFor } from "@/lib/gallery-group";
 import { resolveSortieByCode } from "@/lib/store";
 import { StoreScreen } from "@/components/store/StoreScreen";
 
 // Le lien d'une sortie précise, celui du QR code affiché à la fin de la
-// journée. Il ouvre la même boutique que le slug seul, mais directement sur
-// le jour de cette sortie : le client n'a pas à retrouver sa date dans la
-// liste. Le code n'est plus un secret, seulement un raccourci.
+// journée : il n'affiche que les créneaux de CETTE sortie. Ouvrir seulement
+// son jour ne suffisait pas, un même jour pouvant porter plusieurs sorties du
+// même opérateur. Le code n'est plus un secret, la boutique est publique,
+// mais il désigne bien une sortie et une seule.
 export const dynamic = "force-dynamic";
 
 // Le titre d'onglet vient du layout, écrit pour la landing : c'est
@@ -26,5 +26,5 @@ export default async function StoreSortiePage({ params }: { params: { slug: stri
   const found = await resolveSortieByCode(params.slug, params.code);
   if (!found) notFound();
 
-  return <StoreScreen operator={found.operator} initialDateKey={dateKeyFor(found.startsAt)} />;
+  return <StoreScreen operator={found.operator} sortieId={found.sortieId} />;
 }

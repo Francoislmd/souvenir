@@ -55,10 +55,7 @@ function frMonthAbbr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { month: "short", timeZone: TZ }).replace(".", "").toUpperCase();
 }
 
-// Exportée : la page d'une sortie doit calculer la clé du jour à
-// présélectionner avec exactement la même règle de fuseau que les cartes de
-// jour, sinon le lien d'une sortie de 23 h 30 ouvre la veille.
-export function dateKeyFor(d: Date): string {
+function dateKeyFor(d: Date): string {
   // Format "en-CA" = YYYY-MM-DD, dans le fuseau de Paris plutôt qu'UTC.
   return d.toLocaleDateString("en-CA", { timeZone: TZ });
 }
@@ -193,6 +190,41 @@ export async function getSlotsForDate(slug: string, dateKey: string): Promise<{ 
     }));
 
   return { dateLabel: formatDateFr(matching[0]!.startsAt).toLowerCase(), slots };
+}
+
+/**
+ * Créneaux d'une seule sortie, pour le lien qui la désigne
+ * (store.linktrip.co/{slug}/{code}).
+ *
+ * Distinct de getSlotsForDate : une même date calendaire peut porter
+ * plusieurs sorties du même opérateur, et le lien d'une sortie ne doit
+ * ouvrir que la sienne. Renvoie null tant qu'aucun créneau n'existe, c'est
+ * à dire tant que la sortie n'est pas publiée.
+ */
+export async function getSortieSlots(sortieId: string): Promise<{ dateLabel: string; slots: GroupSlotSummary[] } | null> {
+  const sortie = await prisma.sortie.findUnique({
+    where: { id: sortieId },
+    include: {
+      slots: {
+        include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },
+        orderBy: { startsAt: "asc" },
+      },
+    },
+  });
+  if (!sortie || sortie.slots.length === 0) return null;
+
+  return {
+    dateLabel: formatDateFr(sortie.startsAt).toLowerCase(),
+    slots: sortie.slots.map((slot) => ({
+      id: slot.id,
+      label: slot.label,
+      hourBucket: hourBucketFor(slot.startsAt),
+      activity: sortie.activity,
+      activityKey: slugify(sortie.activity),
+      guide: slot.guide,
+      photoCount: slot._count.photos,
+    })),
+  };
 }
 
 /**

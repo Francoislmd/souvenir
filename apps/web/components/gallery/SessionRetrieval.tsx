@@ -22,27 +22,30 @@ import type { GroupDaySummary, GroupSlotSummary } from "@/lib/gallery-group";
 export function SessionRetrieval({
   apiBase,
   days,
-  initialDateKey,
+  sortie,
   onPick,
 }: {
   apiBase: string;
   days: GroupDaySummary[];
-  initialDateKey?: string;
+  // Posé quand on arrive par le lien d'une sortie précise : ses créneaux sont
+  // alors déjà connus du serveur, il n'y a ni jour à choisir ni appel à faire.
+  // Un même jour peut porter plusieurs sorties du même opérateur, et le lien
+  // d'une sortie ne doit ouvrir que la sienne.
+  sortie?: { dateLabel: string; slots: GroupSlotSummary[] };
   onPick: (slot: GroupSlotSummary, dayLabel: string) => void;
 }) {
-  // Le jour du lien de sortie, quand on arrive par le QR code d'une journée
-  // précise, sinon le plus récent : on scanne au retour, pas trois semaines
-  // plus tard.
-  const [dateKey, setDateKey] = useState(
-    (initialDateKey && days.some((d) => d.dateKey === initialDateKey) ? initialDateKey : days[0]?.dateKey) ?? "",
-  );
+  // Le jour le plus récent : on scanne le QR code au retour de la sortie, pas
+  // trois semaines plus tard.
+  const [dateKey, setDateKey] = useState(days[0]?.dateKey ?? "");
   const [slots, setSlots] = useState<GroupSlotSummary[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
 
   const activeDay = days.find((d) => d.dateKey === dateKey) ?? null;
+  const shownSlots = sortie ? sortie.slots : slots;
+  const shownLabel = sortie ? sortie.dateLabel : (activeDay?.dateLabel ?? "");
 
   useEffect(() => {
-    if (!dateKey) return;
+    if (sortie || !dateKey) return;
     let cancelled = false;
     setState("loading");
     fetch(`${apiBase}/days/${encodeURIComponent(dateKey)}/slots`)
@@ -61,9 +64,9 @@ export function SessionRetrieval({
     return () => {
       cancelled = true;
     };
-  }, [dateKey, apiBase]);
+  }, [dateKey, apiBase, sortie]);
 
-  if (days.length === 0) {
+  if (!sortie && days.length === 0) {
     return (
       <>
         <div className={styles.head}>
@@ -78,10 +81,11 @@ export function SessionRetrieval({
     <>
       <div className={styles.head}>
         <h1>Choisissez votre départ</h1>
+        {sortie ? <p className={styles.sub}>{sortie.dateLabel.replace(/^./, (c) => c.toUpperCase())}</p> : null}
         <p className={styles.hint}>Les photos sont classées par heure de départ.</p>
       </div>
 
-      {days.length > 1 ? (
+      {!sortie && days.length > 1 ? (
         <div className={styles.chips}>
           {days.map((day) => (
             <button
@@ -96,14 +100,14 @@ export function SessionRetrieval({
         </div>
       ) : null}
 
-      {state === "error" ? (
+      {!sortie && state === "error" ? (
         <p className={styles.empty}>Les créneaux n&rsquo;ont pas pu être chargés. Réessayez dans un instant.</p>
-      ) : state === "ready" && slots.length === 0 ? (
+      ) : !sortie && state === "ready" && slots.length === 0 ? (
         <p className={styles.empty}>Aucun créneau publié ce jour-là.</p>
       ) : (
         <div className={styles.slots}>
-          {slots.map((slot) => (
-            <button key={slot.id} type="button" className={styles.slotRow} onClick={() => onPick(slot, activeDay?.dateLabel ?? "")}>
+          {shownSlots.map((slot) => (
+            <button key={slot.id} type="button" className={styles.slotRow} onClick={() => onPick(slot, shownLabel)}>
               <span className={styles.slotH}>{slot.label}</span>
               <span className={styles.slotA}>{slot.activity}</span>
               <span className={styles.slotN}>

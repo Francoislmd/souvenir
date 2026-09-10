@@ -22,15 +22,15 @@ import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/galler
  * `basePath` est le chemin tel que le navigateur le voit (il diffère selon
  * qu'on est sur store.linktrip.co ou sur le domaine principal, cf.
  * lib/store.ts) ; `apiBase` est identique partout, /api n'étant jamais
- * réécrit. `initialDateKey` n'est posé que lorsqu'on arrive par le lien
- * d'une sortie précise.
+ * réécrit. `sortie` n'est posé que lorsqu'on arrive par le lien d'une sortie
+ * précise, et court-circuite alors le choix du jour.
  */
 export function GroupGallery({
   basePath,
   apiBase,
   appUrl,
   days,
-  initialDateKey,
+  sortie,
   pricing,
   packOnly,
 }: {
@@ -38,7 +38,7 @@ export function GroupGallery({
   apiBase: string;
   appUrl: string;
   days: GroupDaySummary[];
-  initialDateKey?: string;
+  sortie?: { dateLabel: string; slots: GroupSlotSummary[] };
   pricing: PricingConfig;
   packOnly: boolean;
 }) {
@@ -95,7 +95,7 @@ export function GroupGallery({
   if (!slot) {
     return (
       <>
-        <SessionRetrieval apiBase={apiBase} days={days} initialDateKey={initialDateKey} onPick={pick} />
+        <SessionRetrieval apiBase={apiBase} days={days} sortie={sortie} onPick={pick} />
         <div className={styles.legal}>
           Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
         </div>

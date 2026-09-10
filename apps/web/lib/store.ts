@@ -136,11 +136,12 @@ export async function resolveOperator(slug: string): Promise<StoreOperator | nul
 }
 
 /**
- * La sortie désignée par un code, dans la boutique d'un opérateur. Sert
- * uniquement à savoir sur quel jour ouvrir la boutique : le code n'ouvre plus
- * rien à lui seul, la boutique est publique.
+ * La sortie désignée par un code, dans la boutique d'un opérateur. Le code
+ * n'est plus un secret (la boutique est publique) mais il désigne bien UNE
+ * sortie : son lien n'ouvre que ses créneaux, pas ceux des autres sorties du
+ * même jour.
  */
-export async function resolveSortieByCode(slug: string, code: string): Promise<{ operator: StoreOperator; startsAt: Date } | null> {
+export async function resolveSortieByCode(slug: string, code: string): Promise<{ operator: StoreOperator; sortieId: string; startsAt: Date } | null> {
   const operator = await resolveOperator(slug);
   if (!operator) return null;
 
@@ -149,9 +150,9 @@ export async function resolveSortieByCode(slug: string, code: string): Promise<{
 
   const sortie = await prisma.sortie.findFirst({
     where: { operatorId: operator.id, shareCode: normalizedCode, mode: "GROUPE" },
-    select: { startsAt: true },
+    select: { id: true, startsAt: true },
   });
   if (!sortie) return null;
 
-  return { operator, startsAt: sortie.startsAt };
+  return { operator, sortieId: sortie.id, startsAt: sortie.startsAt };
 }
