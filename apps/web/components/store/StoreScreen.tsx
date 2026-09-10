@@ -17,13 +17,13 @@ import styles from "@/components/gallery/collective.module.css";
 export async function StoreScreen({ operator, initialDateKey }: { operator: StoreOperator; initialDateKey?: string }) {
   const data = await getOperatorGroupDays(operator.slug);
 
+  // Le pied de page n'est posé ici que sur l'écran d'attente : GroupGallery
+  // pose déjà le sien, et l'enveloppe en ajoutait un second, visible en
+  // production.
   const frame = (children: React.ReactNode) => (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
       <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
       {children}
-      <div className={gallery.powered}>
-        Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
-      </div>
     </div>
   );
 
@@ -32,10 +32,15 @@ export async function StoreScreen({ operator, initialDateKey }: { operator: Stor
   // 404 lui ferait croire que son lien est mauvais.
   if (!data || data.days.length === 0) {
     return frame(
-      <div className={gallery.head}>
-        <h1>Les photos ne sont pas encore en ligne</h1>
-        <p className={gallery.hint}>Elles arrivent ici après la sortie. Rouvrez ce lien plus tard, il reste valable.</p>
-      </div>,
+      <>
+        <div className={gallery.head}>
+          <h1>Les photos ne sont pas encore en ligne</h1>
+          <p className={gallery.hint}>Elles arrivent ici après la sortie. Rouvrez ce lien plus tard, il reste valable.</p>
+        </div>
+        <div className={gallery.powered}>
+          Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
+        </div>
+      </>,
     );
   }
 
