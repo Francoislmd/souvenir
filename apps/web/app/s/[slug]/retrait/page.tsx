@@ -6,9 +6,18 @@ import styles from "@/components/gallery/collective.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
+// Le titre d'onglet vient du layout, écrit pour la landing : c'est
+// l'argumentaire destiné aux prestataires, affiché à un client qui achète ses
+// photos. Il porte donc ici le nom de son prestataire, et le mot utile en
+// premier, seul à survivre quand l'onglet rétrécit.
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const found = await resolveOperator(params.slug);
+  const name = found?.name;
+  return {
+    title: name ? `Vos photos · ${name}` : "Vos photos",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function WithdrawPage({ params }: { params: { slug: string } }) {
   const operator = await resolveOperator(params.slug);
