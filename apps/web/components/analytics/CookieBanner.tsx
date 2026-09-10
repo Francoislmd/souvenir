@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CONSENT_ALL, CONSENT_NONE, readConsent, writeConsent, type ConsentState } from "@/lib/consent";
 import { isGtmEnabled } from "@/lib/gtm";
+import { useIsClientPage } from "@/components/analytics/useClientPage";
 import styles from "./cookie-banner.module.css";
 
 /** Événement global : permet à un lien « Gérer mes cookies » de rouvrir le bandeau. */
@@ -14,6 +15,9 @@ export function openCookieBanner(): void {
 }
 
 export function CookieBanner() {
+  // Boutiques et galeries ne chargent aucune mesure d'audience : il n'y a
+  // donc rien à faire accepter, et surtout pas juste avant un paiement.
+  const clientPage = useIsClientPage();
   // Rendu uniquement après montage : le choix vit dans localStorage, donc le
   // serveur ne peut pas le connaître — l'afficher au SSR provoquerait un
   // mismatch d'hydratation et un flash du bandeau chez ceux qui ont déjà choisi.
@@ -22,7 +26,7 @@ export function CookieBanner() {
   const [draft, setDraft] = useState<ConsentState>(CONSENT_NONE);
 
   useEffect(() => {
-    if (!isGtmEnabled) return;
+    if (!isGtmEnabled || clientPage) return;
     if (readConsent() === null) setVisible(true);
 
     function reopen(): void {
@@ -32,7 +36,7 @@ export function CookieBanner() {
     }
     window.addEventListener(OPEN_COOKIE_BANNER_EVENT, reopen);
     return () => window.removeEventListener(OPEN_COOKIE_BANNER_EVENT, reopen);
-  }, []);
+  }, [clientPage]);
 
   function decide(state: ConsentState): void {
     writeConsent(state);

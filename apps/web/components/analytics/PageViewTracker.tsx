@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { trackPageView } from "@/lib/gtm";
+import { useIsClientPage } from "@/components/analytics/useClientPage";
 
 /**
  * En App Router, les navigations client ne rechargent pas la page : la balise
@@ -13,9 +14,13 @@ import { trackPageView } from "@/lib/gtm";
 function Tracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const clientPage = useIsClientPage();
   const lastUrl = useRef<string | null>(null);
 
   useEffect(() => {
+    // Aucune vue de page sur les boutiques et les galeries : GTM n'y est
+    // même pas chargé, le push partirait dans le vide.
+    if (clientPage) return;
     const qs = searchParams.toString();
     const url = qs ? `${pathname}?${qs}` : pathname;
 
@@ -27,7 +32,7 @@ function Tracker() {
     // Laisse Next mettre à jour document.title avant de lire la valeur.
     const id = window.setTimeout(() => trackPageView(url), 0);
     return () => window.clearTimeout(id);
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, clientPage]);
 
   return null;
 }

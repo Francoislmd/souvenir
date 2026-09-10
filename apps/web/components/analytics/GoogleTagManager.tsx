@@ -1,5 +1,5 @@
-import Script from "next/script";
 import { CONSENT_MAX_AGE_MS, CONSENT_STORAGE_KEY, CONSENT_VERSION } from "@/lib/consent";
+import { GtmLoader, GtmNoScript } from "@/components/analytics/GtmLoader";
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "";
 
@@ -71,7 +71,11 @@ export function GoogleTagManager() {
           AVANT que gtm.js ne démarre. Un `beforeInteractive` de next/script
           conviendrait aussi mais n'est supporté que dans le layout racine. */}
       <script id="consent-mode-default" dangerouslySetInnerHTML={{ __html: consentBootstrap }} />
-      <Script id="gtm-loader" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: gtmLoader }} />
+      {/* Le chargeur est un composant client : il se tait sur les boutiques et
+          les galeries, où aucune mesure n'est faite. Le script d'amorçage
+          ci-dessus reste rendu partout, il ne fait aucune requête réseau et
+          se contente de poser les défauts Consent Mode. */}
+      <GtmLoader script={gtmLoader} />
     </>
   );
 }
@@ -80,15 +84,5 @@ export function GoogleTagManager() {
 export function GoogleTagManagerNoScript() {
   if (!GTM_ID) return null;
 
-  return (
-    <noscript>
-      <iframe
-        src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-        height="0"
-        width="0"
-        style={{ display: "none", visibility: "hidden" }}
-        title="Google Tag Manager"
-      />
-    </noscript>
-  );
+  return <GtmNoScript gtmId={GTM_ID} />;
 }
