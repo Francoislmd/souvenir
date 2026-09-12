@@ -10,7 +10,14 @@ export async function purgeParticipant(participantId: string): Promise<void> {
   if (!participant || participant.deletedAt) return;
 
   const originalKeys = participant.photos.map((p) => p.originalKey);
-  const previewKeys = participant.photos.flatMap((p) => [p.previewKey, p.thumbKey].filter((k): k is string => !!k));
+  // TOUTES les dérivées, pas seulement previewKey/thumbKey. Le bucket
+  // `previews` est public : un aperçu flouté ou filigrané oublié ici reste
+  // lisible par son URL après que la personne a demandé sa suppression — et
+  // il porte son visage. purgeGroupSortie listait déjà les cinq clés, la
+  // version individuelle en oubliait trois.
+  const previewKeys = participant.photos.flatMap((p) =>
+    [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
+  );
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
   await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);

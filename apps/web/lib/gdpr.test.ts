@@ -44,15 +44,30 @@ describe("purgeParticipant", () => {
       deletedAt: null,
       sortie: { operatorId: "operator_1" },
       photos: [
-        { originalKey: "orig/1.jpg", previewKey: "prev/1.jpg", thumbKey: "thumb/1.jpg" },
-        { originalKey: "orig/2.jpg", previewKey: null, thumbKey: null },
+        {
+          originalKey: "orig/1.jpg",
+          previewKey: "prev/1.jpg",
+          thumbKey: "thumb/1.jpg",
+          blurKey: "blur/1.jpg",
+          blurEmailKey: "blur-email/1.jpg",
+          groupPreviewKey: "group/1.jpg",
+        },
+        { originalKey: "orig/2.jpg", previewKey: null, thumbKey: null, blurKey: null, blurEmailKey: null, groupPreviewKey: null },
       ],
     });
 
     await purgeParticipant("participant_1");
 
     expect(deleteStorageObjectsMock).toHaveBeenCalledWith("originals", ["orig/1.jpg", "orig/2.jpg"]);
-    expect(deleteStorageObjectsMock).toHaveBeenCalledWith("previews", ["prev/1.jpg", "thumb/1.jpg"]);
+    // Les cinq dérivées, pas seulement l'aperçu et la miniature : le bucket
+    // `previews` est public, une clé oubliée survit à la suppression.
+    expect(deleteStorageObjectsMock).toHaveBeenCalledWith("previews", [
+      "prev/1.jpg",
+      "thumb/1.jpg",
+      "blur/1.jpg",
+      "blur-email/1.jpg",
+      "group/1.jpg",
+    ]);
     expect(prismaMock.photo.deleteMany).toHaveBeenCalledWith({ where: { ownerId: "participant_1" } });
     expect(prismaMock.participant.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ name: "Supprimé", contact: "", deletedAt: expect.any(Date) }) }),
