@@ -3,7 +3,7 @@ import { stripe } from "./stripe";
 import { quote, applyReducedOffer, type PricingConfig } from "./pricing";
 
 export class CheckoutError extends Error {
-  constructor(public code: "not_found" | "stripe_not_ready") {
+  constructor(public code: "not_found" | "stripe_not_ready" | "already_paid") {
     super(code);
   }
 }
@@ -17,6 +17,16 @@ export async function createOrUpdatePaymentIntent(params: {
     include: { sortie: { include: { operator: true } }, order: true },
   });
   if (!participant || participant.deletedAt) throw new CheckoutError("not_found");
+
+  // Une commande déjà payée ne se rouvre pas. L'upsert ci-dessous repasse le
+  // statut à "pending", et lib/gallery.ts n'ouvre la galerie qu'en égalité
+  // stricte sur "succeeded" : sans ce garde-fou, un simple rappel de la route
+  // reverrouille les photos d'un client qui les a payées. Même raisonnement
+  // pour un remboursement ou un litige, dont le statut ne doit pas être
+  // écrasé par une nouvelle tentative d'achat.
+  if (participant.order && participant.order.status !== "pending" && participant.order.status !== "failed") {
+    throw new CheckoutError("already_paid");
+  }
 
   const operator = participant.sortie.operator;
   if (!operator.stripeOnboarded || !operator.stripeAccountId) throw new CheckoutError("stripe_not_ready");

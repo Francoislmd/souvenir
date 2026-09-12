@@ -195,10 +195,10 @@ export function BoutiqueGallery({
       extra: { ...gtmContext, photos_selected: photoIds.length, reduced_offer: reducedOfferActive },
     });
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch(`/api/g/${token}/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantId, photoIds }),
+        body: JSON.stringify({ photoIds }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
