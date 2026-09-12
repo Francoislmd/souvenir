@@ -8,11 +8,6 @@ export function bucketSortie(startsAt: Date, now: Date = new Date()): SortieBuck
   return startsAt > endOfDay(now) ? "upcoming" : "past";
 }
 
-export function sortieStatusLabel(status: SortieStatus, bucket: SortieBucket): string {
-  if (status === "SENT") return "Envoyée";
-  if (status === "SORTED") return "Photos triées";
-  return bucket === "past" ? "Non envoyée" : "À venir";
-}
 
 export type PublicationStatus = "online" | "pending" | "none";
 
@@ -26,8 +21,3 @@ export function publicationStatus(photoCount: number, status: SortieStatus): Pub
   return status === "SENT" ? "online" : "pending";
 }
 
-export function publicationStatusLabel(status: PublicationStatus): string {
-  if (status === "online") return "Photos en ligne";
-  if (status === "pending") return "Photos à publier";
-  return "Sans photo";
-}

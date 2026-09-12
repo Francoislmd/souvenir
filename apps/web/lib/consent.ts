@@ -98,12 +98,3 @@ export function writeConsent(state: ConsentState): void {
   });
 }
 
-/** Efface le choix — utilisé par le lien « Gérer mes cookies ». */
-export function clearConsent(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(CONSENT_STORAGE_KEY);
-  } catch {
-    // rien à faire
-  }
-}

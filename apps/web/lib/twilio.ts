@@ -2,7 +2,7 @@ import twilio from "twilio";
 import { env } from "./env";
 import { toE164 } from "./phone";
 
-export const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 
 /**
  * La normalisation E.164 se fait ICI, au seul endroit qui parle à Twilio, et
@@ -20,13 +20,3 @@ export async function sendWhatsAppMessage(to: string, body: string): Promise<voi
   });
 }
 
-export async function sendSms(to: string, body: string): Promise<void> {
-  if (!env.TWILIO_SMS_FROM) {
-    throw new Error("TWILIO_SMS_FROM is not configured");
-  }
-  await twilioClient.messages.create({
-    from: env.TWILIO_SMS_FROM,
-    to,
-    body,
-  });
-}
