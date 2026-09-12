@@ -81,8 +81,13 @@ describe("runGdprPurgeScan", () => {
 
     await runGdprPurgeScan(now);
 
+    // Le plafond et l'ordre font partie du contrat : le scan doit traiter les
+    // plus anciens d'abord, pour que le reliquat d'un passage saturé parte au
+    // suivant plutôt que de rester indéfiniment en fin de file.
     expect(prismaMock.participant.findMany).toHaveBeenCalledWith({
       where: { deleteAt: { lte: now }, deletedAt: null },
+      orderBy: { deleteAt: "asc" },
+      take: 500,
       select: { id: true },
     });
   });
@@ -143,6 +148,8 @@ describe("runGroupPurgeScan", () => {
 
     expect(prismaMock.sortie.findMany).toHaveBeenCalledWith({
       where: { mode: "GROUPE", purgeAt: { lte: now } },
+      orderBy: { purgeAt: "asc" },
+      take: 200,
       select: { id: true },
     });
   });
