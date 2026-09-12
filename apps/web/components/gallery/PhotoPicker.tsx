@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
@@ -39,7 +39,6 @@ export function PhotoPicker({
   busy,
   discount,
   onCheckout,
-  onSelectionChange,
 }: {
   photos: PickerPhoto[];
   pricing: PricingConfig;
@@ -53,7 +52,6 @@ export function PhotoPicker({
   /** Remise en cours (offre à durée limitée) — appliquée à l'affichage comme au débit. */
   discount?: (cents: number) => number;
   onCheckout: (photoIds: string[]) => void;
-  onSelectionChange?: (added: string[], removed: string[], source: string) => void;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [zoom, setZoom] = useState<number | null>(null);
@@ -70,26 +68,12 @@ export function PhotoPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packOnly, total]);
 
-  const apply = useCallback(
-    (next: Set<string>, source: string) => {
-      setSelected((prev) => {
-        onSelectionChange?.(
-          Array.from(next).filter((id) => !prev.has(id)),
-          Array.from(prev).filter((id) => !next.has(id)),
-          source,
-        );
-        return next;
-      });
-    },
-    [onSelectionChange],
-  );
-
   function toggle(id: string): void {
     if (packOnly) return;
     const next = new Set(selected);
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    apply(next, "tile");
+    setSelected(next);
   }
 
   // Navigation clavier de la vue plein écran (ordinateur) — ignorée si le
@@ -239,7 +223,7 @@ export function PhotoPicker({
               </span>
             </span>
             {packOnly ? null : selected.size > 0 ? (
-              <button type="button" className={styles.clear} onClick={() => apply(new Set(), "clear")}>
+              <button type="button" className={styles.clear} onClick={() => setSelected(new Set())}>
                 Tout enlever
               </button>
             ) : (
@@ -260,7 +244,7 @@ export function PhotoPicker({
           </button>
           {partial && extraCents > 0 ? (
             <p className={styles.more}>
-              <button type="button" className={styles.moreBtn} onClick={() => apply(new Set(allIds), "take_all")}>
+              <button type="button" className={styles.moreBtn} onClick={() => setSelected(new Set(allIds))}>
                 {allLabel(total)} pour <b>{formatEuros(allCents)}</b>
               </button>
               , soit {formatEuros(extraCents)} de plus

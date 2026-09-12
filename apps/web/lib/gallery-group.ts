@@ -29,7 +29,6 @@ export interface GroupSlotSummary {
 export interface GroupPhoto {
   id: string;
   previewUrl: string | null;
-  isVideo: boolean;
 }
 
 // Pas de fuseau horaire par opérateur dans le modèle actuel — tout le
@@ -288,6 +287,5 @@ export async function getSlotPhotos(slotId: string, operatorName: string): Promi
   return photos.map((p) => ({
     id: p.id,
     previewUrl: previewUrlFor({ groupPreviewKey: p.groupPreviewKey ?? backfilled.get(p.id) ?? null }),
-    isVideo: p.isVideo,
   }));
 }

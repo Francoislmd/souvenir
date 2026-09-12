@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/components/gallery/gallery.module.css";
 import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
@@ -9,23 +9,11 @@ import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
-import {
-  gtmEvent,
-  trackAddPaymentInfo,
-  trackAddToCart,
-  trackBeginCheckout,
-  trackPurchase,
-  trackRemoveFromCart,
-  trackViewItemList,
-  toEuros,
-  type GtmItem,
-} from "@/lib/gtm";
 
 export interface BoutiquePhoto {
   id: string;
   previewUrl: string | null;
   originalUrl: string | null;
-  isVideo: boolean;
 }
 
 /**
@@ -51,8 +39,6 @@ export function BoutiqueGallery({
   purchasedIds,
   googleReviewUrl,
   reducedOfferActive,
-  operatorId,
-  sortieId,
 }: {
   token: string;
   participantId: string;
@@ -67,9 +53,6 @@ export function BoutiqueGallery({
   purchasedIds: string[];
   googleReviewUrl: string | null;
   reducedOfferActive: boolean;
-  /** Uniquement pour la mesure — permet de segmenter GA4 par prestataire/sortie. */
-  operatorId: string;
-  sortieId: string;
 }) {
   const router = useRouter();
   const [photos, setPhotos] = useState(initialPhotos);
@@ -81,66 +64,8 @@ export function BoutiqueGallery({
   // lesquelles rien ne bougeait à l'écran.
   const [zipping, setZipping] = useState(false);
 
-  /* ── Mesure e-commerce (GA4 via GTM) ──────────────────────────────
-     La galerie EST la boutique : chaque photo est un article, la sélection
-     est le panier. On colle donc au modèle e-commerce standard plutôt que
-     d'inventer des événements maison — ça débloque les rapports
-     « Monétisation » de GA4 sans configuration supplémentaire. */
-  const gtmContext = useMemo(
-    () => ({ operator_id: operatorId, sortie_id: sortieId, participant_id: participantId }),
-    [operatorId, sortieId, participantId],
-  );
-
-  const toItems = useCallback(
-    (list: BoutiquePhoto[]): GtmItem[] =>
-      list.map((p, i) => ({
-        item_id: p.id,
-        item_name: p.isVideo ? "Vidéo de sortie" : "Photo de sortie",
-        item_category: p.isVideo ? "video" : "photo",
-        // Le prix unitaire ne dépend pas de la photo : c'est le tarif du pro.
-        price: toEuros(pricing.pricePhotoCents),
-        quantity: 1,
-        index: i,
-      })),
-    [pricing.pricePhotoCents],
-  );
-
-  const itemsFor = useCallback(
-    (ids: Iterable<string>): GtmItem[] => {
-      const wanted = new Set(ids);
-      return toItems(photos.filter((p) => wanted.has(p.id)));
-    },
-    [photos, toItems],
-  );
-
-  const listSent = useRef(false);
-  useEffect(() => {
-    if (listSent.current || photos.length === 0) return;
-    listSent.current = true;
-
-    gtmEvent("gallery_open", {
-      ...gtmContext,
-      photos_total: photos.length,
-      pack_only: packOnly,
-      reduced_offer: reducedOfferActive,
-      already_bought: bought,
-    });
-
-    if (!bought) {
-      trackViewItemList({
-        items: toItems(photos),
-        listId: "gallery_participant",
-        listName: "Galerie participant",
-        extra: gtmContext,
-      });
-    }
-    // Volontairement au premier rendu utile uniquement : le polling qui
-    // complète les aperçus ne doit pas renvoyer une impression de liste.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photos.length]);
-
-  // Le pro peut envoyer avant que le worker ait fini de traiter toutes les
-  // photos — celles encore en cours n'ont pas d'aperçu à l'ouverture du lien.
+  // Le pro peut envoyer avant que le traitement serveur ait fini — les photos
+  // encore en cours n'ont pas d'aperçu à l'ouverture du lien.
   // On les complète discrètement en arrière-plan, sans recharger la page.
   useEffect(() => {
     if (bought) return;
@@ -176,24 +101,10 @@ export function BoutiqueGallery({
     };
   }, [token, bought, photos]);
 
-  function trackSelection(added: string[], removed: string[], source: string): void {
-    if (added.length > 0) {
-      trackAddToCart({ items: itemsFor(added), valueCents: added.length * pricing.pricePhotoCents, extra: { ...gtmContext, selection_source: source } });
-    }
-    if (removed.length > 0) {
-      trackRemoveFromCart({ items: itemsFor(removed), valueCents: removed.length * pricing.pricePhotoCents, extra: { ...gtmContext, selection_source: source } });
-    }
-  }
-
   async function openCheckout(photoIds: string[]): Promise<void> {
     if (photoIds.length === 0) return;
     setError(null);
     setBusy(true);
-    trackBeginCheckout({
-      items: itemsFor(photoIds),
-      valueCents: 0,
-      extra: { ...gtmContext, photos_selected: photoIds.length, reduced_offer: reducedOfferActive },
-    });
     try {
       const res = await fetch(`/api/g/${token}/checkout`, {
         method: "POST",
@@ -206,9 +117,6 @@ export function BoutiqueGallery({
         return;
       }
       const data = (await res.json()) as { clientSecret: string; amountCents: number };
-      // Le PaymentIntent est créé et la feuille Stripe s'ouvre : à ce stade le
-      // client a bien atteint le formulaire de paiement.
-      trackAddPaymentInfo({ items: itemsFor(photoIds), valueCents: data.amountCents, paymentType: "stripe", extra: gtmContext });
       setCheckout({
         clientSecret: data.clientSecret,
         amountCents: data.amountCents,
@@ -223,16 +131,6 @@ export function BoutiqueGallery({
   }
 
   async function onPaymentSuccess(): Promise<void> {
-    // transaction_id = participantId : un participant n'a qu'une commande, ce
-    // qui donne à GA4 une clé de déduplication stable même si la page est
-    // rechargée ou l'événement rejoué.
-    trackPurchase({
-      transactionId: participantId,
-      items: itemsFor(checkout?.photoIds ?? []),
-      valueCents: checkout?.amountCents ?? 0,
-      extra: { ...gtmContext, photos_purchased: checkout?.photoIds.length ?? 0, reduced_offer: reducedOfferActive, pack_only: packOnly },
-    });
-
     setCheckout(null);
     await fetch("/api/checkout/confirm", {
       method: "POST",
@@ -333,7 +231,6 @@ export function BoutiqueGallery({
                 href={googleReviewUrl}
                 target="_blank"
                 rel="noreferrer"
-                onClick={() => gtmEvent("review_click", { ...gtmContext, platform: "google" })}
               >
                 Laisser un avis
               </a>
@@ -369,7 +266,6 @@ export function BoutiqueGallery({
         busy={busy}
         discount={reducedOfferActive ? applyReducedOffer : undefined}
         onCheckout={(ids) => void openCheckout(ids)}
-        onSelectionChange={trackSelection}
       />
 
       <p className={styles.legal}>

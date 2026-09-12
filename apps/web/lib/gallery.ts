@@ -45,9 +45,7 @@ export async function getBoutiquePhotos(
   return Promise.all(
     rawPhotos.map(async (rawP) => {
       const p = backfilled.has(rawP.id) ? { ...rawP, groupPreviewKey: backfilled.get(rawP.id)! } : rawP;
-      // Plus de photo offerte : seul le paiement déverrouille. Les photos
-      // marquées isFreeSample par un envoi antérieur redeviennent des
-      // photos comme les autres — filigranées, et achetables.
+      // Plus de photo offerte : seul le paiement déverrouille.
       const unlocked = purchasedSet.has(p.id);
       // Verrouillée : aperçu protégé (Photo.groupPreviewKey,
       // lib/group-watermark.ts) — et jamais de repli sur previewKey/thumbKey
@@ -68,7 +66,6 @@ export async function getBoutiquePhotos(
         previewUrl,
         // Jamais d'original pour une photo non achetée (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
-        isVideo: p.isVideo,
       };
     }),
   );
