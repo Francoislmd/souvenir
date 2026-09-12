@@ -48,11 +48,10 @@ describe("purgeParticipant", () => {
           originalKey: "orig/1.jpg",
           previewKey: "prev/1.jpg",
           thumbKey: "thumb/1.jpg",
-          blurKey: "blur/1.jpg",
           blurEmailKey: "blur-email/1.jpg",
           groupPreviewKey: "group/1.jpg",
         },
-        { originalKey: "orig/2.jpg", previewKey: null, thumbKey: null, blurKey: null, blurEmailKey: null, groupPreviewKey: null },
+        { originalKey: "orig/2.jpg", previewKey: null, thumbKey: null, blurEmailKey: null, groupPreviewKey: null },
       ],
     });
 
@@ -64,7 +63,6 @@ describe("purgeParticipant", () => {
     expect(deleteStorageObjectsMock).toHaveBeenCalledWith("previews", [
       "prev/1.jpg",
       "thumb/1.jpg",
-      "blur/1.jpg",
       "blur-email/1.jpg",
       "group/1.jpg",
     ]);
@@ -124,7 +122,7 @@ describe("purgeGroupSortie", () => {
       operatorId: "operator_1",
       mode: "GROUPE",
       purgeAt: new Date(),
-      photos: [{ originalKey: "o1", previewKey: "p1", thumbKey: null, blurKey: null, blurEmailKey: null, groupPreviewKey: "gp1" }],
+      photos: [{ originalKey: "o1", previewKey: "p1", thumbKey: null, blurEmailKey: null, groupPreviewKey: "gp1" }],
     });
 
     await purgeGroupSortie("s1");

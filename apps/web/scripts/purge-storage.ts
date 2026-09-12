@@ -87,14 +87,13 @@ async function main() {
       originalKey: true,
       previewKey: true,
       thumbKey: true,
-      blurKey: true,
       blurEmailKey: true,
       groupPreviewKey: true,
     },
   });
   const referenced = new Set<string>();
   for (const p of photos) {
-    for (const key of [p.originalKey, p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey, p.groupPreviewKey]) {
+    for (const key of [p.originalKey, p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey]) {
       if (key) referenced.add(key);
     }
   }

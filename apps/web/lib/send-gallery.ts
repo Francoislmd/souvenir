@@ -38,7 +38,7 @@ export async function sendParticipantGallery(
       status: { not: "FAILED" },
       OR: [{ ownerId: participant.id }, { ownerId: null }],
     },
-    select: { blurKey: true, blurEmailKey: true },
+    select: { blurEmailKey: true },
   });
 
   try {
@@ -46,12 +46,13 @@ export async function sendParticipantGallery(
       // L'email ne montre jamais rien en clair — uniquement le flou
       // pré-généré côté serveur, qu'il s'agisse d'une photo offerte ou
       // payante (ce n'est pas à l'email de faire cette distinction, c'est le
-      // rôle de la boutique). blurEmailKey est plus flouté que blurKey : la
-      // galerie a le cadenas pour contextualiser un flou léger, l'email non.
+      // rôle de la boutique). blurEmailKey est flouté un cran plus fort que
+      // l'aperçu de la galerie : celle-ci a le cadenas pour contextualiser un
+      // flou léger, l'email non.
       // Peut rester null si rien n'est encore traité — l'email part quand même.
-      const withBlur = photos.filter((p) => p.blurEmailKey ?? p.blurKey);
-      const heroUrl = withBlur[0] ? getPreviewUrl((withBlur[0].blurEmailKey ?? withBlur[0].blurKey) ?? "") : null;
-      const thumbUrls = withBlur.slice(1, 4).map((p) => getPreviewUrl((p.blurEmailKey ?? p.blurKey) ?? ""));
+      const withBlur = photos.filter((p): p is { blurEmailKey: string } => !!p.blurEmailKey);
+      const heroUrl = withBlur[0] ? getPreviewUrl(withBlur[0].blurEmailKey) : null;
+      const thumbUrls = withBlur.slice(1, 4).map((p) => getPreviewUrl(p.blurEmailKey));
 
       await sendPhotosReadyEmail({
         to: participant.contact,

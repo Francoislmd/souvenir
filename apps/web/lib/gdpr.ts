@@ -16,7 +16,7 @@ export async function purgeParticipant(participantId: string): Promise<void> {
   // il porte son visage. purgeGroupSortie listait déjà les cinq clés, la
   // version individuelle en oubliait trois.
   const previewKeys = participant.photos.flatMap((p) =>
-    [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
+    [p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
   );
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
@@ -62,7 +62,7 @@ export async function purgeGroupSortie(sortieId: string): Promise<void> {
 
   const originalKeys = sortie.photos.map((p) => p.originalKey);
   const previewKeys = sortie.photos.flatMap((p) =>
-    [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
+    [p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
   );
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);

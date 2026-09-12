@@ -80,7 +80,7 @@ export async function DELETE(_request: Request, { params }: { params: { sortieId
 
     const originalKeys = sortie.photos.map((p) => p.originalKey);
     const previewKeys = sortie.photos.flatMap((p) =>
-      [p.previewKey, p.thumbKey, p.blurKey, p.blurEmailKey, p.groupPreviewKey].filter((key): key is string => Boolean(key)),
+      [p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey].filter((key): key is string => Boolean(key)),
     );
     await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
     await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);

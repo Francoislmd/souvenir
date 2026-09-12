@@ -13,19 +13,15 @@ export async function POST(_request: Request, { params }: { params: { photoId: s
 
     const photo = await prisma.photo.findFirst({
       where: { id: params.photoId, sortie: { operatorId: dbUser.operatorId } },
+      select: { id: true },
     });
     if (!photo) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    await prisma.processingJob.updateMany({
-      where: { photoId: photo.id, status: { in: ["pending", "running", "failed"] } },
-      data: { status: "failed" },
-    });
-    await prisma.photo.update({ where: { id: photo.id }, data: { status: "UPLOADED" } });
-    const job = await prisma.processingJob.create({ data: { photoId: photo.id, kind: "preview", status: "running" } });
-
-    await runPhotoProcessing(photo.id, job.id);
+    // runPhotoProcessing repasse la photo en PROCESSING puis READY ou FAILED :
+    // pas besoin de la remettre en UPLOADED d'abord.
+    await runPhotoProcessing(photo.id);
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {

@@ -24,8 +24,8 @@ const LOCK_BADGE_SVG = `
  * READY (ou FAILED en cas d'échec).
  *
  * Tourne dans le même déploiement Vercel que le reste de l'app (déclenché
- * via `after()` juste après l'upload, voir /api/photos/[photoId]/complete)
- * — pas de worker séparé, zéro infra en plus (voir CLAUDE.md §2).
+ * par /api/photos/[photoId]/complete juste après l'upload) — pas de worker
+ * séparé, zéro infra en plus (voir CLAUDE.md §2).
  */
 export async function processPhotoPreview(photoId: string): Promise<void> {
   const photo = await prisma.photo.findUniqueOrThrow({
@@ -120,16 +120,14 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
   }
 }
 
-/** Enrobe processPhotoPreview : marque la photo (et la tâche associée si
- * fournie) FAILED en cas d'erreur, plutôt que de laisser planter l'appelant. */
-export async function runPhotoProcessing(photoId: string, jobId?: string): Promise<void> {
+/** Enrobe processPhotoPreview : marque la photo FAILED en cas d'erreur,
+ * plutôt que de laisser planter l'appelant. */
+export async function runPhotoProcessing(photoId: string): Promise<void> {
   try {
     await processPhotoPreview(photoId);
-    if (jobId) await prisma.processingJob.update({ where: { id: jobId }, data: { status: "done" } });
   } catch (error) {
     console.error(`[photo-processing] ${photoId} failed`, error);
     await prisma.photo.update({ where: { id: photoId }, data: { status: "FAILED" } });
-    if (jobId) await prisma.processingJob.update({ where: { id: jobId }, data: { status: "failed" } });
   }
 }
 

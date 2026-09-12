@@ -83,7 +83,6 @@ model Sortie {
   participants   Participant[]
   photos         Photo[]
   slots          Slot[]
-  processingJobs ProcessingJob[]
 
   @@unique([operatorId, shareCode])
   @@index([operatorId])
@@ -170,7 +169,6 @@ model Photo {
   originalKey     String
   previewKey      String?
   thumbKey        String?
-  blurKey         String? // aperçu flouté généré côté serveur (JPEG) — jamais de CSS filter:blur, ça ne s'affiche pas dans les emails
   blurEmailKey    String? // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
   groupPreviewKey String? // mode GROUPE uniquement — aperçu filigrané (motif répété), servi non floué avant paiement (lib/group-watermark.ts)
   takenAt         DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
@@ -183,7 +181,6 @@ model Photo {
   owner   Participant?    @relation("PhotoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   slot    Slot?           @relation("SlotPhotos", fields: [slotId], references: [id], onDelete: SetNull)
   coverOf Slot?           @relation("SlotCover")
-  jobs    ProcessingJob[]
 
   @@index([sortieId])
   @@index([ownerId])
@@ -217,24 +214,6 @@ model Order {
   participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }
 
-model ProcessingJob {
-  id        String    @id @default(cuid())
-  photoId   String? // "preview" jobs — one photo
-  sortieId  String? // "publish_group" jobs — one GROUPE sortie, clusters its whole photo batch
-  kind      String // "preview" | "publish_group"
-  status    String    @default("pending")
-  attempts  Int       @default(0)
-  lockedAt  DateTime?
-  createdAt DateTime  @default(now())
-
-  photo  Photo?  @relation(fields: [photoId], references: [id], onDelete: Cascade)
-  sortie Sortie? @relation(fields: [sortieId], references: [id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([photoId])
-  @@index([sortieId])
-}
-
 model Event {
   id            String   @id @default(cuid())
   operatorId    String
@@ -250,9 +229,9 @@ model Event {
   @@index([name])
 }
 
-// Limitation de débit sur la connexion et la demande de réinitialisation —
-// une ligne par tentative, comptée sur une fenêtre glissante. Pas de Redis :
-// même logique "table Postgres" que ProcessingJob (cf. CLAUDE.md §2.3).
+// Limitation de débit sur la connexion, la demande de réinitialisation et
+// les endpoints publics de la boutique — une ligne par tentative, comptée sur
+// une fenêtre glissante. Pas de Redis : une table Postgres suffit.
 model AuthAttempt {
   id        String   @id @default(cuid())
   key       String

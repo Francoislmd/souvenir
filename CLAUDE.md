@@ -117,8 +117,8 @@ Considère Souvenir comme une startup ambitieuse en phase de lancement et propos
 ## 2. Décisions verrouillées 🔒
 
 1. **Stack** : Next.js 14 (App Router, TypeScript strict) · Supabase (Postgres + Auth + Storage) · Prisma · Stripe Connect (Express) · Twilio WhatsApp · Resend (email) · Tailwind. C'est la stack des projets précédents (Yieldly/Linktrip) — réutilise les patterns, n'introduis pas de nouveau framework.
-2. **Monorepo** pnpm : `apps/web` (Next, déployé Vercel) + `apps/worker` (Node, déployé via Dockerfile/Railway-Fly) + `packages/db` (Prisma partagé).
-3. **Queue de traitement = table Postgres** (`ProcessingJob`, polling `FOR UPDATE SKIP LOCKED`). Pas de Redis, pas de BullMQ, pas d'Inngest. Zéro infra en plus.
+2. **Monorepo** pnpm : `apps/web` (Next, déployé Vercel) + `packages/db` (Prisma partagé). Il n'y a **pas** de worker : `apps/worker` a existé, n'a jamais été branché (aucun job n'était créé en `pending`, sa boucle tournait à vide) et a été supprimé le 12/09/2026.
+3. **Aucune queue.** Le traitement des photos tourne **en ligne, dans la requête** : `/api/photos/[photoId]/complete` appelle `lib/photo-processing.ts`, `/api/sorties/[sortieId]/publish` appelle `lib/group-publish.ts`. Pas de Redis, pas de BullMQ, pas d'Inngest, pas de table de jobs. `Photo.status` (UPLOADED → PROCESSING → READY/FAILED) est la seule source de vérité sur l'avancement. Zéro infra en plus.
 
 > **Le produit s'appelle Linktrip en interface** (logo, emails, titres, `hello@linktrip.co`). "Souvenir" est le nom du repo et de ce document — historique, jamais utilisé côté utilisateur.
 
@@ -131,7 +131,7 @@ Le modèle métier a divergé de la v1 : plus de "Session/Delivery/Media" ni de 
 ```
 souvenir/
 ├── apps/
-│   ├── web/                        # Next.js 14 App Router
+│   └── web/                        # Next.js 14 App Router
 │   │   ├── app/
 │   │   │   ├── (operator)/         # dashboard opérateur, derrière middleware.ts (session Supabase)
 │   │   │   │   ├── sorties/                # liste + sorties/[sortieId] + sorties/nouvelle
@@ -158,7 +158,6 @@ souvenir/
 │   │   ├── sentry.client.config.ts, sentry.server.config.ts, sentry.edge.config.ts, instrumentation.ts
 │   │   ├── components/
 │   │   └── lib/                    # stripe.ts, twilio.ts, supabase-server.ts, analytics.ts, gdpr.ts, order-fulfillment.ts, order-refunds.ts, automations.ts…
-│   └── worker/                     # Node 20 + sharp, tourne via `npx tsx src/index.ts`
 └── packages/db/                    # schema.prisma + client Prisma partagé (source TS brute, pas de build)
 ```
 
@@ -170,24 +169,24 @@ souvenir/
 
 La traduction sous-domaine → chemin interne `/s/{slug}` se fait dans `middleware.ts`, qui y pose aussi le `X-Robots-Tag: noindex` ; sans `NEXT_PUBLIC_STORE_URL` (local, previews) les boutiques se servent depuis le domaine principal sur `/s/...`.
 - **Storage** : buckets Supabase `originals` (privé) et `previews` (aperçus/miniatures/flous — voir `lib/storage.ts`).
-- **Accès DB** : Prisma côté serveur uniquement (server components / route handlers / worker). Pas de requête Supabase côté client.
+- **Accès DB** : Prisma côté serveur uniquement (server components, route handlers, scripts). Pas de requête Supabase côté client.
 - **SEO** : `app/sitemap.ts` et `app/robots.ts` n'exposent que la landing et les 4 pages légales — galeries, boutiques, espace opérateur et auth sont explicitement exclus (`Disallow` + header `X-Robots-Tag: noindex` sur `/g/:path*` et `/s/:path*`, posé dans `next.config.mjs`, et sur le sous-domaine par `middleware.ts`).
-- **Monitoring** : Sentry (`@sentry/nextjs` côté web, `@sentry/node` côté worker), entièrement optionnel — inerte tant que `NEXT_PUBLIC_SENTRY_DSN`/`SENTRY_DSN` ne sont pas définies, l'app démarre sans.
+- **Monitoring** : Sentry (`@sentry/nextjs`), entièrement optionnel — inerte tant que `NEXT_PUBLIC_SENTRY_DSN` n'est pas définie, l'app démarre sans.
 
 ---
 
-## 4. Le worker — ce qu'il fait vraiment
+## 4. Le traitement des photos — ce qui tourne vraiment
 
-`apps/worker` ne traite **qu'un seul type de job : `"preview"`** (`apps/worker/src/index.ts` → `jobs/preview.ts`), via `sharp` : génère miniature, aperçu, et les versions floutées (`blurKey`, `blurEmailKey`) et filigranées (`groupPreviewKey`, mode GROUPE) d'une photo.
+Tout se passe **en ligne, dans la requête Vercel**, il n'y a aucun processus de fond.
+
+- **Une photo déposée** : `/api/photos/[photoId]/complete` → `lib/photo-processing.ts` (sharp) → miniature, aperçu, aperçu flouté pour l'email (`blurEmailKey`), et — mode INDIVIDUEL uniquement — l'aperçu filigrané (`groupPreviewKey`, `lib/group-watermark.ts`). `maxDuration = 60`.
+- **Une sortie GROUPE publiée** : `/api/sorties/[sortieId]/publish` → `lib/group-publish.ts` → lecture EXIF, aperçus filigranés, regroupement en `Slot`. `maxDuration = 120`.
+- **Rattrapage** : un aperçu filigrané raté à la publication est régénéré à la demande par `backfillGroupPreviews`, appelé depuis `lib/gallery.ts` et `lib/gallery-group.ts`. **Au plus une tentative par photo et par tranche de 10 minutes** (`lib/preview-backfill.ts`) : ces deux routes sont sondées toutes les 4 s par la galerie, régénérer sans garde-fou revenait à relancer sharp + canvas toutes les 4 secondes, indéfiniment, sur une route publique.
 
 Écarts à connaître par rapport à la vision produit (§1) et au schéma :
 - **Pas de ffmpeg, pas de traitement vidéo**, malgré `Photo.isVideo` dans le schéma — la vidéo n'est pas implémentée.
-- **Pas de zip de téléchargement groupé.**
-- Le job `"publish_group"` (regroupement EXIF des photos d'une sortie GROUPE en `Slot`) ne passe **pas** par ce worker — il tourne en ligne, synchrone, dans `apps/web/lib/group-publish.ts`, déclenché par `api/photos/[photoId]/complete`.
-
-Le worker interroge `ProcessingJob` par polling `FOR UPDATE SKIP LOCKED` (§2.3), avec retry borné (`MAX_JOB_ATTEMPTS`) et parallélisme borné (`MAX_PARALLEL_JOBS`).
-
----
+- **Pas de détection de visage** : blazeface (TF.js) a été essayé puis abandonné le 09/09/2026, et ses dépendances retirées le 12/09/2026. Le filigrane est le même sur toutes les photos, c'est ce qui le fait lire comme une signature de marque.
+- Le téléchargement groupé (zip) existe, lui : `/api/g/[token]/zip`, fabriqué à la volée, uniquement sur les photos payées.
 
 ## 5. Paiements — Stripe Connect
 

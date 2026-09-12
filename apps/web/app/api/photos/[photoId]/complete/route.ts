@@ -15,18 +15,19 @@ export async function POST(_request: Request, { params }: { params: { photoId: s
 
     const photo = await prisma.photo.findFirst({
       where: { id: params.photoId, sortie: { operatorId: dbUser.operatorId } },
+      select: { id: true },
     });
     if (!photo) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const job = await prisma.processingJob.create({ data: { photoId: photo.id, kind: "preview", status: "running" } });
-
-    // Traité ici, dans ce même déploiement — pas de worker séparé à faire
-    // tourner (voir CLAUDE.md §2 : zéro infra en plus). Le dépôt de photos
-    // n'attend pas cet appel pour avancer (voir PhotoDropZone), donc ça ne
-    // bloque pas le pro même si ça prend quelques secondes.
-    await runPhotoProcessing(photo.id, job.id);
+    // Traité ici, dans ce même déploiement — pas de worker séparé (CLAUDE.md
+    // §2 : zéro infra en plus). Le dépôt de photos n'attend pas cet appel
+    // pour avancer (voir PhotoDropZone), donc ça ne bloque pas le pro même si
+    // ça prend quelques secondes. L'avancement se lit sur Photo.status, seule
+    // source de vérité — la table ProcessingJob ne servait plus qu'à écrire
+    // une ligne que personne ne relisait.
+    await runPhotoProcessing(photo.id);
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {
