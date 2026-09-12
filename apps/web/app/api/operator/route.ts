@@ -10,7 +10,6 @@ const schema = z.object({
   name: z.string().min(2),
   pricePhotoCents: z.number().int().min(0),
   priceAllCents: z.number().int().min(0),
-  freeCount: z.number().int().min(0).default(2),
   brandColor: z.string().optional(),
   googleReviewUrl: z.string().optional(),
   qualification: z.record(z.unknown()).optional(),
@@ -50,7 +49,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: message, details: parsed.error.errors }, { status: 400 });
   }
 
-  const { name, pricePhotoCents, priceAllCents, freeCount, brandColor, googleReviewUrl, qualification } = parsed.data;
+  const { name, pricePhotoCents, priceAllCents, brandColor, googleReviewUrl, qualification } = parsed.data;
 
   // RESERVED_SLUGS existait mais n'était appliqué nulle part : un prestataire
   // nommé « Api » obtenait le slug `api`, que middleware.ts laisse passer sans
@@ -75,7 +74,6 @@ export async function POST(request: Request): Promise<Response> {
       slug,
       pricePhotoCents,
       priceAllCents,
-      freeCount,
       activities,
       ...(brandColor && { brandColor }),
       ...(googleReviewUrl && { googleReviewUrl }),

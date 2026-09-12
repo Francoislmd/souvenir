@@ -18,7 +18,6 @@ interface SeedParticipant {
   sentAt?: Date;
   openedAt?: Date;
   photoCount: number;
-  freeCount: number;
   order?: { amountCents: number; feeCents: number; stripePi: string; paidAt: Date };
 }
 
@@ -42,7 +41,6 @@ async function main(): Promise<void> {
       slug: "vol-passion-annecy",
       pricePhotoCents: 800,
       priceAllCents: 3900,
-      freeCount: 2,
       feePercent: 20,
       googleReviewUrl: "https://g.page/r/CXXXXXXXXXXXXXX/review",
     },
@@ -73,9 +71,9 @@ async function main(): Promise<void> {
       guide: "Sofia",
       status: SortieStatus.SORTED,
       participants: [
-        { name: "Léa", contact: "lea.p@email.com", createdAt: new Date(now - 3 * HOUR), photoCount: 4, freeCount: 2 },
-        { name: "Yanis", contact: "+33600000012", createdAt: new Date(now - 3 * HOUR), photoCount: 3, freeCount: 2 },
-        { name: "Chloé", contact: "chloe.b@email.com", createdAt: new Date(now - 3 * HOUR), photoCount: 4, freeCount: 2 },
+        { name: "Léa", contact: "lea.p@email.com", createdAt: new Date(now - 3 * HOUR), photoCount: 4 },
+        { name: "Yanis", contact: "+33600000012", createdAt: new Date(now - 3 * HOUR), photoCount: 3 },
+        { name: "Chloé", contact: "chloe.b@email.com", createdAt: new Date(now - 3 * HOUR), photoCount: 4 },
       ],
       commonPhotoCount: 3,
     },
@@ -94,7 +92,6 @@ async function main(): Promise<void> {
           sentAt: new Date(now - 1 * DAY),
           openedAt: new Date(now - 1 * DAY + 10 * MIN),
           photoCount: 5,
-          freeCount: 2,
           order: {
             amountCents: 2200,
             feeCents: 440,
@@ -109,7 +106,6 @@ async function main(): Promise<void> {
           sentAt: new Date(now - 1 * DAY),
           openedAt: new Date(now - 1 * DAY + 30 * MIN),
           photoCount: 4,
-          freeCount: 2,
         },
         {
           name: "Rémi",
@@ -117,7 +113,6 @@ async function main(): Promise<void> {
           createdAt: new Date(now - 1 * DAY - 1 * HOUR),
           sentAt: new Date(now - 1 * DAY),
           photoCount: 3,
-          freeCount: 2,
         },
       ],
       commonPhotoCount: 2,
@@ -179,7 +174,6 @@ async function main(): Promise<void> {
             previewKey: `${sortie.id}/seed-${participant.id}-${photoIndex}-preview.jpg`,
             thumbKey: `${sortie.id}/seed-${participant.id}-${photoIndex}-thumb.jpg`,
             status: PhotoStatus.READY,
-            isFreeSample: i < p.freeCount,
           },
         });
       }

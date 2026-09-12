@@ -21,7 +21,7 @@ export async function POST(_request: Request, { params }: { params: { sortieId: 
     // qu'elles ne sont pas payées. Une photo donnée d'avance ne déclenchait
     // pas l'achat, elle donnait juste une photo — et elle obligeait la
     // galerie à porter deux états de vignette au lieu d'un.
-    // `Operator.freeCount` et lib/assign.ts n'ont plus d'emploi.
+    // `Operator.freeCount`, `Photo.isFreeSample` et lib/assign.ts sont partis avec.
 
     const results: { participantId: string; sent: boolean }[] = [];
     for (const participant of sortie.participants) {

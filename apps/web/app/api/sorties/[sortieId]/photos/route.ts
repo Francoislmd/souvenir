@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: { params: { sortieId: s
   const photos = await prisma.photo.findMany({
     where: { sortieId: sortie.id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, status: true, ownerId: true, isFreeSample: true, thumbKey: true },
+    select: { id: true, status: true, ownerId: true, thumbKey: true },
   });
 
   return Response.json({
@@ -31,7 +31,6 @@ export async function GET(_request: Request, { params }: { params: { sortieId: s
       id: p.id,
       status: p.status,
       ownerId: p.ownerId,
-      isFreeSample: p.isFreeSample,
       thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
     })),
   });

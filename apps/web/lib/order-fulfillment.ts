@@ -44,19 +44,17 @@ async function sendPostPurchaseMessages(
   }
 
   const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`;
-  const freeSampleCount = await prisma.photo.count({
-    where: { sortieId: sortie.id, ownerId: participant.id, isFreeSample: true },
-  });
+  // Plus d'échantillon offert depuis que toutes les photos sont filigranées
+  // tant qu'elles ne sont pas payées : le reçu ne compte donc que le payé.
   const paidCount = order.photoIds.length;
-  const paidLabel = `${paidCount} photo${paidCount > 1 ? "s" : ""}`;
-  const orderLabel = freeSampleCount > 0 ? `${paidLabel} + ${freeSampleCount} offerte${freeSampleCount > 1 ? "s" : ""}` : paidLabel;
+  const orderLabel = `${paidCount} photo${paidCount > 1 ? "s" : ""}`;
 
   try {
     await sendOrderConfirmedEmail({
       to: participant.contact,
       operatorId: operator.id,
       operatorName: operator.name,
-      photoCount: paidCount + freeSampleCount,
+      photoCount: paidCount,
       downloadUrl: galleryUrl,
       orderLabel,
       amountLabel: formatEurosPrecise(order.amountCents),

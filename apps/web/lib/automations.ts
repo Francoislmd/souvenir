@@ -100,7 +100,7 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
   }
 
   const photos = await prisma.photo.findMany({
-    where: { sortieId: sortie.id, status: { not: "FAILED" }, isFreeSample: false, OR: [{ ownerId: participant.id }, { ownerId: null }] },
+    where: { sortieId: sortie.id, status: { not: "FAILED" }, OR: [{ ownerId: participant.id }, { ownerId: null }] },
     select: { blurEmailKey: true },
   });
   // Jamais thumbKey en repli : ce sont des photos payantes, non achetées —

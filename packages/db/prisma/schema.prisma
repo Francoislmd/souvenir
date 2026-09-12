@@ -21,7 +21,6 @@ model Operator {
 
   pricePhotoCents Int     @default(800)
   priceAllCents   Int     @default(3900) // "Toutes vos photos" — aussi "Tout le créneau" en mode GROUPE
-  freeCount       Int     @default(2)
   feePercent      Int     @default(20)
   packOnly        Boolean @default(false) // true = le client ne peut acheter que le pack complet, pas photo par photo
 
@@ -172,8 +171,6 @@ model Photo {
   blurEmailKey    String? // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
   groupPreviewKey String? // mode GROUPE uniquement — aperçu filigrané (motif répété), servi non floué avant paiement (lib/group-watermark.ts)
   takenAt         DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
-  isVideo         Boolean     @default(false)
-  isFreeSample    Boolean     @default(false) // INDIVIDUEL uniquement : échantillon offert (lib/assign.ts) — plus utilisé en mode GROUPE
   status          PhotoStatus @default(UPLOADED)
   createdAt       DateTime    @default(now())
 
