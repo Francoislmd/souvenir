@@ -51,6 +51,39 @@
   line-height: 1.55;
 }
 
+/* Le retour, au-dessus du titre, comme sur la boutique (gallery.module.css).
+   Il remplace les liens « Changer de jour » et « Changer de créneau » qui
+   traînaient en bas de page, sous les mentions. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  margin: 0 0 6px -9px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  letter-spacing: -0.014em;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.back:active {
+  background: var(--line-2);
+}
+.back:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .back:hover {
+    color: var(--ink);
+  }
+}
+
 .slots {
   max-width: 640px;
   margin: 0 auto;

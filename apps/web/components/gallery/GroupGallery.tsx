@@ -8,6 +8,7 @@ import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
+import { BackLink } from "@/components/gallery/BackLink";
 import { LockIcon } from "@/components/gallery/icons";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
@@ -45,6 +46,12 @@ export function GroupGallery({
 }) {
   const [slot, setSlot] = useState<GroupSlotSummary | null>(null);
   const [dayLabel, setDayLabel] = useState("");
+  // Le jour et l'étape de l'écran de choix vivent ici, pas dans
+  // SessionRetrieval : celui-ci est démonté dès qu'une grille de photos
+  // s'ouvre, et le retour doit ramener aux heures du jour choisi plutôt
+  // qu'au début du parcours.
+  const [dateKey, setDateKey] = useState(days[0]?.dateKey ?? "");
+  const [retrievalStep, setRetrievalStep] = useState<"days" | "slots">(sortie || days.length <= 1 ? "slots" : "days");
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pendingIds, setPendingIds] = useState<string[] | null>(null);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
@@ -100,7 +107,16 @@ export function GroupGallery({
   if (!slot) {
     return (
       <>
-        <SessionRetrieval apiBase={apiBase} days={days} sortie={sortie} onPick={pick} />
+        <SessionRetrieval
+          apiBase={apiBase}
+          days={days}
+          sortie={sortie}
+          dateKey={dateKey}
+          onDateKey={setDateKey}
+          step={retrievalStep}
+          onStep={setRetrievalStep}
+          onPick={pick}
+        />
         <div className={styles.legal}>
           Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
         </div>
@@ -116,16 +132,14 @@ export function GroupGallery({
   return (
     <>
       <div className={styles.head}>
+        <BackLink onClick={() => setSlot(null)} />
         <h1>{slot.activity}</h1>
         <p className={styles.sub}>
           {dayLabel ? `${dayLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
           {slot.label}
         </p>
         <p className={styles.hint}>
-          {packOnly ? "Toutes les photos du créneau, en une fois." : "Touchez celles où vous êtes, ou prenez le créneau entier."}{" "}
-          <button type="button" className={styles.moreBtn} onClick={() => setSlot(null)}>
-            Changer de créneau
-          </button>
+          {packOnly ? "Toutes les photos du créneau, en une fois." : "Touchez celles où vous êtes, ou prenez le créneau entier."}
         </p>
       </div>
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "@/components/gallery/collective.module.css";
+import { BackLink } from "@/components/gallery/BackLink";
 import { LoadingBlock, Spinner, TileSpinner } from "@/components/ui/Spinner";
 import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
@@ -105,6 +106,7 @@ export function WithdrawPhotoPicker({
     return (
       <>
         <div className={styles.hi}>
+          <BackLink className={styles.back} onClick={() => setStep("days")} />
           <h1>Choisissez le créneau</h1>
           <p>{activeDay?.dateLabel}</p>
         </div>
@@ -120,11 +122,6 @@ export function WithdrawPhotoPicker({
             </button>
           ))}
         </div>
-        <div className={styles.legal}>
-          <button type="button" onClick={() => setStep("days")}>
-            ← Changer de jour
-          </button>
-        </div>
       </>
     );
   }
@@ -132,6 +129,7 @@ export function WithdrawPhotoPicker({
   return (
     <>
       <div className={styles.hi}>
+        <BackLink className={styles.back} onClick={() => setStep("slots")} />
         <h1>Touchez une photo pour la retirer</h1>
         <p>Le retrait est définitif. Aucune justification ne vous est demandée.</p>
       </div>
@@ -159,11 +157,6 @@ export function WithdrawPhotoPicker({
         ))}
       </div>
       {confirmedId ? <div className={styles.legal}>Photo retirée. {operatorName} en a été informé.</div> : null}
-      <div className={styles.legal}>
-        <button type="button" onClick={() => setStep("slots")}>
-          Changer de créneau
-        </button>
-      </div>
     </>
   );
 }

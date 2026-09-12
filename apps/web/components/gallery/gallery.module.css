@@ -84,6 +84,44 @@
   line-height: 1.5;
 }
 
+/* ── Reculer d'un écran ────────────────────────────────────────────────
+   Une flèche et un mot, au-dessus du titre, au même endroit sur tous les
+   écrans du parcours. Ça remplace « Changer de créneau », lien glissé au
+   milieu de la phrase d'aide : le recul se cherche en haut de l'écran, pas
+   au milieu d'un paragraphe.
+
+   Le retrait à gauche rattrape le rembourrage de la zone touchée, pour que
+   le mot s'aligne au pixel près sur le titre qu'il surplombe. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  margin: 0 0 6px -9px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  letter-spacing: -0.014em;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.back:active {
+  background: var(--line-2);
+}
+.back:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .back:hover {
+    color: var(--ink);
+  }
+}
+
 /* ── Les photos ────────────────────────────────────────────────────────
    Un seul geste sur une vignette : toucher choisit. Le bouton « agrandir »
    n'apparaît qu'au survol, donc jamais sur un écran tactile, où deux
@@ -698,41 +736,10 @@
   color: var(--ink-4);
 }
 
-/* ── Le lien de groupe : un écran, pas trois ───────────────────────────
-   Le jour est déjà sur aujourd'hui, puisqu'on scanne le QR au retour et pas
-   trois semaines plus tard. Les créneaux sont juste en dessous. */
-.chips {
-  max-width: 920px;
-  margin: 0 auto;
-  display: flex;
-  gap: 8px;
-  padding: 0 20px 20px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.chips::-webkit-scrollbar {
-  display: none;
-}
-.chip {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 13px;
-  background: var(--line-2);
-  color: var(--ink-2);
-  font-family: inherit;
-  font-size: 0.97rem;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.chipOn {
-  background: var(--ink);
-  color: #fff;
-}
+/* ── Le lien de groupe : le jour, puis l'heure ─────────────────────────
+   Le jour était une rangée de pastilles au-dessus des créneaux : deux
+   listes sur le même écran, et rien pour reculer. C'est désormais un écran
+   à lui seul, sauté quand l'opérateur n'a publié qu'un seul jour. */
 .slots {
   max-width: 920px;
   margin: 0 auto;
@@ -778,6 +785,19 @@
   .slotRow:hover {
     background: var(--line-2);
   }
+}
+/* La liste des jours reprend la ligne des créneaux : même hauteur, même
+   chevron. Le jour prend la place que l'heure et l'activité occupent
+   ailleurs — il peut être long (« Dimanche 26 juillet »). */
+.dayH {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.06rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
 }
 .slotH {
   flex: 0 0 auto;
@@ -943,7 +963,6 @@
   }
   .legal,
   .note,
-  .chips,
   .slots,
   .empty {
     padding-left: 40px;
@@ -972,6 +991,9 @@
   .slotRow + .slotRow::before {
     left: 14px;
     right: 14px;
+  }
+  .dayH {
+    font-size: 1.12rem;
   }
   .slotH {
     min-width: 92px;
