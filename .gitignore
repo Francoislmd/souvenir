@@ -22,6 +22,10 @@ _to_delete/
 Claude outputs/
 _tmp_*
 
+# exports de base contenant des données personnelles : ils vivent sur le
+# disque, jamais dans l'historique du dépôt.
+docs/sauvegarde-*.json
+
 # misc
 .DS_Store
 *.log

@@ -61,6 +61,10 @@ export async function middleware(request: NextRequest) {
   });
 
   // Rafraîchit la session si besoin (pose les cookies à jour sur la réponse).
+  // Ce middleware ne garde AUCUNE porte : le résultat est volontairement
+  // ignoré, la requête passe dans tous les cas. L'autorisation se décide dans
+  // lib/current-user.ts, qui vérifie le jeton pour de bon (getClaims). Ne pas
+  // se reposer sur cet appel pour conclure qu'une session est valide.
   await supabase.auth.getUser();
 
   return response;
