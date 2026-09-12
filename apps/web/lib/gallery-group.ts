@@ -67,7 +67,10 @@ function frMonthAbbr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { month: "short", timeZone: TZ }).replace(".", "").toUpperCase();
 }
 
-function dateKeyFor(d: Date): string {
+// Exportée : le lien d'une sortie (store.linktrip.co/{slug}/{code}) redirige
+// vers le jour de cette sortie, et doit donc composer la même clé que celle
+// des jours de la boutique.
+export function dateKeyFor(d: Date): string {
   // Format "en-CA" = YYYY-MM-DD, dans le fuseau de Paris plutôt qu'UTC.
   return d.toLocaleDateString("en-CA", { timeZone: TZ });
 }
@@ -223,37 +226,37 @@ export async function getSlotsForDate(slug: string, dateKey: string): Promise<{ 
 }
 
 /**
- * Créneaux d'une seule sortie, pour le lien qui la désigne
- * (store.linktrip.co/{slug}/{code}).
+ * Un créneau désigné par son identifiant, celui que porte l'URL de la
+ * galerie (`?c=...`). C'est ce qui permet d'ouvrir un lien de galerie
+ * directement, de le partager et de le mettre en favori.
  *
- * Distinct de getSlotsForDate : une même date calendaire peut porter
- * plusieurs sorties du même opérateur, et le lien d'une sortie ne doit
- * ouvrir que la sienne. Renvoie null tant qu'aucun créneau n'existe, c'est
- * à dire tant que la sortie n'est pas publiée.
+ * L'opérateur est vérifié : un identifiant de créneau appartenant à une
+ * autre boutique ne doit rien ouvrir ici. Le jour renvoyé est celui de la
+ * SORTIE, pas celui du créneau, pour rester aligné sur le regroupement par
+ * jour de l'écran d'accueil.
  */
-export async function getSortieSlots(sortieId: string): Promise<{ dateLabel: string; slots: GroupSlotSummary[] } | null> {
-  const sortie = await prisma.sortie.findUnique({
-    where: { id: sortieId },
+export async function getStoreSlot(operatorId: string, slotId: string): Promise<{ slot: GroupSlotSummary; dateKey: string; dateLabel: string } | null> {
+  const slot = await prisma.slot.findUnique({
+    where: { id: slotId },
     include: {
-      slots: {
-        include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },
-        orderBy: { startsAt: "asc" },
-      },
+      sortie: { select: { operatorId: true, mode: true, activity: true, startsAt: true } },
+      _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
     },
   });
-  if (!sortie || sortie.slots.length === 0) return null;
+  if (!slot || slot.sortie.operatorId !== operatorId || slot.sortie.mode !== "GROUPE") return null;
 
   return {
-    dateLabel: formatDateFr(sortie.startsAt).toLowerCase(),
-    slots: sortie.slots.map((slot) => ({
+    slot: {
       id: slot.id,
       label: slot.label,
       hourBucket: hourBucketFor(slot.startsAt),
-      activity: sortie.activity,
-      activityKey: slugify(sortie.activity),
+      activity: slot.sortie.activity,
+      activityKey: slugify(slot.sortie.activity),
       guide: slot.guide,
       photoCount: slot._count.photos,
-    })),
+    },
+    dateKey: dateKeyFor(slot.sortie.startsAt),
+    dateLabel: formatDateFr(slot.sortie.startsAt).toLowerCase(),
   };
 }
 

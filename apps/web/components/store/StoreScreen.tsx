@@ -1,4 +1,4 @@
-import { getOperatorGroupDays, getSortieSlots, type GroupSlotSummary } from "@/lib/gallery-group";
+import { getOperatorGroupDays, getStoreSlot } from "@/lib/gallery-group";
 import { publicStorePath, apiStoreBase, type StoreOperator } from "@/lib/store";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { GroupGallery } from "@/components/gallery/GroupGallery";
@@ -7,27 +7,26 @@ import gallery from "@/components/gallery/gallery.module.css";
 import styles from "@/components/gallery/collective.module.css";
 
 /**
- * La boutique d'un opérateur, servie à deux adresses : store.linktrip.co/{slug}
- * pour l'entrée générale, qui commence par le choix du jour, et
- * .../{slug}/{code} pour le lien d'une sortie précise, qui n'affiche que ses
- * créneaux. La distinction compte : un même jour peut porter plusieurs
- * sorties du même opérateur, et le QR code d'une sortie ne doit pas ouvrir
- * celles d'à côté.
+ * La boutique d'un opérateur, à une seule adresse : store.linktrip.co/{slug}.
+ * L'écran ouvert se lit dans l'URL — `?j={jour}` pour les heures de départ,
+ * `?j={jour}&c={créneau}` pour une galerie — de sorte qu'un lien de galerie
+ * se partage, se met en favori et se rouvre tel quel.
  *
- * Un seul composant pour les deux, sinon les deux écrans divergent au premier
- * changement.
+ * C'est ici que ces deux paramètres sont vérifiés, parce que c'est le seul
+ * endroit qui parle à la base : un jour qui ne correspond à aucune sortie
+ * publiée, ou un créneau appartenant à une autre boutique, est ignoré et le
+ * client repart de l'écran du jour.
  */
-export async function StoreScreen({ operator, sortieId }: { operator: StoreOperator; sortieId?: string }) {
-  const sortie: { dateLabel: string; slots: GroupSlotSummary[] } | null = sortieId ? await getSortieSlots(sortieId) : null;
-  const data = sortieId ? null : await getOperatorGroupDays(operator.slug);
+export async function StoreScreen({ operator, dateKey, slotId }: { operator: StoreOperator; dateKey?: string; slotId?: string }) {
+  const data = await getOperatorGroupDays(operator.slug);
+  const initial = slotId ? await getStoreSlot(operator.id, slotId) : null;
 
   // Le pied de page n'est posé ici que sur l'écran d'attente : GroupGallery
   // pose déjà le sien, et l'enveloppe en ajoutait un second, visible en
   // production.
   const frame = (children: React.ReactNode) => (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
-      {/* Le logo ramène à l'accueil de la boutique — l'entrée générale, même
-          quand on est arrivé par le lien d'une sortie précise. */}
+      {/* Le logo ramène à l'accueil de la boutique. */}
       <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} href={publicStorePath(operator.slug)} />
       {children}
     </div>
@@ -36,7 +35,7 @@ export async function StoreScreen({ operator, sortieId }: { operator: StoreOpera
   // Aucune sortie publiée : un client qui scanne le QR code en sortant de
   // l'eau arrive souvent avant que les photos soient en ligne. Lui servir un
   // 404 lui ferait croire que son lien est mauvais.
-  if (sortieId ? !sortie : !data || data.days.length === 0) {
+  if (!data || data.days.length === 0) {
     return frame(
       <>
         <div className={gallery.head}>
@@ -50,13 +49,17 @@ export async function StoreScreen({ operator, sortieId }: { operator: StoreOpera
     );
   }
 
+  const day = initial?.dateKey ?? (dateKey && data.days.some((d) => d.dateKey === dateKey) ? dateKey : undefined);
+
   return frame(
     <GroupGallery
       basePath={publicStorePath(operator.slug)}
       apiBase={apiStoreBase(operator.slug)}
       appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ""}
-      days={data?.days ?? []}
-      sortie={sortie ?? undefined}
+      days={data.days}
+      initialDateKey={day}
+      initialSlot={initial?.slot}
+      initialDayLabel={initial?.dateLabel}
       pricing={{ pricePhotoCents: operator.pricePhotoCents, priceAllCents: operator.priceAllCents }}
       packOnly={operator.packOnly}
     />,

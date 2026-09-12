@@ -26,9 +26,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function StorePage({ params }: { params: { slug: string } }) {
+// `j` = le jour affiché, `c` = le créneau ouvert. Deux paramètres courts
+// parce qu'ils se retrouvent dans un lien qu'un client colle dans une
+// conversation. Ils sont vérifiés par StoreScreen, jamais crus sur parole.
+export default async function StorePage({ params, searchParams }: { params: { slug: string }; searchParams: { j?: string | string[]; c?: string | string[] } }) {
   const operator = await resolveOperator(params.slug);
   if (!operator) notFound();
 
-  return <StoreScreen operator={operator} />;
+  return <StoreScreen operator={operator} dateKey={first(searchParams.j)} slotId={first(searchParams.c)} />;
+}
+
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }

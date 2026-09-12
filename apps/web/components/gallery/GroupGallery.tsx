@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
@@ -16,23 +16,36 @@ import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/galler
 
 /**
  * La boutique d'un opérateur : un QR code affiché à la base, scanné au
- * retour. Deux écrans seulement, choisir son créneau puis choisir ses photos.
- * Le second est exactement celui de la boutique individuelle (PhotoPicker) :
+ * retour. Trois écrans — le jour, l'heure de départ, les photos — dont le
+ * dernier est exactement celui de la boutique individuelle (PhotoPicker) :
  * le client n'a aucune raison de voir deux interfaces différentes pour le
  * même geste.
+ *
+ * **L'URL désigne l'écran** : `?j={jour}` pour les heures de départ d'un
+ * jour, `?j={jour}&c={créneau}` pour une galerie. Sans ça, tout vivait dans
+ * l'état React : impossible de partager le lien de sa galerie, de le mettre
+ * en favori, et le bouton « précédent » du navigateur sortait de la
+ * boutique au lieu de remonter d'un écran.
+ *
+ * Le jour et le créneau sont donc lus de l'URL au premier rendu (le serveur
+ * les passe en props, après les avoir vérifiés), écrits avec
+ * `history.pushState` à chaque choix — pas de `router.push`, qui rejouerait
+ * la page côté serveur à chaque toucher — et relus sur `popstate`, ce qui
+ * rend les flèches du navigateur équivalentes au « Retour ».
  *
  * `basePath` est le chemin tel que le navigateur le voit (il diffère selon
  * qu'on est sur store.linktrip.co ou sur le domaine principal, cf.
  * lib/store.ts) ; `apiBase` est identique partout, /api n'étant jamais
- * réécrit. `sortie` n'est posé que lorsqu'on arrive par le lien d'une sortie
- * précise, et court-circuite alors le choix du jour.
+ * réécrit.
  */
 export function GroupGallery({
   basePath,
   apiBase,
   appUrl,
   days,
-  sortie,
+  initialDateKey,
+  initialSlot,
+  initialDayLabel,
   pricing,
   packOnly,
 }: {
@@ -40,18 +53,21 @@ export function GroupGallery({
   apiBase: string;
   appUrl: string;
   days: GroupDaySummary[];
-  sortie?: { dateLabel: string; slots: GroupSlotSummary[] };
+  initialDateKey?: string;
+  initialSlot?: GroupSlotSummary;
+  initialDayLabel?: string;
   pricing: PricingConfig;
   packOnly: boolean;
 }) {
-  const [slot, setSlot] = useState<GroupSlotSummary | null>(null);
-  const [dayLabel, setDayLabel] = useState("");
-  // Le jour et l'étape de l'écran de choix vivent ici, pas dans
-  // SessionRetrieval : celui-ci est démonté dès qu'une grille de photos
-  // s'ouvre, et le retour doit ramener aux heures du jour choisi plutôt
-  // qu'au début du parcours.
-  const [dateKey, setDateKey] = useState(days[0]?.dateKey ?? "");
-  const [retrievalStep, setRetrievalStep] = useState<"days" | "slots">(sortie || days.length <= 1 ? "slots" : "days");
+  // Un seul jour publié : l'écran du jour n'aurait qu'une ligne à offrir, on
+  // ouvre directement ses heures de départ. C'est aussi ce vers quoi le
+  // « Retour » doit revenir si le navigateur remonte à une URL sans jour.
+  const soleDay = days.length === 1 ? days[0]!.dateKey : "";
+
+  const [dateKey, setDateKey] = useState(initialDateKey || soleDay);
+  const [slotId, setSlotId] = useState(initialSlot?.id ?? "");
+  const [slots, setSlots] = useState<GroupSlotSummary[]>([]);
+  const [slotsState, setSlotsState] = useState<"loading" | "ready" | "error">("loading");
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pendingIds, setPendingIds] = useState<string[] | null>(null);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
@@ -60,36 +76,116 @@ export function GroupGallery({
   // fond ne doivent pas faire disparaître une grille déjà affichée.
   const [loadingPhotos, setLoadingPhotos] = useState(false);
 
-  async function load(id: string): Promise<void> {
-    const res = await fetch(`${apiBase}/slots/${id}/photos`);
-    if (!res.ok) return;
-    const data = (await res.json()) as { photos: GroupPhoto[] };
-    setPhotos(data.photos);
-  }
+  // Le créneau ouvert. Il vient de la liste du jour dès qu'elle est chargée ;
+  // `initialSlot` ne sert qu'au tout premier rendu d'un lien ouvert
+  // directement, avant que cette liste n'arrive.
+  const slot = slots.find((s) => s.id === slotId) ?? (initialSlot && initialSlot.id === slotId ? initialSlot : null);
+  const dayLabel = days.find((d) => d.dateKey === dateKey)?.dateLabel ?? initialDayLabel ?? "";
 
-  function pick(picked: GroupSlotSummary, label: string): void {
-    setSlot(picked);
-    setDayLabel(label);
+  const go = useCallback(
+    (nextDateKey: string, nextSlotId: string, mode: "push" | "replace" = "push") => {
+      setDateKey(nextDateKey);
+      setSlotId(nextSlotId);
+      const params = new URLSearchParams();
+      if (nextDateKey) params.set("j", nextDateKey);
+      if (nextSlotId) params.set("c", nextSlotId);
+      const qs = params.toString();
+      const url = qs ? `${basePath}?${qs}` : basePath;
+      if (mode === "replace") window.history.replaceState(null, "", url);
+      else window.history.pushState(null, "", url);
+      window.scrollTo({ top: 0 });
+    },
+    [basePath],
+  );
+
+  // Les flèches du navigateur font exactement ce que fait le « Retour ».
+  useEffect(() => {
+    function onPop(): void {
+      const params = new URLSearchParams(window.location.search);
+      setDateKey(params.get("j") ?? soleDay);
+      setSlotId(params.get("c") ?? "");
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [soleDay]);
+
+  // Les créneaux du jour affiché.
+  useEffect(() => {
+    if (!dateKey) {
+      setSlots([]);
+      return;
+    }
+    let cancelled = false;
+    setSlotsState("loading");
+    fetch(`${apiBase}/days/${encodeURIComponent(dateKey)}/slots`)
+      .then((res) => {
+        if (!res.ok) throw new Error("failed");
+        return res.json() as Promise<{ dateLabel: string; slots: GroupSlotSummary[] }>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setSlots(data.slots);
+        setSlotsState("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setSlotsState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dateKey, apiBase]);
+
+  const load = useCallback(
+    async (id: string): Promise<void> => {
+      const res = await fetch(`${apiBase}/slots/${id}/photos`);
+      if (!res.ok) return;
+      const data = (await res.json()) as { photos: GroupPhoto[] };
+      setPhotos(data.photos);
+    },
+    [apiBase],
+  );
+
+  // Les photos du créneau ouvert.
+  useEffect(() => {
+    setPendingIds(null);
+    setError(null);
+    if (!slotId) {
+      setPhotos([]);
+      return;
+    }
+    let cancelled = false;
     setPhotos([]);
     setLoadingPhotos(true);
-    void load(picked.id).finally(() => setLoadingPhotos(false));
-  }
+    void load(slotId).finally(() => {
+      if (!cancelled) setLoadingPhotos(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slotId, load]);
 
-  // Les aperçus arrivent en tâche de fond si le worker n'a pas fini de tout
-  // traiter au moment de l'ouverture — même principe que la boutique.
+  // Un identifiant de créneau qui ne correspond à rien dans le jour affiché :
+  // lien périmé, ou sortie purgée depuis. On remonte à la liste des heures
+  // sans laisser d'entrée dans l'historique — sinon le « précédent » y
+  // retomberait aussitôt.
   useEffect(() => {
-    if (!slot) return;
+    if (slotId && !slot && slotsState !== "loading") go(dateKey, "", "replace");
+  }, [slotId, slot, slotsState, dateKey, go]);
+
+  // Les aperçus arrivent en tâche de fond si tout n'a pas été traité au
+  // moment de l'ouverture — même principe que la boutique individuelle.
+  useEffect(() => {
+    if (!slotId) return;
     if (photos.length > 0 && photos.every((p) => p.previewUrl)) return;
     let cancelled = false;
     const interval = setInterval(() => {
-      if (!cancelled) void load(slot.id);
+      if (!cancelled) void load(slotId);
     }, 4000);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slot, photos]);
+  }, [slotId, photos, load]);
 
   async function onPaymentSuccess(): Promise<void> {
     if (!checkout) return;
@@ -104,25 +200,43 @@ export function GroupGallery({
     window.location.href = `${appUrl}/g/${checkout.token}`;
   }
 
+  const footer = (
+    <>
+      <div className={styles.legal}>
+        Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
+      </div>
+      <div className={styles.powered}>
+        Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
+      </div>
+    </>
+  );
+
   if (!slot) {
+    // Un lien ouvert directement sur une galerie : le créneau n'est pas encore
+    // résolu, mais l'écran de choix serait un clignotement de trop. En cas
+    // d'échec réseau on retombe sur l'écran des heures, qui sait le dire.
+    if (slotId && slotsState === "loading") {
+      return (
+        <>
+          <LoadingBlock label="Chargement des photos du créneau…" />
+          {footer}
+        </>
+      );
+    }
     return (
       <>
         <SessionRetrieval
-          apiBase={apiBase}
           days={days}
-          sortie={sortie}
           dateKey={dateKey}
-          onDateKey={setDateKey}
-          step={retrievalStep}
-          onStep={setRetrievalStep}
-          onPick={pick}
+          dayLabel={dayLabel}
+          slots={slots}
+          state={slotsState}
+          canGoBack={days.length > 1}
+          onDay={(day) => go(day.dateKey, "")}
+          onSlot={(picked) => go(dateKey, picked.id)}
+          onBack={() => go("", "")}
         />
-        <div className={styles.legal}>
-          Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
-        </div>
-        <div className={styles.powered}>
-          Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
-        </div>
+        {footer}
       </>
     );
   }
@@ -132,7 +246,7 @@ export function GroupGallery({
   return (
     <>
       <div className={styles.head}>
-        <BackLink onClick={() => setSlot(null)} />
+        <BackLink onClick={() => go(dateKey, "")} />
         <h1>{slot.activity}</h1>
         <p className={styles.sub}>
           {dayLabel ? `${dayLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
@@ -147,19 +261,19 @@ export function GroupGallery({
         // Un créneau peut porter quarante photos : l'aller-retour se voit.
         <LoadingBlock label="Chargement des photos du créneau…" />
       ) : (
-      <PhotoPicker
-        photos={photos}
-        pricing={pricing}
-        packOnly={packOnly}
-        allLabel={allLabel}
-        unitSuffix="l'unité"
-        error={error}
-        busy={false}
-        onCheckout={(ids) => {
-          setError(null);
-          setPendingIds(ids);
-        }}
-      />
+        <PhotoPicker
+          photos={photos}
+          pricing={pricing}
+          packOnly={packOnly}
+          allLabel={allLabel}
+          unitSuffix="l'unité"
+          error={error}
+          busy={false}
+          onCheckout={(ids) => {
+            setError(null);
+            setPendingIds(ids);
+          }}
+        />
       )}
 
       <div className={styles.legal}>
