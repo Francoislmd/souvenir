@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
+import { throttleBackfill } from "./preview-backfill";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -235,11 +236,12 @@ export async function getSortieSlots(sortieId: string): Promise<{ dateLabel: str
  * avant paiement.
  *
  * Rattrapage : la génération du filigrane à la publication peut échouer
- * pour une poignée de photos (contention CPU, original pas encore répliqué
- * — voir lib/group-publish.ts). Plutôt que de les laisser sans aperçu pour
- * toujours, on retente ici, à chaque appel — cette route est sondée toutes
- * les 4s par GroupGallery tant qu'il manque un aperçu, ce qui fait
- * naturellement office de nouvelles tentatives.
+ * pour une poignée de photos (original pas encore répliqué côté stockage —
+ * voir lib/group-publish.ts). Plutôt que de les laisser sans aperçu pour
+ * toujours, on retente ici — mais au plus une fois par photo toutes les
+ * 10 min (lib/preview-backfill.ts) : cette route est sondée toutes les 4 s
+ * par GroupGallery, retenter à chaque appel relançait un rendu d'image en
+ * boucle sur une route publique et non authentifiée.
  */
 export async function getSlotPhotos(slotId: string, operatorName: string): Promise<GroupPhoto[]> {
   const photos = await prisma.photo.findMany({
@@ -247,7 +249,7 @@ export async function getSlotPhotos(slotId: string, operatorName: string): Promi
     orderBy: { createdAt: "asc" },
   });
 
-  const missing = photos.filter((p) => !p.groupPreviewKey);
+  const missing = throttleBackfill(photos.filter((p) => !p.groupPreviewKey));
   const backfilled = await backfillGroupPreviews(
     missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
     operatorName,

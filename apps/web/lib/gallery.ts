@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
+import { throttleBackfill } from "./preview-backfill";
 import type { BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
 
 /**
@@ -31,9 +32,11 @@ export async function getBoutiquePhotos(
 
   // Rattrapage : processPhotoPreview (lib/photo-processing.ts) peut échouer à
   // générer groupPreviewKey pour une poignée de photos (même mécanisme que
-  // lib/gallery-group.ts) ; cette route étant sondée toutes les 4s par
-  // BoutiqueGallery tant qu'il manque un aperçu, on retente ici à chaque appel.
-  const missing = rawPhotos.filter((p) => !p.groupPreviewKey && !purchasedSet.has(p.id));
+  // lib/gallery-group.ts). Au plus une tentative par photo toutes les 10 min
+  // (lib/preview-backfill.ts) : cette route est sondée toutes les 4 s par
+  // BoutiqueGallery, retenter à chaque appel relançait sharp en boucle sur
+  // une route publique.
+  const missing = throttleBackfill(rawPhotos.filter((p) => !p.groupPreviewKey && !purchasedSet.has(p.id)));
   const backfilled = await backfillGroupPreviews(
     missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
     operatorName,
