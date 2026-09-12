@@ -8,6 +8,7 @@ import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
+import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import {
   gtmEvent,
   trackAddPaymentInfo,
@@ -75,6 +76,10 @@ export function BoutiqueGallery({
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; photoIds: string[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // L'archive se fabrique photo par photo côté serveur : entre le clic et le
+  // début du téléchargement, il peut s'écouler plusieurs secondes pendant
+  // lesquelles rien ne bougeait à l'écran.
+  const [zipping, setZipping] = useState(false);
 
   /* ── Mesure e-commerce (GA4 via GTM) ──────────────────────────────
      La galerie EST la boutique : chaque photo est un article, la sélection
@@ -237,6 +242,28 @@ export function BoutiqueGallery({
     router.refresh();
   }
 
+  /**
+   * Le téléchargement groupé. La moulinette s'arrête quand le serveur répond
+   * vraiment : la route repose un cookie portant le jeton envoyé, et le
+   * navigateur affiche dès lors sa propre progression. Le garde-fou de 90
+   * secondes évite une moulinette éternelle si la réponse n'arrive jamais.
+   */
+  function startZip(): void {
+    const ticket = Math.random().toString(36).slice(2, 12);
+    setZipping(true);
+    window.location.href = `/api/g/${token}/zip?t=${ticket}`;
+
+    const started = Date.now();
+    const timer = setInterval(() => {
+      const done = document.cookie.split("; ").some((c) => c === `zip-ready=${ticket}`);
+      if (done || Date.now() - started > 90_000) {
+        clearInterval(timer);
+        setZipping(false);
+        if (done) document.cookie = "zip-ready=; Path=/; Max-Age=0; SameSite=Lax";
+      }
+    }, 400);
+  }
+
   if (bought) {
     const purchasedSet = new Set(purchasedIds);
     const yours = photos.filter((p) => purchasedSet.has(p.id));
@@ -262,10 +289,19 @@ export function BoutiqueGallery({
                 page écrivait trois fois « téléchargement immédiat » et
                 n'offrait aucun téléchargement — il fallait appuyer longuement
                 sur chaque photo, une par une. */}
-            <a className={styles.cta} href={`/api/g/${token}/zip`} style={{ marginTop: 20 }}>
-              <DownloadIcon />
-              Tout télécharger
-            </a>
+            <button type="button" className={styles.cta} style={{ marginTop: 20 }} disabled={zipping} onClick={() => startZip()}>
+              {zipping ? (
+                <>
+                  <Spinner size={17} tone="light" />
+                  Préparation de l&rsquo;archive…
+                </>
+              ) : (
+                <>
+                  <DownloadIcon />
+                  Tout télécharger
+                </>
+              )}
+            </button>
           </div>
 
           <div className={styles.doneGrid}>
@@ -279,7 +315,9 @@ export function BoutiqueGallery({
                       <DownloadIcon size={15} />
                     </a>
                   </>
-                ) : null}
+                ) : (
+                  <TileSpinner />
+                )}
               </span>
             ))}
           </div>

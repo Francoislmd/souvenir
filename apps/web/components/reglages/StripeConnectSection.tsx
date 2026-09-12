@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
+import { Spinner } from "@/components/ui/Spinner";
 
 function CheckIcon() {
   return (
@@ -46,7 +47,14 @@ export function StripeConnectSection({ stripeOnboarded }: { stripeOnboarded: boo
         Connectez Stripe pour encaisser vos ventes. Sans lui, vos galeries s&rsquo;ouvrent mais personne ne peut payer.
       </span>
       <button type="button" className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`} onClick={handleConnect} disabled={loading}>
-        {loading ? "…" : "Connecter Stripe"}
+        {loading ? (
+          <>
+            <Spinner size={15} tone="current" />
+            Ouverture de Stripe…
+          </>
+        ) : (
+          "Connecter Stripe"
+        )}
       </button>
     </div>
   );

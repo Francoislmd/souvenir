@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 
 const BENEFITS = [
   "Versements automatiques sur votre compte après chaque vente",
@@ -57,7 +58,14 @@ export function StepPayments({ onDone }: { onDone: (stripeOnboarded: boolean) =>
           </ul>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <Button size="md" onClick={handleConnect} disabled={loading}>
-              {loading ? "Redirection…" : "Connecter Stripe"}
+              {loading ? (
+                <>
+                  <Spinner size={16} tone="light" />
+                  Redirection…
+                </>
+              ) : (
+                "Connecter Stripe"
+              )}
             </Button>
             <button
               type="button"

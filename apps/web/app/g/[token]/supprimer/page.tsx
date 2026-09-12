@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function DeleteRequestPage() {
   const params = useParams<{ token: string }>();
@@ -37,9 +38,16 @@ export default function DeleteRequestPage() {
             type="button"
             onClick={confirmDelete}
             disabled={loading}
-            style={{ marginTop: 24, height: 44, width: "100%", borderRadius: 999, border: "1px solid #dc2626", background: "none", fontSize: "0.9rem", fontWeight: 600, color: "#dc2626", opacity: loading ? 0.6 : 1 }}
+            style={{ marginTop: 24, height: 44, width: "100%", borderRadius: 999, border: "1px solid #dc2626", background: "none", fontSize: "0.9rem", fontWeight: 600, color: "#dc2626", opacity: loading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           >
-            {loading ? "Suppression…" : "Confirmer la suppression"}
+            {loading ? (
+              <>
+                <Spinner size={16} tone="current" />
+                Suppression…
+              </>
+            ) : (
+              "Confirmer la suppression"
+            )}
           </button>
         </>
       )}

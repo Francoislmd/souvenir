@@ -129,6 +129,11 @@
   font-size: 0.72rem;
   font-weight: 500;
   cursor: pointer;
+  /* La moulinette du retrait se pose à côté du texte, pas au-dessus. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .legal {

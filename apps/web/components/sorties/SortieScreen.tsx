@@ -9,6 +9,7 @@ import { formatEuros } from "@/lib/format";
 import { useToast } from "@/components/operator/ToastProvider";
 import { PhotoDropZone, type PhotoDropZoneHandle } from "@/components/photos/PhotoDropZone";
 import { useUploadQueue } from "@/components/photos/UploadQueueProvider";
+import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
 
@@ -324,7 +325,7 @@ export function SortieScreen({
             }
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {src ? <img src={src} alt="" draggable={false} /> : null}
+            {src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
             {selectable ? (
               <span className={`${styles.sdPhCheck} ${on ? styles.sdPhCheckOn : ""}`}>
                 <CheckIcon />
@@ -338,7 +339,7 @@ export function SortieScreen({
         return (
           <span key={item.id} className={styles.sdPh} style={{ cursor: "default" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {src ? <img src={src} alt="" draggable={false} /> : null}
+            {src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
           </span>
         );
       })}
@@ -493,8 +494,16 @@ export function SortieScreen({
         {published && shareUrl ? (
           <div className={styles.sdShare}>
             <span className={styles.sdQr}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {qrDataUrl ? <img src={qrDataUrl} alt="QR code de la galerie" /> : null}
+              {qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={qrDataUrl} alt="QR code de la galerie" />
+              ) : (
+                // Le code se dessine côté navigateur : la place est réservée
+                // pour que la carte ne saute pas quand il apparaît.
+                <span style={{ width: 108, height: 108, display: "grid", placeItems: "center" }}>
+                  <Spinner size={22} />
+                </span>
+              )}
             </span>
             <span className={styles.sdShareMain}>
               <span className={styles.sdOk}>
@@ -587,7 +596,14 @@ export function SortieScreen({
                     onClick={() => void deleteSortie()}
                     disabled={deleteSortieState === "deleting"}
                   >
-                    {deleteSortieState === "deleting" ? "Suppression…" : "Supprimer définitivement"}
+                    {deleteSortieState === "deleting" ? (
+                      <>
+                        <Spinner size={16} tone="current" />
+                        Suppression…
+                      </>
+                    ) : (
+                      "Supprimer définitivement"
+                    )}
                   </button>
                 </div>
               </div>

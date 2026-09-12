@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
+import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 
 export interface PickerPhoto {
   id: string;
@@ -177,7 +178,12 @@ export function PhotoPicker({
               {photo.previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={photo.previewUrl} alt="" loading={i < 2 ? "eager" : "lazy"} decoding="async" />
-              ) : null}
+              ) : (
+                // L'aperçu n'est pas encore prêt : le worker traite encore
+                // cette photo, elle arrivera d'elle-même. Une tuile grise et
+                // muette passait pour une photo manquante.
+                <TileSpinner />
+              )}
               <span className={styles.check} aria-hidden="true">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
@@ -243,7 +249,14 @@ export function PhotoPicker({
             )}
           </div>
           <button type="button" className={styles.cta} onClick={checkout} disabled={busy || total === 0}>
-            {busy ? "Un instant…" : ctaLabel}
+            {busy ? (
+              <>
+                <Spinner size={17} tone="light" />
+                Un instant…
+              </>
+            ) : (
+              ctaLabel
+            )}
           </button>
           {partial && extraCents > 0 ? (
             <p className={styles.more}>
@@ -289,7 +302,9 @@ export function PhotoPicker({
             {zoomed.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={zoomed.previewUrl} alt="" />
-            ) : null}
+            ) : (
+              <TileSpinner tone="light" size={30} />
+            )}
 
             {total > 1 ? (
               <>

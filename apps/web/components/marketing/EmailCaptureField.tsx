@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(marketing)/landing.module.css";
 import { trackEvent, type MarketingEventName } from "@/lib/marketing-analytics";
+import { Spinner } from "@/components/ui/Spinner";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -85,7 +86,12 @@ export function EmailCaptureField({
           }
           style={buttonClassName ? undefined : { paddingTop: "clamp(12px, 1.7vh, 15px)", paddingBottom: "clamp(12px, 1.7vh, 15px)" }}
         >
-          {submitting ? "…" : (
+          {submitting ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner size={15} tone="current" />
+              Envoi…
+            </span>
+          ) : (
             <>
               {submitLabel} <span aria-hidden="true">→</span>
             </>

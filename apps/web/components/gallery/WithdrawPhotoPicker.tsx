@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "@/components/gallery/collective.module.css";
+import { LoadingBlock, Spinner, TileSpinner } from "@/components/ui/Spinner";
 import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
 type Step = "days" | "slots" | "photos";
@@ -28,24 +29,39 @@ export function WithdrawPhotoPicker({
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  // L'écran change avant que la liste n'arrive : sans ça, on passe une
+  // seconde devant une page vide qui a l'air de dire « il n'y a rien ».
+  const [busy, setBusy] = useState(false);
 
   async function openDay(day: GroupDaySummary): Promise<void> {
     setActiveDay(day);
+    setSlots([]);
     setStep("slots");
-    const res = await fetch(`${apiBase}/days/${encodeURIComponent(day.dateKey)}/slots`);
-    if (res.ok) {
-      const data = (await res.json()) as { dateLabel: string; slots: GroupSlotSummary[] };
-      setSlots(data.slots);
+    setBusy(true);
+    try {
+      const res = await fetch(`${apiBase}/days/${encodeURIComponent(day.dateKey)}/slots`);
+      if (res.ok) {
+        const data = (await res.json()) as { dateLabel: string; slots: GroupSlotSummary[] };
+        setSlots(data.slots);
+      }
+    } finally {
+      setBusy(false);
     }
   }
 
   async function openSlot(id: string): Promise<void> {
     setConfirmedId(null);
+    setPhotos([]);
     setStep("photos");
-    const res = await fetch(`${apiBase}/slots/${id}/photos`);
-    if (res.ok) {
-      const data = (await res.json()) as { photos: GroupPhoto[] };
-      setPhotos(data.photos);
+    setBusy(true);
+    try {
+      const res = await fetch(`${apiBase}/slots/${id}/photos`);
+      if (res.ok) {
+        const data = (await res.json()) as { photos: GroupPhoto[] };
+        setPhotos(data.photos);
+      }
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -92,6 +108,7 @@ export function WithdrawPhotoPicker({
           <h1>Choisissez le créneau</h1>
           <p>{activeDay?.dateLabel}</p>
         </div>
+        {busy && slots.length === 0 ? <LoadingBlock label="Chargement des créneaux…" /> : null}
         <div className={styles.slots}>
           {slots.map((slot) => (
             <button key={slot.id} type="button" className={styles.slot} onClick={() => void openSlot(slot.id)}>
@@ -118,15 +135,25 @@ export function WithdrawPhotoPicker({
         <h1>Touchez une photo pour la retirer</h1>
         <p>Le retrait est définitif. Aucune justification ne vous est demandée.</p>
       </div>
+      {busy && photos.length === 0 ? <LoadingBlock label="Chargement des photos…" /> : null}
       <div className={styles.grid}>
         {photos.map((photo) => (
           <div key={photo.id} className={styles.cell}>
             {photo.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photo.previewUrl} alt="" />
-            ) : null}
+            ) : (
+              <TileSpinner />
+            )}
             <button type="button" className={styles.hideBar} onClick={() => confirmHide(photo.id)} disabled={pending === photo.id}>
-              {pending === photo.id ? "Retrait…" : "Retirer cette photo"}
+              {pending === photo.id ? (
+                <>
+                  <Spinner size={15} tone="current" />
+                  Retrait…
+                </>
+              ) : (
+                "Retirer cette photo"
+              )}
             </button>
           </div>
         ))}

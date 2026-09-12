@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { AppHeader } from "@/components/operator/AppHeader";
+import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
 import { StripeConnectSection } from "@/components/reglages/StripeConnectSection";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
@@ -137,7 +138,10 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
         status={
           <span className={styles.rgStatus} aria-live="polite">
             {status === "saving" ? (
-              "Enregistrement…"
+              <>
+                <Spinner size={14} />
+                Enregistrement…
+              </>
             ) : status === "saved" ? (
               <>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -175,7 +179,9 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
               <label>Logo et couleur</label>
               <div className={styles.rgLogo}>
                 <button type="button" className={styles.rgLogoBtn} onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} aria-label="Changer le logo">
-                  {logoUrl ? (
+                  {uploadingLogo ? (
+                    <Spinner size={18} />
+                  ) : logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={logoUrl} alt="" />
                   ) : (

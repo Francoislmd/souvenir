@@ -25,7 +25,7 @@ function extensionOf(key: string): string {
  * devinable EST le droit d'accès. Mais la commande doit être payée, et on
  * ne sert que les photos réellement achetées — jamais tout le lot.
  */
-export async function GET(_request: Request, { params }: { params: { token: string } }): Promise<Response> {
+export async function GET(request: Request, { params }: { params: { token: string } }): Promise<Response> {
   const participant = await prisma.participant.findUnique({
     where: { token: params.token },
     include: { sortie: true, order: true },
@@ -63,9 +63,15 @@ export async function GET(_request: Request, { params }: { params: { token: stri
   const day = participant.sortie.startsAt.toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
   const filename = `${base}-${day}.zip`;
 
+  // Le client pose un jeton dans l'URL et guette ce cookie : il lui dit que
+  // l'archive part vraiment, et c'est le moment d'arrêter sa moulinette — le
+  // navigateur prend alors le relais avec sa propre barre de téléchargement.
+  const ticket = new URL(request.url).searchParams.get("t");
+
   return new Response(zipStream(entries), {
     headers: {
       "Content-Type": "application/zip",
+      ...(ticket && /^[a-z0-9]{1,40}$/i.test(ticket) ? { "Set-Cookie": `zip-ready=${ticket}; Path=/; Max-Age=60; SameSite=Lax` } : {}),
       // Les deux formes : `filename` pour les clients anciens, `filename*`
       // pour que les accents survivent partout ailleurs.
       "Content-Disposition": `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,

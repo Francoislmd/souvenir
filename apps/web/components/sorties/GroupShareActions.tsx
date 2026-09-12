@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import QRCode from "qrcode";
 import styles from "@/app/(operator)/operator.module.css";
 import { useToast } from "@/components/operator/ToastProvider";
+import { Spinner } from "@/components/ui/Spinner";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -93,7 +94,14 @@ export function GroupShareActions({ sortieId, shareUrl }: { sortieId: string; sh
             </div>
             <div className={styles.sharerow} style={{ justifyContent: "center" }}>
               <button type="button" className={`${styles.btn} ${styles.sm}`} onClick={() => void sendInvites()} disabled={validEmails.length === 0 || sending}>
-                {sending ? "Envoi…" : "Envoyer"}
+                {sending ? (
+                  <>
+                    <Spinner size={15} tone="current" />
+                    Envoi…
+                  </>
+                ) : (
+                  "Envoyer"
+                )}
               </button>
               <button type="button" className={`${styles.btn} ${styles.ghost} ${styles.sm}`} onClick={() => setInviteOpen(false)}>
                 Fermer
@@ -110,7 +118,9 @@ export function GroupShareActions({ sortieId, shareUrl }: { sortieId: string; sh
               {qrDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={qrDataUrl} alt="QR code de la galerie" />
-              ) : null}
+              ) : (
+                <Spinner size={24} />
+              )}
             </div>
             <div className={styles.lh} style={{ textAlign: "center", wordBreak: "break-all" }}>
               {shareUrl.replace(/^https?:\/\//, "")}

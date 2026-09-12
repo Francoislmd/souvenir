@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
+import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
 
 export interface ClientRow {
@@ -74,15 +75,18 @@ export function ClientsSection({ sortieId, clients }: { sortieId: string; client
   }
 
   async function saveEdit(id: string): Promise<void> {
+    if (saving) return;
     if (!editName.trim() || !editContact.trim()) {
       toast("Prénom et contact sont requis");
       return;
     }
+    setSaving(true);
     const res = await fetch(`/api/participants/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: editName.trim(), contact: editContact.trim() }),
     });
+    setSaving(false);
     if (res.ok) {
       setEditingId(null);
       router.refresh();
@@ -124,7 +128,8 @@ export function ClientsSection({ sortieId, clients }: { sortieId: string; client
           onKeyDown={(e) => e.key === "Enter" && void add()}
         />
         <button type="button" className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`} onClick={() => void add()} disabled={saving}>
-          Ajouter
+          {saving ? <Spinner size={15} tone="current" /> : null}
+          {saving ? "Ajout…" : "Ajouter"}
         </button>
       </div>
 
@@ -136,8 +141,9 @@ export function ClientsSection({ sortieId, clients }: { sortieId: string; client
             <div key={c.id} className={styles.sdAdd}>
               <input className={styles.sdInp} value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void saveEdit(c.id)} />
               <input className={styles.sdInp} value={editContact} onChange={(e) => setEditContact(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void saveEdit(c.id)} />
-              <button type="button" className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`} onClick={() => void saveEdit(c.id)}>
-                Enregistrer
+              <button type="button" className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`} onClick={() => void saveEdit(c.id)} disabled={saving}>
+                {saving ? <Spinner size={15} tone="current" /> : null}
+                {saving ? "Enregistrement…" : "Enregistrer"}
               </button>
             </div>
           ) : (

@@ -1222,6 +1222,11 @@ a.trow:hover .tgo {
   border-radius: 14px;
   overflow: hidden;
   background: var(--line-2);
+  /* La place du code est tenue pendant qu'il se dessine, sinon la carte
+     grandit d'un coup sous les yeux de l'opérateur. */
+  min-height: 132px;
+  display: grid;
+  place-items: center;
 }
 .qrImg img {
   display: block;

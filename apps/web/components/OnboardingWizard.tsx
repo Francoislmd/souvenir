@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase-browser";
 import { gtmEvent } from "@/lib/gtm";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { inputClass } from "@/components/ui/Input";
 import { Stepper } from "@/components/onboarding/Stepper";
 import { StepActivities } from "@/components/onboarding/StepActivities";
@@ -458,6 +459,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
             )}
 
             <Button variant="accent" size="md" onClick={handleContinue} disabled={loading || !canContinue}>
+              {loading ? <Spinner size={16} tone="light" /> : null}
               {loading
                 ? currentStep === "compte" ? "Vérification…" : "Chargement…"
                 : currentStep === "revenus" ? "Voir mon potentiel"

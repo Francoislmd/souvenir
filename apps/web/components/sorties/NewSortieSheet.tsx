@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
+import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
 
 export type SortieMode = "INDIVIDUEL" | "GROUPE";
@@ -178,7 +179,14 @@ export function NewSortieSheet({
 
         <div className={styles.shActions}>
           <button type="button" className={`${styles.sBtn} ${styles.sBtnPri} ${styles.shFull}`} onClick={() => void create()} disabled={saving}>
-            {saving ? "Création…" : "Créer la sortie"}
+            {saving ? (
+              <>
+                <Spinner size={16} tone="current" />
+                Création…
+              </>
+            ) : (
+              "Créer la sortie"
+            )}
           </button>
         </div>
       </div>

@@ -1,0 +1,81 @@
+/* Moulinette d'attente, commune à toute l'application.
+   Une seule forme partout : l'opérateur et le client voient le même objet
+   tourner, qu'il s'agisse de charger des créneaux, des photos ou d'attendre
+   un paiement. Les couleurs viennent du contexte (--sp-track / --sp-head)
+   plutôt que d'une palette locale, ce qui permet de la poser aussi bien sur
+   une page blanche que dans un bouton sombre ou sur une photo. */
+.sp {
+  display: inline-block;
+  width: var(--sp-size, 18px);
+  height: var(--sp-size, 18px);
+  border-radius: 50%;
+  border: var(--sp-w, 2px) solid var(--sp-track);
+  border-top-color: var(--sp-head);
+  animation: spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+
+/* Sur fond clair : le filet du projet, la tête en couleur de marque. */
+.brand {
+  --sp-track: var(--line, #ece9ef);
+  --sp-head: var(--brand, #ff5a1f);
+}
+/* Dans un bouton : la moulinette prend la couleur du texte, quelle que soit
+   la variante (encre, marque, fantôme). */
+.current {
+  --sp-track: color-mix(in srgb, currentColor 24%, transparent);
+  --sp-head: currentColor;
+}
+/* Sur une photo ou une dalle sombre. */
+.light {
+  --sp-track: rgba(255, 255, 255, 0.32);
+  --sp-head: #fff;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mouvement réduit : l'anneau ne tourne plus, il respire. Un cercle figé ne
+   dit rien, et c'est souvent le seul signe d'attente dans un bouton, où il
+   n'y a pas de phrase pour le dire. Un fondu ne déclenche pas les troubles
+   vestibulaires que la rotation vise à éviter. */
+@media (prefers-reduced-motion: reduce) {
+  .sp {
+    animation: breathe 1.6s ease-in-out infinite;
+  }
+}
+@keyframes breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Zone en attente : une liste, une grille ou un écran qui n'a encore rien à
+   montrer. Sans ça, la place reste vide et rien ne dit que ça charge. */
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: var(--sp-pad, 56px) 20px;
+  text-align: center;
+}
+.label {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-3, #726c80);
+}
+
+/* Posée dans une vignette dont l'aperçu n'est pas encore prêt. */
+.tile {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}

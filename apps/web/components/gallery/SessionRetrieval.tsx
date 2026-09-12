@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "@/components/gallery/gallery.module.css";
+import { LoadingBlock } from "@/components/ui/Spinner";
 import type { GroupDaySummary, GroupSlotSummary } from "@/lib/gallery-group";
 
 /**
@@ -100,7 +101,12 @@ export function SessionRetrieval({
         </div>
       ) : null}
 
-      {!sortie && state === "error" ? (
+      {!sortie && state === "loading" ? (
+        // Les créneaux arrivent par le réseau, sur un téléphone et souvent en
+        // 4G de bord de mer : sans moulinette, la place reste vide et le
+        // client croit que sa sortie n'est pas là.
+        <LoadingBlock label="Chargement des créneaux…" />
+      ) : !sortie && state === "error" ? (
         <p className={styles.empty}>Les créneaux n&rsquo;ont pas pu être chargés. Réessayez dans un instant.</p>
       ) : !sortie && state === "ready" && slots.length === 0 ? (
         <p className={styles.empty}>Aucun créneau publié ce jour-là.</p>

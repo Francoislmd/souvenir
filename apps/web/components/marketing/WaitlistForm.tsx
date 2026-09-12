@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { inputClass } from "@/components/ui/Input";
+import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import styles from "@/app/(marketing)/landing.module.css";
 import { trackEvent } from "@/lib/marketing-analytics";
@@ -179,7 +180,16 @@ export function WaitlistForm({ initialEmail = "" }: WaitlistFormProps) {
 
         <div className={cx(styles.stickyBar, "min-[1000px]:col-span-2")}>
           <Button type="submit" variant="sunset" size="lg" disabled={submitting} className="mt-1 w-full">
-            {submitting ? "…" : <>Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span></>}
+            {submitting ? (
+              <>
+                <Spinner size={17} tone="light" />
+                Envoi…
+              </>
+            ) : (
+              <>
+                Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
+              </>
+            )}
           </Button>
           <p className="mt-2.5 text-center text-xs text-ink-4">Aucune carte bancaire · Aucun engagement</p>
           {error && <p className="mt-2 text-center text-sm text-danger">Une erreur est survenue, réessayez.</p>}

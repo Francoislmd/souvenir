@@ -9,6 +9,7 @@ import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
 import { LockIcon } from "@/components/gallery/icons";
+import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
 import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
@@ -48,6 +49,9 @@ export function GroupGallery({
   const [pendingIds, setPendingIds] = useState<string[] | null>(null);
   const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Le premier chargement d'un créneau seulement : les rafraîchissements de
+  // fond ne doivent pas faire disparaître une grille déjà affichée.
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   async function load(id: string): Promise<void> {
     const res = await fetch(`${apiBase}/slots/${id}/photos`);
@@ -60,7 +64,8 @@ export function GroupGallery({
     setSlot(picked);
     setDayLabel(label);
     setPhotos([]);
-    void load(picked.id);
+    setLoadingPhotos(true);
+    void load(picked.id).finally(() => setLoadingPhotos(false));
   }
 
   // Les aperçus arrivent en tâche de fond si le worker n'a pas fini de tout
@@ -124,6 +129,10 @@ export function GroupGallery({
         </p>
       </div>
 
+      {loadingPhotos && photos.length === 0 ? (
+        // Un créneau peut porter quarante photos : l'aller-retour se voit.
+        <LoadingBlock label="Chargement des photos du créneau…" />
+      ) : (
       <PhotoPicker
         photos={photos}
         pricing={pricing}
@@ -137,6 +146,7 @@ export function GroupGallery({
           setPendingIds(ids);
         }}
       />
+      )}
 
       <div className={styles.legal}>
         Photos conservées 90 jours puis supprimées automatiquement. Une photo de vous que vous ne voulez pas ici ?{" "}
@@ -267,7 +277,14 @@ function EmailSheet({
         </div>
         {error ? <p className={styles.error}>{error}</p> : null}
         <button type="button" className={styles.cta} onClick={() => void submit()} disabled={loading}>
-          {loading ? "Un instant…" : "Continuer"}
+          {loading ? (
+            <>
+              <Spinner size={17} tone="light" />
+              Un instant…
+            </>
+          ) : (
+            "Continuer"
+          )}
         </button>
         <button type="button" className={styles.cancel} onClick={onClose}>
           Annuler
