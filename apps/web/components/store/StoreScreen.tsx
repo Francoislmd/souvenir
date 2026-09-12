@@ -26,7 +26,9 @@ export async function StoreScreen({ operator, sortieId }: { operator: StoreOpera
   // production.
   const frame = (children: React.ReactNode) => (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
-      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
+      {/* Le logo ramène à l'accueil de la boutique — l'entrée générale, même
+          quand on est arrivé par le lien d'une sortie précise. */}
+      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} href={publicStorePath(operator.slug)} />
       {children}
     </div>
   );

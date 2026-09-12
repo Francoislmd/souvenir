@@ -27,6 +27,22 @@
   align-items: center;
   gap: 11px;
 }
+/* Sur la boutique de groupe, l'en-tête est un lien vers son accueil. Il ne
+   se souligne pas et ne change pas de couleur : c'est le logo qui se
+   reconnaît, et un en-tête qui vire au bleu de lien ferait tache sur la
+   page où l'on tape son numéro de carte. */
+a.topIn {
+  color: inherit;
+  text-decoration: none;
+}
+a.topIn:active {
+  opacity: 0.62;
+}
+a.topIn:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -3px;
+  border-radius: 12px;
+}
 .logo {
   width: 32px;
   height: 32px;
