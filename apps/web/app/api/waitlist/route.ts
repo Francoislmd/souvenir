@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit, requestIp } from "@/lib/auth/rate-limit";
+import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email(),

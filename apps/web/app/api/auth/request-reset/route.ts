@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase-server";
-import { checkRateLimit, requestIp } from "@/lib/auth/rate-limit";
+import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 import { isEmail } from "@/lib/auth/password-strength";
 
 const bodySchema = z.object({

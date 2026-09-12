@@ -4,6 +4,7 @@ import { track } from "@/lib/analytics";
 import { deriveChannel } from "@/lib/channel";
 import { createOrUpdatePaymentIntent, CheckoutError } from "@/lib/checkout";
 import { resolveOperator } from "@/lib/store";
+import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -22,6 +23,13 @@ export async function POST(request: Request, { params }: { params: { slug: strin
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
+    }
+
+    // Chaque appel crée une ligne Participant : route publique, donc plafond
+    // par IP, sinon la table se remplit au rythme d'une boucle.
+    const { allowed } = await checkRateLimit(`store-checkout:ip:${requestIp(request)}`, { max: 20, windowMs: 15 * 60 * 1000 });
+    if (!allowed) {
+      return Response.json({ error: "Trop de tentatives, réessayez dans quelques minutes." }, { status: 429 });
     }
 
     const operator = await resolveOperator(params.slug);

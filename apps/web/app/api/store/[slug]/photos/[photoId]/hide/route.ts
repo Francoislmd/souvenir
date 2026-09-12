@@ -3,6 +3,7 @@ import { track } from "@/lib/analytics";
 import { env } from "@/lib/env";
 import { sendPhotoWithdrawalNotifiedEmail } from "@/lib/email";
 import { resolveOperator } from "@/lib/store";
+import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 function formatDateFr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
@@ -13,8 +14,19 @@ function formatDateFr(d: Date): string {
 // demandée. Masquage immédiat, avant même traitement. La boutique étant
 // ouverte à qui connaît le nom du prestataire, ce retrait est le seul recours
 // de quelqu'un qui ne veut pas y figurer : il ne doit rien exiger.
-export async function POST(_request: Request, { params }: { params: { slug: string; photoId: string } }): Promise<Response> {
+export async function POST(request: Request, { params }: { params: { slug: string; photoId: string } }): Promise<Response> {
   try {
+    // Le retrait n'exige aucune justification, c'est un choix produit. Mais
+    // les identifiants de photos sont servis publiquement par la route
+    // voisine : sans limite de débit, un script masque tout le catalogue d'un
+    // prestataire en quelques secondes. Le plafond est haut — une famille qui
+    // retire ses six photos passe sans s'en apercevoir — et bas devant un
+    // script.
+    const { allowed } = await checkRateLimit(`hide:ip:${requestIp(request)}`, { max: 20, windowMs: 15 * 60 * 1000 });
+    if (!allowed) {
+      return Response.json({ error: "Trop de demandes, réessayez dans quelques minutes." }, { status: 429 });
+    }
+
     const operator = await resolveOperator(params.slug);
     if (!operator) {
       return Response.json({ error: "Not found" }, { status: 404 });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { checkRateLimit, requestIp } from "@/lib/auth/rate-limit";
+import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   email: z.string().min(1),
