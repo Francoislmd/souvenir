@@ -42,6 +42,18 @@ export interface GroupPhoto {
 // le code (souvent UTC en production).
 const TZ = "Europe/Paris";
 
+// La boutique n'affiche jamais que la fenêtre de rétention : au-delà, la purge
+// a supprimé les photos et les créneaux (lib/gdpr.ts). 100 jours plutôt que
+// 90 pour couvrir un cron passé et les bornes de journée.
+const RETENTION_DAYS = 100;
+// Garde-fou dur en plus du plancher de date : un très gros opérateur ne doit
+// pas transformer l'ouverture de sa boutique en requête sans fond.
+const MAX_SORTIES_PER_STORE = 400;
+
+function retentionFloor(now: Date = new Date()): Date {
+  return new Date(now.getTime() - RETENTION_DAYS * DAY_MS);
+}
+
 function formatDateFr(d: Date): string {
   return d
     .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: TZ })
@@ -106,11 +118,18 @@ export async function getOperatorGroupDays(slug: string): Promise<{ operatorId: 
     where: { slug },
     include: {
       sorties: {
-        where: { mode: "GROUPE", slots: { some: {} } },
+        // Borné par la rétention : rien ne survit au-delà de 90 jours
+        // (Sortie.purgeAt), la marge couvre un cron passé et la fin de
+        // journée. Sans ce plancher, la boutique chargeait l'historique
+        // complet d'un opérateur — toutes ses sorties, tous leurs créneaux et
+        // un comptage de photos par créneau — à chaque ouverture, et la page
+        // est en force-dynamic.
+        where: { mode: "GROUPE", slots: { some: {} }, startsAt: { gte: retentionFloor() } },
         include: {
           slots: { select: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } } },
         },
         orderBy: { startsAt: "desc" },
+        take: MAX_SORTIES_PER_STORE,
       },
     },
   });
@@ -158,11 +177,22 @@ export async function getOperatorGroupDays(slug: string): Promise<{ operatorId: 
  * jour pouvant mélanger plusieurs activités.
  */
 export async function getSlotsForDate(slug: string, dateKey: string): Promise<{ dateLabel: string; slots: GroupSlotSummary[] } | null> {
+  // Le filtre exact se fait plus bas, en heure de Paris, sur dateKeyFor() —
+  // Postgres ne connaît pas ce fuseau ici. Mais la requête n'a aucune raison
+  // de ramener autre chose que les deux jours qui encadrent celui demandé :
+  // une fenêtre UTC de ±36 h contient à coup sûr le jour parisien visé, quel
+  // que soit le décalage. Avant, elle chargeait toutes les sorties de
+  // l'opérateur pour n'en garder qu'une poignée.
+  const target = new Date(`${dateKey}T12:00:00Z`);
+  if (Number.isNaN(target.getTime())) return null;
+  const from = new Date(target.getTime() - 36 * 60 * 60 * 1000);
+  const to = new Date(target.getTime() + 36 * 60 * 60 * 1000);
+
   const operator = await prisma.operator.findUnique({
     where: { slug },
     include: {
       sorties: {
-        where: { mode: "GROUPE", slots: { some: {} } },
+        where: { mode: "GROUPE", slots: { some: {} }, startsAt: { gte: from, lte: to } },
         include: {
           slots: {
             include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },

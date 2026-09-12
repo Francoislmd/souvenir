@@ -10,6 +10,13 @@ import { env } from "./env";
 
 const HOUR = 60 * 60 * 1000;
 
+// Plafond par passage. Le scan est quotidien et chaque participant coûte un
+// envoi (Resend ou Twilio) en séquentiel : sans borne, la route finit par
+// dépasser son maxDuration et s'arrête au milieu, sans qu'on sache où. Avec
+// une borne, le reste est simplement repris au passage suivant — remindedAt
+// et reducedOfferSentAt garantissent qu'on ne renvoie jamais deux fois.
+const MAX_PER_SCAN = 500;
+
 interface AutomationFlags {
   resendUnopened: boolean;
   reducedPriceOffer: boolean;
@@ -142,6 +149,8 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
       unsubscribedAt: null,
     },
     include: { sortie: { include: { operator: true } } },
+    orderBy: { sentAt: "asc" },
+    take: MAX_PER_SCAN,
   });
   for (const participant of unopened) {
     const operator = participant.sortie.operator;
@@ -163,6 +172,8 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
       OR: [{ order: null }, { order: { status: { notIn: ["succeeded", "refunded", "disputed"] } } }],
     },
     include: { sortie: { include: { operator: true } } },
+    orderBy: { openedAt: "asc" },
+    take: MAX_PER_SCAN,
   });
   for (const participant of openedNoPurchase) {
     const operator = participant.sortie.operator;

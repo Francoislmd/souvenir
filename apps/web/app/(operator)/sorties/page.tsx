@@ -15,10 +15,7 @@ export default async function SortiesPage() {
       where: { operatorId: dbUser.operatorId },
       orderBy: { startsAt: "desc" },
       take: 100,
-      include: {
-        _count: { select: { participants: true, photos: true } },
-        participants: { include: { order: true } },
-      },
+      include: { _count: { select: { participants: true, photos: true } } },
     }),
     // Le mode de réception est une habitude de métier : on reprend celui de
     // la dernière sortie créée plutôt que de reposer la question à chaque
@@ -30,8 +27,27 @@ export default async function SortiesPage() {
     }),
   ]);
 
+  // Les commandes payées, et elles seules. La version précédente incluait
+  // TOUS les participants de chaque sortie avec TOUTE leur commande, sur cent
+  // sorties, pour n'en tirer que deux nombres : un compte et une somme. Une
+  // sortie de huit personnes dont une seule achète ramenait huit lignes et
+  // huit commandes au lieu d'une.
+  const paidBySortie = new Map<string, { count: number; cents: number }>();
+  if (sorties.length > 0) {
+    const paidParticipants = await prisma.participant.findMany({
+      where: { sortieId: { in: sorties.map((s) => s.id) }, order: { status: "succeeded" } },
+      select: { sortieId: true, order: { select: { amountCents: true } } },
+    });
+    for (const p of paidParticipants) {
+      const current = paidBySortie.get(p.sortieId) ?? { count: 0, cents: 0 };
+      current.count += 1;
+      current.cents += p.order?.amountCents ?? 0;
+      paidBySortie.set(p.sortieId, current);
+    }
+  }
+
   const rows: SortieRow[] = sorties.map((s) => {
-    const paid = s.participants.filter((p) => p.order?.status === "succeeded");
+    const paid = paidBySortie.get(s.id) ?? { count: 0, cents: 0 };
     return {
       id: s.id,
       startsAt: s.startsAt.toISOString(),
@@ -40,9 +56,9 @@ export default async function SortiesPage() {
       guide: s.guide,
       participantCount: s._count.participants,
       photoCount: s._count.photos,
-      paidCount: paid.length,
+      paidCount: paid.count,
       isGroup: s.mode === "GROUPE",
-      revenueCents: paid.reduce((sum, p) => sum + (p.order?.amountCents ?? 0), 0),
+      revenueCents: paid.cents,
       publicationStatus: publicationStatus(s._count.photos, s.status),
     };
   });

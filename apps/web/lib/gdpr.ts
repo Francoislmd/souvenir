@@ -32,8 +32,13 @@ export async function purgeParticipant(participantId: string): Promise<void> {
 }
 
 export async function runGdprPurgeScan(now: Date = new Date()): Promise<{ purged: number }> {
+  // Même raisonnement que pour les automations : une purge coûte plusieurs
+  // suppressions de fichiers par participant, et le reliquat est repris au
+  // passage suivant puisque deleteAt ne bouge pas.
   const due = await prisma.participant.findMany({
     where: { deleteAt: { lte: now }, deletedAt: null },
+    orderBy: { deleteAt: "asc" },
+    take: 500,
     select: { id: true },
   });
 
@@ -80,6 +85,8 @@ export async function purgeGroupSortie(sortieId: string): Promise<void> {
 export async function runGroupPurgeScan(now: Date = new Date()): Promise<{ purged: number }> {
   const due = await prisma.sortie.findMany({
     where: { mode: "GROUPE", purgeAt: { lte: now } },
+    orderBy: { purgeAt: "asc" },
+    take: 200,
     select: { id: true },
   });
 
