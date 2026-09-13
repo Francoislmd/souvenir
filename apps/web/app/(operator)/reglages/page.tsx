@@ -12,6 +12,7 @@ export default async function ReglagesPage() {
       operator={{
         name: operator.name,
         logoUrl: operator.logoUrl,
+        coverUrl: operator.coverUrl,
         brandColor: operator.brandColor,
         pricePhotoCents: operator.pricePhotoCents,
         priceAllCents: operator.priceAllCents,

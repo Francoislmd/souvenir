@@ -2439,6 +2439,43 @@ a.sdClient:hover {
   height: 100%;
   object-fit: cover;
 }
+/* La couverture de la boutique : un aperçu à sa vraie forme, pas une
+   vignette carrée. Le rapport 16/9 est celui de l'écran d'accueil, c'est le
+   seul moyen de voir ce qui sera recadré avant de publier. */
+.rgCover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 190px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink-4);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.14s;
+}
+.rgCover:hover {
+  border-color: var(--brand);
+}
+.rgCover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rgCoverEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 100%;
+  font-size: 0.88rem;
+}
+
 .rgSws {
   display: flex;
   gap: 8px;

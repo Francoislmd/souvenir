@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/components/gallery/gallery.module.css";
+import store from "@/components/gallery/store.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
+import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { BackLink } from "@/components/gallery/BackLink";
 import { LockIcon } from "@/components/gallery/icons";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
@@ -39,6 +41,7 @@ import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/galler
  * réécrit.
  */
 export function GroupGallery({
+  operator,
   basePath,
   apiBase,
   appUrl,
@@ -49,6 +52,7 @@ export function GroupGallery({
   pricing,
   packOnly,
 }: {
+  operator: { name: string; logoUrl: string | null; coverUrl: string | null; tagline: string };
   basePath: string;
   apiBase: string;
   appUrl: string;
@@ -200,14 +204,20 @@ export function GroupGallery({
     window.location.href = `${appUrl}/g/${checkout.token}`;
   }
 
+  const header = <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} href={basePath} />;
+
+  const powered = (
+    <div className={styles.powered}>
+      Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
+    </div>
+  );
+
   const footer = (
     <>
       <div className={styles.legal}>
         Une photo de vous que vous ne voulez pas ici ? <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
       </div>
-      <div className={styles.powered}>
-        Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
-      </div>
+      {powered}
     </>
   );
 
@@ -218,6 +228,7 @@ export function GroupGallery({
     if (slotId && slotsState === "loading") {
       return (
         <>
+          {header}
           <LoadingBlock label="Chargement des photos du créneau…" />
           {footer}
         </>
@@ -226,6 +237,7 @@ export function GroupGallery({
     return (
       <>
         <SessionRetrieval
+          operator={operator}
           days={days}
           dateKey={dateKey}
           dayLabel={dayLabel}
@@ -236,7 +248,7 @@ export function GroupGallery({
           onSlot={(picked) => go(dateKey, picked.id)}
           onBack={() => go("", "")}
         />
-        {footer}
+        {dateKey ? footer : <div className={store.foot}>{powered}</div>}
       </>
     );
   }
@@ -245,6 +257,7 @@ export function GroupGallery({
 
   return (
     <>
+      {header}
       <div className={styles.head}>
         <BackLink onClick={() => go(dateKey, "")} />
         <h1>{slot.activity}</h1>

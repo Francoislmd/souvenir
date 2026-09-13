@@ -12,7 +12,10 @@
   --ink-4: #a6a0b2;
   --line: #ece9ef;
   --line-2: #f4f2f6;
-  --bg: #fbfaf9;
+  /* Blanc, et pas le papier crème du reste du produit : la boutique s'ouvre
+     sur une photo pleine largeur, et un fond teinté sous une photo se lit
+     comme une page mal chargée. */
+  --bg: #ffffff;
   --ok: #16a34a;
   --ok-soft: #eaf7ef;
 

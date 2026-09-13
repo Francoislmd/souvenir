@@ -20,6 +20,7 @@ interface Automations {
 interface OperatorSettings {
   name: string;
   logoUrl: string | null;
+  coverUrl: string | null;
   brandColor: string;
   pricePhotoCents: number;
   priceAllCents: number;
@@ -40,10 +41,13 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
   const router = useRouter();
   const toast = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(operator.name);
   const [logoUrl, setLogoUrl] = useState(operator.logoUrl);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [coverUrl, setCoverUrl] = useState(operator.coverUrl);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [brandColor, setBrandColor] = useState(operator.brandColor);
   const [pricePhoto, setPricePhoto] = useState(toEuros(operator.pricePhotoCents));
   const [priceAll, setPriceAll] = useState(toEuros(operator.priceAllCents));
@@ -110,6 +114,27 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
   function net(euros: string): string {
     const cents = Math.round(Number(euros || 0) * 100);
     return ((cents * (100 - operator.feePercent)) / 100 / 100).toFixed(2).replace(".", ",");
+  }
+
+  // La couverture de la boutique. Même trajet que le logo : envoi d'abord,
+  // l'adresse obtenue part ensuite dans le même lot que les autres réglages.
+  async function handleCoverFile(file: File): Promise<void> {
+    setUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/operator/cover", { method: "POST", body: formData });
+      if (!uploadRes.ok) {
+        const body = await uploadRes.json().catch(() => ({}));
+        toast((body as { error?: string }).error ?? "L'envoi a échoué, réessayez.");
+        return;
+      }
+      const { coverUrl: uploadedUrl } = (await uploadRes.json()) as { coverUrl: string };
+      setCoverUrl(uploadedUrl);
+      queue({ coverUrl: uploadedUrl });
+    } finally {
+      setUploadingCover(false);
+    }
   }
 
   async function handleLogoFile(file: File): Promise<void> {
@@ -216,6 +241,45 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) void handleLogoFile(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <div className={styles.rgField}>
+              <label>Photo de couverture</label>
+              <button
+                type="button"
+                className={styles.rgCover}
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                aria-label={coverUrl ? "Changer la photo de couverture" : "Ajouter une photo de couverture"}
+              >
+                {uploadingCover ? (
+                  <Spinner size={20} />
+                ) : coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={coverUrl} alt="" />
+                ) : (
+                  <span className={styles.rgCoverEmpty}>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="5" width="18" height="14" rx="3" />
+                      <circle cx="8.5" cy="10" r="1.5" />
+                      <path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5" />
+                    </svg>
+                    Ajouter une photo
+                  </span>
+                )}
+              </button>
+              <span className={styles.rgHint}>En haut de votre boutique, la première chose que voient vos clients. Format paysage.</span>
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className={styles.hiddenInput}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleCoverFile(file);
                   e.target.value = "";
                 }}
               />

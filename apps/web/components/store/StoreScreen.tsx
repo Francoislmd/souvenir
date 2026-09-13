@@ -21,15 +21,12 @@ export async function StoreScreen({ operator, dateKey, slotId }: { operator: Sto
   const data = await getOperatorGroupDays(operator.slug);
   const initial = slotId ? await getStoreSlot(operator.id, slotId) : null;
 
-  // Le pied de page n'est posé ici que sur l'écran d'attente : GroupGallery
-  // pose déjà le sien, et l'enveloppe en ajoutait un second, visible en
-  // production.
+  // L'enveloppe ne pose ni en-tête ni pied de page : GroupGallery décide des
+  // deux écran par écran. L'accueil s'ouvre sur la couverture du prestataire,
+  // l'écran du jour sur sa propre barre — une bande « logo + nom » au-dessus
+  // de l'une ou de l'autre ferait un second en-tête.
   const frame = (children: React.ReactNode) => (
-    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
-      {/* Le logo ramène à l'accueil de la boutique. */}
-      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} href={publicStorePath(operator.slug)} />
-      {children}
-    </div>
+    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>{children}</div>
   );
 
   // Aucune sortie publiée : un client qui scanne le QR code en sortant de
@@ -38,6 +35,8 @@ export async function StoreScreen({ operator, dateKey, slotId }: { operator: Sto
   if (!data || data.days.length === 0) {
     return frame(
       <>
+        {/* Le logo ramène à l'accueil de la boutique. */}
+        <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} href={publicStorePath(operator.slug)} />
         <div className={gallery.head}>
           <h1>Les photos ne sont pas encore en ligne</h1>
           <p className={gallery.hint}>Elles arrivent ici après la sortie. Rouvrez ce lien plus tard, il reste valable.</p>
@@ -53,6 +52,7 @@ export async function StoreScreen({ operator, dateKey, slotId }: { operator: Sto
 
   return frame(
     <GroupGallery
+      operator={{ name: operator.name, logoUrl: operator.logoUrl, coverUrl: operator.coverUrl, tagline: operator.tagline }}
       basePath={publicStorePath(operator.slug)}
       apiBase={apiStoreBase(operator.slug)}
       appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ""}

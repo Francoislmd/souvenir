@@ -24,6 +24,8 @@ export interface GroupSlotSummary {
   activityKey: string; // slug stable pour le filtre
   guide: string | null;
   photoCount: number;
+  coverUrl: string | null; // vignette du créneau (Slot.cover), absente tant que son aperçu n'est pas prêt
+  pending: boolean; // au moins une photo sans aperçu filigrané : le lot arrive encore
 }
 
 export interface GroupPhoto {
@@ -102,6 +104,38 @@ function slugify(s: string): string {
 // reste absent et le client patiente (GroupGallery sonde toutes les 4s).
 function previewUrlFor(photo: { groupPreviewKey: string | null }): string | null {
   return photo.groupPreviewKey ? getPreviewUrl(photo.groupPreviewKey) : null;
+}
+
+/**
+ * Ce qu'il faut de plus pour une ligne de créneau : sa vignette, et de quoi
+ * dire que le lot n'est pas complet.
+ *
+ * La vignette est la couverture posée à la publication (Slot.coverPhotoId,
+ * lib/group-publish.ts). Une heure et un nombre de photos ne disent pas au
+ * client si c'est sa sortie ; une image le lui dit avant qu'il ait fini de
+ * lire. Jamais previewKey ni thumbKey : ce sont les aperçus non filigranés
+ * de la boutique individuelle (voir previewUrlFor).
+ *
+ * `photos` ne ramène qu'une ligne, et seulement s'il reste une photo sans
+ * aperçu filigrané : c'est la sonde qui allume « Aperçus en préparation ».
+ * Sans elle, un créneau à moitié traité affiche moins de photos qu'il n'en
+ * a, et le client compte les siennes en croyant qu'il en manque.
+ */
+const slotDetailSelect = {
+  cover: { select: { groupPreviewKey: true, hiddenAt: true } },
+  photos: {
+    where: { hiddenAt: null, status: { not: "FAILED" }, groupPreviewKey: null },
+    select: { id: true },
+    take: 1,
+  },
+} as const;
+
+function slotDetail(slot: {
+  cover: { groupPreviewKey: string | null; hiddenAt: Date | null } | null;
+  photos: { id: string }[];
+}): { coverUrl: string | null; pending: boolean } {
+  const cover = slot.cover && !slot.cover.hiddenAt ? slot.cover.groupPreviewKey : null;
+  return { coverUrl: cover ? getPreviewUrl(cover) : null, pending: slot.photos.length > 0 };
 }
 
 /**
@@ -197,7 +231,10 @@ export async function getSlotsForDate(slug: string, dateKey: string): Promise<{ 
         where: { mode: "GROUPE", slots: { some: {} }, startsAt: { gte: from, lte: to } },
         include: {
           slots: {
-            include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },
+            include: {
+              _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
+              ...slotDetailSelect,
+            },
             orderBy: { startsAt: "asc" },
           },
         },
@@ -220,6 +257,7 @@ export async function getSlotsForDate(slug: string, dateKey: string): Promise<{ 
       activityKey: slugify(sortie.activity),
       guide: slot.guide,
       photoCount: slot._count.photos,
+      ...slotDetail(slot),
     }));
 
   return { dateLabel: formatDateFr(matching[0]!.startsAt).toLowerCase(), slots };
@@ -241,6 +279,7 @@ export async function getStoreSlot(operatorId: string, slotId: string): Promise<
     include: {
       sortie: { select: { operatorId: true, mode: true, activity: true, startsAt: true } },
       _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
+      ...slotDetailSelect,
     },
   });
   if (!slot || slot.sortie.operatorId !== operatorId || slot.sortie.mode !== "GROUPE") return null;
@@ -254,6 +293,7 @@ export async function getStoreSlot(operatorId: string, slotId: string): Promise<
       activityKey: slugify(slot.sortie.activity),
       guide: slot.guide,
       photoCount: slot._count.photos,
+      ...slotDetail(slot),
     },
     dateKey: dateKeyFor(slot.sortie.startsAt),
     dateLabel: formatDateFr(slot.sortie.startsAt).toLowerCase(),

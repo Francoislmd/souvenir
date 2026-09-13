@@ -14,6 +14,11 @@ model Operator {
   name       String
   slug       String  @unique
   logoUrl    String?
+  // Photo de couverture de la boutique de groupe (store.linktrip.co/{slug}) :
+  // la première chose que voit un client qui scanne le QR code, et le seul
+  // visuel de l'écran d'accueil depuis que les jours y sont des dates.
+  // Téléversée dans Réglages, servie depuis le bucket previews.
+  coverUrl   String?
   brandColor String  @default("#FF5A1F") // one of the 7 Linktrip swatches; drives boutique --op only
 
   stripeAccountId String?

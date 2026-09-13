@@ -1,0 +1,529 @@
+/* Les deux écrans d'entrée de la boutique de groupe : l'accueil, où le
+   client choisit son jour, et le jour ouvert, où il choisit son heure de
+   départ.
+
+   Ils sont séparés de gallery.module.css, partagé avec la boutique
+   individuelle : celle-ci n'a ni couverture, ni jours, ni onglets. Le cadre
+   de page et les variables (--op, --ink, --line) restent dans
+   collective.module.css. */
+
+/* ── L'accueil : la couverture et l'identité ────────────────────────────
+   Un client qui vient de scanner le QR code vérifie d'abord qu'il est au bon
+   endroit. La photo du prestataire le dit avant son nom, et l'écusson à
+   cheval sur le bord de la photo tient les deux ensemble. */
+.cover {
+  position: relative;
+  height: 208px;
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.share {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+  cursor: pointer;
+}
+.share:active {
+  background: #fff;
+}
+.share:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 3px;
+}
+
+/* flow-root : sans lui, la marge négative de l'écusson remonterait tout le
+   bloc blanc au lieu de l'écusson seul. */
+.sheet {
+  position: relative;
+  display: flow-root;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px 22px;
+}
+.badge {
+  position: relative;
+  z-index: 2;
+  width: 92px;
+  height: 92px;
+  margin: -46px auto 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 5px solid var(--bg);
+  background: var(--op);
+  color: #fff;
+  overflow: hidden;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Sans couverture téléversée, l'écusson n'a pas de bord à enjamber : il se
+   pose en haut de page, à sa place. */
+.noCover .badge {
+  margin-top: 26px;
+}
+
+.id {
+  padding: 14px 0 0;
+  text-align: center;
+}
+.id h1 {
+  margin: 0;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.38rem;
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  line-height: 1.16;
+  text-wrap: balance;
+}
+.id p {
+  margin: 8px auto 0;
+  max-width: 30ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.label {
+  margin: 26px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.label h2 {
+  margin: 0;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.024em;
+}
+.label p {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+  line-height: 1.45;
+}
+
+/* ── Les jours : des dates, pas des photos ──────────────────────────────
+   Une vignette par jour donnait six photos d'activité sans rapport avec ce
+   que le client cherche, qui est sa date. Le quantième porte la lecture, le
+   nombre de créneaux dit si le jour vaut le geste. */
+.days {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 14px 14px 15px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.14s;
+}
+.day:active {
+  background: var(--line-2);
+}
+.day:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .day:hover {
+    border-color: var(--ink-4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .day {
+    transition: none;
+  }
+}
+/* « Aujourd'hui » et « Hier » se lisent plus vite qu'une date, et ce sont
+   les deux jours où le QR code est vraiment scanné. */
+.dayWhen {
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-3);
+}
+.dayNow {
+  border-color: var(--op);
+}
+.dayNow .dayWhen {
+  color: var(--op);
+}
+.dayNum {
+  margin-top: 6px;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.dayMonth {
+  margin-top: 3px;
+  font-size: 0.95rem;
+  letter-spacing: -0.018em;
+  color: var(--ink-2);
+}
+.dayN {
+  margin-top: 9px;
+  font-size: 0.84rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Le jour ouvert : la barre, les onglets, les créneaux ───────────────
+   Le jour reste écrit en haut, et se change sans reculer d'un écran : le
+   client qui ouvre le mauvais jour est le cas courant, pas l'exception. */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 12px 10px;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.barBtn {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.barBtn:active {
+  background: var(--line-2);
+}
+.barBtn:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+.barTitle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.04rem;
+  font-weight: 700;
+  letter-spacing: -0.028em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.barTitle:active {
+  background: var(--line-2);
+}
+.barTitle:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+.barTitle svg {
+  flex: 0 0 auto;
+  transition: transform 0.2s ease;
+}
+.barTitle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .barTitle svg {
+    transition: none;
+  }
+}
+.barSpacer {
+  flex: 0 0 38px;
+}
+/* Un seul jour publié : le titre ne mène nulle part, il ne doit pas se
+   comporter comme un bouton. */
+.barTitleStatic {
+  cursor: default;
+}
+
+.switch {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 6px 12px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.switchRow:active,
+.switchRow[aria-current="true"] {
+  background: var(--line-2);
+}
+.switchRow:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+.switchRow b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.97rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.switchRow[aria-current="true"] b {
+  font-weight: 600;
+  color: var(--op);
+}
+.switchRow i {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-size: 0.86rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Un onglet par activité du jour : une même journée mélange canyoning et
+   via ferrata, et le client ne cherche que la sienne. La barre ne s'affiche
+   pas quand il n'y a qu'une activité, elle n'aurait rien à filtrer. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  flex: 0 0 auto;
+  padding: 13px 10px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  color: var(--ink-4);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--op);
+}
+.tab:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -3px;
+}
+
+.list {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px 4px;
+}
+.sec {
+  margin: 0;
+  padding: 22px 0 4px;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.026em;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  padding: 16px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+.row + .row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  border-top: 1px solid var(--line);
+}
+.row:active {
+  background: var(--line-2);
+}
+.row:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: var(--line-2);
+  }
+}
+.rowTxt {
+  flex: 1;
+  min-width: 0;
+}
+/* L'état du lot, en premier : un créneau dont les aperçus arrivent encore
+   affiche moins de photos qu'il n'en a. Sans cette ligne, le client compte
+   les siennes et croit qu'il en manque. */
+.state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--op);
+}
+.stateWait {
+  color: var(--ink-4);
+}
+.stateWait::before {
+  background: #ffb443;
+}
+.rowH {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.16rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.rowN {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.97rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.rowG {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+}
+.rowThumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 94px;
+  height: 94px;
+  border-radius: 15px;
+  overflow: hidden;
+  background: var(--line-2);
+}
+.rowThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.go {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--op);
+  color: #fff;
+}
+
+/* Le pied de l'accueil. Le lien de retrait, lui, vit sur les écrans qui
+   montrent des photos : ici il n'y en a aucune à faire retirer. */
+.foot {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.foot > * {
+  border-top: 1px solid var(--line);
+}
+
+@media (min-width: 720px) {
+  .cover {
+    height: 280px;
+  }
+  .days {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .id h1 {
+    font-size: 1.62rem;
+  }
+}
