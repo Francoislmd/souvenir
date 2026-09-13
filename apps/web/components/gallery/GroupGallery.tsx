@@ -9,8 +9,6 @@ import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
-import { GalleryHeader } from "@/components/gallery/GalleryHeader";
-import { BackLink } from "@/components/gallery/BackLink";
 import { LockIcon } from "@/components/gallery/icons";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
@@ -204,8 +202,6 @@ export function GroupGallery({
     window.location.href = `${appUrl}/g/${checkout.token}`;
   }
 
-  const header = <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} href={basePath} />;
-
   const powered = (
     <div className={styles.powered}>
       Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
@@ -228,7 +224,6 @@ export function GroupGallery({
     if (slotId && slotsState === "loading") {
       return (
         <>
-          {header}
           <LoadingBlock label="Chargement des photos du créneau…" />
           {footer}
         </>
@@ -255,20 +250,31 @@ export function GroupGallery({
 
   const q = quote(pendingIds?.length ?? 0, photos.length, pricing, allLabel(photos.length));
 
+  // Une seule ligne au-dessus des photos : le retour, l'activité, le
+  // créneau. L'en-tête « logo + nom », le grand titre, la date sur sa propre
+  // ligne et le chapeau prenaient 218 px avant la première photo, sur
+  // l'écran où le client cherche son visage.
+  const shotBar = (
+    <div className={store.bar}>
+      <button type="button" className={store.barBtn} onClick={() => go(dateKey, "")} aria-label="Revenir aux heures de départ">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M14.5 5 8 12l6.5 7" />
+        </svg>
+      </button>
+      <span className={store.barHead}>
+        <b>{slot.activity}</b>
+        <span>
+          {dayLabel ? `${dayLabel}, ` : ""}
+          {slot.label}
+        </span>
+      </span>
+      <span className={store.barSpacer} />
+    </div>
+  );
+
   return (
     <>
-      {header}
-      <div className={styles.head}>
-        <BackLink onClick={() => go(dateKey, "")} />
-        <h1>{slot.activity}</h1>
-        <p className={styles.sub}>
-          {dayLabel ? `${dayLabel.replace(/^./, (c) => c.toUpperCase())}, ` : ""}
-          {slot.label}
-        </p>
-        <p className={styles.hint}>
-          {packOnly ? "Toutes les photos du créneau, en une fois." : "Touchez celles où vous êtes, ou prenez le créneau entier."}
-        </p>
-      </div>
+      {shotBar}
 
       {loadingPhotos && photos.length === 0 ? (
         // Un créneau peut porter quarante photos : l'aller-retour se voit.

@@ -171,28 +171,84 @@ a.topIn:focus-visible {
   display: none;
 }
 .railPos {
-  padding: 14px 20px 0;
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 0;
 }
 .dots {
+  flex: 1;
   display: flex;
+  align-items: center;
   gap: 6px;
-  justify-content: center;
 }
 .dots i {
   width: 6px;
   height: 6px;
   border-radius: 999px;
   background: var(--line);
+  transition: width 0.14s, background 0.14s;
 }
+/* La photo en cours s'allonge, celles déjà prises passent à la couleur du
+   prestataire : la rangée dit la position ET la sélection, ce que des
+   points tous identiques ne disaient pas. */
 .dots .dotOn {
-  background: var(--ink);
+  width: 18px;
+  background: var(--ink-4);
+}
+.dots .dotGot {
+  background: var(--op);
 }
 .count {
+  flex: 1;
   margin: 0;
-  text-align: center;
   font-size: 0.88rem;
   color: var(--ink-4);
   font-variant-numeric: tabular-nums;
+}
+/* Le geste de prendre, à portée de pouce sous la photo. Il remplace la
+   pastille posée dans le coin de l'image : sur un rail, la cible était à
+   viser, et elle écrivait sur la photo. */
+.take {
+  flex: 0 0 auto;
+  height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  cursor: pointer;
+}
+.take:active {
+  background: var(--line-2);
+}
+.take:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 2px;
+}
+.takeOn {
+  border-color: var(--op);
+  color: var(--op);
+}
+.take svg {
+  opacity: 0;
+}
+.takeOn svg {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dots i {
+    transition: none;
+  }
 }
 .tile {
   position: relative;
@@ -203,8 +259,12 @@ a.topIn:focus-visible {
   padding: 0;
   border: 0;
   aspect-ratio: 3 / 4;
-  max-height: calc(100vh - 344px);
-  max-height: calc(100svh - 344px);
+  /* Ce qui reste sous la barre de titre et au-dessus de la barre d'achat.
+     La valeur a baissé de 344 à 268 px le 13/09/2026 : l'en-tête
+     « logo + nom », le grand titre, la date et le chapeau ont laissé la
+     place à une seule ligne. */
+  max-height: calc(100vh - 268px);
+  max-height: calc(100svh - 268px);
   border-radius: 14px;
   overflow: hidden;
   background: var(--line-2);
@@ -216,16 +276,20 @@ a.topIn:focus-visible {
 .tile:active {
   transform: scale(0.985);
 }
-/* Choisie : la pastille se remplit et la photo s'éclaircit d'un souffle.
-   Le cadre de 3 px qui entourait la vignette a été retiré : sur téléphone,
-   où la photo occupe presque tout l'écran, il se lisait comme un défaut
-   d'affichage plutôt que comme un choix. */
+/* Choisie : un liseré à la couleur du prestataire, posé AU-DESSUS de la
+   photo — une ombre intérieure passerait dessous et ne se verrait pas.
+   Le liseré revient après avoir été retiré en août : il était alors le
+   seul signe, sur une photo qui occupait presque tout l'écran. Il en est
+   maintenant le troisième, avec le bouton sous le rail et la pastille de
+   position, et la photo ne touche plus les bords. */
 .tileOn::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.14);
+  border: 3px solid var(--op);
+  border-radius: 14px;
+  pointer-events: none;
 }
 .tile img {
   position: absolute;
@@ -236,33 +300,6 @@ a.topIn:focus-visible {
   display: block;
   user-select: none;
   -webkit-user-drag: none;
-}
-/* La pastille est là dès le départ, vide : c'est elle qui dit que la photo
-   se touche. Sur un écran tactile, aucun survol ne peut le faire deviner. */
-.check {
-  position: absolute;
-  z-index: 2;
-  top: 9px;
-  right: 9px;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  background: rgba(13, 12, 18, 0.34);
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.92);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  transition: background 0.14s;
-}
-.check svg {
-  opacity: 0;
-}
-.tileOn .check {
-  background: var(--op);
-  box-shadow: none;
-}
-.tileOn .check svg {
-  opacity: 1;
 }
 /* Voir la photo en grand. Sur écran tactile le bouton est toujours là :
    sans survol, rien d'autre ne pourrait l'annoncer, et la photo en grand

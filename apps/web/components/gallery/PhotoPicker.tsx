@@ -137,6 +137,11 @@ export function PhotoPicker({
     setAt(Math.min(total - 1, Math.max(0, Math.round(rail.scrollLeft / step))));
   }
 
+  // La photo que le client a sous les yeux dans le rail : c'est elle que
+  // prend le bouton posé dessous.
+  const current = photos[at] ?? photos[0];
+  const currentOn = current ? selected.has(current.id) : false;
+
   return (
     <>
       <div className={styles.grid} onScroll={onRailScroll}>
@@ -168,11 +173,6 @@ export function PhotoPicker({
                 // muette passait pour une photo manquante.
                 <TileSpinner />
               )}
-              <span className={styles.check} aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </span>
               <button
                 type="button"
                 aria-label="Voir en grand"
@@ -191,21 +191,39 @@ export function PhotoPicker({
         })}
       </div>
 
-      {/* Où l'on en est dans le rail. Masqué sur ordinateur, où la grille
-          montre tout d'un coup. Au-delà de huit photos, une rangée de points
-          n'est plus lisible ni cliquable : le compte prend le relais. */}
+      {/* Sous le rail : où l'on en est, et le geste de prendre la photo qu'on
+          regarde. Masqué sur ordinateur, où la grille montre tout d'un coup.
+          Au-delà de huit photos, une rangée de points n'est plus lisible :
+          le compte prend le relais.
+
+          Le bouton remplace la pastille posée dans le coin de l'image. Sur
+          un rail, cette pastille était une cible à viser au pouce, et elle
+          écrivait sur la photo. */}
       {total > 1 ? (
-        <div className={styles.railPos} aria-hidden="true">
+        <div className={styles.railPos}>
           {total <= 8 ? (
-            <div className={styles.dots}>
+            <div className={styles.dots} aria-hidden="true">
               {photos.map((photo, i) => (
-                <i key={photo.id} className={i === at ? styles.dotOn : undefined} />
+                <i key={photo.id} className={`${i === at ? styles.dotOn : ""} ${selected.has(photo.id) ? styles.dotGot : ""}`.trim() || undefined} />
               ))}
             </div>
           ) : (
-            <p className={styles.count}>
+            <p className={styles.count} aria-hidden="true">
               {at + 1} sur {total}
             </p>
+          )}
+          {packOnly || !current ? null : (
+            <button
+              type="button"
+              className={`${styles.take} ${currentOn ? styles.takeOn : ""}`}
+              aria-pressed={currentOn}
+              onClick={() => toggle(current.id)}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              {currentOn ? "Choisie" : "Prendre"}
+            </button>
           )}
         </div>
       ) : null}

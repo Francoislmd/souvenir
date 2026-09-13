@@ -279,6 +279,34 @@
 .barSpacer {
   flex: 0 0 38px;
 }
+/* L'écran des photos : l'activité et le créneau tiennent sur la même ligne
+   que le retour. Ils remplacent l'en-tête « logo + nom », le grand titre, la
+   date et le chapeau — 218 px au-dessus des photos, contre 55. */
+.barHead {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.barHead b {
+  flex: 0 0 auto;
+  font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.028em;
+}
+.barHead span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.87rem;
+  color: var(--ink-3);
+}
+
 /* Un seul jour publié : le titre ne mène nulle part, il ne doit pas se
    comporter comme un bouton. */
 .barTitleStatic {
