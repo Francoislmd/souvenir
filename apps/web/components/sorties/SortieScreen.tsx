@@ -12,6 +12,9 @@ import { useUploadQueue } from "@/components/photos/UploadQueueProvider";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
+import { EmailPills, PasteEmailsButton } from "@/components/sorties/EmailPaste";
+import { clientCount } from "@/lib/emails";
+import { formatSentAtFr } from "@/lib/format";
 
 export interface ScreenPhoto {
   id: string;
@@ -57,6 +60,8 @@ export function SortieScreen({
   isGroup,
   published,
   shareUrl,
+  storeHomeUrl,
+  lastInvite,
   clients,
   initialPhotos,
 }: {
@@ -66,6 +71,10 @@ export function SortieScreen({
   isGroup: boolean;
   published: boolean;
   shareUrl: string | null;
+  /** Mode GROUPE : l'adresse de la boutique, sans code de sortie. */
+  storeHomeUrl: string | null;
+  /** Le dernier envoi du lien par email, s'il y en a eu un. */
+  lastInvite: { count: number; at: string } | null;
   clients: ScreenClient[];
   initialPhotos: ScreenPhoto[];
 }) {
@@ -82,6 +91,12 @@ export function SortieScreen({
   const [publishing, setPublishing] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [deleteSortieState, setDeleteSortieState] = useState<"idle" | "confirm" | "deleting">("idle");
+  // Mode GROUPE : les adresses collées ne quittent le navigateur qu'à l'envoi.
+  // Rien n'est enregistré côté serveur avant, et rien n'est conservé après.
+  const [emails, setEmails] = useState<string[]>([]);
+  const [pasteNote, setPasteNote] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [invite, setInvite] = useState(lastInvite);
 
   // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
   const dropZone = useRef<PhotoDropZoneHandle | null>(null);
@@ -229,14 +244,26 @@ export function SortieScreen({
     // part toute seule dès que la dernière photo est prête.
     if (state.working) {
       awaitingSchedule.current = true;
-      upload.schedulePublish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now() });
+      upload.schedulePublish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now(), emails });
       toast(isGroup ? "Publication programmée" : "Envoi programmé");
       return;
     }
     const endpoint = isGroup ? `/api/sorties/${sortieId}/publish` : `/api/sorties/${sortieId}/send`;
     const res = await fetch(endpoint, { method: "POST" });
     if (res.ok) {
-      toast(isGroup ? "Galerie publiée" : `Envoyé à ${clients.length} client${clients.length > 1 ? "s" : ""}`);
+      // Publier et envoyer sont un seul geste : le lien part dans la foulée,
+      // sans écran ni bouton de plus.
+      const invited = emails.length;
+      const sent = await sendInvites();
+      toast(
+        isGroup
+          ? invited === 0
+            ? "Galerie publiée"
+            : sent
+              ? `Galerie publiée, lien envoyé à ${clientCount(invited)}`
+              : "Galerie publiée, mais l'envoi du lien a échoué"
+          : `Envoyé à ${clients.length} client${clients.length > 1 ? "s" : ""}`,
+      );
       router.refresh();
     } else {
       toast("La publication a échoué — réessayez.");
@@ -260,6 +287,41 @@ export function SortieScreen({
     }
   }, [publishing, published, state.working, scheduled]);
 
+  function addEmails(found: string[]): void {
+    setEmails((prev) => [...prev, ...found]);
+  }
+
+  function removeEmail(email: string): void {
+    setEmails((prev) => prev.filter((e) => e !== email));
+    setPasteNote("");
+  }
+
+  // Une liste d'adresses saisies à la main par l'opérateur, pas des
+  // Participant : en mode GROUPE personne n'est identifié avant l'achat.
+  async function sendInvites(): Promise<boolean> {
+    if (emails.length === 0) return true;
+    const res = await fetch(`/api/sorties/${sortieId}/invite`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emails }),
+    });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { sent: number };
+    setInvite({ count: data.sent, at: new Date().toISOString() });
+    setEmails([]);
+    setPasteNote("");
+    return true;
+  }
+
+  async function sendInvitesNow(): Promise<void> {
+    if (sendingInvite || emails.length === 0) return;
+    setSendingInvite(true);
+    const count = emails.length;
+    const ok = await sendInvites();
+    setSendingInvite(false);
+    toast(ok ? `Lien envoyé à ${clientCount(count)}` : "L'envoi a échoué, réessayez.");
+  }
+
   async function copyLink(): Promise<void> {
     if (!shareUrl) return;
     try {
@@ -268,6 +330,16 @@ export function SortieScreen({
       // Presse-papiers indisponible — le lien reste lisible et sélectionnable.
     }
     toast("Lien copié");
+  }
+
+  async function copySeason(): Promise<void> {
+    if (!storeHomeUrl) return;
+    try {
+      await navigator.clipboard.writeText(storeHomeUrl);
+    } catch {
+      // Presse-papiers indisponible : l'adresse reste lisible et sélectionnable.
+    }
+    toast("Adresse copiée");
   }
 
   async function share(): Promise<void> {
@@ -366,6 +438,7 @@ export function SortieScreen({
         {isGroup
           ? `${photoCount} photo${photoCount > 1 ? "s" : ""} deviendront visibles par tous vos clients.`
           : `${photoCount} photo${photoCount > 1 ? "s" : ""} seront envoyées à vos ${clients.length} client${clients.length > 1 ? "s" : ""}.`}
+        {isGroup && emails.length > 0 ? ` Le lien partira à ${clientCount(emails.length)}.` : ""}
         {state.working ? " Le transfert n'est pas fini : l'envoi partira automatiquement dès qu'il le sera." : ""}
       </p>
       <div className={styles.sdConfirmActions}>
@@ -442,24 +515,30 @@ export function SortieScreen({
     );
   } else if (!published && photoCount > 0) {
     const needsClients = !isGroup && clients.length === 0;
+    // Dès qu'une adresse est collée, c'est d'elle que la barre parle : le
+    // nombre de photos est déjà sous les yeux, juste au-dessus.
+    const pasted = isGroup && emails.length > 0;
+    const head = pasted
+      ? `${emails.length} adresse${emails.length > 1 ? "s" : ""} reconnue${emails.length > 1 ? "s" : ""}.`
+      : `${photoCount} photo${photoCount > 1 ? "s" : ""} déposée${photoCount > 1 ? "s" : ""}.`;
+    const tail = pasted
+      ? pasteNote ||
+        (scheduled ? "Le lien partira dès la fin de l'envoi." : "Le lien partira avec la publication.")
+      : scheduled
+        ? isGroup
+          ? "La galerie sera publiée dès la fin de l'envoi."
+          : "Vos clients les recevront dès la fin de l'envoi."
+        : needsClients
+          ? "Ajoutez au moins un client pour les envoyer."
+          : isGroup
+            ? "Vos clients les retrouveront par créneau."
+            : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`;
     bar = (
       <div className={styles.sdBar}>
+        {isGroup ? <EmailPills emails={emails} onRemove={removeEmail} /> : null}
         <div className={styles.sdBarIn}>
           <span className={styles.sdBarText}>
-            <b>
-              {photoCount} photo{photoCount > 1 ? "s" : ""} déposée{photoCount > 1 ? "s" : ""}.
-            </b>{" "}
-            <span>
-              {scheduled
-                ? isGroup
-                  ? "La galerie sera publiée dès la fin de l'envoi."
-                  : "Vos clients les recevront dès la fin de l'envoi."
-                : needsClients
-                  ? "Ajoutez au moins un client pour les envoyer."
-                  : isGroup
-                    ? "Vos clients les retrouveront par créneau."
-                    : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`}
-            </span>
+            <b>{head}</b> <span>{tail}</span>
           </span>
           <span className={styles.sdBarActions}>
             <button type="button" className={styles.sdChip} onClick={() => dropZone.current?.open()}>
@@ -468,13 +547,32 @@ export function SortieScreen({
               </svg>
               <span className={styles.sdChipLabel}>Ajouter des photos</span>
             </button>
+            {isGroup && !scheduled ? (
+              <PasteEmailsButton
+                label={emails.length > 0 ? "Coller encore" : "Coller des adresses"}
+                known={emails}
+                onEmails={addEmails}
+                onMessage={setPasteNote}
+              />
+            ) : null}
             {scheduled ? (
               <button type="button" className={`${styles.sdChip} ${styles.sdChipGhost}`} onClick={() => upload.cancelPublish(sortieId)}>
                 Annuler l&rsquo;envoi programmé
               </button>
             ) : needsClients ? null : (
               <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setConfirmPublishOpen(true)}>
-                {isGroup ? "Publier les photos" : `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`}
+                {isGroup ? (
+                  pasted ? (
+                    <>
+                      <span className={styles.sdBtnLong}>Publier et envoyer à {clientCount(emails.length)}</span>
+                      <span className={styles.sdBtnShort}>Publier et envoyer ({emails.length})</span>
+                    </>
+                  ) : (
+                    "Publier les photos"
+                  )
+                ) : (
+                  `Envoyer à mes ${clients.length} client${clients.length > 1 ? "s" : ""}`
+                )}
               </button>
             )}
           </span>
@@ -525,6 +623,52 @@ export function SortieScreen({
               </span>
             </span>
           </div>
+        ) : null}
+
+        {published && isGroup ? (
+          <>
+            {invite ? (
+              <p className={styles.sdSent}>
+                <CheckIcon />
+                Lien envoyé à {clientCount(invite.count)}, {formatSentAtFr(new Date(invite.at))}.
+              </p>
+            ) : null}
+
+            <EmailPills emails={emails} onRemove={removeEmail} />
+
+            <div className={styles.sdLine}>
+              <PasteEmailsButton
+                label={emails.length > 0 ? "Coller encore" : "Coller des adresses"}
+                known={emails}
+                onEmails={addEmails}
+                onMessage={setPasteNote}
+              />
+              {emails.length > 0 ? (
+                <button
+                  type="button"
+                  className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sBtnInk}`}
+                  onClick={() => void sendInvitesNow()}
+                  disabled={sendingInvite}
+                >
+                  {sendingInvite ? <Spinner size={15} tone="current" /> : null}
+                  {sendingInvite ? "Envoi…" : `Envoyer à ${clientCount(emails.length)}`}
+                </button>
+              ) : null}
+              <span className={styles.sdLineNote}>{pasteNote || "Pour ceux qui sont partis avant la fin."}</span>
+            </div>
+
+            {storeHomeUrl ? (
+              <div className={styles.sdSeason}>
+                <span className={styles.sdSeasonMain}>
+                  <b>{storeHomeUrl.replace(/^https?:\/\//, "")}</b>
+                  La même adresse pour toutes vos sorties. Dans vos confirmations de réservation, elle travaille sans vous.
+                </span>
+                <button type="button" className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sdChip}`} onClick={() => void copySeason()}>
+                  Copier l&rsquo;adresse
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {published ? null : (

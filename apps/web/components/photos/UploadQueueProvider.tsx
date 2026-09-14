@@ -58,6 +58,8 @@ export interface PublishIntent {
   isGroup: boolean;
   clients: number;
   requestedAt: number;
+  /** Mode GROUPE : les adresses collées avant la publication, envoyées avec elle. */
+  emails?: string[];
 }
 
 function readIntents(): Record<string, PublishIntent> {
@@ -376,7 +378,34 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         const endpoint = intent.isGroup ? `/api/sorties/${sortieId}/publish` : `/api/sorties/${sortieId}/send`;
         const res = await fetch(endpoint, { method: "POST" });
         if (!res.ok) throw new Error("publish failed");
-        toast(intent.isGroup ? "Galerie publiée" : `Envoyé à ${intent.clients} client${intent.clients > 1 ? "s" : ""}`);
+
+        // Le lien part dans la foulée, aux adresses collées avant le départ.
+        // Un envoi raté ne remet pas la publication en question : elle a eu
+        // lieu, et l'écran de la sortie permet de renvoyer.
+        const invited = intent.emails?.length ?? 0;
+        let invitedOk = true;
+        if (intent.isGroup && invited > 0) {
+          try {
+            const sent = await fetch(`/api/sorties/${sortieId}/invite`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ emails: intent.emails }),
+            });
+            invitedOk = sent.ok;
+          } catch {
+            invitedOk = false;
+          }
+        }
+
+        toast(
+          intent.isGroup
+            ? invited === 0
+              ? "Galerie publiée"
+              : invitedOk
+                ? `Galerie publiée, lien envoyé à ${invited} client${invited > 1 ? "s" : ""}`
+                : "Galerie publiée, mais l'envoi du lien a échoué"
+            : `Envoyé à ${intent.clients} client${intent.clients > 1 ? "s" : ""}`,
+        );
       } catch {
         toast("La publication programmée n'est pas partie — relancez-la depuis la sortie.");
       }

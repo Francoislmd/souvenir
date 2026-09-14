@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getPreviewUrl } from "@/lib/storage";
 import { bucketSortie } from "@/lib/sorties";
-import { ensureShareCode, storeUrl } from "@/lib/store";
+import { ensureShareCode, storeHomeUrl, storeUrl } from "@/lib/store";
 import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
 function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
@@ -35,6 +35,18 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
   // encore de code : on le leur donne à la première ouverture de leur fiche,
   // plutôt qu'en migration de base.
   const shareUrl = isGroup ? storeUrl(dbUser.operator.slug, await ensureShareCode(sortie)) : null;
+
+  // Le dernier envoi du lien par email. Les adresses ne sont jamais stockées :
+  // seul l'événement d'envoi l'est, et c'est lui qui porte la trace à l'écran.
+  const lastInviteEvent = isGroup
+    ? await prisma.event.findFirst({
+        where: { operatorId: dbUser.operatorId, name: "group_invite_sent", meta: { path: ["sortieId"], equals: sortie.id } },
+        orderBy: { createdAt: "desc" },
+        select: { meta: true, createdAt: true },
+      })
+    : null;
+  const sentCount = Number((lastInviteEvent?.meta as { sent?: number } | null)?.sent ?? 0);
+  const lastInvite = lastInviteEvent && sentCount > 0 ? { count: sentCount, at: lastInviteEvent.createdAt.toISOString() } : null;
   const clients: ScreenClient[] = sortie.participants.map((p) => ({
     id: p.id,
     name: p.name,
@@ -53,6 +65,8 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       isGroup={isGroup}
       published={sortie.status === "SENT"}
       shareUrl={shareUrl}
+      storeHomeUrl={isGroup ? storeHomeUrl(dbUser.operator.slug) : null}
+      lastInvite={lastInvite}
       clients={clients}
       initialPhotos={sortie.photos.map((p) => ({
         id: p.id,

@@ -2238,6 +2238,130 @@ a.sdClient:hover {
     flex: 1;
   }}
 
+/* ---------- adresses collées, envoi du lien (mode GROUPE) ---------- */
+/* Les adresses se posent au-dessus de la barre, séparées par le même filet
+   que le reste de l'écran : elles appartiennent à l'action, pas au décor. */
+.sdPaste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 13px;
+  margin-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+}
+.sdPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 6px 0 12px;
+  border-radius: 9px;
+  background: var(--fill);
+  color: var(--ink-2);
+  font-size: 0.88rem;
+}
+.sdPillX {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-4);
+  transition: background 0.14s, color 0.14s;
+}
+.sdPillX:hover {
+  background: var(--fill-2);
+  color: var(--ink);
+}
+.sdPillMore {
+  padding: 0 4px;
+  font-size: 0.88rem;
+  color: var(--ink-4);
+}
+
+/* Le champ n'existe que si le presse-papiers s'est refusé : il prend alors
+   toute la largeur, sous la barre comme sous la carte. */
+.sdManual {
+  display: block;
+  flex: 1 1 100%;
+  margin-top: 12px;
+}
+.sdManualTa {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 12px 15px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.sdManualFoot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sdLine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.sdLineNote {
+  flex: 1;
+  min-width: 140px;
+  font-size: 0.9rem;
+  color: var(--ink-4);
+}
+.sdSent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ink-3);
+}
+.sdSent svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: var(--ok);
+}
+
+/* L'adresse de la boutique ne change pas d'une sortie à l'autre : elle se
+   donne une fois, dans les confirmations de réservation, et rend l'envoi
+   suivant inutile. */
+.sdSeason {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding: 15px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.sdSeasonMain {
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.sdSeasonMain b {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---------- clients d'une sortie nominative ---------- */
 .sdAdd {
   display: grid;
@@ -2282,6 +2406,35 @@ a.sdClient:hover {
   .sdAdd {
     grid-template-columns: 1fr;
   }}
+/* Le libellé long dit ce que fait le bouton ; sur un téléphone il ne tient
+   pas dans la rangée d'actions, et c'est le nombre qui compte. */
+.sdBtnShort {
+  display: none;
+}
+@media (max-width: 760px) {
+  /* Quatre adresses prennent quatre lignes en hauteur d'écran : elles
+     défilent sur une seule, comme la rangée d'actions juste dessous. */
+  .sdPaste {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sdPaste::-webkit-scrollbar {
+    display: none;
+  }
+  .sdPaste > * {
+    flex: 0 0 auto;
+  }
+  .sdBtnLong {
+    display: none;
+  }
+  .sdBtnShort {
+    display: inline;
+  }
+  .sdSeason {
+    padding: 14px 15px;
+  }
+}
 
 /* ---------- revenus ---------- */
 /* Le montant porte l'écran ; la seule autre chose qu'il dit, c'est quand il

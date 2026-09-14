@@ -32,3 +32,14 @@ export function formatWhenFr(d: Date): string {
     .replace(/^./, (c) => c.toUpperCase());
   return `${day}, ${formatHourFr(d)}`;
 }
+
+/**
+ * "aujourd'hui à 14 h 05", "le 12 septembre à 9 h 30" — quand un envoi est
+ * parti. Daté en heure de Paris des deux côtés, donc identique au rendu
+ * serveur et après hydratation.
+ */
+export function formatSentAtFr(d: Date, now: Date = new Date()): string {
+  const dayKey = (x: Date): string => x.toLocaleDateString("fr-FR", { timeZone: TZ });
+  const day = dayKey(d) === dayKey(now) ? "aujourd'hui" : `le ${d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: TZ })}`;
+  return `${day} à ${formatHourFr(d)}`;
+}

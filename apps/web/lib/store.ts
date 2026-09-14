@@ -67,6 +67,18 @@ export function storeUrl(slug: string, code: string): string {
 }
 
 /**
+ * L'adresse de la boutique elle-même, sans code de sortie : la même toute la
+ * saison, donc celle qu'un opérateur colle une fois dans ses confirmations de
+ * réservation plutôt que d'envoyer un lien après chaque sortie.
+ */
+export function storeHomeUrl(slug: string): string {
+  const store = process.env.NEXT_PUBLIC_STORE_URL?.trim();
+  if (store) return `${store.replace(/\/+$/, "")}/${slug}`;
+  const app = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
+  return `${app}/s/${slug}`;
+}
+
+/**
  * Le chemin tel que le NAVIGATEUR le voit, à passer aux composants client
  * pour leurs liens et leurs `router.push`.
  *
