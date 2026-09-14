@@ -2306,13 +2306,71 @@ a.sdClient:hover {
   color: var(--ink);
 }
 
-.sdLine {
+/* La carte d'envoi : même gabarit que celle du lien (filet 1px, rayon 20,
+   24 px de marge intérieure), parce que c'est la seule chose que l'écran
+   demande de remplir. L'écusson reprend celui de la zone de dépôt. */
+.sdMail {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin-top: 26px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fff;
+}
+.sdMailIc {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--brand-ic);
+  display: grid;
+  place-items: center;
+}
+.sdMailMain {
+  flex: 1;
+  min-width: 0;
+}
+.sdMailT {
+  display: block;
+  font-size: 1.28rem;
+  font-weight: 500;
+  letter-spacing: -0.028em;
+}
+.sdMailH {
+  display: block;
+  margin: 5px 0 16px;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--ink-4);
+}
+.sdMailFoot {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 18px;
+  margin-top: 14px;
 }
+
+@media (max-width: 760px) {
+  .sdMail {
+    gap: 14px;
+    padding: 18px;
+  }
+  .sdMailIc {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+  .sdMailT {
+    font-size: 1.14rem;
+  }
+  .sdMailFoot .sBtn {
+    flex: 1;
+  }
+}
+
 /* ---------- clients d'une sortie nominative ---------- */
 .sdAdd {
   display: grid;

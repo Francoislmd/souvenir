@@ -318,20 +318,6 @@ export function SortieScreen({
     toast("Lien copié");
   }
 
-  async function share(): Promise<void> {
-    if (!shareUrl) return;
-    const nav = navigator as Navigator & { share?: (data: { title: string; url: string }) => Promise<void> };
-    if (nav.share) {
-      try {
-        await nav.share({ title: "Vos photos", url: shareUrl });
-        return;
-      } catch {
-        // Partage annulé — on retombe sur la copie du lien.
-      }
-    }
-    await copyLink();
-  }
-
   // Les photos déposées à l'instant s'affichent avant tout aller-retour réseau :
   // le fichier est déjà sur l'appareil, sa vignette aussi.
   const known = new Set(photos.map((p) => p.id));
@@ -472,19 +458,39 @@ export function SortieScreen({
 
   // Le même champ avant et après la publication : seul ce qui le suit change,
   // le bouton de publication d'un côté, celui d'envoi de l'autre.
-  // « Vos clients » est déjà le titre de la liste des acheteurs, plus bas sur
-  // l'écran d'une sortie publiée : ce bloc dit ce qu'il fait.
+  // Une carte, pas une ligne de formulaire : remplir cette liste est la seule
+  // chose que l'écran demande, elle pèse donc autant que la carte du lien.
   const emailsSection = (
-    <>
-      <p className={styles.sDay} style={{ marginTop: 34 }}>
-        Envoyer le lien par email
-      </p>
-      <EmailsField
-        emails={emails}
-        onChange={setEmails}
-        hint="Collez la liste de votre carnet de réservation. Seules les adresses sont retenues, sans doublon."
-      />
-    </>
+    <div className={styles.sdMail}>
+      <span className={styles.sdMailIc} aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="5.5" width="18" height="13" rx="3" />
+          <path d="m3.8 7.2 7.1 5.2a2 2 0 0 0 2.2 0l7.1-5.2" />
+        </svg>
+      </span>
+      <span className={styles.sdMailMain}>
+        <span className={styles.sdMailT}>Envoyez le lien à vos clients</span>
+        <span className={styles.sdMailH}>
+          {published
+            ? "Collez la liste de votre carnet de réservation. Seules les adresses sont retenues, sans doublon."
+            : "Collez la liste de votre carnet de réservation. Vos clients recevront le lien dès la publication."}
+        </span>
+        <EmailsField emails={emails} onChange={setEmails} />
+        {published && emails.length > 0 ? (
+          <span className={styles.sdMailFoot}>
+            <button
+              type="button"
+              className={`${styles.sBtn} ${styles.sBtnPri}`}
+              onClick={() => void sendInvitesNow()}
+              disabled={sendingInvite}
+            >
+              {sendingInvite ? <Spinner size={16} tone="current" /> : null}
+              {sendingInvite ? "Envoi…" : `Envoyer à ${clientCount(emails.length)}`}
+            </button>
+          </span>
+        ) : null}
+      </span>
+    </div>
   );
 
   let bar: React.ReactNode = null;
@@ -624,36 +630,15 @@ export function SortieScreen({
               <span className={styles.sdShareH}>Montrez le code au retour, ou envoyez le lien.</span>
               <span className={styles.sdShareRow}>
                 <span className={styles.sdShareUrl}>{shareUrl.replace(/^https?:\/\//, "")}</span>
-                <button type="button" className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sdChip}`} onClick={() => void copyLink()}>
-                  Copier
-                </button>
-                <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => void share()}>
-                  Partager
+                <button type="button" className={`${styles.sBtn} ${styles.sdChip}`} onClick={() => void copyLink()}>
+                  Copier le lien
                 </button>
               </span>
             </span>
           </div>
         ) : null}
 
-        {published && isGroup ? (
-          <>
-            {emailsSection}
-
-            {emails.length > 0 ? (
-              <div className={styles.sdLine}>
-                <button
-                  type="button"
-                  className={`${styles.sBtn} ${styles.sBtnInk}`}
-                  onClick={() => void sendInvitesNow()}
-                  disabled={sendingInvite}
-                >
-                  {sendingInvite ? <Spinner size={16} tone="current" /> : null}
-                  {sendingInvite ? "Envoi…" : `Envoyer à ${clientCount(emails.length)}`}
-                </button>
-              </div>
-            ) : null}
-          </>
-        ) : null}
+        {published && isGroup ? emailsSection : null}
 
         {published ? null : (
           <>
