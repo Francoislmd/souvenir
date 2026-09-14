@@ -140,8 +140,13 @@ export interface AutomationScanResult {
 export async function runAutomationScan(now: Date = new Date()): Promise<AutomationScanResult> {
   const result: AutomationScanResult = { resent: 0, offersSent: 0 };
 
+  // Mode GROUPE exclu des deux scans : depuis que l'envoi du lien crée une
+  // ligne par adresse, ces participants ont un `sentAt` sans rien posséder en
+  // propre. Les relances les enverraient vers /g/{token}, une galerie
+  // individuelle qui n'est pas leur boutique.
   const unopened = await prisma.participant.findMany({
     where: {
+      sortie: { mode: "INDIVIDUEL" },
       sentAt: { lte: new Date(now.getTime() - 2 * HOUR) },
       openedAt: null,
       remindedAt: null,
@@ -165,6 +170,7 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
 
   const openedNoPurchase = await prisma.participant.findMany({
     where: {
+      sortie: { mode: "INDIVIDUEL" },
       openedAt: { lte: new Date(now.getTime() - 24 * HOUR) },
       reducedOfferSentAt: null,
       deletedAt: null,

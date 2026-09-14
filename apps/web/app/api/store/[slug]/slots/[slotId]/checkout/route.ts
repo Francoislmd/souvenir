@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { deriveChannel } from "@/lib/channel";
+import { nameFromEmail } from "@/lib/emails";
 import { createOrUpdatePaymentIntent, CheckoutError } from "@/lib/checkout";
 import { resolveOperator } from "@/lib/store";
 import { checkRateLimit, requestIp } from "@/lib/rate-limit";
@@ -43,18 +44,30 @@ export async function POST(request: Request, { params }: { params: { slug: strin
 
     const email = parsed.data.email.trim();
     const now = new Date();
-    const participant = await prisma.participant.create({
-      data: {
-        sortieId: slot.sortieId,
-        slotId: slot.id,
-        name: email.split("@")[0] ?? "Client",
-        contact: email,
-        channel: deriveChannel(email),
-        token: crypto.randomUUID(),
-        consentAt: now,
-        deleteAt: new Date(now.getTime() + 90 * DAY_MS),
-      },
+
+    // L'opérateur a pu envoyer le lien à cette adresse avant l'achat : la
+    // ligne existe alors déjà dans « Vos clients », en « Envoyé ». On la
+    // reprend, sinon la même personne y figurerait deux fois, une fois
+    // prévenue et une fois payante.
+    const invited = await prisma.participant.findFirst({
+      where: { sortieId: slot.sortieId, contact: { equals: email, mode: "insensitive" }, slotId: null, order: null, deletedAt: null },
+      select: { id: true },
     });
+
+    const participant = invited
+      ? await prisma.participant.update({ where: { id: invited.id }, data: { slotId: slot.id } })
+      : await prisma.participant.create({
+          data: {
+            sortieId: slot.sortieId,
+            slotId: slot.id,
+            name: nameFromEmail(email),
+            contact: email,
+            channel: deriveChannel(email),
+            token: crypto.randomUUID(),
+            consentAt: now,
+            deleteAt: new Date(now.getTime() + 90 * DAY_MS),
+          },
+        });
 
     const { clientSecret, amountCents } = await createOrUpdatePaymentIntent({
       participantId: participant.id,

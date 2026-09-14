@@ -70,3 +70,20 @@ export function pasteSummary(parsed: ParsedEmails): string {
   }
   return bits.length === 0 ? "" : `${bits.join(" et ")}.`;
 }
+
+/**
+ * Un nom lisible tiré d'une adresse, pour les clients qu'on n'a jamais vus
+ * autrement : « julie.marchand@ecole.fr » donne « Julie Marchand ». Il tient
+ * la liste jusqu'à ce que le client paie et donne le sien.
+ */
+export function nameFromEmail(email: string): string {
+  const local = email.split("@")[0] ?? "";
+  const name = local
+    .split(/[._\-+]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+    .slice(0, 60)
+    .trim();
+  return name || email;
+}

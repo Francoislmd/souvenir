@@ -14,7 +14,6 @@ import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
 import { EmailsField } from "@/components/sorties/EmailsField";
 import { clientCount } from "@/lib/emails";
-import { formatSentAtFr } from "@/lib/format";
 
 export interface ScreenPhoto {
   id: string;
@@ -60,7 +59,6 @@ export function SortieScreen({
   isGroup,
   published,
   shareUrl,
-  lastInvite,
   clients,
   initialPhotos,
 }: {
@@ -70,8 +68,6 @@ export function SortieScreen({
   isGroup: boolean;
   published: boolean;
   shareUrl: string | null;
-  /** Le dernier envoi du lien par email, s'il y en a eu un. */
-  lastInvite: { count: number; at: string } | null;
   clients: ScreenClient[];
   initialPhotos: ScreenPhoto[];
 }) {
@@ -92,7 +88,6 @@ export function SortieScreen({
   // Rien n'est enregistré côté serveur avant, et rien n'est conservé après.
   const [emails, setEmails] = useState<string[]>([]);
   const [sendingInvite, setSendingInvite] = useState(false);
-  const [invite, setInvite] = useState(lastInvite);
 
   // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
   const dropZone = useRef<PhotoDropZoneHandle | null>(null);
@@ -293,8 +288,6 @@ export function SortieScreen({
       body: JSON.stringify({ emails }),
     });
     if (!res.ok) return false;
-    const data = (await res.json()) as { sent: number };
-    setInvite({ count: data.sent, at: new Date().toISOString() });
     setEmails([]);
     return true;
   }
@@ -305,7 +298,14 @@ export function SortieScreen({
     const count = emails.length;
     const ok = await sendInvites();
     setSendingInvite(false);
-    toast(ok ? `Lien envoyé à ${clientCount(count)}` : "L'envoi a échoué, réessayez.");
+    if (ok) {
+      // Les adresses deviennent des clients « Envoyé » dans la liste juste
+      // en dessous : elle est rendue côté serveur, donc il faut la relire.
+      router.refresh();
+      toast(`Lien envoyé à ${clientCount(count)}`);
+    } else {
+      toast("L'envoi a échoué, réessayez.");
+    }
   }
 
   async function copyLink(): Promise<void> {
@@ -440,6 +440,35 @@ export function SortieScreen({
         </button>
       </p>
     ) : null;
+
+  // Trois états, dans l'ordre où ils arrivent : le lien est parti, puis la
+  // photo est payée. Une ligne sans envoi est une adresse ajoutée à la main
+  // qui n'a pas encore reçu la sienne.
+  function clientRow(c: ScreenClient): React.ReactNode {
+    const inside = (
+      <>
+        <span className={styles.sdAv}>{c.name.slice(0, 2).toUpperCase()}</span>
+        <span className={styles.sdClientMain}>
+          <b>{c.name}</b>
+          <span>{c.contact}</span>
+        </span>
+        <span className={`${styles.sdTag} ${c.paid ? styles.sdTagPaid : c.sentAt ? "" : styles.sdTagWait}`}>
+          {c.paid ? formatEuros(c.amountCents) : c.sentAt ? "Envoyé" : "En attente"}
+        </span>
+      </>
+    );
+    // En mode GROUPE, /g/{token} n'est pas la boutique du client : il n'y a
+    // rien à ouvrir depuis la liste.
+    return isGroup ? (
+      <div key={c.id} className={styles.sdClient}>
+        {inside}
+      </div>
+    ) : (
+      <Link key={c.id} href={`/g/${c.token}`} target="_blank" className={styles.sdClient}>
+        {inside}
+      </Link>
+    );
+  }
 
   // Le même champ avant et après la publication : seul ce qui le suit change,
   // le bouton de publication d'un côté, celui d'envoi de l'autre.
@@ -610,8 +639,8 @@ export function SortieScreen({
           <>
             {emailsSection}
 
-            <div className={styles.sdLine}>
-              {emails.length > 0 ? (
+            {emails.length > 0 ? (
+              <div className={styles.sdLine}>
                 <button
                   type="button"
                   className={`${styles.sBtn} ${styles.sBtnInk}`}
@@ -621,14 +650,8 @@ export function SortieScreen({
                   {sendingInvite ? <Spinner size={16} tone="current" /> : null}
                   {sendingInvite ? "Envoi…" : `Envoyer à ${clientCount(emails.length)}`}
                 </button>
-              ) : null}
-              {invite ? (
-                <span className={styles.sdSent}>
-                  <CheckIcon />
-                  Lien envoyé à {clientCount(invite.count)}, {formatSentAtFr(new Date(invite.at))}.
-                </span>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </>
         ) : null}
 
@@ -650,20 +673,7 @@ export function SortieScreen({
               <p className={styles.sDay} style={{ marginTop: 34 }}>
                 Vos clients
               </p>
-              <div className={styles.sdClients}>
-                {clients.map((c) => (
-                  <Link key={c.id} href={`/g/${c.token}`} target="_blank" className={styles.sdClient}>
-                    <span className={styles.sdAv}>{c.name.slice(0, 2).toUpperCase()}</span>
-                    <span className={styles.sdClientMain}>
-                      <b>{c.name}</b>
-                      <span>{c.contact}</span>
-                    </span>
-                    <span className={`${styles.sdTag} ${c.paid ? styles.sdTagPaid : styles.sdTagWait}`}>
-                      {c.paid ? formatEuros(c.amountCents) : "Relance en cours"}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              <div className={styles.sdClients}>{clients.map((c) => clientRow(c))}</div>
             </>
           ) : null
         ) : !isGroup ? (

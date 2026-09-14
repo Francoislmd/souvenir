@@ -2313,24 +2313,6 @@ a.sdClient:hover {
   flex-wrap: wrap;
   margin-top: 18px;
 }
-.sdSent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 0.92rem;
-  color: var(--ink-3);
-}
-.sdSent svg {
-  width: 15px;
-  height: 15px;
-  flex: 0 0 auto;
-  /* L'icône est celle des vignettes, dessinée pour un trait épais sur une
-     photo : à 15 px dans une ligne de texte, elle doit s'affiner. */
-  stroke-width: 2.4;
-  color: var(--ok);
-}
-
 /* ---------- clients d'une sortie nominative ---------- */
 .sdAdd {
   display: grid;
