@@ -37,7 +37,7 @@ function toEuros(cents: number): string {
   return (cents / 100).toString();
 }
 
-export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
+export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSettings; storeUrl: string }) {
   const router = useRouter();
   const toast = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -283,6 +283,26 @@ export function ReglagesForm({ operator }: { operator: OperatorSettings }) {
                   e.target.value = "";
                 }}
               />
+            </div>
+
+            <div className={styles.rgField}>
+              <label>L&rsquo;adresse de votre boutique</label>
+              <div className={styles.rgCopy}>
+                <span className={styles.rgCopyUrl}>{storeUrl.replace(/^https?:\/\//, "")}</span>
+                <button
+                  type="button"
+                  className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sdChip}`}
+                  onClick={() => {
+                    void navigator.clipboard.writeText(storeUrl).catch(() => undefined);
+                    toast("Adresse copiée");
+                  }}
+                >
+                  Copier
+                </button>
+              </div>
+              <span className={styles.rgHint}>
+                La même pour toutes vos sorties. Dans vos confirmations de réservation, elle évite un envoi après chacune.
+              </span>
             </div>
 
             <p className={styles.sDay}>Vos prix</p>

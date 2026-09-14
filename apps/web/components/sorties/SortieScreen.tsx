@@ -60,7 +60,6 @@ export function SortieScreen({
   isGroup,
   published,
   shareUrl,
-  storeHomeUrl,
   lastInvite,
   clients,
   initialPhotos,
@@ -71,8 +70,6 @@ export function SortieScreen({
   isGroup: boolean;
   published: boolean;
   shareUrl: string | null;
-  /** Mode GROUPE : l'adresse de la boutique, sans code de sortie. */
-  storeHomeUrl: string | null;
   /** Le dernier envoi du lien par email, s'il y en a eu un. */
   lastInvite: { count: number; at: string } | null;
   clients: ScreenClient[];
@@ -330,16 +327,6 @@ export function SortieScreen({
       // Presse-papiers indisponible — le lien reste lisible et sélectionnable.
     }
     toast("Lien copié");
-  }
-
-  async function copySeason(): Promise<void> {
-    if (!storeHomeUrl) return;
-    try {
-      await navigator.clipboard.writeText(storeHomeUrl);
-    } catch {
-      // Presse-papiers indisponible : l'adresse reste lisible et sélectionnable.
-    }
-    toast("Adresse copiée");
   }
 
   async function share(): Promise<void> {
@@ -627,13 +614,6 @@ export function SortieScreen({
 
         {published && isGroup ? (
           <>
-            {invite ? (
-              <p className={styles.sdSent}>
-                <CheckIcon />
-                Lien envoyé à {clientCount(invite.count)}, {formatSentAtFr(new Date(invite.at))}.
-              </p>
-            ) : null}
-
             <EmailPills emails={emails} onRemove={removeEmail} />
 
             <div className={styles.sdLine}>
@@ -654,20 +634,15 @@ export function SortieScreen({
                   {sendingInvite ? "Envoi…" : `Envoyer à ${clientCount(emails.length)}`}
                 </button>
               ) : null}
-              <span className={styles.sdLineNote}>{pasteNote || "Pour ceux qui sont partis avant la fin."}</span>
-            </div>
-
-            {storeHomeUrl ? (
-              <div className={styles.sdSeason}>
-                <span className={styles.sdSeasonMain}>
-                  <b>{storeHomeUrl.replace(/^https?:\/\//, "")}</b>
-                  La même adresse pour toutes vos sorties. Dans vos confirmations de réservation, elle travaille sans vous.
+              {pasteNote ? (
+                <span className={styles.sdLineNote}>{pasteNote}</span>
+              ) : invite ? (
+                <span className={styles.sdSent}>
+                  <CheckIcon />
+                  Lien envoyé à {clientCount(invite.count)}, {formatSentAtFr(new Date(invite.at))}.
                 </span>
-                <button type="button" className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sdChip}`} onClick={() => void copySeason()}>
-                  Copier l&rsquo;adresse
-                </button>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </>
         ) : null}
 

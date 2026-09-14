@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getPreviewUrl } from "@/lib/storage";
 import { bucketSortie } from "@/lib/sorties";
-import { ensureShareCode, storeHomeUrl, storeUrl } from "@/lib/store";
+import { ensureShareCode, storeUrl } from "@/lib/store";
 import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
 function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
@@ -65,7 +65,6 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       isGroup={isGroup}
       published={sortie.status === "SENT"}
       shareUrl={shareUrl}
-      storeHomeUrl={isGroup ? storeHomeUrl(dbUser.operator.slug) : null}
       lastInvite={lastInvite}
       clients={clients}
       initialPhotos={sortie.photos.map((p) => ({

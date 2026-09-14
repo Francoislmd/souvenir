@@ -1,6 +1,7 @@
 import { requireOperatorUser } from "@/lib/current-user";
 import { ReglagesForm } from "@/components/reglages/ReglagesForm";
 import { readAutomations } from "@/lib/automations";
+import { storeHomeUrl } from "@/lib/store";
 
 export default async function ReglagesPage() {
   const dbUser = await requireOperatorUser();
@@ -9,6 +10,7 @@ export default async function ReglagesPage() {
 
   return (
     <ReglagesForm
+      storeUrl={storeHomeUrl(operator.slug)}
       operator={{
         name: operator.name,
         logoUrl: operator.logoUrl,

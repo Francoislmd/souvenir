@@ -102,7 +102,9 @@ export function PasteEmailsButton({
 
   return (
     <>
-      <button type="button" className={styles.sdChip} onClick={() => void paste()}>
+      {/* Le libellé disparaît sur téléphone, où la rangée d'actions ne tient
+          pas quatre mots : l'aria-label, lui, ne bouge pas. */}
+      <button type="button" className={styles.sdChip} aria-label={label} onClick={() => void paste()}>
         <ClipboardIcon />
         <span className={styles.sdChipLabel}>{label}</span>
       </button>
