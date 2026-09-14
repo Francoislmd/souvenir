@@ -2238,39 +2238,64 @@ a.sdClient:hover {
     flex: 1;
   }}
 
-/* ---------- adresses collées, envoi du lien (mode GROUPE) ---------- */
-/* Les adresses se posent au-dessus de la barre, séparées par le même filet
-   que le reste de l'écran : elles appartiennent à l'action, pas au décor. */
-.sdPaste {
+/* ---------- adresses des clients, envoi du lien (mode GROUPE) ---------- */
+/* Un seul cadre : les adresses déjà retenues et le curseur qui attend à la
+   suite. Le champ se remplit d'un collage, pas d'une saisie, mais les deux
+   entrent au même endroit. */
+.sdField {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 7px;
-  margin-top: 18px;
+  min-height: 52px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  cursor: text;
+  transition: border-color 0.14s, box-shadow 0.14s;
 }
-/* Dans la barre, les adresses sont posées au-dessus de l'action : le filet
-   les en sépare. Ailleurs elles suivent la carte, sans rien à séparer. */
-.sdBar .sdPaste {
-  margin-top: 0;
-  margin-bottom: 13px;
-  padding-bottom: 13px;
-  border-bottom: 1px solid var(--line);
+.sdField:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+}
+.sdFieldIn {
+  flex: 1 1 200px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.97rem;
+  color: var(--ink);
+}
+.sdFieldIn:focus {
+  outline: none;
+}
+.sdFieldIn::placeholder {
+  color: var(--ink-4);
+}
+.sdFieldNote {
+  margin: 8px 0 0 2px;
+  font-size: 0.88rem;
+  color: var(--ink-4);
 }
 .sdPill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
-  padding: 0 6px 0 12px;
-  border-radius: 9px;
+  height: 36px;
+  padding: 0 7px 0 13px;
+  border-radius: 10px;
   background: var(--fill);
   color: var(--ink-2);
-  font-size: 0.88rem;
+  font-size: 0.92rem;
 }
 .sdPillX {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
   display: grid;
   place-items: center;
   color: var(--ink-4);
@@ -2280,33 +2305,6 @@ a.sdClient:hover {
   background: var(--fill-2);
   color: var(--ink);
 }
-.sdPillMore {
-  padding: 0 4px;
-  font-size: 0.88rem;
-  color: var(--ink-4);
-}
-
-/* Le champ n'existe que si le presse-papiers s'est refusé : il prend alors
-   toute la largeur, sous la barre comme sous la carte. */
-.sdManual {
-  display: block;
-  flex: 1 1 100%;
-  margin-top: 12px;
-}
-.sdManualTa {
-  display: block;
-  width: 100%;
-  height: auto;
-  padding: 12px 15px;
-  line-height: 1.5;
-  resize: vertical;
-}
-.sdManualFoot {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-}
 
 .sdLine {
   display: flex;
@@ -2314,12 +2312,6 @@ a.sdClient:hover {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 18px;
-}
-.sdLineNote {
-  flex: 1;
-  min-width: 140px;
-  font-size: 0.9rem;
-  color: var(--ink-4);
 }
 .sdSent {
   display: flex;
@@ -2389,18 +2381,11 @@ a.sdClient:hover {
   display: none;
 }
 @media (max-width: 760px) {
-  /* Quatre adresses prennent quatre lignes en hauteur d'écran : elles
-     défilent sur une seule, comme la rangée d'actions juste dessous. */
-  .sdPaste {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .sdPaste::-webkit-scrollbar {
-    display: none;
-  }
-  .sdPaste > * {
-    flex: 0 0 auto;
+  /* Une pastille par ligne prendrait tout l'écran : le champ garde une
+     hauteur lisible et défile au-delà de quatre lignes d'adresses. */
+  .sdField {
+    max-height: 210px;
+    overflow-y: auto;
   }
   .sdBtnLong {
     display: none;
