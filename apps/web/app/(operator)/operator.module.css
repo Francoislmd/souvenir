@@ -732,255 +732,6 @@
   font-weight: 700;
 }
 
-/* ---------- responsive : page Sorties + shell ---------- */
-
-/* Portable large : KPI sur 2 rangs, colonne photos masquée */
-@media (max-width: 1240px) {
-  .kpis {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .trow {
-    grid-template-columns: 128px minmax(0, 2fr) 130px 28px;
-  }
-  .trow .col-photos,
-  .thead .col-photos {
-    display: none;
-  }
-}
-
-/* Tablette : colonne statut masquée (repli sur le badge tuile uniquement) */
-@media (max-width: 1040px) {
-  .trow {
-    grid-template-columns: 128px minmax(0, 2fr) 28px;
-  }
-  .trow .col-statut,
-  .thead .col-statut {
-    display: none;
-  }
-}
-
-/* Petite tablette : en-tête de page empilé, recherche retirée */
-@media (max-width: 860px) {
-  .hd {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-  .newbtn {
-    align-self: flex-start;
-  }
-  .hdrSearch {
-    display: none;
-  }
-  .toolbar {
-    flex-wrap: wrap;
-  }
-  .toolbar .lbl {
-    flex: 1 1 100%;
-    margin-bottom: 2px;
-  }
-}
-
-/* Mobile : menu en tiroir (remplace la sidebar), tableau en cartes */
-@media (max-width: 760px) {
-  .side {
-    display: none;
-  }
-  .kpis {
-    display: none;
-  }
-  .hdr {
-    height: 60px;
-  }
-  .hdr-logo {
-    width: 44px;
-    height: 44px;
-  }
-  .burger {
-    display: grid;
-    width: 44px;
-    height: 44px;
-  }
-  .drawer .nv {
-    min-height: 48px;
-    padding: 13px 12px;
-  }
-  .scrim {
-    display: block;
-  }
-  .drawer {
-    display: flex;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 80;
-    width: 100%;
-    height: 100dvh;
-    padding: calc(22px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));
-    border: 0;
-    background: var(--side);
-    flex-direction: column;
-    overscroll-behavior: contain;
-    transform: translateX(100%);
-    transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .drawer,
-    .scrim {
-      transition: none;
-    }
-  }
-  :global(body.nav-open) .drawer {
-    transform: none;
-    box-shadow: -12px 0 40px rgba(20, 19, 32, 0.16);
-  }
-  .drawerClose {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    color: var(--ink-3);
-    transition: background 0.15s, color 0.15s;
-  }
-  .drawerClose:hover {
-    background: var(--line-2);
-    color: var(--ink);
-  }
-  :global(body.nav-open) .scrim {
-    opacity: 1;
-  }
-
-  .content {
-    padding: 20px 16px 40px;
-  }
-  .hdr {
-    padding: 0 16px;
-    gap: 10px;
-  }
-  .hdr-logo {
-    display: flex;
-    order: 1;
-  }
-  .hdr-title {
-    display: block;
-    order: 2;
-    flex: 1;
-    text-align: center;
-    font-size: 1.02rem;
-  }
-  .hdrSearch,
-  .hsp,
-  .hdr > form {
-    display: none;
-  }
-  .burger {
-    order: 3;
-    margin: 0 -6px 0 4px;
-  }
-  .h1 {
-    font-size: 1.5rem;
-  }
-  .newbtn {
-    align-self: stretch;
-    justify-content: center;
-  }
-  .thumbs {
-    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
-    gap: 6px;
-  }
-  .act {
-    position: static;
-    background: none;
-    padding: 0;
-  }
-
-  .seg {
-    width: 100%;
-  }
-  .seg button {
-    flex: 1;
-  }
-  .select {
-    width: 100%;
-  }
-
-  .tbl {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    overflow: visible;
-  }
-  .thead {
-    display: none;
-  }
-  a.trow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 14px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    grid-template-columns: none;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    box-shadow: var(--sh-1);
-  }
-  a.trow:last-child {
-    margin-bottom: 0;
-  }
-  .trow .tact {
-    flex: 1 1 100%;
-    order: 1;
-  }
-  .trow .tcell {
-    order: 2;
-    font-size: 0.82rem;
-  }
-  .trow .tcell b,
-  .trow .tcell small {
-    display: inline;
-  }
-  .trow .tcell small::before {
-    content: " · ";
-  }
-  .trow .col-photos {
-    display: none;
-  }
-  .trow .tmid:not(.col-photos) {
-    order: 3;
-    margin-left: auto;
-    text-align: right;
-  }
-  .trow .tmid:not(.col-photos) b {
-    font-size: 1.05rem;
-  }
-  .trow .col-statut {
-    display: block;
-    order: 4;
-    flex: 1 1 100%;
-    margin-left: 0;
-  }
-  .trow .tgo {
-    display: none;
-  }
-
-  .tfoot {
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .tfoot button {
-    width: 100%;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .app * {
     animation: none !important;
@@ -1368,6 +1119,18 @@ a.sRow:hover .sTh {
 }
 
 /* ---------- barre basse sur téléphone ---------- */
+
+/* Le déclencheur « Nouvelle sortie » du téléphone : caché par défaut, allumé
+   par la media query ci-dessous. ⚠️ Ces deux règles doivent rester AVANT
+   elle — écrites après, elles gagnaient la cascade à spécificité égale et le
+   bouton n'apparaissait jamais sur téléphone. */
+.sCtaWrap {
+  display: none;
+}
+.sCtaMobile {
+  display: none;
+}
+
 @media (max-width: 1120px) {
   .side {
     width: 82px;
@@ -1474,9 +1237,18 @@ a.sRow:hover .sTh {
     padding: 12px 18px 0;
   }
   .sCtaMobile {
-    display: flex !important;
+    display: flex;
     width: 100%;
     margin-bottom: 26px;
+  }
+  .sSteps {
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 44px;
+    padding-top: 26px;
+  }
+  .sStep {
+    max-width: none;
   }
   .sRowAct {
     flex: 1 1 100%;
@@ -1536,12 +1308,6 @@ a.sRow:hover .sTh {
   .sVal b {
     font-size: 1.1rem;
   }}
-.sCtaWrap {
-  display: none;
-}
-.sCtaMobile {
-  display: none;
-}
 
 /* ---------- action portée par une ligne ---------- */
 .sRowAct {
@@ -2191,24 +1957,25 @@ a.sdClient:hover {
     flex: 1 1 auto;
     min-width: 0;
   }
-  /* Les actions passent sous le texte et défilent horizontalement plutôt
-     que de rogner leurs libellés — quatre chips ne tiennent pas en 390 px. */
+  /* Les actions passent sous le texte et s'enroulent plutôt que de rogner
+     leurs libellés — quatre chips ne tiennent pas en 390 px. Elles ont
+     défilé horizontalement un temps : le bouton principal sortait alors de
+     l'écran, coupé en deux, et rien ne disait qu'il fallait faire glisser
+     la barre pour l'atteindre. */
   .sdBarActions {
     /* `order` renvoie les actions sur un second rang : la sortie de secours
        (« Annuler ») reste ainsi toujours visible, sur la ligne du décompte. */
     order: 1;
     flex: 1 1 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .sdBarActions::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
+    row-gap: 8px;
   }
   .sdBarActions > * {
     flex: 0 0 auto;
   }
+  /* Le bouton principal garde sa propre ligne, en entier. */
   .sdBarActions .sBtnPri {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
   }
   .sdChipLabel {
     display: none;
@@ -2231,8 +1998,13 @@ a.sdClient:hover {
   .sdShareRow {
     justify-content: center;
   }
+  /* `display: flex` empêche le texte-enfant de se tronquer : sur téléphone
+     l'adresse repasse en bloc pour que l'ellipse fonctionne. */
   .sdShareUrl {
     flex: 1 1 100%;
+    min-width: 0;
+    display: block;
+    line-height: 46px;
   }
   .sdShareRow .sBtn {
     flex: 1;
@@ -2706,6 +2478,7 @@ a.sdClient:hover {
     gap: 0;
   }}
 
+
 /* L'envoi qui continue ailleurs dans l'espace pro. Discret, en bas à gauche,
    jamais au-dessus de la barre d'action d'un écran de sortie (qui, elle, dit
    déjà tout de son propre transfert). */
@@ -2746,4 +2519,14 @@ a.sdClient:hover {
   border-radius: 999px;
   background: linear-gradient(90deg, #ff6b2c, #f2500f);
   transition: width 0.3s ease;
+}
+
+/* La barre de navigation basse occupe les 72 px du bas sur téléphone : la
+   pastille d'envoi se pose au-dessus, sur toute la largeur. */
+@media (max-width: 760px) {
+  .upPill {
+    left: 14px;
+    right: 14px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
 }
