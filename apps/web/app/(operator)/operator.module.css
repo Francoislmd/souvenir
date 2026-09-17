@@ -579,183 +579,6 @@ a.sRow:hover .sTh {
   display: none;
 }
 
-@media (max-width: 1120px) {
-  .side {
-    width: 82px;
-    flex: 0 0 82px;
-    padding: 24px 12px 18px;
-    align-items: center;
-  }
-  .sBrand {
-    padding: 4px 0 26px;
-  }
-  .sNavLabel,
-  .sWho {
-    display: none;
-  }
-  .sNav {
-    justify-content: center;
-    padding: 0;
-    width: 50px;
-    height: 50px;
-  }
-  .sAcct {
-    padding: 0;
-    justify-content: center;
-  }
-  .sHdrIn {
-    padding: 0 34px;
-  }
-  .sWrap {
-    padding: 14px 34px 120px;
-  }
-}
-@media (max-width: 760px) {
-  .side {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    width: auto;
-    flex: none;
-    height: auto;
-    z-index: 50;
-    flex-direction: row;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(16px);
-    padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
-    box-shadow: 0 -1px 0 rgba(22, 19, 32, 0.07);
-  }
-  .sBrand,
-  .side .sp {
-    display: none;
-  }
-  .side .sNav {
-    flex: 1;
-    flex-direction: column;
-    gap: 3px;
-    width: auto;
-    height: 52px;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--ink-4);
-    background: none;
-    box-shadow: none;
-  }
-  .side .sNavLabel {
-    display: block;
-  }
-  .side .sNavOn,
-  .side .sNavOn svg {
-    color: var(--brand);
-  }
-  .sAcct {
-    display: none;
-  }
-  .sHdrIn {
-    padding: 14px 18px;
-    min-height: 68px;
-    gap: 10px;
-  }
-  /* Sur téléphone le titre passe à la ligne, mais jamais au-delà de deux :
-     un nom de sortie long mangeait sinon le sixième de l'écran, entre
-     l'en-tête et la barre d'onglets. */
-  .sTitle {
-    font-size: 1.45rem;
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-  .sBack {
-    margin-left: -12px;
-    margin-right: -8px;
-  }
-  .sHdrIn .sBtn {
-    display: none;
-  }
-  .sWrap {
-    padding: 12px 18px 108px;
-  }
-  .sCtaWrap {
-    display: block;
-    padding: 12px 18px 0;
-  }
-  .sCtaMobile {
-    display: flex;
-    width: 100%;
-    margin-bottom: 26px;
-  }
-  .sSteps {
-    flex-direction: column;
-    gap: 22px;
-    margin-top: 44px;
-    padding-top: 26px;
-  }
-  .sStep {
-    max-width: none;
-  }
-  .sRowAct {
-    flex: 1 1 100%;
-    margin-top: 8px;
-  }
-  .sRowAct .sBtn {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-  }
-  .shOverlay {
-    align-items: flex-end;
-    padding: 0;
-  }
-  .shPanel {
-    max-width: none;
-    border-radius: 26px 26px 0 0;
-    padding: 12px 18px calc(30px + env(safe-area-inset-bottom));
-    max-height: 88vh;
-  }
-  .shGrip {
-    display: block;
-    width: 38px;
-    height: 4px;
-    border-radius: 999px;
-    background: var(--fill-2);
-    margin: 0 auto 18px;
-  }
-  /* Sur téléphone la valeur passe sous le titre : la garder à droite
-     rognait le nom de la sortie, qui est l'information principale. */
-  .sRow {
-    gap: 4px 14px;
-    padding: 12px;
-    margin: 0 -12px;
-    flex-wrap: wrap;
-  }
-  .sMain {
-    flex: 1 1 auto;
-  }
-  .sVal {
-    flex: 1 1 100%;
-    text-align: right;
-    margin-top: 2px;
-  }
-  .sTh {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-  }
-  .sTh svg {
-    width: 19px;
-    height: 19px;
-  }
-  .sMain b {
-    font-size: 1rem;
-  }
-  .sVal b {
-    font-size: 1.1rem;
-  }}
-
 /* ---------- action portée par une ligne ---------- */
 .sRowAct {
   display: flex;
@@ -1386,77 +1209,6 @@ a.sdClient:hover {
   color: var(--wait-ink);
 }
 
-@media (max-width: 1120px) {
-  .sdShare {
-    gap: 20px;
-    padding: 20px;
-  }}
-@media (max-width: 760px) {
-  .sdGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .sdBar {
-    bottom: 88px;
-    padding: 13px 14px;
-  }
-  .sdBarText {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  /* Les actions passent sous le texte et s'enroulent plutôt que de rogner
-     leurs libellés — quatre chips ne tiennent pas en 390 px. Elles ont
-     défilé horizontalement un temps : le bouton principal sortait alors de
-     l'écran, coupé en deux, et rien ne disait qu'il fallait faire glisser
-     la barre pour l'atteindre. */
-  .sdBarActions {
-    /* `order` renvoie les actions sur un second rang : la sortie de secours
-       (« Annuler ») reste ainsi toujours visible, sur la ligne du décompte. */
-    order: 1;
-    flex: 1 1 100%;
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-  .sdBarActions > * {
-    flex: 0 0 auto;
-  }
-  /* Le bouton principal garde sa propre ligne, en entier. */
-  .sdBarActions .sBtnPri {
-    flex: 1 1 100%;
-  }
-  .sdChipLabel {
-    display: none;
-  }
-  .sdBarActions .sdChip {
-    padding: 0 13px;
-  }
-  .sdShare {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-  .sdQr {
-    align-self: center;
-  }
-  .sdQr img {
-    width: 146px;
-    height: 146px;
-  }
-  .sdShareRow {
-    justify-content: center;
-  }
-  /* `display: flex` empêche le texte-enfant de se tronquer : sur téléphone
-     l'adresse repasse en bloc pour que l'ellipse fonctionne. */
-  .sdShareUrl {
-    flex: 1 1 100%;
-    min-width: 0;
-    display: block;
-    line-height: 46px;
-  }
-  .sdShareRow .sBtn {
-    flex: 1;
-  }}
-
 /* ---------- adresses des clients, envoi du lien (mode GROUPE) ---------- */
 /* Un seul cadre : les adresses déjà retenues et le curseur qui attend à la
    suite. Le champ se remplit d'un collage, pas d'une saisie, mais les deux
@@ -1572,24 +1324,6 @@ a.sdClient:hover {
   margin-top: 14px;
 }
 
-@media (max-width: 760px) {
-  .sdMail {
-    gap: 14px;
-    padding: 18px;
-  }
-  .sdMailIc {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-  }
-  .sdMailT {
-    font-size: 1.14rem;
-  }
-  .sdMailFoot .sBtn {
-    flex: 1;
-  }
-}
-
 /* ---------- clients d'une sortie nominative ---------- */
 .sdAdd {
   display: grid;
@@ -1630,28 +1364,11 @@ a.sdClient:hover {
   background: var(--fill);
   color: var(--ink-2);
 }
-@media (max-width: 760px) {
-  .sdAdd {
-    grid-template-columns: 1fr;
-  }}
+
 /* Le libellé long dit ce que fait le bouton ; sur un téléphone il ne tient
    pas dans la rangée d'actions, et c'est le nombre qui compte. */
 .sdBtnShort {
   display: none;
-}
-@media (max-width: 760px) {
-  /* Une pastille par ligne prendrait tout l'écran : le champ garde une
-     hauteur lisible et défile au-delà de quatre lignes d'adresses. */
-  .sdField {
-    max-height: 210px;
-    overflow-y: auto;
-  }
-  .sdBtnLong {
-    display: none;
-  }
-  .sdBtnShort {
-    display: inline;
-  }
 }
 
 /* ---------- revenus ---------- */
@@ -1690,10 +1407,6 @@ a.sdClient:hover {
   letter-spacing: -0.026em;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 760px) {
-  .rvBig {
-    font-size: 2.35rem;
-  }}
 
 /* ---------- réglages ---------- */
 /* Deux colonnes sur grand écran, une sur téléphone. Pas de carte, pas de
@@ -1919,11 +1632,6 @@ a.sdClient:hover {
 .rgQuiet:hover {
   color: var(--ink-2);
 }
-@media (max-width: 1120px) {
-  .rgCols {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }}
 
 /* L'envoi qui continue ailleurs dans l'espace pro. Discret, en bas à gauche,
    jamais au-dessus de la barre d'action d'un écran de sortie (qui, elle, dit
@@ -1966,6 +1674,348 @@ a.sdClient:hover {
   background: linear-gradient(90deg, #ff6b2c, #f2500f);
   transition: width 0.3s ease;
 }
+
+/* ---------------------------------------------------------------------- *
+ * Tout le responsive vit ICI, à la fin du fichier, du plus large au plus
+ * étroit. ⚠️ Ne jamais remonter une media query au milieu de la feuille :
+ * à spécificité égale c'est la dernière règle écrite qui gagne, et une
+ * règle de base déclarée plus bas éteint alors sans bruit la variante
+ * téléphone. Le 14/09/2026 c'est ce qui masquait la barre de navigation et
+ * le bouton « Nouvelle sortie » ; le 17/09/2026, la feuille « Nouvelle
+ * sortie » qui refusait de s'ouvrir en bas d'écran.
+ * ---------------------------------------------------------------------- */
+@media (max-width: 1120px) {
+  .side {
+    width: 82px;
+    flex: 0 0 82px;
+    padding: 24px 12px 18px;
+    align-items: center;
+  }
+  .sBrand {
+    padding: 4px 0 26px;
+  }
+  .sNavLabel,
+  .sWho {
+    display: none;
+  }
+  .sNav {
+    justify-content: center;
+    padding: 0;
+    width: 50px;
+    height: 50px;
+  }
+  .sAcct {
+    padding: 0;
+    justify-content: center;
+  }
+  .sHdrIn {
+    padding: 0 34px;
+  }
+  .sWrap {
+    padding: 14px 34px 120px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .sdShare {
+    gap: 20px;
+    padding: 20px;
+  }}
+
+@media (max-width: 1120px) {
+  .rgCols {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }}
+
+@media (max-width: 760px) {
+  .side {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    flex: none;
+    height: auto;
+    z-index: 50;
+    flex-direction: row;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -1px 0 rgba(22, 19, 32, 0.07);
+  }
+  .sBrand,
+  .side .sp {
+    display: none;
+  }
+  .side .sNav {
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    width: auto;
+    height: 52px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ink-4);
+    background: none;
+    box-shadow: none;
+  }
+  .side .sNavLabel {
+    display: block;
+  }
+  .side .sNavOn,
+  .side .sNavOn svg {
+    color: var(--brand);
+  }
+  .sAcct {
+    display: none;
+  }
+  .sHdrIn {
+    padding: 14px 18px;
+    min-height: 68px;
+    gap: 10px;
+  }
+  /* Sur téléphone le titre passe à la ligne, mais jamais au-delà de deux :
+     un nom de sortie long mangeait sinon le sixième de l'écran, entre
+     l'en-tête et la barre d'onglets. */
+  .sTitle {
+    font-size: 1.45rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .sBack {
+    margin-left: -12px;
+    margin-right: -8px;
+  }
+  .sHdrIn .sBtn {
+    display: none;
+  }
+  .sWrap {
+    padding: 12px 18px 108px;
+  }
+  .sCtaWrap {
+    display: block;
+    padding: 12px 18px 0;
+  }
+  .sCtaMobile {
+    display: flex;
+    width: 100%;
+    margin-bottom: 26px;
+  }
+  .sSteps {
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 44px;
+    padding-top: 26px;
+  }
+  .sStep {
+    max-width: none;
+  }
+  .sRowAct {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+  .sRowAct .sBtn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  .shOverlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .shPanel {
+    max-width: none;
+    border-radius: 26px 26px 0 0;
+    padding: 12px 18px calc(30px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+  }
+  .shGrip {
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--fill-2);
+    margin: 0 auto 18px;
+  }
+  /* Sur téléphone la valeur passe sous le titre : la garder à droite
+     rognait le nom de la sortie, qui est l'information principale. */
+  .sRow {
+    gap: 4px 14px;
+    padding: 12px;
+    margin: 0 -12px;
+    flex-wrap: wrap;
+  }
+  /* Base 0 : le titre se tronque à côté de la vignette au lieu de la
+     laisser seule sur sa ligne. Avec `auto`, un nom de sortie long imposait
+     sa largeur entière et passait à la ligne suivante. */
+  .sMain {
+    flex: 1 1 0;
+  }
+  .sVal {
+    flex: 1 1 100%;
+    text-align: right;
+    margin-top: 2px;
+  }
+  .sTh {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+  .sTh svg {
+    width: 19px;
+    height: 19px;
+  }
+  .sMain b {
+    font-size: 1rem;
+  }
+  .sVal b {
+    font-size: 1.1rem;
+  }}
+
+@media (max-width: 760px) {
+  .sdGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .sdBar {
+    bottom: 88px;
+    padding: 13px 14px;
+  }
+  .sdBarText {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* Les actions passent sous le texte et s'enroulent plutôt que de rogner
+     leurs libellés — quatre chips ne tiennent pas en 390 px. Elles ont
+     défilé horizontalement un temps : le bouton principal sortait alors de
+     l'écran, coupé en deux, et rien ne disait qu'il fallait faire glisser
+     la barre pour l'atteindre. */
+  .sdBarActions {
+    /* `order` renvoie les actions sur un second rang : la sortie de secours
+       (« Annuler ») reste ainsi toujours visible, sur la ligne du décompte. */
+    order: 1;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .sdBarActions > * {
+    flex: 0 0 auto;
+  }
+  /* Le bouton principal prend la place qui reste sur la ligne, et passe
+     tout seul à la ligne suivante — en entier — quand elle ne suffit plus.
+     Il a été coupé par un défilement horizontal, puis forcé sur sa propre
+     ligne : il laissait alors une rangée presque vide au-dessus de lui. */
+  .sdBarActions .sBtnPri {
+    flex: 1 1 auto;
+    min-width: 150px;
+  }
+  .sdChipLabel {
+    display: none;
+  }
+  .sdBarActions .sdChip {
+    padding: 0 13px;
+  }
+  .sdShare {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .sdQr {
+    align-self: center;
+  }
+  .sdQr img {
+    width: 146px;
+    height: 146px;
+  }
+  .sdShareRow {
+    justify-content: center;
+  }
+  /* `display: flex` empêche le texte-enfant de se tronquer : sur téléphone
+     l'adresse repasse en bloc pour que l'ellipse fonctionne. */
+  .sdShareUrl {
+    flex: 1 1 100%;
+    min-width: 0;
+    display: block;
+    line-height: 46px;
+  }
+  .sdShareRow .sBtn {
+    flex: 1;
+  }}
+
+@media (max-width: 760px) {
+  .sdMail {
+    gap: 14px;
+    padding: 18px;
+  }
+  .sdMailIc {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+  .sdMailT {
+    font-size: 1.14rem;
+  }
+  .sdMailFoot .sBtn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 760px) {
+  .sdAdd {
+    grid-template-columns: 1fr;
+  }
+  /* Le nom et l'adresse d'abord, sur toute la largeur ; l'état dessous,
+     aligné sur eux. Côte à côte, la pastille cassait le nom en deux ou
+     trois lignes et rognait l'adresse — les deux informations qu'on vient
+     lire. La base de 100 % moins la vignette est ce qui force le retour à
+     la ligne : sans elle, le nom se comprime pour laisser passer la
+     pastille. */
+  .sdClient {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .sdClient .sdClientMain {
+    flex: 1 1 calc(100% - 46px);
+  }
+  .sdClient .sdTag {
+    order: 2;
+    margin-left: 46px;
+  }
+  .sdClient .sdIconBtn {
+    order: 3;
+    margin-left: auto;
+  }
+  /* Même gabarit sur l'écran Revenus : le montant passe sous le nom, mais
+     reste collé à droite — c'est lui qu'on parcourt du regard. */
+  .sdClient .rvAmount {
+    margin-left: auto;
+  }}
+
+@media (max-width: 760px) {
+  /* Une pastille par ligne prendrait tout l'écran : le champ garde une
+     hauteur lisible et défile au-delà de quatre lignes d'adresses. */
+  .sdField {
+    max-height: 210px;
+    overflow-y: auto;
+  }
+  .sdBtnLong {
+    display: none;
+  }
+  .sdBtnShort {
+    display: inline;
+  }
+}
+
+@media (max-width: 760px) {
+  .rvBig {
+    font-size: 2.35rem;
+  }}
 
 /* La barre de navigation basse occupe les 72 px du bas sur téléphone : la
    pastille d'envoi se pose au-dessus, sur toute la largeur. */
