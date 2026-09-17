@@ -62,13 +62,20 @@ function meta(row: SortieRow, d: Date): string {
 /** Ce que la ligne dit une fois la galerie en ligne : le résultat, jamais
  *  une redite de l'état. Sans achat, le montant reste en gris — c'est une
  *  information, pas une alerte. */
-function outcome(row: SortieRow): { value: string; sub: string; muted: boolean } {
+function outcome(row: SortieRow): { value: string; sub: string; subShort: string; muted: boolean } {
   if (row.paidCount === 0) {
-    return { value: formatEuros(0), sub: "en ligne", muted: true };
+    return { value: formatEuros(0), sub: "en ligne", subShort: "en ligne", muted: true };
   }
   const plural = row.paidCount > 1 ? "s" : "";
   const denominator = !row.isGroup && row.participantCount > 0 ? ` sur ${row.participantCount}` : "";
-  return { value: formatEuros(row.revenueCents), sub: `${row.paidCount} achat${plural}${denominator}`, muted: false };
+  // Sur téléphone la colonne de droite prend sa place sur le titre : le
+  // « sur 12 » saute, le nombre d'achats reste.
+  return {
+    value: formatEuros(row.revenueCents),
+    sub: `${row.paidCount} achat${plural}${denominator}`,
+    subShort: `${row.paidCount} achat${plural}`,
+    muted: false,
+  };
 }
 
 function UploadIcon() {
@@ -150,12 +157,21 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
               // encore faut-il en avoir un : la fiche sortie ne montre même pas
               // de bouton tant que la liste est vide, la ligne ne devrait pas
               // promettre un « Publier » qui n'existe pas derrière.
-              let action: string | null = null;
-              if (row.photoCount === 0) action = "Ajouter les photos";
+              //
+              // Deux libellés : le long, et celui du téléphone. Sur 390 px le
+              // déclencheur et le titre se partagent la ligne — « Publier les
+              // photos » ne laissait plus que « Canyoning, g… ». Le CSS choisit
+              // (.sdBtnLong / .sdBtnShort), rien n'est décidé ici.
+              let action: { long: string; short: string; upload?: boolean } | null = null;
+              if (row.photoCount === 0) action = { long: "Ajouter les photos", short: "Ajouter", upload: true };
               else if (row.publicationStatus === "pending") {
-                if (row.isGroup) action = "Publier les photos";
-                else if (row.participantCount === 0) action = "Ajouter des clients";
-                else action = `Envoyer à ${row.participantCount} client${row.participantCount > 1 ? "s" : ""}`;
+                if (row.isGroup) action = { long: "Publier les photos", short: "Publier" };
+                else if (row.participantCount === 0) action = { long: "Ajouter des clients", short: "Clients" };
+                else
+                  action = {
+                    long: `Envoyer à ${row.participantCount} client${row.participantCount > 1 ? "s" : ""}`,
+                    short: `Envoyer (${row.participantCount})`,
+                  };
               }
 
               const result = action === null && row.publicationStatus === "online" ? outcome(row) : null;
@@ -172,14 +188,16 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                   {action ? (
                     <span className={styles.sRowAct}>
                       <span className={styles.sdChip}>
-                        {action === "Ajouter les photos" ? <UploadIcon /> : null}
-                        {action}
+                        {action.upload ? <UploadIcon /> : null}
+                        <span className={styles.sdBtnLong}>{action.long}</span>
+                        <span className={styles.sdBtnShort}>{action.short}</span>
                       </span>
                     </span>
                   ) : result ? (
                     <span className={`${styles.sVal} ${result.muted ? styles.sValZero : ""}`}>
                       <b>{result.value}</b>
-                      <span>{result.sub}</span>
+                      <span className={styles.sdBtnLong}>{result.sub}</span>
+                      <span className={styles.sdBtnShort}>{result.subShort}</span>
                     </span>
                   ) : null}
                 </Link>

@@ -1370,6 +1370,12 @@ a.sdClient:hover {
 .sdBtnShort {
   display: none;
 }
+/* `.sVal span` pose un display sur tous ses enfants et bat une classe seule :
+   la bascule long/court doit être aussi précise, sinon les deux libellés
+   s'affichent l'un sous l'autre. */
+.sVal .sdBtnShort {
+  display: none;
+}
 
 /* ---------- revenus ---------- */
 /* Le montant porte l'écran ; la seule autre chose qu'il dit, c'est quand il
@@ -1815,15 +1821,11 @@ a.sdClient:hover {
   .sStep {
     max-width: none;
   }
-  .sRowAct {
-    flex: 1 1 100%;
-    justify-content: flex-start;
-    margin-top: 8px;
-  }
-  .sRowAct .sBtn {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
+  /* Le déclencheur reste sur la ligne de sa sortie, collé à droite. Il est
+     un peu plus compact qu'ailleurs pour laisser respirer le titre. */
+  .sRowAct .sdChip {
+    padding: 0 12px;
+    font-size: 0.88rem;
   }
   .shOverlay {
     align-items: flex-end;
@@ -1843,24 +1845,22 @@ a.sdClient:hover {
     background: var(--fill-2);
     margin: 0 auto 18px;
   }
-  /* Sur téléphone la valeur passe sous le titre : la garder à droite
-     rognait le nom de la sortie, qui est l'information principale. */
+  /* Une sortie tient sur une ligne, comme sur grand écran : la vignette, le
+     titre, et à droite ce que la sortie doit ou ce qu'elle a rapporté. La
+     valeur et le déclencheur sont passés sous le titre un temps, pour ne pas
+     le rogner — mais deux lignes par sortie faisaient une liste deux fois
+     plus longue, et la colonne de droite n'existait plus. C'est le titre qui
+     se tronque (base 0 sur .sMain), pas la mise en page qui casse. */
   .sRow {
-    gap: 4px 14px;
+    gap: 12px;
     padding: 12px;
     margin: 0 -12px;
-    flex-wrap: wrap;
   }
-  /* Base 0 : le titre se tronque à côté de la vignette au lieu de la
-     laisser seule sur sa ligne. Avec `auto`, un nom de sortie long imposait
-     sa largeur entière et passait à la ligne suivante. */
   .sMain {
     flex: 1 1 0;
   }
   .sVal {
-    flex: 1 1 100%;
-    text-align: right;
-    margin-top: 2px;
+    flex: 0 0 auto;
   }
   .sTh {
     width: 34px;
@@ -2009,6 +2009,12 @@ a.sdClient:hover {
   }
   .sdBtnShort {
     display: inline;
+  }
+  .sVal .sdBtnLong {
+    display: none;
+  }
+  .sVal .sdBtnShort {
+    display: block;
   }
 }
 
