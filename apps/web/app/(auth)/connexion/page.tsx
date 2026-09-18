@@ -93,8 +93,8 @@ export default function ConnexionPage() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Content de vous revoir.</h1>
-        <p className={styles.lead}>Connectez-vous pour retrouver vos sorties.</p>
+        <h1>Connexion</h1>
+        <p className={styles.lead}>Accédez à vos sorties, vos photos et vos ventes.</p>
       </div>
 
       <ErrorBanner message={error} />
@@ -129,7 +129,7 @@ export default function ConnexionPage() {
         </label>
 
         <SubmitButton loading={status === "loading"} loadingLabel="Connexion…">
-          Me connecter
+          Se connecter
         </SubmitButton>
       </form>
 

@@ -34,7 +34,7 @@ export function PasswordField({
         <span className={styles.sp} />
         {forgotHref ? (
           <a href={forgotHref} className={styles.lrowLink}>
-            Oublié ?
+            Mot de passe oublié ?
           </a>
         ) : null}
       </div>

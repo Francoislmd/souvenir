@@ -51,7 +51,7 @@ export default function MotDePasseOubliePage() {
               <path d="m3 7 9 6 9-6" />
             </svg>
           </div>
-          <h1>Regardez vos e-mails.</h1>
+          <h1>Regardez vos e-mails</h1>
           <p className={styles.lead}>
             Un lien a été envoyé à <b>{sentTo}</b>. Il est valable une heure.
           </p>
