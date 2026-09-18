@@ -101,11 +101,6 @@
 .prog i.on {
   background: var(--ink);
 }
-.logo {
-  display: flex;
-  align-items: center;
-  margin-right: auto;
-}
 .login {
   flex: 0 0 auto;
   font-size: 0.88rem;
@@ -188,6 +183,16 @@
   letter-spacing: 0.3em;
   height: 64px;
   font-variant-numeric: tabular-nums;
+}
+.pwWrap {
+  margin-top: 18px;
+}
+.pwWrap label {
+  font-size: 0.92rem;
+}
+.err a {
+  color: inherit;
+  font-weight: 600;
 }
 .url {
   margin: 10px 0 0;
@@ -314,24 +319,6 @@
   text-align: center;
 }
 .legal a {
-  color: var(--ink-3);
-}
-
-/* ── Connexion : un seul écran court, centré sur grand écran ─ */
-@media (min-width: 560px) {
-  .centered .scr {
-    flex: 0 0 auto;
-    margin: auto;
-    padding-bottom: 72px;
-  }
-}
-.help {
-  padding: 18px 22px calc(18px + env(safe-area-inset-bottom, 0px));
-  text-align: center;
-  font-size: 0.84rem;
-  color: var(--ink-4);
-}
-.help a {
   color: var(--ink-3);
 }
 

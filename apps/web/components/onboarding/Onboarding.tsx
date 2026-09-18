@@ -8,7 +8,7 @@ import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { operatorTagline } from "@/lib/tagline";
 import { Spinner } from "@/components/ui/Spinner";
 import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
-import { EmailCodeForm } from "./EmailCodeForm";
+import { AccountForm } from "./AccountForm";
 import styles from "./onboarding.module.css";
 
 /*
@@ -179,11 +179,8 @@ export function Onboarding({
       </header>
 
       {step === "compte" ? (
-        <EmailCodeForm
-          title="Créez votre compte Linktrip."
-          lede="Nous vous envoyons un code par e-mail. Pas de mot de passe à retenir."
+        <AccountForm
           initialEmail={initialEmail}
-          withLegal
           onSignedIn={() => {
             gtmEvent("sign_up", { method: "email", verification_pending: false });
             router.refresh();

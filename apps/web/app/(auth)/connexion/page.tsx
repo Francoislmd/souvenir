@@ -1,0 +1,141 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { EmailField } from "@/components/auth/EmailField";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { SubmitButton } from "@/components/auth/SubmitButton";
+import { ErrorBanner } from "@/components/auth/ErrorBanner";
+import { useAutofillSync } from "@/components/auth/useAutofillSync";
+import { isEmail } from "@/lib/auth/password-strength";
+import styles from "@/components/auth/auth.module.css";
+
+export default function ConnexionPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  useAutofillSync([
+    { ref: emailRef, value: email, onChange: setEmail },
+    { ref: passwordRef, value: password, onChange: setPassword },
+  ]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (status === "loading") return;
+
+    // On envoie ce que l'utilisateur a sous les yeux : si le navigateur a
+    // rempli les champs sans prévenir React, l'état est en retard sur le DOM.
+    const typedEmail = (emailRef.current?.value ?? email).trim();
+    const typedPassword = passwordRef.current?.value ?? password;
+    setEmail(typedEmail);
+    setPassword(typedPassword);
+
+    if (!isEmail(typedEmail)) {
+      setEmailError("Il manque une adresse e-mail valide.");
+      emailRef.current?.focus();
+      return;
+    }
+    if (typedPassword.length === 0) {
+      setError("Il manque le mot de passe.");
+      passwordRef.current?.focus();
+      return;
+    }
+
+    setStatus("loading");
+    setError(null);
+    setEmailError(null);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: typedEmail, password: typedPassword, remember }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(data.error ?? "Adresse e-mail ou mot de passe incorrect.");
+        setPassword("");
+        setStatus("idle");
+        passwordRef.current?.focus();
+        return;
+      }
+      setStatus("done");
+      setTimeout(() => {
+        router.push("/sorties");
+        router.refresh();
+      }, 700);
+    } catch {
+      setError("Le réseau a coupé, réessayez.");
+      setStatus("idle");
+    }
+  }
+
+  if (status === "done") {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <div className={styles.ring}>
+          <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </div>
+        <h1>Vous êtes connecté</h1>
+        <p className={styles.lead}>Ouverture de vos sorties…</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className={styles.head}>
+        <h1>Content de vous revoir.</h1>
+        <p className={styles.lead}>Connectez-vous pour retrouver vos sorties.</p>
+      </div>
+
+      <ErrorBanner message={error} />
+
+      <form onSubmit={handleSubmit} noValidate>
+        <EmailField
+          label="Adresse e-mail"
+          value={email}
+          onChange={(value) => {
+            setEmail(value);
+            setEmailError(null);
+          }}
+          autoComplete="username"
+          placeholder="vous@votre-structure.fr"
+          error={emailError}
+          autoFocus
+          inputRef={emailRef}
+        />
+        <PasswordField
+          label="Mot de passe"
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          placeholder="Votre mot de passe"
+          forgotHref="/mot-de-passe-oublie"
+          inputRef={passwordRef}
+        />
+
+        <label className={styles.remember}>
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          Rester connecté sur cet appareil
+        </label>
+
+        <SubmitButton loading={status === "loading"} loadingLabel="Connexion…">
+          Me connecter
+        </SubmitButton>
+      </form>
+
+      <div className={styles.alt}>
+        Pas encore de compte&nbsp;? <a href="/signup">Créer votre compte</a>
+      </div>
+    </>
+  );
+}

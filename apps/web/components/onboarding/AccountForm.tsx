@@ -3,50 +3,42 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
+import { isAcceptable, isEmail, MIN_LENGTH } from "@/lib/auth/password-strength";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { StrengthMeter } from "@/components/auth/StrengthMeter";
 import { Spinner } from "@/components/ui/Spinner";
 import styles from "./onboarding.module.css";
 
 /*
- * Entrer par un code reçu par e-mail : le même geste pour créer son compte
- * (/signup) et pour se reconnecter (/connexion). Pas de mot de passe, donc
- * pas de « mot de passe oublié », et l'adresse est vérifiée par le code
- * lui-même.
+ * Premier écran de l'inscription : une adresse et un mot de passe, comme à
+ * la connexion.
  *
- * `shouldCreateUser` reste vrai des deux côtés : une adresse inconnue tapée
- * sur /connexion ne tombe pas sur un refus, elle crée le compte et l'espace
- * pro renvoie vers /signup (requireOperatorUser). Aucun écran ne dit donc si
- * une adresse a déjà un compte.
+ * Si le projet Supabase demande de confirmer l'adresse, signUp ne rend pas de
+ * session. Au lieu de l'ancien « Vérifiez vos emails » qui envoyait le pro
+ * dans sa boîte puis sur un autre formulaire, on lui demande ici le code du
+ * même e-mail (verifyOtp, type « signup ») : il reste dans l'onglet. Le lien
+ * de l'e-mail marche aussi, il ramène sur /signup à la bonne étape.
  */
 
 const NETWORK = "Le réseau a coupé, réessayez dans une minute.";
 
-function describe(err: { status?: number; message: string }): string {
+function describe(err: { status?: number; message: string; code?: string }): string {
   const status = err.status ?? 0;
-  if (status === 429) return "Trop de demandes. Réessayez dans quelques minutes.";
+  if (err.code === "user_already_exists" || err.message === "User already registered") return "exists";
+  if (status === 429) return "Trop de tentatives. Réessayez dans quelques minutes.";
   // Une panne côté Supabase (402 quota, 5xx) doit se dire : sinon on la
   // cherche des heures du côté du formulaire.
   if (status >= 500 || status === 402) {
-    console.error("[auth] panne côté Supabase", err);
+    console.error("[signup] panne côté Supabase", err);
     return "Le service est momentanément indisponible. Réessayez dans quelques minutes.";
   }
   if (status === 0) return NETWORK;
   return err.message;
 }
 
-export function EmailCodeForm({
-  title,
-  lede,
-  initialEmail = "",
-  withLegal = false,
-  onSignedIn,
-}: {
-  title: string;
-  lede: string;
-  initialEmail?: string;
-  withLegal?: boolean;
-  onSignedIn: () => void;
-}) {
+export function AccountForm({ initialEmail, onSignedIn }: { initialEmail: string; onSignedIn: () => void }) {
   const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,33 +46,35 @@ export function EmailCodeForm({
   const [resent, setResent] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
 
-  async function sendCode(address: string): Promise<boolean> {
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email: address,
-      options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (err) {
-      setError(describe(err));
-      return false;
-    }
-    return true;
-  }
-
-  async function submitEmail(e: React.FormEvent): Promise<void> {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const address = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
-      setError(address.includes("@") ? "Cette adresse ne semble pas complète." : "Il manque le @ dans l'adresse.");
+    if (!isEmail(address)) {
+      setError("Cette adresse ne semble pas complète.");
+      return;
+    }
+    if (!isAcceptable(password)) {
+      setError(`Choisissez un mot de passe d'au moins ${MIN_LENGTH} caractères, qui ne soit pas un mot courant.`);
       return;
     }
     setBusy(true);
     setError(null);
-    const ok = await sendCode(address);
+    const supabase = createClient();
+    const { data, error: err } = await supabase.auth.signUp({
+      email: address,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
     setBusy(false);
-    if (!ok) return;
+    if (err) {
+      setError(describe(err));
+      return;
+    }
+    if (data.session) {
+      onSignedIn();
+      return;
+    }
     setSentTo(address);
-    setCode("");
     setTimeout(() => codeRef.current?.focus(), 50);
   }
 
@@ -89,7 +83,7 @@ export function EmailCodeForm({
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const { error: err } = await supabase.auth.verifyOtp({ email: sentTo, token, type: "email" });
+    const { error: err } = await supabase.auth.verifyOtp({ email: sentTo, token, type: "signup" });
     if (err) {
       setBusy(false);
       setError(
@@ -102,16 +96,18 @@ export function EmailCodeForm({
     onSignedIn();
   }
 
+  const exists = error === "exists";
+
   if (sentTo) {
     return (
       <div className={styles.scr}>
-        <h1>Entrez le code reçu.</h1>
+        <h1>Confirmez votre adresse.</h1>
         <p className={styles.lede}>
-          Envoyé à <b>{sentTo}</b>.
+          Nous avons envoyé un code à <b>{sentTo}</b>. Entrez-le ici, ou touchez le lien de l&rsquo;e-mail.
         </p>
         <input
           ref={codeRef}
-          id="authCode"
+          id="obCode"
           className={`${styles.inp} ${styles.code}`}
           inputMode="numeric"
           autoComplete="one-time-code"
@@ -139,7 +135,9 @@ export function EmailCodeForm({
               className={styles.link}
               onClick={async () => {
                 setError(null);
-                if (await sendCode(sentTo)) setResent(true);
+                const { error: err } = await createClient().auth.resend({ type: "signup", email: sentTo });
+                if (err) setError(describe(err));
+                else setResent(true);
               }}
             >
               Renvoyer le code
@@ -149,6 +147,7 @@ export function EmailCodeForm({
               className={styles.link}
               onClick={() => {
                 setSentTo(null);
+                setCode("");
                 setError(null);
                 setResent(false);
               }}
@@ -162,14 +161,14 @@ export function EmailCodeForm({
   }
 
   return (
-    <form className={styles.scr} onSubmit={(e) => void submitEmail(e)} noValidate>
-      <h1>{title}</h1>
-      <p className={styles.lede}>{lede}</p>
-      <label className={styles.lbl} htmlFor="authEmail">
+    <form className={styles.scr} onSubmit={(e) => void submit(e)} noValidate>
+      <h1>Créez votre compte Linktrip.</h1>
+      <p className={styles.lede}>Ensuite, votre structure, votre page et votre première sortie.</p>
+      <label className={styles.lbl} htmlFor="obEmail">
         Votre adresse e-mail
       </label>
       <input
-        id="authEmail"
+        id="obEmail"
         className={styles.inp}
         type="email"
         autoComplete="email"
@@ -181,18 +180,27 @@ export function EmailCodeForm({
         }}
         autoFocus
       />
-      {error ? <p className={styles.err}>{error}</p> : null}
+      <div className={styles.pwWrap}>
+        <PasswordField label="Choisissez un mot de passe" value={password} onChange={setPassword} autoComplete="new-password">
+          <StrengthMeter password={password} />
+        </PasswordField>
+      </div>
+      {exists ? (
+        <p className={styles.err}>
+          Un compte existe déjà avec cette adresse. <Link href="/connexion">Connectez-vous</Link>.
+        </p>
+      ) : error ? (
+        <p className={styles.err}>{error}</p>
+      ) : null}
       <div className={styles.foot}>
         <button type="submit" className={`${styles.btn} ${styles.pri}`} disabled={busy}>
-          {busy ? <Spinner size={16} tone="current" label="Envoi du code" /> : null}
-          {busy ? "Envoi…" : "Recevoir un code"}
+          {busy ? <Spinner size={16} tone="current" label="Création du compte" /> : null}
+          {busy ? "Création…" : "Créer mon compte"}
         </button>
-        {withLegal ? (
-          <p className={styles.legal}>
-            En continuant, vous acceptez les <Link href="/cgu">CGU</Link>, les <Link href="/cgv">CGV</Link> et la{" "}
-            <Link href="/confidentialite">politique de confidentialité</Link>.
-          </p>
-        ) : null}
+        <p className={styles.legal}>
+          En continuant, vous acceptez les <Link href="/cgu">CGU</Link>, les <Link href="/cgv">CGV</Link> et la{" "}
+          <Link href="/confidentialite">politique de confidentialité</Link>.
+        </p>
       </div>
     </form>
   );

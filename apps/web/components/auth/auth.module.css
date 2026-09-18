@@ -1,0 +1,431 @@
+/* Portage fidèle de linktrip-connexion.html / linktrip-inscription.html —
+   mêmes valeurs, mêmes noms de classes que le prototype (kebab-case via
+   styles['...']) pour rester traçable au pixel. Les sélecteurs bruts du
+   prototype (h1, button, label, :focus-visible) sont ici scopés sous .auth
+   pour ne pas fuiter sur le reste de l'app. */
+
+.auth {
+  display: flex;
+  min-height: 100dvh;
+  background: #fff;
+}
+.logoLink {
+  display: inline-flex;
+}
+.auth :where(button) {
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--ink);
+  border: 0;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.auth :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 24px;
+  min-width: 0;
+}
+.top {
+  display: flex;
+  align-items: center;
+}
+.sideIn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 52px;
+}
+.box {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* ---------- la photo ----------
+   Une vraie photo de sortie, posée dans la page comme la carte du héros de
+   l'accueil : c'est ce que le pro vient retrouver. Elle remplace le dégradé
+   et ses vignettes dessinées, qui ne montraient rien de réel. */
+.photoCol {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 16px 16px 0;
+  display: flex;
+}
+.photoCard {
+  position: relative;
+  flex: 1;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #1c1a24;
+}
+.photo {
+  object-fit: cover;
+}
+.veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(22, 19, 32, 0) 50%, rgba(22, 19, 32, 0.55) 100%);
+}
+.photoLine {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 36px;
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 1.2vw + 1.1rem, 2.3rem);
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  text-wrap: balance;
+  max-width: 16ch;
+}
+.photoLogo {
+  display: none;
+}
+
+/* ---------- formulaire ---------- */
+.head {
+  margin-bottom: 24px;
+}
+.head h1 {
+  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  margin: 0;
+  line-height: 1.18;
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.lead {
+  color: var(--ink-3);
+  font-size: 0.94rem;
+  line-height: 1.55;
+  margin: 9px 0 0;
+}
+.lead b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.lrow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.lrow label {
+  margin-bottom: 0;
+}
+.sp {
+  flex: 1;
+}
+.lrowLink {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-ink);
+  padding: 0;
+}
+.wrapf {
+  position: relative;
+}
+.inp {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  padding: 14px 15px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+  transition: 0.15s;
+  min-height: 44px;
+}
+.inp.pw {
+  padding-right: 48px;
+}
+.inp::placeholder {
+  color: var(--ink-4);
+}
+.inp:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+.inp.err {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+.eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-4);
+}
+.eye:hover {
+  color: var(--ink-2);
+  background: var(--line-2);
+}
+
+/* robustesse */
+.meter {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+.meter i {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--line);
+  transition: 0.25s;
+  font-style: normal;
+}
+.meter.s1 i:nth-child(1) {
+  background: var(--danger);
+}
+.meter.s2 i:nth-child(-n + 2) {
+  background: var(--warning);
+}
+.meter.s3 i:nth-child(-n + 3) {
+  background: #65a30d;
+}
+.meter.s4 i {
+  background: var(--success);
+}
+.hint {
+  font-size: 0.8rem;
+  color: var(--ink-4);
+  margin-top: 8px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hint.s1 {
+  color: var(--danger);
+}
+.hint.s2 {
+  color: var(--warning);
+}
+.hint.s3,
+.hint.s4 {
+  color: var(--success);
+}
+.caps {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  color: var(--warning);
+  margin-top: 8px;
+}
+
+.btn {
+  width: 100%;
+  border-radius: 14px;
+  padding: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 1.03rem;
+  letter-spacing: -0.015em;
+  min-height: 52px;
+  background: linear-gradient(180deg, #ff6b2c 0%, #f2500f 100%);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(172, 50, 5, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 22px;
+}
+.btn:hover {
+  background: linear-gradient(180deg, #fb6122 0%, #e34709 100%);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.ghost {
+  background: var(--line-2);
+  color: var(--ink);
+  box-shadow: none;
+  margin-top: 11px;
+}
+.ghost:hover {
+  background: #eae8ee;
+}
+
+.msg {
+  font-size: 0.85rem;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+.msgErr {
+  color: var(--danger);
+}
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 13px;
+  padding: 13px 15px;
+  margin-bottom: 18px;
+  font-size: 0.86rem;
+  color: #991b1b;
+  line-height: 1.5;
+}
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  font-size: 0.87rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.remember input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-3);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 20px;
+  min-height: 44px;
+}
+.back:hover {
+  color: var(--ink);
+}
+.alt {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+  margin-top: 26px;
+}
+.alt a {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+.legal {
+  text-align: center;
+  font-size: 0.76rem;
+  color: var(--ink-4);
+  line-height: 1.6;
+  margin-top: auto;
+  padding-top: 26px;
+}
+.legal a {
+  color: var(--ink-3);
+}
+
+.sp2 {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2.2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #eaf7ef;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  animation: pop 0.48s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .auth {
+    flex-direction: column;
+  }
+  .photoCol {
+    order: -1;
+    flex: 0 0 auto;
+    height: 168px;
+    padding: 12px 12px 0;
+  }
+  .photoCard {
+    border-radius: 22px;
+  }
+  /* Le bandeau est trop bas pour porter une phrase : le logo suffit. */
+  .photoLine {
+    display: none;
+  }
+  .photoLogo {
+    display: block;
+    position: absolute;
+    top: 18px;
+    left: 20px;
+  }
+  .side {
+    padding: 22px 20px 20px;
+  }
+  .top {
+    display: none;
+  }
+  .sideIn {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth *,
+  .auth *::before,
+  .auth *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
