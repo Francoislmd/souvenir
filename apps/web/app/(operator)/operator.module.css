@@ -51,6 +51,10 @@
 
   display: flex;
   min-height: 100vh;
+  /* `clip` et non `hidden` : `hidden` ferait de .app un conteneur de
+     défilement et casserait le `position: sticky` de l'en-tête et de la
+     barre d'action. Rien ne peut plus faire glisser l'écran de côté. */
+  overflow-x: clip;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-space-grotesk), system-ui, -apple-system, sans-serif;
@@ -113,6 +117,104 @@
   padding: 0;
   width: 100%;
 }
+/* ---------- bandeau de marque du téléphone ---------- */
+/* Rendu par MobileTopBar, invisible au-dessus de 760 px : au-dessus, c'est la
+   colonne de gauche qui porte le logo et le compte. */
+.sTop {
+  display: none;
+  align-items: center;
+  height: 56px;
+  padding: 0 12px 0 18px;
+}
+.sTopMark {
+  display: flex;
+  line-height: 0;
+  flex: 0 0 auto;
+}
+.sTopSpacer {
+  flex: 1;
+}
+.sBurger {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  color: var(--ink-2);
+  transition: background 0.14s;
+}
+.sBurger:hover {
+  background: var(--fill);
+}
+
+/* Le menu s'ouvre dans la feuille de « Nouvelle sortie » (.shOverlay /
+   .shPanel) : même geste, même gabarit. */
+.sMenuAcct {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px 18px;
+}
+.sMenuWho {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sMenuWho b {
+  font-weight: 500;
+  font-size: 1.02rem;
+  letter-spacing: -0.018em;
+}
+.sMenuWho em {
+  font-style: normal;
+  font-size: 0.87rem;
+  color: var(--ink-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sMenuNav {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  height: 52px;
+  padding: 0 12px;
+  margin: 0 -8px;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background 0.14s, color 0.14s;
+}
+.sMenuNav svg {
+  flex: 0 0 auto;
+  color: var(--ink-4);
+}
+.sMenuNavOn {
+  background: var(--grad-sf);
+  color: var(--accent-dk);
+}
+.sMenuNavOn svg {
+  color: var(--accent);
+}
+.sMenuOut {
+  width: 100%;
+  height: 50px;
+  margin-top: 8px;
+  padding: 0 12px;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-4);
+  transition: color 0.14s;
+}
+.sMenuOut:hover {
+  color: var(--ink-2);
+}
+
 /* ---------- interrupteurs, champ caché, toast ---------- */
 
 .hiddenInput {
@@ -1023,6 +1125,7 @@ a.sRow:hover .sTh {
 }
 .sdChip {
   display: inline-flex;
+  max-width: 100%;
   align-items: center;
   gap: 7px;
   height: 42px;
@@ -1256,12 +1359,23 @@ a.sdClient:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
-  padding: 0 7px 0 13px;
+  /* Hauteur libre : figée à 36 px, une adresse longue sortait de sa propre
+     pastille et chevauchait la suivante. Elle s'enroule maintenant, et coupe
+     n'importe où — une adresse n'a pas d'espace où passer à la ligne.
+     `flex: 0 0 auto` avec : sans lui la pastille se comprime pour finir la
+     ligne en cours et coupe « thomas.ferrand@exemple.fr » en deux au lieu de
+     passer à la ligne suivante. `max-width` garde la plus longue dans
+     l'écran. */
+  flex: 0 0 auto;
+  min-height: 36px;
+  max-width: 100%;
+  padding: 6px 7px 6px 13px;
   border-radius: 10px;
   background: var(--fill);
   color: var(--ink-2);
   font-size: 0.92rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .sdPillX {
   width: 22px;
@@ -1778,6 +1892,11 @@ a.sdClient:hover {
   .sAcct {
     display: none;
   }
+  /* Le bandeau de marque défile avec la page ; c'est la ligne de titre qui
+     reste collée en haut. */
+  .sTop {
+    display: flex;
+  }
   .sHdrIn {
     padding: 14px 18px;
     min-height: 68px;
@@ -1949,14 +2068,15 @@ a.sdClient:hover {
   }}
 
 @media (max-width: 760px) {
+  /* La vignette d'enveloppe prenait 52 px de large — sur 390 px, le champ
+     d'adresses tombait à 244 px et coupait « thomas.ferrand@exemple.fr » en
+     deux. Elle ne dit rien que le titre ne dise déjà. */
   .sdMail {
-    gap: 14px;
-    padding: 18px;
+    gap: 0;
+    padding: 16px;
   }
   .sdMailIc {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    display: none;
   }
   .sdMailT {
     font-size: 1.14rem;
