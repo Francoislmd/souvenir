@@ -402,7 +402,7 @@ function StepAccount({ initialEmail, onSignedIn }: { initialEmail: string; onSig
   return (
     <form className={styles.scr} onSubmit={(e) => void submitEmail(e)} noValidate>
       <h1>Créez votre compte Linktrip.</h1>
-      <p className={styles.lede}>Aucun abonnement pour vendre vos photos. Une commission seulement quand un client achète.</p>
+      <p className={styles.lede}>Nous vous envoyons un code par e-mail. Pas de mot de passe à retenir.</p>
       <label className={styles.lbl} htmlFor="obEmail">
         Votre adresse e-mail
       </label>
