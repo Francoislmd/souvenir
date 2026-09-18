@@ -8,8 +8,10 @@ import { RESERVED_SLUGS } from "@/lib/store";
 
 const schema = z.object({
   name: z.string().min(2),
-  pricePhotoCents: z.number().int().min(0),
-  priceAllCents: z.number().int().min(0),
+  // Les prix se règlent à l'étape suivante de l'inscription : sans eux, les
+  // valeurs par défaut du schéma s'appliquent (8 € / 39 €).
+  pricePhotoCents: z.number().int().min(0).optional(),
+  priceAllCents: z.number().int().min(0).optional(),
   brandColor: z.string().optional(),
   googleReviewUrl: z.string().optional(),
   qualification: z.record(z.unknown()).optional(),
@@ -72,8 +74,11 @@ export async function POST(request: Request): Promise<Response> {
     data: {
       name,
       slug,
-      pricePhotoCents,
-      priceAllCents,
+      ...(pricePhotoCents !== undefined && { pricePhotoCents }),
+      ...(priceAllCents !== undefined && { priceAllCents }),
+      // Le lot seul par défaut : la vente à l'unité est un choix que le pro
+      // fait lui-même, à l'écran des prix.
+      packOnly: true,
       activities,
       ...(brandColor && { brandColor }),
       ...(googleReviewUrl && { googleReviewUrl }),

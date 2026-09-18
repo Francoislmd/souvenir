@@ -1006,6 +1006,25 @@ a.sRow:hover .sTh {
   flex: 1;
 }
 
+/* Publier sans paiements actifs : l'inscription Stripe prend la place de la
+   confirmation, dans la même colonne centrée. */
+.sdPayments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 0 24px;
+  text-align: center;
+}
+.rgStripe {
+  margin-top: 16px;
+}
+.sdStripe {
+  width: 100%;
+  max-width: 520px;
+  text-align: left;
+}
+
 .sDangerZone {
   margin: 46px 0 8px;
   padding-top: 24px;

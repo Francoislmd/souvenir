@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { ACTIVITIES } from "@/lib/onboarding/activities";
+import { operatorTagline } from "@/lib/tagline";
 
 /**
  * L'adresse publique d'une sortie de groupe : store.linktrip.co/{slug}/{code}.
@@ -21,6 +21,10 @@ const CODE_LENGTH = 6;
 
 // Réservés : ces segments ne doivent jamais être confondus avec un slug
 // d'opérateur sur store.linktrip.co (voir middleware.ts).
+// La phrase vit dans son propre module pour être lisible côté client (aperçu
+// de l'inscription) sans tirer Prisma ; on la réexporte pour les appelants.
+export { operatorTagline };
+
 export const RESERVED_SLUGS = new Set(["api", "_next", "s", "g", "store", "www", "admin", "favicon.ico", "robots.txt", "sitemap.xml"]);
 
 function randomCode(): string {
@@ -121,31 +125,6 @@ export interface StoreOperator {
   packOnly: boolean;
 }
 
-/**
- * La phrase sous le nom, sur l'accueil de la boutique : ce que fait le
- * prestataire, pour qu'un client qui vient de scanner un QR code reconnaisse
- * l'endroit avant de chercher son jour.
- *
- * Elle se compose des activités déjà cochées en réglages — aucun champ à
- * saisir en plus, donc aucune boutique sans phrase. « Autre » est écarté :
- * il ne dit rien à un client. Au-delà de quatre activités la liste devient
- * un inventaire, on s'arrête à trois.
- */
-export function operatorTagline(activityIds: string[]): string {
-  const labels = activityIds
-    .filter((id) => id !== "autre")
-    .map((id) => ACTIVITIES.find((a) => a.id === id)?.label)
-    .filter((label): label is string => Boolean(label));
-
-  if (labels.length === 0) return "";
-
-  // Seule la première garde sa majuscule : c'est une phrase, pas une liste.
-  const join = (list: string[]): string => list.map((l, i) => (i === 0 ? l : l.toLowerCase())).join(", ");
-
-  if (labels.length > 4) return `${join(labels.slice(0, 3))} et d'autres activités.`;
-  if (labels.length === 1) return `${labels[0]}.`;
-  return `${join(labels.slice(0, -1))} et ${labels[labels.length - 1]!.toLowerCase()}.`;
-}
 
 function toStoreOperator(o: {
   id: string;
@@ -153,6 +132,7 @@ function toStoreOperator(o: {
   slug: string;
   logoUrl: string | null;
   coverUrl: string | null;
+  tagline?: string | null;
   activities: string[];
   brandColor: string;
   pricePhotoCents: number;
@@ -165,7 +145,7 @@ function toStoreOperator(o: {
     slug: o.slug,
     logoUrl: o.logoUrl,
     coverUrl: o.coverUrl,
-    tagline: operatorTagline(o.activities),
+    tagline: o.tagline?.trim() || operatorTagline(o.activities),
     brandColor: o.brandColor,
     pricePhotoCents: o.pricePhotoCents,
     priceAllCents: o.priceAllCents,

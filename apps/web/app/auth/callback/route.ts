@@ -12,10 +12,12 @@ export async function GET(request: Request): Promise<Response> {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user?.email) {
-      if (next) return NextResponse.redirect(`${origin}${next}`);
+      // Un chemin interne seulement : « @autre-site.fr » collé à l'origine
+      // donnerait https://linktrip.co@autre-site.fr, qui mène ailleurs.
+      if (next && next.startsWith("/") && !next.startsWith("//")) return NextResponse.redirect(`${origin}${next}`);
 
       const user = await prisma.user.findUnique({ where: { email: data.user.email } });
-      return NextResponse.redirect(`${origin}${user ? "/sorties" : "/onboarding"}`);
+      return NextResponse.redirect(`${origin}${user ? "/sorties" : "/signup"}`);
     }
   }
 

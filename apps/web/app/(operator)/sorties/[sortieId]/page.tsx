@@ -55,6 +55,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       published={sortie.status === "SENT"}
       shareUrl={shareUrl}
       clients={clients}
+      paymentsReady={dbUser.operator.stripeOnboarded}
       initialPhotos={sortie.photos.map((p) => ({
         id: p.id,
         ownerId: p.ownerId,

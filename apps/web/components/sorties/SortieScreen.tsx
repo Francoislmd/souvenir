@@ -14,6 +14,7 @@ import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
 import { EmailsField } from "@/components/sorties/EmailsField";
 import { clientCount } from "@/lib/emails";
+import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
 
 export interface ScreenPhoto {
   id: string;
@@ -61,6 +62,7 @@ export function SortieScreen({
   shareUrl,
   clients,
   initialPhotos,
+  paymentsReady: initialPaymentsReady,
 }: {
   sortieId: string;
   title: string;
@@ -70,6 +72,10 @@ export function SortieScreen({
   shareUrl: string | null;
   clients: ScreenClient[];
   initialPhotos: ScreenPhoto[];
+  /** Stripe peut encaisser pour ce compte. Sans lui, publier ouvre d'abord
+   *  l'inscription Stripe : une galerie en ligne où personne ne peut payer
+   *  est pire qu'une galerie pas encore publiée. */
+  paymentsReady: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -82,6 +88,8 @@ export function SortieScreen({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [paymentsReady, setPaymentsReady] = useState(initialPaymentsReady);
+  const [paymentsPending, setPaymentsPending] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [deleteSortieState, setDeleteSortieState] = useState<"idle" | "confirm" | "deleting">("idle");
   // Mode GROUPE : les adresses collées ne quittent le navigateur qu'à l'envoi.
@@ -393,6 +401,41 @@ export function SortieScreen({
   // Remplace la grille à la place d'une popup : valider une publication n'a
   // rien à voir avec regarder ses photos, la grille n'a donc plus sa place à
   // l'écran pendant qu'on décide.
+  const paymentsScreen = (
+    <div className={styles.sdPayments}>
+      <p className={styles.sdPublishingText}>Activez vos paiements pour publier.</p>
+      <p className={styles.sdPublishingHint}>
+        {paymentsPending
+          ? "Stripe a encore besoin d'informations, ou vérifie celles que vous avez données. Reprenez quand vous voulez : vos photos restent là."
+          : "Sans eux, vos clients verraient les photos sans pouvoir les acheter. Quelques minutes, avec une pièce d'identité et votre IBAN."}
+      </p>
+      {paymentsPending ? null : (
+        <div className={styles.sdStripe}>
+          <StripeOnboarding
+            onDone={(ready) => {
+              if (ready) {
+                setPaymentsReady(true);
+                router.refresh();
+              } else {
+                setPaymentsPending(true);
+              }
+            }}
+          />
+        </div>
+      )}
+      <div className={styles.sdConfirmActions}>
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnGhost}`} onClick={() => setConfirmPublishOpen(false)}>
+          Plus tard
+        </button>
+        {paymentsPending ? (
+          <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setPaymentsPending(false)}>
+            Reprendre avec Stripe
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+
   const confirmScreen = (
     <div className={styles.sdPublishing}>
       <p className={styles.sdPublishingText}>{isGroup ? "Publier la galerie ?" : "Envoyer les photos ?"}</p>
@@ -642,7 +685,7 @@ export function SortieScreen({
 
         {published ? null : (
           <>
-            {empty ? null : publishing ? publishingScreen : confirmPublishOpen ? confirmScreen : grid}
+            {empty ? null : publishing ? publishingScreen : confirmPublishOpen ? (paymentsReady ? confirmScreen : paymentsScreen) : grid}
 
             <PhotoDropZone sortieId={sortieId} controlRef={dropZone} variant={empty ? "zone" : "silent"} />
 

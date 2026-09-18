@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
-import { Spinner } from "@/components/ui/Spinner";
+import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
 
 function CheckIcon() {
   return (
@@ -12,23 +13,14 @@ function CheckIcon() {
   );
 }
 
+/**
+ * Le formulaire Stripe s'ouvre ici même, comme à l'inscription : plus de
+ * départ vers stripe.com ni de retour à deviner.
+ */
 export function StripeConnectSection({ stripeOnboarded }: { stripeOnboarded: boolean }) {
-  const [loading, setLoading] = useState(false);
-
-  async function handleConnect(): Promise<void> {
-    setLoading(true);
-    const res = await fetch("/api/stripe/connect", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ returnPath: "/reglages" }),
-    });
-    const data = (await res.json()) as { url?: string };
-    if (data.url) {
-      window.location.href = data.url;
-      return;
-    }
-    setLoading(false);
-  }
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
 
   if (stripeOnboarded) {
     return (
@@ -42,20 +34,37 @@ export function StripeConnectSection({ stripeOnboarded }: { stripeOnboarded: boo
   }
 
   return (
-    <div className={styles.rgFoot}>
-      <span className={styles.rgFootText}>
-        Connectez Stripe pour encaisser vos ventes. Sans lui, vos galeries s&rsquo;ouvrent mais personne ne peut payer.
-      </span>
-      <button type="button" className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`} onClick={handleConnect} disabled={loading}>
-        {loading ? (
-          <>
-            <Spinner size={15} tone="current" />
-            Ouverture de Stripe…
-          </>
-        ) : (
-          "Connecter Stripe"
+    <>
+      <div className={styles.rgFoot}>
+        <span className={styles.rgFootText}>
+          {pending
+            ? "Stripe a encore besoin d'informations, ou vérifie celles que vous avez données."
+            : "Connectez Stripe pour encaisser vos ventes. Sans lui, vos galeries s'ouvrent mais personne ne peut payer."}
+        </span>
+        {open ? null : (
+          <button
+            type="button"
+            className={`${styles.sBtn} ${styles.sBtnInk} ${styles.sBtnSm}`}
+            onClick={() => {
+              setPending(false);
+              setOpen(true);
+            }}
+          >
+            {pending ? "Reprendre" : "Connecter Stripe"}
+          </button>
         )}
-      </button>
-    </div>
+      </div>
+      {open ? (
+        <div className={styles.rgStripe}>
+          <StripeOnboarding
+            onDone={(ready) => {
+              setOpen(false);
+              if (ready) router.refresh();
+              else setPending(true);
+            }}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }

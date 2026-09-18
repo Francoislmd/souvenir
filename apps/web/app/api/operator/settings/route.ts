@@ -9,6 +9,8 @@ const schema = z.object({
   name: z.string().min(2).optional(),
   logoUrl: z.string().optional(),
   coverUrl: z.string().optional(),
+  // Chaîne vide = revenir à la phrase composée des activités.
+  tagline: z.string().max(90).optional(),
   brandColor: z.string().optional(),
   pricePhotoCents: z.number().int().min(0).optional(),
   priceAllCents: z.number().int().min(0).optional(),
@@ -39,7 +41,7 @@ export async function PATCH(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const { logoUrl, coverUrl, googleReviewUrl, whatsappNumber, automations, ...rest } = parsed.data;
+  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, ...rest } = parsed.data;
 
   const operator = await prisma.operator.update({
     where: { id: dbUser.operatorId },
@@ -47,6 +49,7 @@ export async function PATCH(request: Request): Promise<Response> {
       ...rest,
       ...(logoUrl !== undefined && { logoUrl: logoUrl || null }),
       ...(coverUrl !== undefined && { coverUrl: coverUrl || null }),
+      ...(tagline !== undefined && { tagline: tagline.trim() || null }),
       ...(googleReviewUrl !== undefined && { googleReviewUrl: googleReviewUrl || null }),
       ...(whatsappNumber !== undefined && { whatsappNumber: whatsappNumber || null }),
       ...(automations !== undefined && { automations: { ...automations, referral: false } }),

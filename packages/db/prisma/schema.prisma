@@ -19,6 +19,10 @@ model Operator {
   // visuel de l'écran d'accueil depuis que les jours y sont des dates.
   // Téléversée dans Réglages, servie depuis le bucket previews.
   coverUrl   String?
+  // La phrase sous le nom, en tête de la boutique. Vide : elle se compose des
+  // activités cochées (operatorTagline, lib/store.ts). Réécrite par le pro
+  // depuis l'écran « Votre page » de l'inscription ou depuis Réglages.
+  tagline    String?
   brandColor String  @default("#FF5A1F") // one of the 7 Linktrip swatches; drives boutique --op only
 
   stripeAccountId String?

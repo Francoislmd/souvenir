@@ -23,7 +23,7 @@ export type OperatorUser = User & { operator: Operator };
  * qui soit à la fois sûre et rapide — à condition de basculer le projet
  * Supabase sur des clés de signature asymétriques (réglage tableau de bord).
  */
-async function verifiedEmail(): Promise<string | null> {
+export async function verifiedEmail(): Promise<string | null> {
   const supabase = createClient();
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) return null;
@@ -41,7 +41,7 @@ export const requireOperatorUser = cache(async (): Promise<OperatorUser> => {
     include: { operator: true },
   });
 
-  if (!dbUser) redirect("/onboarding");
+  if (!dbUser) redirect("/signup");
 
   return dbUser;
 });
