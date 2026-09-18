@@ -14,10 +14,8 @@ export default function robots(): MetadataRoute.Robots {
         "/reglages",
         "/revenus",
         "/onboarding",
-        // Groupe de routes (auth) — pas de segment d'URL, chemins réels ci-dessous.
         "/connexion",
-        "/mot-de-passe-oublie",
-        "/reinitialiser",
+        "/signup",
       ],
     },
     sitemap: `${env.NEXT_PUBLIC_APP_URL}/sitemap.xml`,
