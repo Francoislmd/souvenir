@@ -23,6 +23,7 @@ export function SortiesHeader({ activities, mode }: { activities: string[]; mode
     <>
       <AppHeader
         title="Sorties"
+        hideTitle
         action={
           <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setOpen(true)}>
             <PlusIcon />

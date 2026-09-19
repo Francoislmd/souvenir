@@ -20,8 +20,12 @@ export function AppHeader({
   backLabel,
   status,
   action,
+  hideTitle = false,
 }: {
   title: string;
+  /** Le titre reste pour les lecteurs d'écran, mais n'est plus affiché :
+   *  sur la liste des sorties, le menu dit déjà où l'on est. */
+  hideTitle?: boolean;
   backHref?: string;
   /** Ce que le retour ramène, pour le lecteur d'écran et l'infobulle. */
   backLabel?: string;
@@ -40,7 +44,7 @@ export function AppHeader({
   }, []);
 
   return (
-    <header className={`${styles.sHdr} ${scrolled ? styles.sHdrScrolled : ""}`}>
+    <header className={`${styles.sHdr} ${scrolled ? styles.sHdrScrolled : ""} ${hideTitle ? styles.sHdrBare : ""}`}>
       <div className={styles.sHdrIn}>
         {backHref ? (
           <Link href={backHref} className={styles.sBack} aria-label={backLabel ?? "Retour"} title={backLabel ?? "Retour"}>
@@ -50,7 +54,7 @@ export function AppHeader({
           </Link>
         ) : null}
 
-        <h1 className={styles.sTitle} title={title}>
+        <h1 className={hideTitle ? styles.srOnly : styles.sTitle} title={hideTitle ? undefined : title}>
           {title}
         </h1>
 
