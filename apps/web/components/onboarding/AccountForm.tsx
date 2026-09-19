@@ -74,6 +74,13 @@ export function AccountForm({ initialEmail, onSignedIn }: { initialEmail: string
       onSignedIn();
       return;
     }
+    // Adresse déjà confirmée : Supabase répond comme si de rien n'était, sans
+    // envoyer d'e-mail (anti-énumération), mais avec identities vide. Sans ce
+    // test, le pro attend un code qui n'arrivera jamais.
+    if (data.user && data.user.identities?.length === 0) {
+      setError("exists");
+      return;
+    }
     setSentTo(address);
     setTimeout(() => codeRef.current?.focus(), 50);
   }
