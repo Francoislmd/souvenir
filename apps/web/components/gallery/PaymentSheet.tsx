@@ -94,14 +94,18 @@ function PaymentForm({
               paypal: "never",
               amazonPay: "never",
             },
-            // Apple ne fournit pas de libellé « Payer avec » : ses types sont
-            // traduits par le système (« buy » donne « Acheter avec »). Le type
-            // « plain » affiche le seul logo Apple Pay, qui se lit « payer ».
-            // Google, lui, a un type « pay » : « Payer avec Google Pay ».
-            buttonType: { applePay: "plain", googlePay: "pay" },
+            // « Acheter avec Apple Pay » : le libellé qu'Apple affiche en
+            // français, celui que les clients connaissent. Apple n'a pas de
+            // type « Payer avec » ; le bouton logo seul faisait vide en pleine
+            // largeur. Google, lui, a un type « pay » : « Payer avec Google Pay ».
+            buttonType: { applePay: "buy", googlePay: "pay" },
             buttonTheme: { applePay: "black", googlePay: "black" },
-            // Même hauteur que le bouton carte : Apple Pay jamais plus petit.
-            buttonHeight: 52,
+            // Le texte du bouton Apple grandit avec sa hauteur (on ne règle
+            // pas sa police) : à 52 px il écrasait la feuille. 44 px, la
+            // hauteur standard d'Apple, et le bouton carte de la feuille est
+            // ramené à la même hauteur pour qu'Apple Pay ne soit jamais plus
+            // petit que lui.
+            buttonHeight: 44,
             // Pas de maxRows : avec maxRows + overflow « never », Stripe ne
             // rend jamais les boutons (ni événement ready, ni erreur).
             layout: { maxColumns: 1, overflow: "never" },
@@ -136,7 +140,7 @@ function PaymentForm({
         )}
       </div>
       {error ? <p className={styles.error} style={{ marginTop: 12 }}>{error}</p> : null}
-      <button type="button" onClick={() => void pay()} disabled={loading || !ready} className={styles.cta} style={{ marginTop: 16 }}>
+      <button type="button" onClick={() => void pay()} disabled={loading || !ready} className={styles.cta} style={{ marginTop: 16, height: 44 }}>
         {loading ? (
           <>
             <Spinner size={17} tone="light" />
