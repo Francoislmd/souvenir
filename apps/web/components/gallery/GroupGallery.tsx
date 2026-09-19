@@ -328,6 +328,7 @@ export function GroupGallery({
           stripeAccountId={checkout.stripeAccountId}
           amountCents={checkout.amountCents}
           label={checkout.label}
+          merchantName={operator.name}
           onSuccess={onPaymentSuccess}
           onClose={() => setCheckout(null)}
         />

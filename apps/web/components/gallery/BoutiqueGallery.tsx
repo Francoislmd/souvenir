@@ -39,6 +39,7 @@ export function BoutiqueGallery({
   purchasedIds,
   googleReviewUrl,
   reducedOfferActive,
+  operatorName,
 }: {
   token: string;
   participantId: string;
@@ -53,6 +54,8 @@ export function BoutiqueGallery({
   purchasedIds: string[];
   googleReviewUrl: string | null;
   reducedOfferActive: boolean;
+  /** Le vendeur, nommé dans la feuille Apple Pay. */
+  operatorName?: string;
 }) {
   const router = useRouter();
   const [photos, setPhotos] = useState(initialPhotos);
@@ -286,6 +289,7 @@ export function BoutiqueGallery({
           stripeAccountId={checkout.stripeAccountId}
           amountCents={checkout.amountCents}
           label={checkout.label}
+          merchantName={operatorName}
           onSuccess={onPaymentSuccess}
           onClose={() => setCheckout(null)}
         />

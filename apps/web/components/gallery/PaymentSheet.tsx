@@ -8,7 +8,17 @@ import styles from "@/components/gallery/gallery.module.css";
 import { LockIcon } from "@/components/gallery/icons";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
 
-function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number; onSuccess: () => void; onClose: () => void }) {
+function PaymentForm({
+  amountCents,
+  merchantName,
+  onSuccess,
+  onClose,
+}: {
+  amountCents: number;
+  merchantName?: string;
+  onSuccess: () => void;
+  onClose: () => void;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -28,9 +38,11 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
       ("ApplePaySession" in window || /iPhone|iPad|iPod/.test(navigator.userAgent)),
   );
 
-  async function pay(): Promise<void> {
+  // Apple Pay et Google Pay affichent leur propre suivi dans la feuille du
+  // système : pas de seconde moulinette sur le bouton carte (guide Apple).
+  async function pay(fromWallet = false): Promise<void> {
     if (!stripe || !elements || loading) return;
-    setLoading(true);
+    if (!fromWallet) setLoading(true);
     setError(null);
 
     const { error: submitError } = await elements.submit();
@@ -69,12 +81,14 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
         <ExpressCheckoutElement
           options={{
             // Un seul bouton, celui de l'appareil : Apple Pay sur iPhone, iPad
-            // et Mac (Safari), Google Pay partout ailleurs. « auto » et non
-            // « always » : Stripe n'affiche alors que le bouton natif, quand
-            // une carte est réellement enregistrée dans le portefeuille. Avec
-            // « always », il dessine sa propre imitation, même sans carte.
+            // et Mac, Google Pay ailleurs. Apple Pay en « always » : le guide
+            // Apple interdit de le cacher quand l'appareil le prend en charge
+            // (sans carte enregistrée, le bouton propose de configurer Apple
+            // Pay). Safari le dessine lui-même, c'est le bouton officiel.
+            // Google Pay en « auto » : hors d'Android et de Chrome, Stripe en
+            // dessinerait une imitation.
             paymentMethods: {
-              applePay: apple ? "auto" : "never",
+              applePay: apple ? "always" : "never",
               googlePay: apple ? "never" : "auto",
               link: "never",
               paypal: "never",
@@ -82,7 +96,8 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
             },
             buttonType: { applePay: "buy", googlePay: "buy" },
             buttonTheme: { applePay: "black", googlePay: "black" },
-            buttonHeight: 48,
+            // Même hauteur que le bouton carte : Apple Pay jamais plus petit.
+            buttonHeight: 52,
             // Pas de maxRows : avec maxRows + overflow « never », Stripe ne
             // rend jamais les boutons (ni événement ready, ni erreur).
             layout: { maxColumns: 1, overflow: "never" },
@@ -92,7 +107,10 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
             setWallet(m && (m.applePay || m.googlePay) ? "shown" : "none");
           }}
           onLoadError={() => setWallet("none")}
-          onConfirm={() => void pay()}
+          // Place de marché : la feuille Apple Pay nomme le vendeur réel et
+          // Linktrip (« Payer Deeptown School Surf (via Linktrip) »).
+          onClick={(e) => e.resolve(merchantName ? { business: { name: `${merchantName} (via Linktrip)` } } : {})}
+          onConfirm={() => void pay(true)}
         />
         {wallet === "shown" ? <p className={styles.or}>ou par carte</p> : null}
       </div>
@@ -136,6 +154,7 @@ export function PaymentSheet({
   stripeAccountId,
   amountCents,
   label,
+  merchantName,
   onSuccess,
   onClose,
 }: {
@@ -143,6 +162,8 @@ export function PaymentSheet({
   stripeAccountId: string;
   amountCents: number;
   label: string;
+  /** Nom de l'opérateur, affiché dans la feuille Apple Pay. */
+  merchantName?: string;
   onSuccess: () => void;
   onClose: () => void;
 }) {
@@ -158,8 +179,8 @@ export function PaymentSheet({
           <span>{label}</span>
           <b>{formatEuros(amountCents)}</b>
         </div>
-        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe", variables: { borderRadius: "12px" } } }}>
-          <PaymentForm amountCents={amountCents} onSuccess={onSuccess} onClose={onClose} />
+        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe", variables: { borderRadius: "14px" } } }}>
+          <PaymentForm amountCents={amountCents} merchantName={merchantName} onSuccess={onSuccess} onClose={onClose} />
         </Elements>
         <div className={styles.fine}>
           <LockIcon />
