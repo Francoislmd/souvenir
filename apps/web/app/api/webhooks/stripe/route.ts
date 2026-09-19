@@ -16,10 +16,21 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("Missing signature", { status: 400 });
   }
 
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
-  } catch {
+  // Même URL pour les deux endpoints Stripe (plateforme et comptes
+  // connectés) : on essaie les deux secrets. En charge directe, presque tout
+  // arrive par l'endpoint Connect, avec `event.account` = le compte de
+  // l'opérateur. Les handlers retrouvent la commande par l'ID du
+  // PaymentIntent, qui est unique sur tout Stripe : ils n'ont pas besoin du compte.
+  let event: Stripe.Event | null = null;
+  for (const secret of [env.STRIPE_CONNECT_WEBHOOK_SECRET, env.STRIPE_WEBHOOK_SECRET]) {
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, secret);
+      break;
+    } catch {
+      // secret suivant
+    }
+  }
+  if (!event) {
     return new Response("Invalid signature", { status: 400 });
   }
 

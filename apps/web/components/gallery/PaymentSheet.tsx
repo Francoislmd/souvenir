@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/lib/stripe-client";
+import { getStripe } from "@/lib/stripe-client";
 import { formatEuros } from "@/lib/format";
 import styles from "@/components/gallery/gallery.module.css";
 import { LockIcon } from "@/components/gallery/icons";
@@ -87,17 +87,20 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
 
 export function PaymentSheet({
   clientSecret,
+  stripeAccountId,
   amountCents,
   label,
   onSuccess,
   onClose,
 }: {
   clientSecret: string;
+  stripeAccountId: string;
   amountCents: number;
   label: string;
   onSuccess: () => void;
   onClose: () => void;
 }) {
+  const stripePromise = getStripe(stripeAccountId);
   if (!stripePromise) return null;
 
   return (

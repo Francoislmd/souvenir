@@ -69,14 +69,14 @@ export async function POST(request: Request, { params }: { params: { slug: strin
           },
         });
 
-    const { clientSecret, amountCents } = await createOrUpdatePaymentIntent({
+    const { clientSecret, amountCents, stripeAccountId } = await createOrUpdatePaymentIntent({
       participantId: participant.id,
       photoIds: parsed.data.photoIds,
     });
 
     await track("group_order_created", { operatorId: operator.id, participantId: participant.id, meta: { slotId: slot.id } });
 
-    return Response.json({ participantId: participant.id, token: participant.token, clientSecret, amountCents }, { status: 200 });
+    return Response.json({ participantId: participant.id, token: participant.token, clientSecret, amountCents, stripeAccountId }, { status: 200 });
   } catch (error) {
     if (error instanceof CheckoutError) {
       return Response.json({ error: error.code }, { status: error.code === "not_found" ? 404 : 409 });

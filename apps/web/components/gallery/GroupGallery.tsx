@@ -72,7 +72,7 @@ export function GroupGallery({
   const [slotsState, setSlotsState] = useState<"loading" | "ready" | "error">("loading");
   const [photos, setPhotos] = useState<GroupPhoto[]>([]);
   const [pendingIds, setPendingIds] = useState<string[] | null>(null);
-  const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
+  const [checkout, setCheckout] = useState<{ clientSecret: string; stripeAccountId: string; amountCents: number; label: string; token: string; participantId: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Le premier chargement d'un créneau seulement : les rafraîchissements de
   // fond ne doivent pas faire disparaître une grille déjà affichée.
@@ -325,6 +325,7 @@ export function GroupGallery({
       {checkout ? (
         <PaymentSheet
           clientSecret={checkout.clientSecret}
+          stripeAccountId={checkout.stripeAccountId}
           amountCents={checkout.amountCents}
           label={checkout.label}
           onSuccess={onPaymentSuccess}
@@ -360,7 +361,7 @@ function EmailSheet({
   photoIds: string[];
   label: string;
   amountCents: number;
-  onReady: (data: { clientSecret: string; amountCents: number; token: string; participantId: string }) => void;
+  onReady: (data: { clientSecret: string; stripeAccountId: string; amountCents: number; token: string; participantId: string }) => void;
   onClose: () => void;
 }) {
   const [email, setEmail] = useState("");
@@ -390,7 +391,7 @@ function EmailSheet({
         setLoading(false);
         return;
       }
-      const data = (await res.json()) as { clientSecret: string; amountCents: number; token: string; participantId: string };
+      const data = (await res.json()) as { clientSecret: string; stripeAccountId: string; amountCents: number; token: string; participantId: string };
       onReady(data);
     } catch {
       setError("La connexion a été interrompue. Réessayez.");

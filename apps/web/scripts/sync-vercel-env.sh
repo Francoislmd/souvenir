@@ -5,6 +5,10 @@
 # l'interface web est long et source d'erreurs.
 #
 #   bash apps/web/scripts/sync-vercel-env.sh
+#   bash apps/web/scripts/sync-vercel-env.sh STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET
+#
+# Sans argument : les cinq variables Supabase. Avec des noms en argument :
+# seulement celles-là (utilisé par set-stripe-keys.sh).
 #
 # Rien ne s'affiche à l'écran : les valeurs passent par un tube, pas par
 # l'historique du terminal.
@@ -17,7 +21,11 @@ WEB="$(cd "$(dirname "$0")/.." && pwd)"
 RACINE="$(cd "$WEB/../.." && pwd)"
 cd "$RACINE"
 
-VARS=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY DATABASE_URL DIRECT_URL)
+if [ "$#" -gt 0 ]; then
+  VARS=("$@")
+else
+  VARS=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY DATABASE_URL DIRECT_URL)
+fi
 
 command -v vercel >/dev/null || { echo "La CLI vercel est introuvable. Installe-la (npm i -g vercel) ou remplace 'vercel' par 'npx vercel' dans ce script."; exit 1; }
 [ -f "$WEB/.env.local" ] || { echo "apps/web/.env.local introuvable."; exit 1; }

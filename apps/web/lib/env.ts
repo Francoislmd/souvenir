@@ -20,6 +20,10 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
+  // Charge directe : paiements, remboursements, litiges et account.updated se
+  // produisent sur les comptes des opérateurs. Stripe ne les envoie qu'à un
+  // endpoint « Connect », qui a son propre secret de signature.
+  STRIPE_CONNECT_WEBHOOK_SECRET: z.string().min(1),
   TWILIO_ACCOUNT_SID: z.string().min(1),
   TWILIO_AUTH_TOKEN: z.string().min(1),
   TWILIO_WHATSAPP_FROM: z.string().min(1),

@@ -9,7 +9,7 @@ export default function CgvPage() {
   return (
     <>
       <h1>Conditions générales de vente</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 3 août 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 19 septembre 2026</p>
       <p>
         Les présentes conditions générales de vente (CGV) régissent, d&apos;une part, la vente
         de photos numériques aux participants via la plateforme Linktrip, et d&apos;autre part
@@ -19,12 +19,21 @@ export default function CgvPage() {
 
       <h2 id="participants">A. Achat de photos par un participant</h2>
 
+      <h3 id="vendeur">Vendeur</h3>
+      <p>
+        Les photos sont vendues par l&apos;opérateur qui a organisé la sortie et les a prises,
+        et non par Linktrip. Linktrip fournit à l&apos;opérateur la plateforme technique qui
+        permet de les présenter, de les vendre et de les livrer. Le nom de l&apos;opérateur est
+        affiché sur la galerie et sur le justificatif de paiement.
+      </p>
+
       <h3 id="prix">Prix et paiement</h3>
       <p>
         Le prix des photos et packs proposés est fixé librement par chaque opérateur et affiché
         avant toute confirmation d&apos;achat, toutes taxes comprises. Le paiement est réalisé en
-        ligne par carte bancaire via Stripe, prestataire de paiement sécurisé. Linktrip
-        n&apos;a jamais accès aux données bancaires du participant.
+        ligne par carte bancaire via Stripe, prestataire de paiement sécurisé, et encaissé
+        directement sur le compte Stripe de l&apos;opérateur. Linktrip n&apos;a jamais accès aux
+        données bancaires du participant.
       </p>
 
       <h3 id="livraison">Livraison</h3>
@@ -65,17 +74,29 @@ export default function CgvPage() {
         l&apos;opérateur. Le taux de commission applicable est TODO(françois) : confirmer le
         taux affiché publiquement (20 % par défaut selon la configuration actuelle de la
         plateforme) — il est rappelé à l&apos;opérateur dans son espace de réglages avant toute
-        vente.
+        vente. La commission est calculée sur le prix de vente TTC payé par le participant.
+      </p>
+
+      <h3 id="frais-paiement">Frais de paiement</h3>
+      <p>
+        Les frais de traitement des paiements facturés par Stripe sont à la charge de
+        l&apos;opérateur. Ils sont prélevés par Stripe sur chaque paiement, en plus de la
+        commission Linktrip, selon la tarification de Stripe en vigueur.
       </p>
 
       <h3 id="reversement">Reversement des fonds</h3>
       <p>
-        Les paiements des participants sont collectés par Stripe pour le compte de
+        Les paiements des participants sont encaissés directement sur le compte Stripe de
         l&apos;opérateur (Stripe Connect), qui doit à ce titre créer et maintenir à jour un
-        compte Stripe Connect valide. La part revenant à l&apos;opérateur (prix de vente moins
-        commission Linktrip) est reversée automatiquement par Stripe selon le calendrier de
-        versement propre à son compte Stripe. Linktrip n&apos;intervient pas dans la conservation
-        des fonds.
+        compte valide. Au moment de chaque paiement, Stripe prélève la commission Linktrip et
+        ses propres frais ; le solde reste sur le compte de l&apos;opérateur et part vers sa
+        banque selon le calendrier de versement qu&apos;il y a réglé. Les fonds ne transitent
+        jamais par Linktrip.
+      </p>
+      <p>
+        L&apos;opérateur étant le vendeur, les remboursements et les contestations de paiement
+        (chargebacks) sont imputés sur son compte Stripe. En cas de remboursement total,
+        TODO(françois) : préciser si la commission Linktrip est restituée à l&apos;opérateur.
       </p>
 
       <h3 id="responsabilite-operateur">Responsabilité de l&apos;opérateur</h3>

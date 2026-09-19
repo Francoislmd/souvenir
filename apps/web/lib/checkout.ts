@@ -11,7 +11,7 @@ export class CheckoutError extends Error {
 export async function createOrUpdatePaymentIntent(params: {
   participantId: string;
   photoIds: string[];
-}): Promise<{ clientSecret: string; amountCents: number }> {
+}): Promise<{ clientSecret: string; amountCents: number; stripeAccountId: string }> {
   const participant = await prisma.participant.findUnique({
     where: { id: params.participantId },
     include: { sortie: { include: { operator: true } }, order: true },
@@ -30,6 +30,7 @@ export async function createOrUpdatePaymentIntent(params: {
 
   const operator = participant.sortie.operator;
   if (!operator.stripeOnboarded || !operator.stripeAccountId) throw new CheckoutError("stripe_not_ready");
+  const stripeAccountId = operator.stripeAccountId;
 
   const purchasablePhotos = await prisma.photo.findMany({
     where: participant.slotId
@@ -66,31 +67,46 @@ export async function createOrUpdatePaymentIntent(params: {
     create: { participantId: participant.id, photoIds: selected, amountCents, feeCents, status: "pending" },
   });
 
+  // Charge directe : le paiement est créé SUR le compte Stripe de
+  // l'opérateur, qui est le vendeur (ses CGV, ses remboursements, les frais
+  // Stripe à sa charge). Linktrip ne perçoit que `application_fee_amount`.
+  // C'est ce qui garde le chiffre d'affaires de la micro-entreprise égal aux
+  // seules commissions : avec l'ancienne charge « destination », 100 % du
+  // prix des photos transitait par le compte plateforme et comptait comme
+  // encaissé par Linktrip (plafond de TVA atteint cinq fois plus vite).
+  // Toute lecture ou mise à jour de ce PaymentIntent doit donc passer le même
+  // `stripeAccount`, et le navigateur doit charger Stripe.js sur ce compte.
+  const onAccount = { stripeAccount: stripeAccountId };
+
   if (order.stripePi) {
     try {
-      const updated = await stripe.paymentIntents.update(order.stripePi, {
-        amount: amountCents,
-        application_fee_amount: feeCents,
-      });
+      const updated = await stripe.paymentIntents.update(
+        order.stripePi,
+        { amount: amountCents, application_fee_amount: feeCents },
+        onAccount,
+      );
       if (updated.client_secret) {
-        return { clientSecret: updated.client_secret, amountCents };
+        return { clientSecret: updated.client_secret, amountCents, stripeAccountId };
       }
     } catch {
-      // PaymentIntent existant non modifiable (déjà confirmé…) — on en recrée un.
+      // PaymentIntent existant non modifiable (déjà confirmé, ou créé sur un
+      // autre compte : ancienne plateforme, charge destination) — on en recrée un.
     }
   }
 
-  const intent = await stripe.paymentIntents.create({
-    amount: amountCents,
-    currency: "eur",
-    application_fee_amount: feeCents,
-    transfer_data: { destination: operator.stripeAccountId },
-    automatic_payment_methods: { enabled: true },
-    metadata: { participantId: participant.id },
-  });
+  const intent = await stripe.paymentIntents.create(
+    {
+      amount: amountCents,
+      currency: "eur",
+      application_fee_amount: feeCents,
+      automatic_payment_methods: { enabled: true },
+      metadata: { participantId: participant.id, operatorId: operator.id },
+    },
+    onAccount,
+  );
 
   await prisma.order.update({ where: { id: order.id }, data: { stripePi: intent.id } });
 
   if (!intent.client_secret) throw new Error("Stripe did not return a client secret");
-  return { clientSecret: intent.client_secret, amountCents };
+  return { clientSecret: intent.client_secret, amountCents, stripeAccountId };
 }

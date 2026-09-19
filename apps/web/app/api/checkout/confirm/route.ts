@@ -13,12 +13,17 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Validation failed" }, { status: 400 });
     }
 
-    const order = await prisma.order.findUnique({ where: { participantId: parsed.data.participantId } });
-    if (!order?.stripePi) {
+    const order = await prisma.order.findUnique({
+      where: { participantId: parsed.data.participantId },
+      include: { participant: { select: { sortie: { select: { operator: { select: { stripeAccountId: true } } } } } } },
+    });
+    const stripeAccount = order?.participant.sortie.operator.stripeAccountId;
+    if (!order?.stripePi || !stripeAccount) {
       return Response.json({ ok: false }, { status: 200 });
     }
 
-    const intent = await stripe.paymentIntents.retrieve(order.stripePi);
+    // Charge directe : le PaymentIntent est sur le compte de l'opérateur.
+    const intent = await stripe.paymentIntents.retrieve(order.stripePi, {}, { stripeAccount });
     if (intent.status === "succeeded") {
       await fulfillPaymentIntent(intent);
     }

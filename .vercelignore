@@ -18,6 +18,7 @@ build/
 # env : les variables de production vivent dans Vercel
 .env
 .env.local
+.env.local.*
 .env.*.local
 *avant-migration-r2
 

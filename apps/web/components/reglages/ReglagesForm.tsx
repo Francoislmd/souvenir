@@ -322,7 +322,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                 <span className={styles.rgUnit}>€</span>
               </div>
               <span className={styles.rgHint}>
-                Vous touchez {net(pricePhoto)} € — Linktrip prend {operator.feePercent} %.
+                Vous touchez {net(pricePhoto)} € avant les frais Stripe. Linktrip prend {operator.feePercent} %.
               </span>
             </div>
 

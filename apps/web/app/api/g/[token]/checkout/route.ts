@@ -34,14 +34,14 @@ export async function POST(request: Request, { params }: { params: { token: stri
       return Response.json({ error: "not_found" }, { status: 404 });
     }
 
-    const { clientSecret, amountCents } = await createOrUpdatePaymentIntent({
+    const { clientSecret, amountCents, stripeAccountId } = await createOrUpdatePaymentIntent({
       participantId: participant.id,
       photoIds: parsed.data.photoIds,
     });
 
     await track("checkout_started", { operatorId: participant.sortie.operatorId, participantId: participant.id });
 
-    return Response.json({ clientSecret, amountCents }, { status: 200 });
+    return Response.json({ clientSecret, amountCents, stripeAccountId }, { status: 200 });
   } catch (error) {
     if (error instanceof CheckoutError) {
       const status = error.code === "not_found" ? 404 : 409;

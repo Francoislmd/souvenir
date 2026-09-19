@@ -56,7 +56,7 @@ export function BoutiqueGallery({
 }) {
   const router = useRouter();
   const [photos, setPhotos] = useState(initialPhotos);
-  const [checkout, setCheckout] = useState<{ clientSecret: string; amountCents: number; label: string; photoIds: string[] } | null>(null);
+  const [checkout, setCheckout] = useState<{ clientSecret: string; stripeAccountId: string; amountCents: number; label: string; photoIds: string[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // L'archive se fabrique photo par photo côté serveur : entre le clic et le
@@ -116,9 +116,10 @@ export function BoutiqueGallery({
         setError(data.error === "stripe_not_ready" ? "Les paiements ne sont pas encore activés." : "Le paiement n'est pas disponible pour le moment.");
         return;
       }
-      const data = (await res.json()) as { clientSecret: string; amountCents: number };
+      const data = (await res.json()) as { clientSecret: string; stripeAccountId: string; amountCents: number };
       setCheckout({
         clientSecret: data.clientSecret,
+        stripeAccountId: data.stripeAccountId,
         amountCents: data.amountCents,
         label: photoIds.length >= photos.length ? allLabel(photos.length) : `${photoIds.length} photo${photoIds.length > 1 ? "s" : ""}`,
         photoIds,
@@ -282,6 +283,7 @@ export function BoutiqueGallery({
       {checkout ? (
         <PaymentSheet
           clientSecret={checkout.clientSecret}
+          stripeAccountId={checkout.stripeAccountId}
           amountCents={checkout.amountCents}
           label={checkout.label}
           onSuccess={onPaymentSuccess}

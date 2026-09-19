@@ -190,10 +190,10 @@ Tout se passe **en ligne, dans la requête Vercel**, il n'y a aucun processus de
 
 ## 5. Paiements — Stripe Connect
 
-- Connect **Express**, split par `application_fee_amount` + `transfer_data.destination` (pas de `on_behalf_of`) — voir `lib/checkout.ts`.
+- Connect **Express** en 🔒 **charge directe** (depuis le 19/09/2026) : le PaymentIntent est créé sur le compte de l'opérateur (`{ stripeAccount }`), Linktrip ne perçoit que `application_fee_amount`, les frais Stripe sont à la charge de l'opérateur — voir `lib/checkout.ts`. Raison : en micro-entreprise, le CA déclaré est ce qui est encaissé ; en charge « destination », 100 % du prix des photos comptait comme CA de Linktrip. Ne jamais revenir à `transfer_data`. Toute lecture/mise à jour d'un PaymentIntent passe `{ stripeAccount }`, et le navigateur charge Stripe.js avec `stripeAccount` (`lib/stripe-client.ts`, `getStripe`).
 - `Order.status` est un `String` libre (pas d'enum Prisma) : `pending | succeeded | failed | refunded | disputed`. Les vérifications d'accès galerie sont en égalité stricte (`=== "succeeded"`, `lib/gallery.ts`) — tout autre statut re-verrouille automatiquement l'accès au prochain chargement, sans code de révocation séparé.
 - Idempotence par relecture d'état DB avant écriture (pas de table d'event-id Stripe) — voir `lib/order-fulfillment.ts` et `lib/order-refunds.ts`.
-- Webhook (`api/webhooks/stripe/route.ts`) géré : `payment_intent.succeeded/payment_failed`, `charge.refunded` (total et partiel — pas de politique de remboursement partiel côté produit, tout remboursement verrouille la galerie), `charge.dispute.created/closed`, `account.updated`.
+- Webhook (`api/webhooks/stripe/route.ts`) — une URL, deux endpoints Stripe (plateforme + « comptes connectés »), deux secrets essayés tour à tour. Géré : `payment_intent.succeeded/payment_failed`, `charge.refunded` (total et partiel — pas de politique de remboursement partiel côté produit, tout remboursement verrouille la galerie), `charge.dispute.created/closed`, `account.updated`.
 
 ---
 
@@ -221,4 +221,4 @@ Points notables :
 - `CRON_SECRET` (min. 20 caractères) protège les deux crons Vercel.
 - `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` / `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` sont **optionnelles**, hors du schéma zod — l'app tourne sans.
 - `RESEND_FROM_EMAIL` est requise, sans repli sur un domaine Resend partagé (mauvais pour la délivrabilité).
-- `STRIPE_CONNECT_WEBHOOK_SECRET` traîne parfois dans des `.env.local` existants mais n'est référencée nulle part dans le code actuel (`account.updated` est traité dans le webhook principal via `STRIPE_WEBHOOK_SECRET`) — probablement un reliquat, à confirmer avant de le retirer pour de bon.
+- `STRIPE_CONNECT_WEBHOOK_SECRET` est **requise** : c'est le secret de l'endpoint « comptes connectés », par lequel arrivent en charge directe les paiements, remboursements, litiges et `account.updated`.

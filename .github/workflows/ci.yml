@@ -20,6 +20,7 @@ jobs:
       STRIPE_SECRET_KEY: "sk_test_ci"
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_ci"
       STRIPE_WEBHOOK_SECRET: "whsec_ci"
+      STRIPE_CONNECT_WEBHOOK_SECRET: "whsec_connect_ci"
       # Le SDK Twilio valide le format du SID au chargement du module (doit
       # commencer par "AC") — une valeur factice mais mal formée fait
       # planter le build, pas seulement les appels réseau (jamais atteints ici).

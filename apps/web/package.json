@@ -12,7 +12,8 @@
     "test:email": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/send-test-email.ts",
     "purge:storage": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/purge-storage.ts",
     "watermarks:regenerate": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/regenerate-watermarks.ts",
-    "setup:storage": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/setup-storage.ts"
+    "setup:storage": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/setup-storage.ts",
+    "stripe:reset-accounts": "TSX_TSCONFIG_PATH=./tsconfig.scripts.json tsx scripts/reset-stripe-accounts.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.0.2",
