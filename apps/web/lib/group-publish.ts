@@ -170,6 +170,14 @@ export async function backfillGroupPreviews(photos: { id: string; originalKey: s
   return new Map(updates.map((u) => [u.id, u.key]));
 }
 
+/** Ce que l'écran de l'opérateur suit pendant la publication : rien de
+ *  simulé, chaque photo est annoncée au moment où son aperçu est posé. */
+export interface PublishProgress {
+  onStart?: (total: number) => void;
+  onPhoto?: (photoId: string, done: number, total: number) => void;
+  onSorting?: () => void;
+}
+
 /**
  * Publie une sortie GROUPE : lit l'EXIF de chaque original, génère son
  * aperçu filigrané, regroupe les photos par créneau (lib/cluster.ts), crée
@@ -178,7 +186,7 @@ export async function backfillGroupPreviews(photos: { id: string; originalKey: s
  * et publie le lien. Tourne en ligne dans la requête (même modèle que
  * lib/photo-processing.ts — voir CLAUDE.md §2 : pas de worker séparé).
  */
-export async function publishGroupSortie(sortieId: string): Promise<void> {
+export async function publishGroupSortie(sortieId: string, progress: PublishProgress = {}): Promise<void> {
   const sortie = await prisma.sortie.findUniqueOrThrow({
     where: { id: sortieId },
     include: {
@@ -188,9 +196,16 @@ export async function publishGroupSortie(sortieId: string): Promise<void> {
   });
   if (sortie.mode !== "GROUPE") throw new Error("publishGroupSortie: sortie is not in GROUPE mode");
 
-  const preparedRaw = await mapWithConcurrency(sortie.photos, PREPARE_CONCURRENCY, (photo) =>
-    preparePhoto(photo.id, photo.originalKey, sortie.operator.name),
-  );
+  const total = sortie.photos.length;
+  let done = 0;
+  progress.onStart?.(total);
+  const preparedRaw = await mapWithConcurrency(sortie.photos, PREPARE_CONCURRENCY, async (photo) => {
+    const prepared = await preparePhoto(photo.id, photo.originalKey, sortie.operator.name);
+    done += 1;
+    progress.onPhoto?.(photo.id, done, total);
+    return prepared;
+  });
+  progress.onSorting?.();
   // L'EXIF n'est fiable que si elle tombe le même jour (heure de Paris) que
   // la date renseignée par l'opérateur pour la sortie — sinon on l'ignore
   // plutôt que de lui faire confiance aveuglément. Cas vus en pratique :

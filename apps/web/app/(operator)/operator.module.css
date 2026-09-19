@@ -961,8 +961,8 @@ a.sRow:hover .sTh {
   color: var(--ink-4);
 }
 
-/* L'écran de publication remplace la grille de photos : une fois confirmée,
-   il n'y a plus rien à regarder ni à annuler, juste à attendre la fin. */
+/* Confirmation de publication et inscription Stripe : une colonne centrée
+   qui prend la place de la grille le temps de décider. */
 .sdPublishing {
   display: flex;
   flex-direction: column;
@@ -972,18 +972,6 @@ a.sRow:hover .sTh {
   padding: 90px 24px;
   text-align: center;
 }
-.sdPublishingSpinner {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 3px solid var(--line);
-  border-top-color: var(--brand);
-  animation: spin 0.7s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .sdPublishingSpinner {
-    animation: none;
-  }}
 .sdPublishingText {
   margin: 0;
   font-size: 1.05rem;
@@ -1004,6 +992,207 @@ a.sRow:hover .sTh {
 }
 .sdConfirmActions > button {
   flex: 1;
+}
+
+/* ---------- publication en cours (19/09/2026) ----------
+   Plus d'écran vide avec une moulinette : une carte d'avancement au-dessus
+   de la grille, qui reste visible, grisée, et dont chaque photo s'allume
+   quand son aperçu filigrané est posé. Tout ce qui est affiché vient du
+   serveur (flux NDJSON de /publish et /send). */
+.sdPub {
+  margin-bottom: 18px;
+  padding: 20px 22px 18px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--sh-2), inset 0 0 0 1px var(--line);
+  animation: sdRise 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sdPubHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.sdPubMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sdPubT {
+  font-size: 1.12rem;
+  font-weight: 500;
+  letter-spacing: -0.022em;
+}
+.sdPubH {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink-4);
+}
+.sdPubPct {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.sdPubBar {
+  display: block;
+  height: 6px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: var(--fill-2);
+  overflow: hidden;
+}
+.sdPubFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff6b2c, #f2500f);
+  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sdSteps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.sdStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: var(--ink-4);
+  transition: color 0.2s;
+}
+.sdStepIc {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1.5px var(--line-3);
+}
+.sdStepIc svg {
+  width: 11px;
+  height: 11px;
+}
+.sdStepL {
+  flex: 1;
+  min-width: 0;
+}
+.sdStepN {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+.sdStepOn {
+  color: var(--ink);
+}
+.sdStepOn .sdStepIc {
+  box-shadow: none;
+}
+.sdStepDone {
+  color: var(--ink-3);
+}
+.sdStepDone .sdStepIc {
+  box-shadow: none;
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+.sdPubCancel {
+  margin-top: 14px;
+}
+.sdPubFail {
+  box-shadow: none;
+  background: #fdf1ef;
+}
+.sdPubFail .sdPubHead {
+  align-items: center;
+}
+
+/* La grille pendant la publication : grisée, et chaque photo prête revient
+   à pleine intensité avec une coche. */
+.sdGridPub .sdPh {
+  cursor: default;
+  opacity: 0.4;
+  filter: saturate(0.3);
+  transition: opacity 0.45s, filter 0.45s, box-shadow 0.14s;
+}
+.sdGridPub .sdPhReady {
+  opacity: 1;
+  filter: none;
+}
+.sdPhOk {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--ok);
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.sdPhOk svg {
+  width: 11px;
+  height: 11px;
+}
+.sdPhReady .sdPhOk {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Squelette de l'écran d'une sortie (loading.tsx) : la forme de la page,
+   vignettes comprises, pendant que le serveur la rend. */
+.sk {
+  display: block;
+  background: var(--line-2);
+  animation: skBreathe 1.4s ease-in-out infinite;
+}
+.skTitle {
+  width: min(320px, 55%);
+  height: 26px;
+  border-radius: 8px;
+}
+.skMeta {
+  width: 220px;
+  height: 14px;
+  margin: 6px 0 26px;
+  border-radius: 6px;
+}
+@keyframes skBreathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* La galerie arrive en ligne sous les yeux de l'opérateur. */
+.sdRise {
+  animation: sdRise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sdRise .sdOk {
+  animation: sdPop 0.5s 0.25s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+}
+@keyframes sdRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes sdPop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
 }
 
 /* Publier sans paiements actifs : l'inscription Stripe prend la place de la
@@ -2020,6 +2209,19 @@ a.sdClient:hover {
   .sdGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
+  }
+  .sdPub {
+    padding: 16px 16px 15px;
+  }
+  .sdPubT {
+    font-size: 1.02rem;
+  }
+  .sdPubPct {
+    font-size: 1.25rem;
+  }
+  .sdPubFail .sdPubHead {
+    flex-direction: column;
+    align-items: stretch;
   }
   .sdBar {
     bottom: 88px;

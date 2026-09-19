@@ -51,7 +51,13 @@ function CheckIcon() {
  * intensité tout de suite, sans état « en cours » visible), l'envoi tourne en
  * tâche de fond dans tout l'espace pro sans jauge ni pourcentage à l'écran, et
  * publier avant la fin du transfert programme l'envoi au lieu de faire
- * patienter — le chargement reste invisible pour l'opérateur du début à la fin.
+ * patienter.
+ *
+ * La publication, elle, se regarde : la grille reste à l'écran, grisée, et
+ * chaque photo s'allume quand son aperçu filigrané est posé, sous une carte
+ * qui dit l'étape en cours et le pourcentage — tout vient du serveur, rien
+ * n'est simulé. L'écran ne revient jamais sur la grille « non publiée » : il
+ * passe directement de l'avancement à la galerie en ligne.
  */
 export function SortieScreen({
   sortieId,
@@ -87,7 +93,9 @@ export function SortieScreen({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
-  const [publishing, setPublishing] = useState(false);
+  // La galerie vient d'être mise en ligne sous les yeux de l'opérateur : la
+  // carte du lien arrive avec un mouvement, pas d'un coup.
+  const [justPublished, setJustPublished] = useState(false);
   const [paymentsReady, setPaymentsReady] = useState(initialPaymentsReady);
   const [paymentsPending, setPaymentsPending] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -102,10 +110,12 @@ export function SortieScreen({
   // Pendant une attribution ou une suppression, la relecture de fond ne doit
   // pas réécrire par-dessus l'affichage optimiste.
   const mutating = useRef(false);
-  // Distingue l'écran de publication qui attend la fin d'un envoi programmé
-  // (rien à faire nous-mêmes, on regarde `scheduled`/`state.working` retomber)
-  // de celui qui attend sa propre requête (déjà géré dans confirmPublish).
-  const awaitingSchedule = useRef(false);
+
+  // La publication appartient à la file (UploadQueueProvider) et non à cet
+  // écran : elle survit à un changement de page, et cet écran la retrouve.
+  const run = upload.publicationFor(sortieId);
+  const inFlight = !published && (Boolean(scheduled) || (run !== null && run.phase !== "failed"));
+  const failedRun = !published && run?.phase === "failed" ? run : null;
 
   const fetchPhotos = useCallback(async (): Promise<ScreenPhoto[]> => {
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
@@ -230,61 +240,30 @@ export function SortieScreen({
     setDeleteSortieState("idle");
   }
 
-  // Confirmée, la publication ne se discute plus : les photos disparaissent au
-  // profit d'un simple écran d'attente, jusqu'à ce que `published` arrive (ou,
-  // pour un envoi programmé qui échoue, jusqu'à ce que l'effet ci-dessous le
-  // détecte et rende la main).
-  async function confirmPublish(): Promise<void> {
-    if (publishing) return;
+  // Confirmée, la publication ne se discute plus : la grille se grise et
+  // l'avancement prend le dessus jusqu'à ce que `published` arrive. Si le
+  // transfert n'est pas fini, elle est programmée et part toute seule.
+  function confirmPublish(): void {
     setConfirmPublishOpen(false);
-    setPublishing(true);
-    awaitingSchedule.current = false;
-    // Publier n'attend pas la fin du transfert : la demande est enregistrée et
-    // part toute seule dès que la dernière photo est prête.
-    if (state.working) {
-      awaitingSchedule.current = true;
-      upload.schedulePublish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now(), emails });
-      toast(isGroup ? "Publication programmée" : "Envoi programmé");
-      return;
-    }
-    const endpoint = isGroup ? `/api/sorties/${sortieId}/publish` : `/api/sorties/${sortieId}/send`;
-    const res = await fetch(endpoint, { method: "POST" });
-    if (res.ok) {
-      // Publier et envoyer sont un seul geste : le lien part dans la foulée,
-      // sans écran ni bouton de plus.
-      const invited = emails.length;
-      const sent = await sendInvites();
-      toast(
-        isGroup
-          ? invited === 0
-            ? "Galerie publiée"
-            : sent
-              ? `Galerie publiée, lien envoyé à ${clientCount(invited)}`
-              : "Galerie publiée, mais l'envoi du lien a échoué"
-          : `Envoyé à ${clients.length} client${clients.length > 1 ? "s" : ""}`,
-      );
-      router.refresh();
-    } else {
-      toast("La publication a échoué — réessayez.");
-      setPublishing(false);
-    }
+    upload.dismissPublication(sortieId);
+    upload.publish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now(), emails });
   }
 
+  // La page relue dit « publiée » : l'avancement laisse la place à la galerie
+  // en ligne, sans repasser par la grille.
+  const { dismissPublication } = upload;
   useEffect(() => {
-    if (!publishing) return;
-    if (published) {
-      awaitingSchedule.current = false;
-      setPublishing(false);
+    if (!published || !run) return;
+    if (run.phase === "failed") {
+      dismissPublication(sortieId);
       return;
     }
-    // L'envoi programmé s'est résolu (fini ou en échec) sans que `published`
-    // soit arrivé : dans le cas d'un échec, rien d'autre ne fera jamais
-    // retomber l'écran d'attente.
-    if (awaitingSchedule.current && !state.working && !scheduled) {
-      awaitingSchedule.current = false;
-      setPublishing(false);
-    }
-  }, [publishing, published, state.working, scheduled]);
+    setJustPublished(true);
+    // Les adresses sont parties avec la publication : le champ repart vide.
+    setEmails([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (run.phase === "done") dismissPublication(sortieId);
+  }, [published, run, dismissPublication, sortieId]);
 
   // Une liste d'adresses saisies à la main par l'opérateur, pas des
   // Participant : en mode GROUPE personne n'est identifié avant l'achat.
@@ -339,17 +318,20 @@ export function SortieScreen({
 
   const photoCount = photos.length + fresh.length;
   const empty = photoCount === 0;
-  const selectable = !published;
+  const selectable = !published && !inFlight;
+  // GROUPE : chaque photo s'allume quand son aperçu filigrané est posé.
+  const lighting = inFlight && isGroup;
+  const ready = new Set(run?.readyIds ?? []);
 
   const grid = (
-    <div className={`${styles.sdGrid} ${selected.size > 0 ? styles.sdGridPicking : ""}`}>
+    <div className={`${styles.sdGrid} ${selected.size > 0 ? styles.sdGridPicking : ""} ${lighting ? styles.sdGridPub : ""}`}>
       {photos.map((p) => {
         const src = p.thumbUrl ?? localByPhoto.get(p.id) ?? null;
         const on = selected.has(p.id);
         return (
           <span
             key={p.id}
-            className={`${styles.sdPh} ${on ? styles.sdPhOn : ""}`}
+            className={`${styles.sdPh} ${on ? styles.sdPhOn : ""} ${lighting && ready.has(p.id) ? styles.sdPhReady : ""}`}
             role={selectable ? "button" : undefined}
             tabIndex={selectable ? 0 : undefined}
             aria-pressed={selectable ? on : undefined}
@@ -372,6 +354,10 @@ export function SortieScreen({
               <span className={`${styles.sdPhCheck} ${on ? styles.sdPhCheckOn : ""}`}>
                 <CheckIcon />
               </span>
+            ) : lighting ? (
+              <span className={styles.sdPhOk} aria-hidden="true">
+                <CheckIcon />
+              </span>
             ) : null}
           </span>
         );
@@ -388,15 +374,134 @@ export function SortieScreen({
     </div>
   );
 
-  const publishingScreen = (
-    <div className={styles.sdPublishing}>
-      <span className={styles.sdPublishingSpinner} aria-hidden="true" />
-      <p className={styles.sdPublishingText}>{isGroup ? "Publication de la galerie…" : "Envoi des photos à vos clients…"}</p>
-      <p className={styles.sdPublishingHint}>
-        {state.working ? "Les dernières photos finissent d'arriver, la suite continue toute seule." : "Quelques secondes."}
-      </p>
+  // ---- Avancement de la publication ----
+  // Transfert : en octets (comme la barre basse), plus les photos finies —
+  // une photo arrivée doit encore être traitée avant de compter.
+  const liveItems = state.items.filter((i) => i.status !== "failed");
+  const readyCount = liveItems.filter((i) => i.status === "done").length;
+  const bytesTotal = liveItems.reduce((sum, i) => sum + i.file.size, 0);
+  const bytesSent = liveItems.reduce((sum, i) => {
+    if (i.status === "queued") return sum;
+    if (i.status === "uploading") return sum + (i.file.size * Math.min(100, Math.max(0, i.progress))) / 100;
+    return sum + i.file.size;
+  }, 0);
+  const transferFrac =
+    liveItems.length === 0 ? 1 : 0.8 * (bytesTotal > 0 ? bytesSent / bytesTotal : 1) + 0.2 * (readyCount / liveItems.length);
+  const transferring = Boolean(scheduled) && !run;
+  const showTransfer = transferring || Boolean(run?.afterTransfer);
+  const phase = run?.phase ?? null;
+  const invites = run ? run.invites : isGroup ? (scheduled?.emails?.length ?? 0) : 0;
+
+  type StepState = "todo" | "on" | "done";
+  const steps: { key: string; label: string; state: StepState; count?: string; weight: number; frac: number }[] = [];
+  if (showTransfer) {
+    steps.push({
+      key: "transfer",
+      label: "Transfert des dernières photos",
+      state: run ? "done" : "on",
+      count: run ? undefined : `${readyCount} / ${liveItems.length}`,
+      weight: 3,
+      frac: run ? 1 : transferFrac,
+    });
+  }
+  if (isGroup) {
+    const preparing = phase === "running";
+    const prepared = phase === "sorting" || phase === "inviting" || phase === "done";
+    steps.push({
+      key: "watermark",
+      label: "Aperçus filigranés",
+      state: prepared ? "done" : preparing ? "on" : "todo",
+      count: preparing && run && run.total > 0 ? `${run.done} / ${run.total}` : undefined,
+      weight: 5,
+      frac: prepared ? 1 : preparing && run && run.total > 0 ? run.done / run.total : 0,
+    });
+    steps.push({
+      key: "sorting",
+      label: "Classement par créneau horaire",
+      state: phase === "inviting" || phase === "done" ? "done" : phase === "sorting" ? "on" : "todo",
+      weight: 1,
+      frac: phase === "inviting" || phase === "done" ? 1 : phase === "sorting" ? 0.4 : 0,
+    });
+    if (invites > 0) {
+      steps.push({
+        key: "invite",
+        label: `Envoi du lien à ${clientCount(invites)}`,
+        state: phase === "done" ? "done" : phase === "inviting" ? "on" : "todo",
+        weight: 0.6,
+        frac: phase === "done" ? 1 : phase === "inviting" ? 0.5 : 0,
+      });
+    }
+  } else {
+    const sending = phase === "running";
+    steps.push({
+      key: "send",
+      label: `Envoi des galeries à vos ${clients.length} client${clients.length > 1 ? "s" : ""}`,
+      state: phase === "done" ? "done" : sending ? "on" : "todo",
+      count: sending && run && run.total > 0 ? `${run.done} / ${run.total}` : undefined,
+      weight: 4,
+      frac: phase === "done" ? 1 : sending && run && run.total > 0 ? run.done / run.total : 0,
+    });
+  }
+  const weightSum = steps.reduce((sum, st) => sum + st.weight, 0);
+  const pct =
+    phase === "done" ? 100 : Math.max(3, Math.min(99, Math.round((100 * steps.reduce((sum, st) => sum + st.weight * st.frac, 0)) / (weightSum || 1))));
+
+  const progressCard = (
+    <div className={styles.sdPub}>
+      <div className={styles.sdPubHead}>
+        <span className={styles.sdPubMain}>
+          <span className={styles.sdPubT} role="status" aria-live="polite">
+            {phase === "done" ? "Mise en ligne…" : isGroup ? "Publication de la galerie" : "Envoi des photos à vos clients"}
+          </span>
+          <span className={styles.sdPubH}>
+            {transferring
+              ? "Vos photos finissent d'arriver, la suite partira toute seule. Gardez cet onglet ouvert."
+              : "Vous pouvez aller ailleurs dans votre espace : tout continue tant que l'onglet reste ouvert."}
+          </span>
+        </span>
+        <span className={styles.sdPubPct}>{pct}&nbsp;%</span>
+      </div>
+      <span className={styles.sdPubBar}>
+        <span className={styles.sdPubFill} style={{ width: `${pct}%` }} />
+      </span>
+      <ol className={styles.sdSteps}>
+        {steps.map((st) => (
+          <li key={st.key} className={`${styles.sdStep} ${st.state === "done" ? styles.sdStepDone : st.state === "on" ? styles.sdStepOn : ""}`}>
+            <span className={styles.sdStepIc}>
+              {st.state === "done" ? <CheckIcon /> : st.state === "on" ? <Spinner size={14} label={st.label} /> : null}
+            </span>
+            <span className={styles.sdStepL}>{st.label}</span>
+            {st.count ? <span className={styles.sdStepN}>{st.count}</span> : null}
+          </li>
+        ))}
+      </ol>
+      {transferring ? (
+        <button type="button" className={`${styles.sdChip} ${styles.sdChipGhost} ${styles.sdPubCancel}`} onClick={() => upload.cancelPublish(sortieId)}>
+          Annuler la publication
+        </button>
+      ) : null}
     </div>
   );
+
+  // Un échec se dit sur place, avec de quoi relancer — pas seulement dans un
+  // toast qui disparaît.
+  const failedCard = failedRun ? (
+    <div className={`${styles.sdPub} ${styles.sdPubFail}`} role="alert">
+      <div className={styles.sdPubHead}>
+        <span className={styles.sdPubMain}>
+          <span className={styles.sdPubT}>{isGroup ? "La publication n'a pas abouti." : "L'envoi n'a pas abouti."}</span>
+          <span className={styles.sdPubH}>
+            {isGroup
+              ? "Rien n'a été mis en ligne, vos photos sont intactes."
+              : "Les clients déjà servis ne recevront pas l'e-mail une seconde fois."}
+          </span>
+        </span>
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => confirmPublish()}>
+          Réessayer
+        </button>
+      </div>
+    </div>
+  ) : null;
 
   // Remplace la grille à la place d'une popup : valider une publication n'a
   // rien à voir avec regarder ses photos, la grille n'a donc plus sa place à
@@ -649,7 +754,7 @@ export function SortieScreen({
         <p className={styles.sdMeta}>{meta}</p>
 
         {published && shareUrl ? (
-          <div className={styles.sdShare}>
+          <div className={`${styles.sdShare} ${justPublished ? styles.sdRise : ""}`}>
             <span className={styles.sdQr}>
               {qrDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -667,7 +772,7 @@ export function SortieScreen({
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                En ligne · {photoCount} photo{photoCount > 1 ? "s" : ""}
+                {justPublished ? "Galerie en ligne" : "En ligne"} · {photoCount} photo{photoCount > 1 ? "s" : ""}
               </span>
               <span className={styles.sdShareT}>Le lien de la galerie</span>
               <span className={styles.sdShareH}>Montrez le code au retour, ou envoyez le lien.</span>
@@ -685,7 +790,23 @@ export function SortieScreen({
 
         {published ? null : (
           <>
-            {empty ? null : publishing ? publishingScreen : confirmPublishOpen ? (paymentsReady ? confirmScreen : paymentsScreen) : grid}
+            {empty ? null : inFlight ? (
+              <>
+                {progressCard}
+                {grid}
+              </>
+            ) : confirmPublishOpen ? (
+              paymentsReady ? (
+                confirmScreen
+              ) : (
+                paymentsScreen
+              )
+            ) : (
+              <>
+                {failedCard}
+                {grid}
+              </>
+            )}
 
             <PhotoDropZone sortieId={sortieId} controlRef={dropZone} variant={empty ? "zone" : "silent"} />
 
@@ -695,13 +816,13 @@ export function SortieScreen({
           </>
         )}
 
-        {publishing || confirmPublishOpen ? null : published ? (
+        {inFlight || confirmPublishOpen ? null : published ? (
           clients.length > 0 ? (
             <>
               <p className={styles.sDay} style={{ marginTop: 34 }}>
                 Vos clients
               </p>
-              <div className={styles.sdClients}>{clients.map((c) => clientRow(c))}</div>
+              <div className={`${styles.sdClients} ${justPublished && !isGroup ? styles.sdRise : ""}`}>{clients.map((c) => clientRow(c))}</div>
             </>
           ) : null
         ) : !isGroup ? (
@@ -712,9 +833,9 @@ export function SortieScreen({
           emailsSection
         )}
 
-        {publishing || confirmPublishOpen ? null : bar}
+        {inFlight || confirmPublishOpen ? null : bar}
 
-        {publishing || confirmPublishOpen ? null : (
+        {inFlight || confirmPublishOpen ? null : (
           <div className={styles.sDangerZone}>
             {deleteSortieState === "idle" ? (
               <button type="button" className={styles.sDangerLink} onClick={() => setDeleteSortieState("confirm")}>

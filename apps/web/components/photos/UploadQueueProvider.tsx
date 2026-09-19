@@ -13,6 +13,7 @@ import {
   updateUploadItem,
   type UploadItem,
 } from "@/lib/idb";
+import { runPublication } from "@/lib/publish-client";
 
 /**
  * La file d'envoi des photos, montée une fois pour tout l'espace opérateur.
@@ -89,6 +90,28 @@ export interface SortieUpload {
   items: UploadItem[];
 }
 
+/**
+ * Une publication en cours, racontée étape par étape par le serveur (flux
+ * NDJSON, lib/progress-stream.ts). Elle vit ici et non dans l'écran de la
+ * sortie : l'opérateur peut aller ailleurs dans son espace, elle continue, et
+ * l'écran qui revient la retrouve où elle en est.
+ */
+export interface PublicationRun {
+  isGroup: boolean;
+  /** running : photos en préparation (GROUPE) ou e-mails en cours (INDIVIDUEL).
+   *  done : le serveur a fini, on attend que la page relue dise « publiée ». */
+  phase: "running" | "sorting" | "inviting" | "done" | "failed";
+  /** Photos préparées (GROUPE) ou clients servis (INDIVIDUEL). */
+  done: number;
+  total: number;
+  /** Les photos dont l'aperçu filigrané est posé : elles s'allument dans la grille. */
+  readyIds: string[];
+  /** Adresses collées auxquelles le lien part dans la foulée (GROUPE). */
+  invites: number;
+  /** La publication a d'abord attendu la fin du transfert. */
+  afterTransfer: boolean;
+}
+
 const EMPTY: SortieUpload = {
   failed: 0,
   working: false,
@@ -103,9 +126,14 @@ interface UploadQueueValue {
   retryFailed: (sortieId: string) => void;
   /** Après une suppression de photos : elles ne doivent plus peser dans la file. */
   forgetPhotos: (sortieId: string, photoIds: string[]) => Promise<void>;
-  schedulePublish: (intent: PublishIntent) => void;
+  /** Publier : tout de suite si la sortie n'a plus rien en vol, sinon dès
+   *  que la dernière photo est prête. */
+  publish: (intent: PublishIntent) => void;
   cancelPublish: (sortieId: string) => void;
   scheduledFor: (sortieId: string) => PublishIntent | null;
+  publicationFor: (sortieId: string) => PublicationRun | null;
+  /** L'écran a pris acte de l'issue (galerie affichée en ligne, ou échec relancé). */
+  dismissPublication: (sortieId: string) => void;
 }
 
 const UploadQueueContext = createContext<UploadQueueValue | null>(null);
@@ -123,6 +151,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
 
   const [items, setItems] = useState<UploadItem[]>([]);
   const [intents, setIntents] = useState<Record<string, PublishIntent>>({});
+  const [runs, setRuns] = useState<Record<string, PublicationRun>>({});
+  /** Verrou synchrone : deux déclencheurs (fin de file + montage) ne doivent
+   *  jamais lancer deux fois la même publication. */
+  const running = useRef<Set<string>>(new Set());
 
   /** L'avancement d'un envoi en cours vit en mémoire, jamais dans IndexedDB :
    *  y écrire à chaque paquet d'octets réécrivait le fichier entier (plusieurs
@@ -354,6 +386,91 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
 
   pumpRef.current = () => void pump();
 
+  const patchRun = useCallback((sortieId: string, patch: Partial<PublicationRun> | ((run: PublicationRun) => Partial<PublicationRun>)) => {
+    setRuns((prev) => {
+      const run = prev[sortieId];
+      if (!run) return prev;
+      return { ...prev, [sortieId]: { ...run, ...(typeof patch === "function" ? patch(run) : patch) } };
+    });
+  }, []);
+
+  /** Une publication, du premier appel au dernier e-mail. L'état « en cours »
+   *  est posé AVANT que l'intention programmée ne soit effacée : sinon l'écran
+   *  voyait un instant « plus rien de programmé, rien en cours » et
+   *  réaffichait la grille non publiée pendant toute la préparation. */
+  const startRun = useCallback(
+    async (intent: PublishIntent, afterTransfer: boolean) => {
+      const { sortieId } = intent;
+      if (running.current.has(sortieId)) return;
+      running.current.add(sortieId);
+      const invites = intent.isGroup ? (intent.emails?.length ?? 0) : 0;
+      setRuns((prev) => ({
+        ...prev,
+        [sortieId]: { isGroup: intent.isGroup, phase: "running", done: 0, total: 0, readyIds: [], invites, afterTransfer },
+      }));
+      const stored = readIntents();
+      if (stored[sortieId]) {
+        delete stored[sortieId];
+        writeIntents(stored);
+        setIntents(stored);
+      }
+
+      let ok = false;
+      try {
+        ok = await runPublication(sortieId, intent.isGroup, (event) => {
+          if (event.t === "start") patchRun(sortieId, { total: event.total });
+          else if (event.t === "photo")
+            patchRun(sortieId, (run) => ({ done: event.done, total: event.total, readyIds: [...run.readyIds, event.id] }));
+          else if (event.t === "client") patchRun(sortieId, { done: event.done, total: event.total });
+          else if (event.t === "sorting") patchRun(sortieId, { phase: "sorting" });
+        });
+      } catch {
+        ok = false;
+      }
+
+      if (!ok) {
+        running.current.delete(sortieId);
+        patchRun(sortieId, { phase: "failed" });
+        toast(intent.isGroup ? "La publication n'a pas abouti — réessayez." : "L'envoi n'a pas abouti — réessayez.");
+        return;
+      }
+
+      // Le lien part dans la foulée, aux adresses collées avant la publication.
+      // Un envoi raté ne remet pas la publication en question : elle a eu
+      // lieu, et l'écran de la sortie permet de renvoyer.
+      let invitedOk = true;
+      if (invites > 0) {
+        patchRun(sortieId, { phase: "inviting" });
+        try {
+          const sent = await fetch(`/api/sorties/${sortieId}/invite`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emails: intent.emails }),
+          });
+          invitedOk = sent.ok;
+        } catch {
+          invitedOk = false;
+        }
+      }
+
+      running.current.delete(sortieId);
+      patchRun(sortieId, { phase: "done" });
+      toast(
+        intent.isGroup
+          ? invites === 0
+            ? "Galerie publiée"
+            : invitedOk
+              ? `Galerie publiée, lien envoyé à ${invites} client${invites > 1 ? "s" : ""}`
+              : "Galerie publiée, mais l'envoi du lien a échoué"
+          : `Envoyé à ${intent.clients} client${intent.clients > 1 ? "s" : ""}`,
+      );
+      // L'écran garde l'avancement affiché jusqu'à ce que la page relue
+      // dise « publiée » : il n'y a plus de retour sur la grille entre-temps.
+      router.refresh();
+    },
+    [patchRun, router, toast],
+  );
+
   /** Les publications demandées avant la fin du transfert partent ici, dès que
    *  la sortie n'a plus rien en vol. */
   const runScheduledPublishes = useCallback(async () => {
@@ -366,52 +483,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       if (!intent) continue;
       const remaining = all.filter((item) => item.sortieId === sortieId && item.status !== "done" && item.status !== "failed");
       if (remaining.length > 0) continue;
-
-      // Retirée avant l'appel : en cas d'échec on le dit et on laisse la main,
-      // plutôt que de rejouer une publication en boucle.
-      const next = readIntents();
-      delete next[sortieId];
-      writeIntents(next);
-      setIntents(next);
-
-      try {
-        const endpoint = intent.isGroup ? `/api/sorties/${sortieId}/publish` : `/api/sorties/${sortieId}/send`;
-        const res = await fetch(endpoint, { method: "POST" });
-        if (!res.ok) throw new Error("publish failed");
-
-        // Le lien part dans la foulée, aux adresses collées avant le départ.
-        // Un envoi raté ne remet pas la publication en question : elle a eu
-        // lieu, et l'écran de la sortie permet de renvoyer.
-        const invited = intent.emails?.length ?? 0;
-        let invitedOk = true;
-        if (intent.isGroup && invited > 0) {
-          try {
-            const sent = await fetch(`/api/sorties/${sortieId}/invite`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ emails: intent.emails }),
-            });
-            invitedOk = sent.ok;
-          } catch {
-            invitedOk = false;
-          }
-        }
-
-        toast(
-          intent.isGroup
-            ? invited === 0
-              ? "Galerie publiée"
-              : invitedOk
-                ? `Galerie publiée, lien envoyé à ${invited} client${invited > 1 ? "s" : ""}`
-                : "Galerie publiée, mais l'envoi du lien a échoué"
-            : `Envoyé à ${intent.clients} client${intent.clients > 1 ? "s" : ""}`,
-        );
-      } catch {
-        toast("La publication programmée n'est pas partie — relancez-la depuis la sortie.");
-      }
-      router.refresh();
+      void startRun(intent, true);
     }
-  }, [router, toast]);
+  }, [startRun]);
 
   publishRef.current = () => void runScheduledPublishes();
 
@@ -451,7 +525,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   // On prévient plutôt que de laisser un opérateur partir en croyant ses photos
   // parties (elles repartiront à sa prochaine visite, mais il doit le savoir).
   useEffect(() => {
-    const inFlight = items.some((i) => i.status === "queued" || i.status === "uploading" || i.status === "sent");
+    // Une publication en cours compte aussi : fermer l'onglet coupe le récit
+    // de l'avancement, et l'invitation par e-mail qui la suit ne partirait pas.
+    const inFlight =
+      items.some((i) => i.status === "queued" || i.status === "uploading" || i.status === "sent") ||
+      Object.values(runs).some((r) => r.phase === "running" || r.phase === "sorting" || r.phase === "inviting");
     if (!inFlight) return;
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -459,7 +537,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [items]);
+  }, [items, runs]);
 
   const enqueue = useCallback(
     async (sortieId: string, files: File[]): Promise<void> => {
@@ -530,10 +608,29 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
-  const schedulePublish = useCallback((intent: PublishIntent) => {
-    const next = { ...readIntents(), [intent.sortieId]: intent };
-    writeIntents(next);
-    setIntents(next);
+  const publish = useCallback(
+    (intent: PublishIntent) => {
+      const busy = items.some((i) => i.sortieId === intent.sortieId && i.status !== "done" && i.status !== "failed");
+      if (!busy) {
+        void startRun(intent, false);
+        return;
+      }
+      const next = { ...readIntents(), [intent.sortieId]: intent };
+      writeIntents(next);
+      setIntents(next);
+    },
+    [items, startRun],
+  );
+
+  const publicationFor = useCallback((sortieId: string) => runs[sortieId] ?? null, [runs]);
+
+  const dismissPublication = useCallback((sortieId: string) => {
+    setRuns((prev) => {
+      if (!prev[sortieId]) return prev;
+      const next = { ...prev };
+      delete next[sortieId];
+      return next;
+    });
   }, []);
 
   const cancelPublish = useCallback((sortieId: string) => {
@@ -563,8 +660,8 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const previewUrl = useCallback((itemId: string) => previews.current.get(itemId), []);
 
   const value = useMemo<UploadQueueValue>(
-    () => ({ forSortie, previewUrl, enqueue, retryFailed, forgetPhotos, schedulePublish, cancelPublish, scheduledFor }),
-    [forSortie, previewUrl, enqueue, retryFailed, forgetPhotos, schedulePublish, cancelPublish, scheduledFor],
+    () => ({ forSortie, previewUrl, enqueue, retryFailed, forgetPhotos, publish, cancelPublish, scheduledFor, publicationFor, dismissPublication }),
+    [forSortie, previewUrl, enqueue, retryFailed, forgetPhotos, publish, cancelPublish, scheduledFor, publicationFor, dismissPublication],
   );
 
   // L'indicateur ne s'affiche que loin de l'écran concerné : sur la sortie
@@ -578,10 +675,28 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     return sum + i.file.size;
   }, 0);
   const pct = elsewhereBytes > 0 ? Math.round((elsewhereSent / elsewhereBytes) * 100) : 0;
+  // Une publication lancée puis laissée derrière soi se voit aussi ailleurs.
+  const publishingElsewhere = Object.entries(runs).find(
+    ([sortieId, run]) => (run.phase === "running" || run.phase === "sorting" || run.phase === "inviting") && !pathname.endsWith(`/sorties/${sortieId}`),
+  )?.[1];
 
   return (
     <UploadQueueContext.Provider value={value}>
       {children}
+      {remaining === 0 && publishingElsewhere ? (
+        <div className={styles.upPill} role="status" aria-live="polite">
+          <span className={styles.upPillText}>
+            <b>{publishingElsewhere.isGroup ? "Publication" : "Envoi"}</b> en cours
+            {publishingElsewhere.total > 0 ? ` · ${publishingElsewhere.done} / ${publishingElsewhere.total}` : "…"}
+          </span>
+          <span className={styles.upPillBar}>
+            <span
+              className={styles.upPillFill}
+              style={{ width: `${publishingElsewhere.total > 0 ? Math.max(4, Math.round((publishingElsewhere.done / publishingElsewhere.total) * 100)) : 4}%` }}
+            />
+          </span>
+        </div>
+      ) : null}
       {remaining > 0 ? (
         <div className={styles.upPill} role="status" aria-live="polite">
           <span className={styles.upPillText}>

@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
 import { sendParticipantGallery } from "@/lib/send-gallery";
+import { progressResponse, wantsStream } from "@/lib/progress-stream";
 
-export async function POST(_request: Request, { params }: { params: { sortieId: string } }): Promise<Response> {
+// Un e-mail par client, envoyés l'un après l'autre.
+export const maxDuration = 60;
+
+export async function POST(request: Request, { params }: { params: { sortieId: string } }): Promise<Response> {
   try {
     const dbUser = await getOperatorUser();
     if (!dbUser) {
@@ -24,12 +28,25 @@ export async function POST(_request: Request, { params }: { params: { sortieId: 
     // `Operator.freeCount`, `Photo.isFreeSample` et lib/assign.ts sont partis avec.
 
     const results: { participantId: string; sent: boolean }[] = [];
-    for (const participant of sortie.participants) {
-      const result = await sendParticipantGallery(participant, sortie, dbUser.operator);
-      results.push({ participantId: participant.id, sent: result.sent });
+    const sendAll = async (onClient?: (done: number, total: number) => void): Promise<void> => {
+      const total = sortie.participants.length;
+      for (const participant of sortie.participants) {
+        const result = await sendParticipantGallery(participant, sortie, dbUser.operator);
+        results.push({ participantId: participant.id, sent: result.sent });
+        onClient?.(results.length, total);
+      }
+      await prisma.sortie.update({ where: { id: sortie.id }, data: { status: "SENT" } });
+    };
+
+    // Un e-mail par client, l'un après l'autre : l'écran les compte.
+    if (wantsStream(request)) {
+      return progressResponse("API /api/sorties/[sortieId]/send", async (emit) => {
+        emit({ t: "start", total: sortie.participants.length });
+        await sendAll((done, total) => emit({ t: "client", done, total }));
+      });
     }
 
-    await prisma.sortie.update({ where: { id: sortie.id }, data: { status: "SENT" } });
+    await sendAll();
 
     return Response.json({ results }, { status: 200 });
   } catch (error) {
