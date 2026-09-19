@@ -92,15 +92,17 @@
 
 /* ---------- shell : 3 entrées ---------- */
 .side {
-  width: 262px;
-  flex: 0 0 262px;
+  width: 252px;
+  flex: 0 0 252px;
   background: var(--side-bg);
+  border-right: 1px solid var(--line);
   position: sticky;
   top: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 26px 16px 20px;
+  gap: 2px;
+  padding: 24px 14px 14px;
 }
 
 .side .sp {
@@ -325,16 +327,16 @@
 .sBrand {
   display: flex;
   align-items: center;
-  padding: 5px 10px 30px;
+  padding: 4px 12px 28px;
 }
 .sNav {
   display: flex;
   align-items: center;
-  gap: 13px;
-  height: 46px;
-  padding: 0 14px;
-  border-radius: 14px;
-  font-size: 1rem;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 11px;
+  font-size: 0.95rem;
   font-weight: 500;
   color: var(--ink-2);
   transition: background 0.15s, color 0.15s;
@@ -357,19 +359,108 @@
 .sNavOn svg {
   color: var(--brand);
 }
+/* Intitulé de la seconde section du menu, et l'entrée « Ma boutique »,
+   qui sort de l'espace pro : la flèche le dit avant le clic. */
+.sNavHead {
+  margin: 22px 12px 6px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--ink-4);
+}
+.sNavExt {
+  margin-left: auto;
+  color: var(--ink-4);
+  transition: transform 0.15s;
+}
+.sNav:hover .sNavExt {
+  transform: translate(1px, -1px);
+}
+.sAcctWrap {
+  position: relative;
+}
 .sAcct {
   display: flex;
   align-items: center;
   gap: 11px;
-  height: 56px;
-  padding: 0 12px;
-  border-radius: 14px;
+  height: 58px;
+  padding: 0 10px;
+  border-radius: 13px;
   transition: background 0.15s;
   width: 100%;
   text-align: left;
 }
-.sAcct:hover {
+.sAcct:hover,
+.sAcctOpen {
   background: #f1eff2;
+}
+.sAcctChev {
+  flex: 0 0 auto;
+  color: var(--ink-4);
+}
+/* Le menu du compte se pose au-dessus de lui : c'est la seule surface
+   flottante de la colonne, d'où son ombre, qui dit qu'elle recouvre. */
+.sAcctMenu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 60;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 14px 32px -14px rgba(22, 19, 32, 0.22);
+}
+.sAcctHead {
+  margin: 0;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.sAcctHead b,
+.sAcctHead span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sAcctHead b {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.sAcctHead span {
+  font-size: 0.8rem;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+.sBrandMark {
+  display: none;
+}
+.sBrandFull,
+.sBrandMark {
+  line-height: 0;
+}
+.sAcctItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  text-align: left;
+  transition: background 0.14s, color 0.14s;
+}
+.sAcctItem svg {
+  color: var(--ink-4);
+}
+.sAcctItem:hover {
+  background: var(--fill);
+  color: var(--ink);
 }
 .sAv {
   width: 34px;
@@ -382,6 +473,13 @@
   place-items: center;
   font-size: 0.8rem;
   font-weight: 500;
+  overflow: hidden;
+}
+.sAv img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .sWho {
   min-width: 0;
@@ -389,7 +487,7 @@
 }
 .sWho b {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.86rem;
   font-weight: 500;
   letter-spacing: -0.012em;
   overflow: hidden;
@@ -400,6 +498,9 @@
   display: block;
   font-size: 0.8rem;
   color: var(--ink-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---------- en-tête de vue ---------- */
@@ -570,10 +671,15 @@ h2.sDayH {
   letter-spacing: -0.01em;
   color: var(--ink);
 }
-h2.sDayH em {
+h2.sDayH em,
+h2.sDayH small {
   font-style: normal;
   font-weight: 400;
   color: var(--ink-4);
+}
+h2.sDayH small {
+  margin-left: auto;
+  font-size: 0.85rem;
 }
 .sGroup {
   margin-bottom: 38px;
@@ -653,8 +759,50 @@ a.sRow:hover .sTh {
    ligne d'infos. Un « 0 € » gris répété sur chaque ligne ne disait rien. */
 .sValState {
   flex: 0 0 auto;
-  font-size: 0.94rem;
-  color: var(--ink-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.sValState::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+/* La colonne de droite a une largeur fixe : les bandes de vignettes
+   s'alignent d'une ligne à l'autre, qu'elle porte un montant, un état ou un
+   bouton. */
+.sRow > .sVal,
+.sRow > .sValState,
+.sRow > .sRowAct {
+  min-width: 176px;
+}
+/* Les quatre premières photos de la sortie, puis le compte du reste. */
+.sStrip {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.sStrip img,
+.sStrip span {
+  width: 58px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  background: var(--fill);
+}
+.sStrip span {
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }
 .sMore {
   display: block;
@@ -2390,5 +2538,57 @@ a.sdClient:hover {
     left: 14px;
     right: 14px;
     bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Liste avec aperçus : sous 1100 px la bande de vignettes volerait sa place
+   au titre. Sur téléphone, la colonne de gauche devient la barre d'onglets :
+   ni la section « Vos clients » ni le compte n'y tiennent (le compte est dans
+   le menu du bandeau de marque). */
+@media (max-width: 1100px) {
+  .sStrip {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .sNavHead,
+  .side .sNavAside,
+  .sAcctWrap {
+    display: none;
+  }
+  .side {
+    border-right: 0;
+  }
+  .sRow > .sVal,
+  .sRow > .sValState,
+  .sRow > .sRowAct {
+    min-width: 0;
+  }
+}
+
+/* Colonne réduite (1120 px et moins) : le symbole seul, un filet à la place
+   de l'intitulé de section, et le menu du compte qui déborde à droite de la
+   colonne plutôt que d'y être tassé. */
+@media (max-width: 1120px) and (min-width: 761px) {
+  .sBrandFull {
+    display: none;
+  }
+  .sBrandMark {
+    display: block;
+  }
+  .sNavHead {
+    width: 34px;
+    height: 1px;
+    margin: 14px auto;
+    background: var(--line);
+    font-size: 0;
+  }
+  .sNavExt,
+  .sAcctChev {
+    display: none;
+  }
+  .sAcctMenu {
+    right: auto;
+    width: 230px;
   }
 }

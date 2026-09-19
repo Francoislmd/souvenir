@@ -15,6 +15,8 @@ export interface SortieRow {
   guide: string | null;
   participantCount: number;
   photoCount: number;
+  /** Jusqu'à quatre vignettes, dans l'ordre de prise de vue. */
+  thumbs: string[];
   paidCount: number;
   isGroup: boolean;
   revenueCents: number;
@@ -139,6 +141,9 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
           <h2 className={styles.sDayH}>
             {group.title}
             {group.detail ? <em>{group.detail}</em> : null}
+            <small>
+              {group.items.length} sortie{group.items.length > 1 ? "s" : ""}
+            </small>
           </h2>
           <div className={styles.sGroup}>
             {group.items.map((row) => {
@@ -190,6 +195,15 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                     <b>{title}</b>
                     <span>{meta(row, d)}</span>
                   </span>
+                  {row.thumbs.length > 0 ? (
+                    <span className={styles.sStrip} aria-hidden="true">
+                      {row.thumbs.map((src) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={src} src={src} alt="" loading="lazy" decoding="async" />
+                      ))}
+                      {row.photoCount > row.thumbs.length ? <span>+{row.photoCount - row.thumbs.length}</span> : null}
+                    </span>
+                  ) : null}
                   {action ? (
                     <span className={styles.sRowAct}>
                       <span className={styles.sdChip}>

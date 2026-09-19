@@ -5,6 +5,7 @@ import { MobileTopBar } from "@/components/operator/MobileTopBar";
 import { StripeSyncBanner } from "@/components/operator/StripeSyncBanner";
 import { ToastProvider } from "@/components/operator/ToastProvider";
 import { UploadQueueProvider } from "@/components/photos/UploadQueueProvider";
+import { storeHomeUrl } from "@/lib/store";
 import styles from "./operator.module.css";
 
 // viewport-fit=cover pour ce segment uniquement : la barre de navigation
@@ -26,7 +27,12 @@ export default async function OperatorLayout({ children }: { children: React.Rea
           dans son espace, le transfert continue. */}
       <UploadQueueProvider>
         <div className={styles.app} id="app-root">
-          <Sidebar operatorName={operator.name} />
+          <Sidebar
+            operatorName={operator.name}
+            email={dbUser.email}
+            logoUrl={operator.logoUrl}
+            storeHref={storeHomeUrl(operator.slug)}
+          />
 
           <div className={styles.main}>
             {!operator.stripeOnboarded ? <StripeSyncBanner /> : null}

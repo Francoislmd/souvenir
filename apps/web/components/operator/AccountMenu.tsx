@@ -1,0 +1,93 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import styles from "@/app/(operator)/operator.module.css";
+
+/**
+ * Le compte, en bas de la colonne de gauche.
+ *
+ * Une version antérieure déconnectait au clic sur son propre nom ; la
+ * suivante n'était plus cliquable du tout, si bien qu'on ne pouvait plus se
+ * déconnecter sur ordinateur. Le clic ouvre désormais un menu, et la
+ * déconnexion y est une ligne explicite.
+ */
+export function AccountMenu({
+  operatorName,
+  email,
+  logoUrl,
+}: {
+  operatorName: string;
+  email: string;
+  logoUrl: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={styles.sAcctWrap} ref={ref}>
+      {open ? (
+        <div className={styles.sAcctMenu} role="menu">
+          <p className={styles.sAcctHead}>
+            <b>{operatorName}</b>
+            <span>{email}</span>
+          </p>
+          <a href="mailto:hello@linktrip.co" className={styles.sAcctItem} role="menuitem">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="3" />
+              <path d="m4 7 8 6 8-6" />
+            </svg>
+            Nous écrire
+          </a>
+          <form action="/auth/signout" method="post">
+            <button type="submit" className={styles.sAcctItem} role="menuitem">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+                <path d="M10 16l-4-4 4-4M6 12h10" />
+              </svg>
+              Se déconnecter
+            </button>
+          </form>
+        </div>
+      ) : null}
+
+      <button
+        type="button"
+        className={`${styles.sAcct} ${open ? styles.sAcctOpen : ""}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className={styles.sAv}>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" />
+          ) : (
+            operatorName.slice(0, 2).toUpperCase()
+          )}
+        </span>
+        <span className={styles.sWho}>
+          <b>{operatorName}</b>
+        </span>
+        <svg className={styles.sAcctChev} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m8 10 4-4 4 4M8 14l4 4 4-4" />
+        </svg>
+      </button>
+    </div>
+  );
+}

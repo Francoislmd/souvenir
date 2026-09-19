@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOperatorUser } from "@/lib/current-user";
 import { publicationStatus } from "@/lib/sorties";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
+import { getPreviewUrl } from "@/lib/storage";
 import { SortiesHeader } from "@/components/sorties/SortiesHeader";
 import { SortiesList, type SortieRow } from "@/components/sorties/SortiesList";
 import styles from "@/app/(operator)/operator.module.css";
@@ -15,7 +16,17 @@ export default async function SortiesPage() {
       where: { operatorId: dbUser.operatorId },
       orderBy: { startsAt: "desc" },
       take: 100,
-      include: { _count: { select: { participants: true, photos: true } } },
+      include: {
+        _count: { select: { participants: true, photos: true } },
+        // Quatre vignettes par ligne suffisent à reconnaître une sortie ; le
+        // reste est dit par le compteur « +32 ».
+        photos: {
+          where: { status: "READY", hiddenAt: null, thumbKey: { not: null } },
+          orderBy: [{ takenAt: "asc" }, { createdAt: "asc" }],
+          take: 4,
+          select: { thumbKey: true },
+        },
+      },
     }),
     // Le mode de réception est une habitude de métier : on reprend celui de
     // la dernière sortie créée plutôt que de reposer la question à chaque
@@ -56,6 +67,7 @@ export default async function SortiesPage() {
       guide: s.guide,
       participantCount: s._count.participants,
       photoCount: s._count.photos,
+      thumbs: s.photos.flatMap((p) => (p.thumbKey ? [getPreviewUrl(p.thumbKey)] : [])),
       paidCount: paid.count,
       isGroup: s.mode === "GROUPE",
       revenueCents: paid.cents,
