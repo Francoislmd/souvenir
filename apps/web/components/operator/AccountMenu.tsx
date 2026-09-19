@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
+import { MailIcon, LogoutIcon } from "@/components/operator/nav-icons";
 
 /**
  * Le compte, en bas de la colonne de gauche.
@@ -48,18 +49,12 @@ export function AccountMenu({
             <span>{email}</span>
           </p>
           <a href="mailto:hello@linktrip.co" className={styles.sAcctItem} role="menuitem">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="3" />
-              <path d="m4 7 8 6 8-6" />
-            </svg>
+            <MailIcon size={18} />
             Nous écrire
           </a>
           <form action="/auth/signout" method="post">
             <button type="submit" className={styles.sAcctItem} role="menuitem">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
-                <path d="M10 16l-4-4 4-4M6 12h10" />
-              </svg>
+              <LogoutIcon size={18} />
               Se déconnecter
             </button>
           </form>

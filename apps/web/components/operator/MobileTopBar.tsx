@@ -100,7 +100,7 @@ export function MobileTopBar({ operatorName, email }: { operatorName: string; em
                   className={`${styles.sMenuNav} ${active ? styles.sMenuNavOn : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon />
+                  <Icon active={active} />
                   {item.label}
                 </Link>
               );
