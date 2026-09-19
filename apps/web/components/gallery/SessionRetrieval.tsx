@@ -140,9 +140,6 @@ export function SessionRetrieval({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={slot.coverUrl} alt="" loading="lazy" />
                       ) : null}
-                      <span className={styles.go} aria-hidden="true">
-                        <ChevronIcon direction="right" size={15} stroke={2.4} />
-                      </span>
                     </span>
                   </button>
                 ))}

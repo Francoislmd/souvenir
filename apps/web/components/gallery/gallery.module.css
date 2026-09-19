@@ -928,11 +928,12 @@ a.topIn:focus-visible {
 }
 .note {
   max-width: 920px;
-  margin: 26px auto 0;
+  margin: 30px auto 0;
   padding: 0 20px;
-  font-size: 0.9rem;
-  color: var(--ink-4);
+  font-size: 0.86rem;
+  color: var(--ink-3);
   line-height: 1.55;
+  text-wrap: pretty;
 }
 .empty {
   max-width: 920px;

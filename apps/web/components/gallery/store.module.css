@@ -410,7 +410,7 @@
 }
 .sec {
   margin: 0;
-  padding: 22px 0 4px;
+  padding: 26px 0 2px;
   font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
   font-size: 1.02rem;
   font-weight: 700;
@@ -483,20 +483,24 @@
 }
 .rowH {
   display: block;
-  margin-top: 5px;
   font-family: var(--font-bricolage), var(--font-space-grotesk), system-ui, sans-serif;
   font-size: 1.16rem;
   font-weight: 700;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
+/* Le compte est une précision, pas un second titre : il ne doit pas
+   concurrencer l'heure, que le client cherche des yeux. */
+.state + .rowH {
+  margin-top: 5px;
+}
 .rowN {
   display: block;
-  margin-top: 2px;
-  font-size: 0.97rem;
-  font-weight: 500;
-  letter-spacing: -0.018em;
-  color: var(--ink-2);
+  margin-top: 3px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .rowG {
@@ -505,32 +509,33 @@
   font-size: 0.88rem;
   color: var(--ink-4);
 }
+/* La vignette suffit à dire que la ligne s'ouvre : plus de pastille
+   « > » posée dessus. Elle écrivait sur la photo, par-dessus le cadenas
+   du filigrane, et donnait trois points bleus à l'écran. */
 .rowThumb {
   position: relative;
   flex: 0 0 auto;
-  width: 94px;
-  height: 94px;
-  border-radius: 15px;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--line-2);
+}
+/* Un filet posé au-dessus de l'image, pour qu'une photo claire (ciel,
+   neige, écume) ne se dissolve pas dans le fond blanc. */
+.rowThumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.08);
+  pointer-events: none;
 }
 .rowThumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-}
-.go {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--op);
-  color: #fff;
 }
 
 /* Le pied de l'accueil. Le lien de retrait, lui, vit sur les écrans qui
