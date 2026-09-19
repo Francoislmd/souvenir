@@ -2,6 +2,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
+import exifr from "exifr";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { supabaseAdmin } from "./supabase";
@@ -19,9 +20,15 @@ const LOCK_BADGE_SVG = `
 
 /**
  * Génère miniature, aperçu filigrané (corner-logo, offert/acheté), aperçu
- * flouté pour l'email et — mode INDIVIDUEL — aperçu filigrané tuilé verrouillé
- * (même mécanisme qu'en mode GROUPE) pour une photo, puis passe son statut à
- * READY (ou FAILED en cas d'échec).
+ * flouté pour l'email et aperçu filigrané tuilé verrouillé (galerie de groupe
+ * comme galerie individuelle), lit l'heure de prise de vue, puis passe son
+ * statut à READY (ou FAILED en cas d'échec).
+ *
+ * Depuis le 19/09/2026, tout ce dont la publication d'une sortie GROUPE a
+ * besoin est prêt ici : elle n'a plus qu'à ranger les photos par créneau
+ * (lib/group-publish.ts). Avant, elle retéléchargeait et redécodait chaque
+ * original — une à deux minutes d'attente sur une sortie de 40 photos, pour
+ * un travail que le dépôt venait de faire en tâche de fond.
  *
  * Tourne dans le même déploiement Vercel que le reste de l'app (déclenché
  * par /api/photos/[photoId]/complete juste après l'upload) — pas de worker
@@ -44,6 +51,21 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const originalBuffer = Buffer.from(await original.arrayBuffer());
     const inputPath = join(dir, "input");
     await writeFile(inputPath, originalBuffer);
+
+    // L'aperçu de galerie part tout de suite, en parallèle des autres
+    // dérivés : c'est le plus long (flou + trame de noms + mozjpeg).
+    // Un échec ici ne coûte pas la photo : sans aperçu, la publication le
+    // refera (lib/group-publish.ts), comme le rattrapage des galeries.
+    const groupPreviewPending = generateGroupPreview(originalBuffer, operator.name).catch((error: unknown) => {
+      console.error(`[photo-processing] ${photoId} group preview failed`, error);
+      return null;
+    });
+    // Heure de prise de vue, pour le rangement par créneau à la publication.
+    // Stockée brute : la publication écarte celles qui ne tombent pas le jour
+    // de la sortie (lib/group-publish.ts).
+    const exif = await exifr.parse(originalBuffer, ["DateTimeOriginal"]).catch(() => null);
+    const takenAtRaw: unknown = exif?.DateTimeOriginal;
+    const takenAt = takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime()) ? takenAtRaw : null;
 
     // Une seule décompression de l'original (24 Mpx sur un reflex récent) au
     // lieu de trois : miniature, aperçu filigrané et flou email dérivent tous
@@ -92,26 +114,27 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
       .jpeg({ quality: 66 })
       .toBuffer();
 
-    // Mode GROUPE : l'aperçu filigrané est (re)généré à la publication de la
-    // sortie (lib/group-publish.ts) — pas ici, ce serait un calcul perdu (visages
-    // détectés puis jamais servi tant que la sortie n'est pas publiée).
-    const groupPreviewBuffer = photo.sortie.mode === "INDIVIDUEL" ? await generateGroupPreview(originalBuffer, operator.name) : null;
+    // Les deux modes : en GROUPE, c'est l'aperçu que la boutique servira dès
+    // la publication, qui n'a donc plus à le calculer. cacheControl court :
+    // la clé peut être réécrite en place (même règle que lib/group-publish.ts).
+    const groupPreviewBuffer = await groupPreviewPending;
     const groupPreviewKey = groupPreviewBuffer ? `${photoId}/group-preview.jpg` : null;
 
     await Promise.all([
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
       supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
       groupPreviewKey && groupPreviewBuffer
-        ? supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg", upsert: true })
+        ? supabaseAdmin.storage
+            .from(PREVIEWS_BUCKET)
+            .upload(groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg", upsert: true, cacheControl: "60" })
         : Promise.resolve(),
     ]);
 
-    // groupPreviewKey omis (plutôt que mis à null) en mode GROUPE : un retry
-    // après publication ne doit pas effacer l'aperçu déjà généré par
-    // lib/group-publish.ts.
     await prisma.photo.update({
       where: { id: photoId },
-      data: { thumbKey, previewKey, blurEmailKey, status: "READY", ...(groupPreviewKey ? { groupPreviewKey } : {}) },
+      // groupPreviewKey omis (plutôt que mis à null) si son rendu a échoué :
+      // un retry ne doit pas effacer un aperçu déjà posé par la publication.
+      data: { thumbKey, previewKey, blurEmailKey, takenAt, status: "READY", ...(groupPreviewKey ? { groupPreviewKey } : {}) },
     });
 
     await track("photo_ready", { operatorId: operator.id, meta: { photoId } });

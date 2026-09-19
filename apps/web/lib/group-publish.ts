@@ -34,7 +34,10 @@ function isSameParisDay(a: Date, b: Date): boolean {
 // aperçus silencieusement manquants sur une grosse sortie, sans la moindre
 // erreur dans les logs — signe de contention plutôt que d'échec propre.
 // On plafonne donc le nombre de photos traitées en parallèle.
-const PREPARE_CONCURRENCY = 3;
+// 6 depuis le 19/09/2026 : la détection de visage (TF.js) qui justifiait 3 a
+// été retirée le 12/09, il ne reste que sharp + canvas. Et la publication ne
+// prépare plus que les photos dont le dépôt n'a pas déjà posé l'aperçu.
+const PREPARE_CONCURRENCY = 6;
 
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const results = new Array<R>(items.length);
@@ -196,15 +199,33 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
   });
   if (sortie.mode !== "GROUPE") throw new Error("publishGroupSortie: sortie is not in GROUPE mode");
 
+  // Depuis le 19/09/2026, le dépôt (lib/photo-processing.ts) pose l'aperçu
+  // filigrané et lit l'heure de prise de vue : une photo qui a son aperçu n'a
+  // plus rien à préparer, publier revient à la ranger. Seules les photos
+  // déposées avant ce changement, ou dont le rendu a échoué au dépôt, sont
+  // retéléchargées ici — et une republication ne refait que les nouvelles.
   const total = sortie.photos.length;
   let done = 0;
   progress.onStart?.(total);
-  const preparedRaw = await mapWithConcurrency(sortie.photos, PREPARE_CONCURRENCY, async (photo) => {
+  const alreadyReady = sortie.photos.filter((photo) => photo.groupPreviewKey);
+  const toPrepare = sortie.photos.filter((photo) => !photo.groupPreviewKey);
+  for (const photo of alreadyReady) {
+    done += 1;
+    progress.onPhoto?.(photo.id, done, total);
+  }
+  const freshlyPrepared = await mapWithConcurrency(toPrepare, PREPARE_CONCURRENCY, async (photo) => {
     const prepared = await preparePhoto(photo.id, photo.originalKey, sortie.operator.name);
     done += 1;
     progress.onPhoto?.(photo.id, done, total);
     return prepared;
   });
+  const freshIds = new Set(toPrepare.map((photo) => photo.id));
+  // Dans l'ordre de dépôt, comme avant : la couverture d'un créneau sans
+  // heure de prise de vue est sa première photo.
+  const byId = new Map<string, PhotoPrep>(freshlyPrepared.map((p) => [p.id, p]));
+  const preparedRaw: PhotoPrep[] = sortie.photos.map(
+    (photo) => byId.get(photo.id) ?? { id: photo.id, takenAt: photo.takenAt, groupPreviewKey: photo.groupPreviewKey },
+  );
   progress.onSorting?.();
   // L'EXIF n'est fiable que si elle tombe le même jour (heure de Paris) que
   // la date renseignée par l'opérateur pour la sortie — sinon on l'ignore
@@ -247,10 +268,13 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
       }
     }
 
-    // takenAt et groupPreviewKey sont renseignés sur chaque photo, indépendamment du slot.
+    // takenAt et groupPreviewKey sont renseignés sur chaque photo préparée
+    // ici, indépendamment du slot. Celles déjà prêtes au dépôt ont les leurs
+    // en base : les réécrire coûterait un aller-retour par photo dans la
+    // transaction pour rien.
     await Promise.all(
       prepared
-        .filter((p) => p.takenAt || p.groupPreviewKey)
+        .filter((p) => freshIds.has(p.id) && (p.takenAt || p.groupPreviewKey))
         .map((p) => tx.photo.update({ where: { id: p.id }, data: { takenAt: p.takenAt, groupPreviewKey: p.groupPreviewKey } })),
     );
 

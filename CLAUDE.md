@@ -179,8 +179,8 @@ La traduction sous-domaine → chemin interne `/s/{slug}` se fait dans `middlewa
 
 Tout se passe **en ligne, dans la requête Vercel**, il n'y a aucun processus de fond.
 
-- **Une photo déposée** : `/api/photos/[photoId]/complete` → `lib/photo-processing.ts` (sharp) → miniature, aperçu, aperçu flouté pour l'email (`blurEmailKey`), et — mode INDIVIDUEL uniquement — l'aperçu filigrané (`groupPreviewKey`, `lib/group-watermark.ts`). `maxDuration = 60`.
-- **Une sortie GROUPE publiée** : `/api/sorties/[sortieId]/publish` → `lib/group-publish.ts` → lecture EXIF, aperçus filigranés, regroupement en `Slot`. `maxDuration = 120`.
+- **Une photo déposée** : `/api/photos/[photoId]/complete` → `lib/photo-processing.ts` (sharp) → miniature, aperçu, aperçu flouté pour l'email (`blurEmailKey`), l'aperçu filigrané (`groupPreviewKey`, `lib/group-watermark.ts`) dans les deux modes, et l'heure de prise de vue (`takenAt`, EXIF brute). `maxDuration = 60`.
+- **Une sortie GROUPE publiée** : `/api/sorties/[sortieId]/publish` → `lib/group-publish.ts` → regroupement en `Slot` à partir de ce que le dépôt a préparé ; seules les photos sans `groupPreviewKey` (déposées avant le 19/09/2026, ou rendu raté au dépôt) sont retéléchargées pour EXIF + aperçu, 6 en parallèle. L'avancement est renvoyé en flux NDJSON (`lib/progress-stream.ts`) et affiché par l'écran de la sortie. `maxDuration = 120`.
 - **Rattrapage** : un aperçu filigrané raté à la publication est régénéré à la demande par `backfillGroupPreviews`, appelé depuis `lib/gallery.ts` et `lib/gallery-group.ts`. **Au plus une tentative par photo et par tranche de 10 minutes** (`lib/preview-backfill.ts`) : ces deux routes sont sondées toutes les 4 s par la galerie, régénérer sans garde-fou revenait à relancer sharp + canvas toutes les 4 secondes, indéfiniment, sur une route publique.
 
 Écarts à connaître par rapport à la vision produit (§1) et au schéma :
