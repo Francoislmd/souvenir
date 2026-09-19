@@ -324,10 +324,14 @@
    .row, .kpi, .rows. Ne jamais redéfinir celles-là ici.
    ===================================================================== */
 
+/* Le logo à 36 px : en dessous, le cadre ne mesure que 14 px, le dessin
+   gardant 20 % de marge de chaque côté. Cette marge est compensée à gauche
+   (5 px au lieu de 12) pour que le bord du cadre tombe sur celui des icônes
+   du menu. */
 .sBrand {
   display: flex;
   align-items: center;
-  padding: 4px 12px 28px;
+  padding: 0 12px 22px 5px;
 }
 .sNav {
   display: flex;

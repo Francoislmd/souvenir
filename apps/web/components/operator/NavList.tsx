@@ -29,10 +29,10 @@ export function NavList({
         {/* Le logo complet, et le symbole seul pour la colonne réduite
             (1120 px et moins) où le nom ne tient pas. */}
         <span className={styles.sBrandFull}>
-          <Logo variant="lockup" height={24} title={null} />
+          <Logo variant="lockup" height={36} title={null} />
         </span>
         <span className={styles.sBrandMark}>
-          <Logo variant="symbol" height={26} title={null} />
+          <Logo variant="symbol" height={34} title={null} />
         </span>
       </Link>
 
