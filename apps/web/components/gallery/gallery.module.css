@@ -779,6 +779,22 @@ a.topIn:focus-visible {
   color: var(--ink-3);
   cursor: pointer;
 }
+/* Séparateur entre Apple Pay / Google Pay et le formulaire carte. */
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 14px;
+  font-size: 0.84rem;
+  color: var(--ink-4);
+}
+.or::before,
+.or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
 .fine {
   display: flex;
   align-items: center;

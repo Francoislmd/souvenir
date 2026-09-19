@@ -1,6 +1,7 @@
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
+import { ensurePaymentDomains } from "@/lib/payment-domains";
 
 // Synchronise stripeOnboarded depuis l'API Stripe, sans attendre le webhook.
 // Appelé depuis onExit du composant ConnectAccountOnboarding.
@@ -17,6 +18,10 @@ export async function POST(): Promise<Response> {
   // charges_enabled suffit — means Stripe will process payments.
   // payouts_enabled arrives later (after bank verification) but doesn't block payment collection.
   const stripeOnboarded = !!account.charges_enabled;
+
+  // Dès que le compte peut encaisser, ses domaines Apple Pay sont posés :
+  // le premier client verra le bouton sans attendre le premier paiement.
+  if (stripeOnboarded) await ensurePaymentDomains(operator.stripeAccountId);
 
   if (stripeOnboarded !== operator.stripeOnboarded) {
     await prisma.operator.update({

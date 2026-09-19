@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { stripe } from "./stripe";
 import { quote, applyReducedOffer, type PricingConfig } from "./pricing";
+import { ensurePaymentDomains } from "./payment-domains";
 
 export class CheckoutError extends Error {
   constructor(public code: "not_found" | "stripe_not_ready" | "already_paid") {
@@ -78,11 +79,20 @@ export async function createOrUpdatePaymentIntent(params: {
   // `stripeAccount`, et le navigateur doit charger Stripe.js sur ce compte.
   const onAccount = { stripeAccount: stripeAccountId };
 
+  // Apple Pay et Google Pay ne s'affichent que sur un domaine enregistré sur
+  // le compte de l'opérateur : on le vérifie avant de rendre le clientSecret.
+  await ensurePaymentDomains(stripeAccountId);
+
+  // Carte uniquement : Apple Pay et Google Pay passent par le type « card »
+  // (ce sont des portefeuilles de cartes). Pas de Link, PayPal, Klarna ni
+  // virement, quel que soit le réglage du compte Stripe de l'opérateur.
+  const paymentMethodTypes = ["card"];
+
   if (order.stripePi) {
     try {
       const updated = await stripe.paymentIntents.update(
         order.stripePi,
-        { amount: amountCents, application_fee_amount: feeCents },
+        { amount: amountCents, application_fee_amount: feeCents, payment_method_types: paymentMethodTypes },
         onAccount,
       );
       if (updated.client_secret) {
@@ -99,7 +109,7 @@ export async function createOrUpdatePaymentIntent(params: {
       amount: amountCents,
       currency: "eur",
       application_fee_amount: feeCents,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: paymentMethodTypes,
       metadata: { participantId: participant.id, operatorId: operator.id },
     },
     onAccount,

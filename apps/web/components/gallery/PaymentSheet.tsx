@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { Elements, ExpressCheckoutElement, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { formatEuros } from "@/lib/format";
 import styles from "@/components/gallery/gallery.module.css";
@@ -16,8 +16,12 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
   // Stripe monte ses champs dans une iframe : sur un téléphone en bord de
   // réseau, la feuille reste vide une bonne seconde avant qu'ils n'arrivent.
   const [ready, setReady] = useState(false);
+  // Apple Pay / Google Pay : « unknown » tant que Stripe n'a pas répondu,
+  // « none » quand l'appareil ne propose aucun des deux (le séparateur
+  // « ou par carte » n'a alors plus de raison d'être).
+  const [wallet, setWallet] = useState<"unknown" | "shown" | "none">("unknown");
 
-  async function submit(): Promise<void> {
+  async function pay(): Promise<void> {
     if (!stripe || !elements || loading) return;
     setLoading(true);
     setError(null);
@@ -51,15 +55,37 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
 
   return (
     <>
-      {/* Apple Pay et Google Pay arrivent en tête de l'accordéon quand
-          l'appareil les propose : sur un parking, mouillé, c'est la
-          différence entre payer et renoncer. */}
+      {/* Apple Pay d'abord, en grand : sur un parking, mouillé, un paiement
+          au Face ID est la différence entre payer et renoncer. Google Pay
+          prend la même place sur Android. Rien d'autre : ni Link, ni PayPal. */}
+      <div hidden={wallet === "none"}>
+        <ExpressCheckoutElement
+          options={{
+            paymentMethods: { applePay: "always", googlePay: "always", link: "never", paypal: "never", amazonPay: "never" },
+            paymentMethodOrder: ["apple_pay", "google_pay"],
+            buttonType: { applePay: "buy", googlePay: "buy" },
+            buttonTheme: { applePay: "black", googlePay: "black" },
+            buttonHeight: 52,
+            layout: { maxColumns: 1, maxRows: 2, overflow: "never" },
+          }}
+          onReady={(e) => {
+            const m = e.availablePaymentMethods;
+            setWallet(m && (m.applePay || m.googlePay) ? "shown" : "none");
+          }}
+          onConfirm={() => void pay()}
+        />
+        {wallet === "shown" ? <p className={styles.or}>ou par carte</p> : null}
+      </div>
+
       {/* Le champ reste monté et visible pour Stripe (masqué en display:none,
           il ne se mesure pas et ne signale jamais sa disponibilité) : on pose
           la moulinette par-dessus, et la place est réservée en attendant. */}
       <div style={{ position: "relative", minHeight: ready ? undefined : 140 }}>
         <div style={{ opacity: ready ? 1 : 0, pointerEvents: ready ? undefined : "none" }}>
-          <PaymentElement options={{ layout: "accordion" }} onReady={() => setReady(true)} />
+          <PaymentElement
+            options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { applePay: "never", googlePay: "never" } }}
+            onReady={() => setReady(true)}
+          />
         </div>
         {ready ? null : (
           <div style={{ position: "absolute", inset: 0 }}>
@@ -68,14 +94,14 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
         )}
       </div>
       {error ? <p className={styles.error} style={{ marginTop: 12 }}>{error}</p> : null}
-      <button type="button" onClick={submit} disabled={loading || !ready} className={styles.cta} style={{ marginTop: 16 }}>
+      <button type="button" onClick={() => void pay()} disabled={loading || !ready} className={styles.cta} style={{ marginTop: 16 }}>
         {loading ? (
           <>
             <Spinner size={17} tone="light" />
             Paiement en cours…
           </>
         ) : (
-          `Payer ${formatEuros(amountCents)}`
+          `Payer ${formatEuros(amountCents)} par carte`
         )}
       </button>
       <button type="button" onClick={onClose} className={styles.cancel}>
@@ -112,7 +138,7 @@ export function PaymentSheet({
           <span>{label}</span>
           <b>{formatEuros(amountCents)}</b>
         </div>
-        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe" } }}>
           <PaymentForm amountCents={amountCents} onSuccess={onSuccess} onClose={onClose} />
         </Elements>
         <div className={styles.fine}>
