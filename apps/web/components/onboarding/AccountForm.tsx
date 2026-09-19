@@ -16,8 +16,8 @@ import styles from "./onboarding.module.css";
  * Si le projet Supabase demande de confirmer l'adresse, signUp ne rend pas de
  * session. Au lieu de l'ancien « Vérifiez vos emails » qui envoyait le pro
  * dans sa boîte puis sur un autre formulaire, on lui demande ici le code du
- * même e-mail (verifyOtp, type « signup ») : il reste dans l'onglet. Le lien
- * de l'e-mail marche aussi, il ramène sur /signup à la bonne étape.
+ * même e-mail (verifyOtp, type « signup ») : il reste dans l'onglet. L'e-mail
+ * ne contient que le code, aucun lien (modèle docs/email-supabase-confirm-signup.html).
  */
 
 const NETWORK = "Le réseau a coupé, réessayez dans une minute.";
@@ -103,7 +103,7 @@ export function AccountForm({ initialEmail, onSignedIn }: { initialEmail: string
       <div className={styles.scr}>
         <h1>Confirmez votre adresse.</h1>
         <p className={styles.lede}>
-          Nous avons envoyé un code à <b>{sentTo}</b>. Entrez-le ici, ou touchez le lien de l&rsquo;e-mail.
+          Nous avons envoyé un code à <b>{sentTo}</b>. Entrez-le ici pour activer votre compte.
         </p>
         <input
           ref={codeRef}
