@@ -94,7 +94,11 @@ function PaymentForm({
               paypal: "never",
               amazonPay: "never",
             },
-            buttonType: { applePay: "buy", googlePay: "buy" },
+            // Apple ne fournit pas de libellé « Payer avec » : ses types sont
+            // traduits par le système (« buy » donne « Acheter avec »). Le type
+            // « plain » affiche le seul logo Apple Pay, qui se lit « payer ».
+            // Google, lui, a un type « pay » : « Payer avec Google Pay ».
+            buttonType: { applePay: "plain", googlePay: "pay" },
             buttonTheme: { applePay: "black", googlePay: "black" },
             // Même hauteur que le bouton carte : Apple Pay jamais plus petit.
             buttonHeight: 52,
