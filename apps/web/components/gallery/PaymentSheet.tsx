@@ -20,6 +20,13 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
   // « none » quand l'appareil ne propose aucun des deux (le séparateur
   // « ou par carte » n'a alors plus de raison d'être).
   const [wallet, setWallet] = useState<"unknown" | "shown" | "none">("unknown");
+  // Appareil Apple : Safari expose ApplePaySession (iPhone, iPad, Mac), et
+  // tous les navigateurs iOS reposent sur WebKit.
+  const [apple] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      ("ApplePaySession" in window || /iPhone|iPad|iPod/.test(navigator.userAgent)),
+  );
 
   async function pay(): Promise<void> {
     if (!stripe || !elements || loading) return;
@@ -61,11 +68,21 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
       <div hidden={wallet === "none"}>
         <ExpressCheckoutElement
           options={{
-            paymentMethods: { applePay: "always", googlePay: "always", link: "never", paypal: "never", amazonPay: "never" },
-            paymentMethodOrder: ["apple_pay", "google_pay"],
+            // Un seul bouton, celui de l'appareil : Apple Pay sur iPhone, iPad
+            // et Mac (Safari), Google Pay partout ailleurs. « auto » et non
+            // « always » : Stripe n'affiche alors que le bouton natif, quand
+            // une carte est réellement enregistrée dans le portefeuille. Avec
+            // « always », il dessine sa propre imitation, même sans carte.
+            paymentMethods: {
+              applePay: apple ? "auto" : "never",
+              googlePay: apple ? "never" : "auto",
+              link: "never",
+              paypal: "never",
+              amazonPay: "never",
+            },
             buttonType: { applePay: "buy", googlePay: "buy" },
             buttonTheme: { applePay: "black", googlePay: "black" },
-            buttonHeight: 52,
+            buttonHeight: 48,
             // Pas de maxRows : avec maxRows + overflow « never », Stripe ne
             // rend jamais les boutons (ni événement ready, ni erreur).
             layout: { maxColumns: 1, overflow: "never" },
@@ -141,7 +158,7 @@ export function PaymentSheet({
           <span>{label}</span>
           <b>{formatEuros(amountCents)}</b>
         </div>
-        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe" } }}>
+        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe", variables: { borderRadius: "12px" } } }}>
           <PaymentForm amountCents={amountCents} onSuccess={onSuccess} onClose={onClose} />
         </Elements>
         <div className={styles.fine}>
