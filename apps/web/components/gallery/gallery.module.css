@@ -345,25 +345,13 @@ a.topIn:focus-visible {
 .pad {
   height: 158px;
 }
-/* Les mentions qui suivent le rail. Assez bas pour que, à l'ouverture, le
-   bord de la barre d'achat tombe dans le blanc : collées au rail, leur
-   première ligne était coupée en deux par la barre, et l'écran avait
-   l'air tronqué.
-
-   La hauteur de la photo dépend de l'écran (bornée par la largeur ou par
-   la réserve de .tile), d'où le calcul : la même hauteur que la vignette,
-   puis ce qui sépare le bas du rail du haut de la barre, + 16 px. Les
-   valeurs sont celles de la vente à l'unité (rangée 54, barre 122) ; au
-   lot (.legalAfterPack) la rangée fait 28 et la barre 88. Doublé de
-   .legal pour passer devant la marge de .legal, déclarée plus bas. */
+/* Les mentions qui suivent le rail. Sur téléphone, leur marge est posée
+   par PhotoPicker (placeRail) : elles s'affichent dans le blanc sous la
+   photo si elles y tiennent entières, sinon elles passent sous la barre
+   d'achat et la photo se centre dans l'espace. Jamais coupées par la
+   barre, jamais de trou d'un seul côté. */
 .legal.legalAfter {
-  --tile-h: min(calc((100vw - 40px) * 0.86 * 4 / 3), calc(100svh - 290px - env(safe-area-inset-bottom)));
-  margin-top: 52px;
-  margin-top: max(52px, calc(100svh - env(safe-area-inset-bottom) - var(--tile-h) - 237px));
-}
-.legal.legalAfterPack {
-  --tile-h: min(calc((100vw - 40px) * 0.86 * 4 / 3), calc(100svh - 235px - env(safe-area-inset-bottom)));
-  margin-top: max(52px, calc(100svh - env(safe-area-inset-bottom) - var(--tile-h) - 177px));
+  margin-top: 16px;
 }
 
 /* ── La barre d'achat ──────────────────────────────────────────────────
@@ -1022,8 +1010,7 @@ a.topIn:focus-visible {
     align-items: center;
     gap: 20px;
   }
-  .legal.legalAfter,
-  .legal.legalAfterPack {
+  .legal.legalAfter {
     margin-top: 28px;
   }
   .barLabel {

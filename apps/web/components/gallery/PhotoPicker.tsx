@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
@@ -145,6 +145,59 @@ export function PhotoPicker({
     setAt(Math.min(total - 1, Math.max(0, Math.round(rail.scrollLeft / step))));
   }
 
+  // Le blanc entre le rail et la barre d'achat. La photo est au format 3/4
+  // et bornée par la largeur : selon le téléphone, il reste sous elle de 0
+  // à 150 px. Deux cas, jamais un trou d'un seul côté :
+  // - les mentions y tiennent entières : elles s'y affichent ;
+  // - sinon : la photo se centre dans l'espace (même blanc au-dessus et
+  //   au-dessous), et les mentions passent sous la barre, à lire en
+  //   faisant défiler. Coupées en deux par la barre, l'écran avait l'air
+  //   tronqué.
+  // Calculé à l'ouverture et quand la largeur change seulement : sur iOS
+  // la hauteur varie à chaque défilement (barre d'adresse qui se replie),
+  // et recentrer à ce moment ferait sauter la page sous le doigt. Pour la
+  // même raison, on compte d'avance la ligne « soit 6 € de plus » que la
+  // barre gagne à la première photo choisie, plutôt que de recentrer quand
+  // elle apparaît.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const legalRef = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{ top: number; legal: number } | null>(null);
+  const placeRef = useRef(place);
+  placeRef.current = place;
+  useLayoutEffect(() => {
+    let width = window.innerWidth;
+    function placeRail(): void {
+      const grid = gridRef.current;
+      const bar = barRef.current;
+      const legalEl = legalRef.current;
+      if (!grid || !bar || !legalEl || window.matchMedia("(min-width: 821px)").matches) {
+        if (placeRef.current) setPlace(null);
+        return;
+      }
+      const extra = placeRef.current?.top ?? 0;
+      const above = (railRef.current ?? grid).getBoundingClientRect().bottom + window.scrollY - extra;
+      const more = packOnly ? 0 : 33;
+      const space = Math.round(window.innerHeight - bar.offsetHeight - above);
+      const gridTop = Number.parseFloat(getComputedStyle(grid).paddingTop) - extra;
+      if (space - more >= 16 + legalEl.offsetHeight + 12) {
+        setPlace({ top: 0, legal: 16 });
+      } else {
+        const top = Math.max(0, Math.floor((space - more - gridTop) / 2));
+        setPlace({ top, legal: Math.max(16, space - top + 16) });
+      }
+    }
+    placeRail();
+    function onResize(): void {
+      if (window.innerWidth === width) return;
+      width = window.innerWidth;
+      placeRail();
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [total, packOnly]);
+
   // La photo que le client a sous les yeux dans le rail : c'est elle que
   // prend le bouton posé dessous.
   const current = photos[at] ?? photos[0];
@@ -152,7 +205,12 @@ export function PhotoPicker({
 
   return (
     <>
-      <div className={`${styles.grid} ${packOnly ? styles.gridPack : ""}`} onScroll={onRailScroll}>
+      <div
+        ref={gridRef}
+        className={`${styles.grid} ${packOnly ? styles.gridPack : ""}`}
+        style={place?.top ? { paddingTop: `calc(14px + ${place.top}px)` } : undefined}
+        onScroll={onRailScroll}
+      >
         {photos.map((photo, i) => {
           // Au lot, tout est pris d'office : un liseré sur chaque photo ne
           // distinguait rien et encadrait l'écran entier de bleu.
@@ -214,7 +272,7 @@ export function PhotoPicker({
           un rail, cette pastille était une cible à viser au pouce, et elle
           écrivait sur la photo. */}
       {total > 1 ? (
-        <div className={styles.railPos}>
+        <div ref={railRef} className={styles.railPos}>
           {total <= 8 ? (
             <div className={styles.dots} aria-hidden="true">
               {photos.map((photo, i) => (
@@ -242,9 +300,13 @@ export function PhotoPicker({
         </div>
       ) : null}
 
-      {legal ? <div className={`${styles.legal} ${packOnly ? styles.legalAfterPack : styles.legalAfter}`}>{legal}</div> : null}
+      {legal ? (
+        <div ref={legalRef} className={`${styles.legal} ${styles.legalAfter}`} style={place ? { marginTop: place.legal } : undefined}>
+          {legal}
+        </div>
+      ) : null}
 
-      <div className={styles.bar}>
+      <div ref={barRef} className={styles.bar}>
         <div className={styles.barIn}>
           {error ? <p className={styles.error}>{error}</p> : null}
           <div className={`${styles.barRow} ${packOnly ? styles.barRowPack : ""}`}>
