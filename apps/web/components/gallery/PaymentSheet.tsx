@@ -66,12 +66,15 @@ function PaymentForm({ amountCents, onSuccess, onClose }: { amountCents: number;
             buttonType: { applePay: "buy", googlePay: "buy" },
             buttonTheme: { applePay: "black", googlePay: "black" },
             buttonHeight: 52,
-            layout: { maxColumns: 1, maxRows: 2, overflow: "never" },
+            // Pas de maxRows : avec maxRows + overflow « never », Stripe ne
+            // rend jamais les boutons (ni événement ready, ni erreur).
+            layout: { maxColumns: 1, overflow: "never" },
           }}
           onReady={(e) => {
             const m = e.availablePaymentMethods;
             setWallet(m && (m.applePay || m.googlePay) ? "shown" : "none");
           }}
+          onLoadError={() => setWallet("none")}
           onConfirm={() => void pay()}
         />
         {wallet === "shown" ? <p className={styles.or}>ou par carte</p> : null}
