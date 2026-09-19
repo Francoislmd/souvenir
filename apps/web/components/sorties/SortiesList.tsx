@@ -55,17 +55,19 @@ function meta(row: SortieRow, d: Date): string {
     bits.push(`${row.photoCount} photo${row.photoCount > 1 ? "s" : ""} déposée${row.photoCount > 1 ? "s" : ""}`);
   } else if (row.participantCount > 0) {
     bits.push(`${row.participantCount} participant${row.participantCount > 1 ? "s" : ""}`);
+  } else if (row.photoCount > 0) {
+    // Une boutique de groupe n'a pas de participants avant les premiers
+    // achats : sans ce repli la ligne ne disait que l'heure.
+    bits.push(`${row.photoCount} photo${row.photoCount > 1 ? "s" : ""}`);
   }
   return bits.join(" · ");
 }
 
-/** Ce que la ligne dit une fois la galerie en ligne : le résultat, jamais
- *  une redite de l'état. Sans achat, le montant reste en gris — c'est une
- *  information, pas une alerte. */
-function outcome(row: SortieRow): { value: string; sub: string; subShort: string; muted: boolean } {
-  if (row.paidCount === 0) {
-    return { value: formatEuros(0), sub: "en ligne", subShort: "en ligne", muted: true };
-  }
+/** Ce que la ligne dit une fois la galerie en ligne : le résultat. Sans
+ *  achat, il n'y a pas de résultat à chiffrer, seulement l'état : « En
+ *  ligne », sur une ligne, sans « 0 € ». */
+function outcome(row: SortieRow): { value: string; sub: string; subShort: string } | null {
+  if (row.paidCount === 0) return null;
   const plural = row.paidCount > 1 ? "s" : "";
   const denominator = !row.isGroup && row.participantCount > 0 ? ` sur ${row.participantCount}` : "";
   // Sur téléphone la colonne de droite prend sa place sur le titre : le
@@ -74,7 +76,6 @@ function outcome(row: SortieRow): { value: string; sub: string; subShort: string
     value: formatEuros(row.revenueCents),
     sub: `${row.paidCount} achat${plural}${denominator}`,
     subShort: `${row.paidCount} achat${plural}`,
-    muted: false,
   };
 }
 
@@ -127,15 +128,18 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
     if (last && last.title === title) last.items.push(row);
     else groups.push({ key: `${title}-${row.id}`, title, detail, items: [row] });
   });
+  // Les jours vont du plus récent au plus ancien, mais une journée se lit
+  // dans l'ordre de l'agenda : 09:00 avant 10:00.
+  for (const g of groups) g.items.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 
   return (
     <>
       {groups.map((group) => (
         <div key={group.key}>
-          <p className={styles.sDay}>
+          <h2 className={styles.sDayH}>
             {group.title}
-            {group.detail ? <em> · {group.detail}</em> : null}
-          </p>
+            {group.detail ? <em>{group.detail}</em> : null}
+          </h2>
           <div className={styles.sGroup}>
             {group.items.map((row) => {
               const d = new Date(row.startsAt);
@@ -174,7 +178,8 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                   };
               }
 
-              const result = action === null && row.publicationStatus === "online" ? outcome(row) : null;
+              const online = action === null && row.publicationStatus === "online";
+              const result = online ? outcome(row) : null;
 
               return (
                 <Link key={row.id} href={`/sorties/${row.id}`} className={styles.sRow}>
@@ -194,11 +199,13 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                       </span>
                     </span>
                   ) : result ? (
-                    <span className={`${styles.sVal} ${result.muted ? styles.sValZero : ""}`}>
+                    <span className={styles.sVal}>
                       <b>{result.value}</b>
                       <span className={styles.sdBtnLong}>{result.sub}</span>
                       <span className={styles.sdBtnShort}>{result.subShort}</span>
                     </span>
+                  ) : online ? (
+                    <span className={styles.sValState}>En ligne</span>
                   ) : null}
                 </Link>
               );
