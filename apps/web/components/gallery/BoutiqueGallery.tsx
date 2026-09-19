@@ -269,13 +269,14 @@ export function BoutiqueGallery({
         error={error}
         busy={busy}
         discount={reducedOfferActive ? applyReducedOffer : undefined}
+        legal={
+          <>
+            Vos photos sont conservées 90 jours puis supprimées automatiquement. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a>.
+          </>
+        }
         onCheckout={(ids) => void openCheckout(ids)}
       />
 
-      <p className={styles.legal}>
-        Vos photos sont conservées 90 jours puis supprimées automatiquement. Vous pouvez demander leur suppression immédiate à tout moment —{" "}
-        <a href={`/g/${token}/supprimer`}>supprimer mes photos</a>.
-      </p>
       <div className={styles.powered}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
       </div>

@@ -254,6 +254,13 @@ export function GroupGallery({
   // créneau. L'en-tête « logo + nom », le grand titre, la date sur sa propre
   // ligne et le chapeau prenaient 218 px avant la première photo, sur
   // l'écran où le client cherche son visage.
+  const legalNote = (
+    <>
+      Photos conservées 90 jours puis supprimées automatiquement. Une photo de vous que vous ne voulez pas ici ?{" "}
+      <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
+    </>
+  );
+
   const shotBar = (
     <div className={store.bar}>
       <button type="button" className={store.barBtn} onClick={() => go(dateKey, "")} aria-label="Revenir aux heures de départ">
@@ -278,7 +285,12 @@ export function GroupGallery({
 
       {loadingPhotos && photos.length === 0 ? (
         // Un créneau peut porter quarante photos : l'aller-retour se voit.
-        <LoadingBlock label="Chargement des photos du créneau…" />
+        // Le lien de retrait reste là pendant le chargement : il doit être
+        // joignable depuis chaque écran.
+        <>
+          <LoadingBlock label="Chargement des photos du créneau…" />
+          <div className={styles.legal}>{legalNote}</div>
+        </>
       ) : (
         <PhotoPicker
           photos={photos}
@@ -288,6 +300,7 @@ export function GroupGallery({
           unitSuffix="l'unité"
           error={error}
           busy={false}
+          legal={legalNote}
           onCheckout={(ids) => {
             setError(null);
             setPendingIds(ids);
@@ -295,10 +308,6 @@ export function GroupGallery({
         />
       )}
 
-      <div className={styles.legal}>
-        Photos conservées 90 jours puis supprimées automatiquement. Une photo de vous que vous ne voulez pas ici ?{" "}
-        <Link href={`${basePath}/retrait`}>Demandez son retrait</Link>, sans justification.
-      </div>
       <div className={styles.powered}>
         Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
       </div>

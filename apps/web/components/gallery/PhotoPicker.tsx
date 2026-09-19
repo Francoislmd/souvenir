@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
@@ -38,6 +38,7 @@ export function PhotoPicker({
   error,
   busy,
   discount,
+  legal,
   onCheckout,
 }: {
   photos: PickerPhoto[];
@@ -51,6 +52,9 @@ export function PhotoPicker({
   busy: boolean;
   /** Remise en cours (offre à durée limitée) — appliquée à l'affichage comme au débit. */
   discount?: (cents: number) => number;
+  /** Les mentions sous le rail. Posées ici parce que leur marge dépend de
+   *  la hauteur de la rangée et de la barre, qui changent au lot. */
+  legal?: ReactNode;
   onCheckout: (photoIds: string[]) => void;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -101,9 +105,13 @@ export function PhotoPicker({
   const partial = selected.size > 0 && selected.size < total;
 
   const barLabel = selected.size === 0 || selected.size === total ? allLabel(total) : `${selected.size} photo${selected.size > 1 ? "s" : ""} choisie${selected.size > 1 ? "s" : ""}`;
-  const ctaLabel = partial
-    ? `Prendre ${selected.size === 1 ? "cette photo" : `ces ${selected.size} photos`} · ${formatEuros(selectedCents)}`
-    : `Tout prendre · ${formatEuros(allCents)}`;
+  // Vente au lot : le bouton dit seul ce qu'il prend et à quel prix. La
+  // ligne « Les 22 photos » posée au-dessus répétait le bouton mot pour mot.
+  const ctaLabel = packOnly
+    ? `${total === 1 ? "Prendre la photo" : `Prendre les ${total} photos`} · ${formatEuros(allCents)}`
+    : partial
+      ? `Prendre ${selected.size === 1 ? "cette photo" : `ces ${selected.size} photos`} · ${formatEuros(selectedCents)}`
+      : `Tout prendre · ${formatEuros(allCents)}`;
 
   function checkout(): void {
     onCheckout(partial ? Array.from(selected) : allIds);
@@ -144,23 +152,29 @@ export function PhotoPicker({
 
   return (
     <>
-      <div className={styles.grid} onScroll={onRailScroll}>
+      <div className={`${styles.grid} ${packOnly ? styles.gridPack : ""}`} onScroll={onRailScroll}>
         {photos.map((photo, i) => {
-          const on = selected.has(photo.id);
+          // Au lot, tout est pris d'office : un liseré sur chaque photo ne
+          // distinguait rien et encadrait l'écran entier de bleu.
+          const on = !packOnly && selected.has(photo.id);
           return (
             // Une div plutôt qu'un bouton : le « voir en grand » est un vrai
             // bouton, et un bouton dans un bouton n'est pas du HTML valide.
+            // Au lot, il n'y a rien à choisir : toucher la photo l'ouvre en
+            // grand, le seul geste utile sur cet écran.
             <div
               key={photo.id}
-              role={packOnly ? undefined : "button"}
-              tabIndex={packOnly ? undefined : 0}
+              role="button"
+              tabIndex={0}
               aria-pressed={packOnly ? undefined : on}
+              aria-label={packOnly ? "Voir en grand" : undefined}
               className={`${styles.tile} ${on ? styles.tileOn : ""}`}
-              onClick={() => toggle(photo.id)}
+              onClick={() => (packOnly ? setZoom(i) : toggle(photo.id))}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  toggle(photo.id);
+                  if (packOnly) setZoom(i);
+                  else toggle(photo.id);
                 }
               }}
             >
@@ -204,7 +218,7 @@ export function PhotoPicker({
           {total <= 8 ? (
             <div className={styles.dots} aria-hidden="true">
               {photos.map((photo, i) => (
-                <i key={photo.id} className={`${i === at ? styles.dotOn : ""} ${selected.has(photo.id) ? styles.dotGot : ""}`.trim() || undefined} />
+                <i key={photo.id} className={`${i === at ? styles.dotOn : ""} ${!packOnly && selected.has(photo.id) ? styles.dotGot : ""}`.trim() || undefined} />
               ))}
             </div>
           ) : (
@@ -228,16 +242,20 @@ export function PhotoPicker({
         </div>
       ) : null}
 
+      {legal ? <div className={`${styles.legal} ${packOnly ? styles.legalAfterPack : styles.legalAfter}`}>{legal}</div> : null}
+
       <div className={styles.bar}>
         <div className={styles.barIn}>
           {error ? <p className={styles.error}>{error}</p> : null}
-          <div className={styles.barRow}>
+          <div className={`${styles.barRow} ${packOnly ? styles.barRowPack : ""}`}>
             <span className={styles.barText}>
               <span className={styles.barLabel}>{barLabel}</span>
               <span className={styles.barSub}>
-                {partial && extraCents > 0
-                  ? `${allLabel(total)} pour ${formatEuros(allCents)}, soit ${formatEuros(extraCents)} de plus`
-                  : `${formatEuros(pricing.pricePhotoCents)} ${unitSuffix}`}
+                {packOnly
+                  ? "Sans filigrane, à télécharger dès le paiement"
+                  : partial && extraCents > 0
+                    ? `${allLabel(total)} pour ${formatEuros(allCents)}, soit ${formatEuros(extraCents)} de plus`
+                    : `${formatEuros(pricing.pricePhotoCents)} ${unitSuffix}`}
               </span>
             </span>
             {packOnly ? null : selected.size > 0 ? (

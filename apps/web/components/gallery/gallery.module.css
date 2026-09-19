@@ -160,7 +160,9 @@ a.topIn:focus-visible {
   margin: 0 auto;
   display: flex;
   gap: 10px;
-  padding: 0 20px;
+  /* 14 px au-dessus : collée au filet de la barre de titre, la photo
+     avait l'air coincée dessous. */
+  padding: 14px 20px 0;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding-left: 20px;
@@ -205,7 +207,7 @@ a.topIn:focus-visible {
   flex: 1;
   margin: 0;
   font-size: 0.88rem;
-  color: var(--ink-4);
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 /* Le geste de prendre, à portée de pouce sous la photo. Il remplace la
@@ -260,11 +262,15 @@ a.topIn:focus-visible {
   border: 0;
   aspect-ratio: 3 / 4;
   /* Ce qui reste sous la barre de titre et au-dessus de la barre d'achat.
-     La valeur a baissé de 344 à 268 px le 13/09/2026 : l'en-tête
-     « logo + nom », le grand titre, la date et le chapeau ont laissé la
-     place à une seule ligne. */
-  max-height: calc(100vh - 268px);
-  max-height: calc(100svh - 268px);
+     La réserve se lit : barre de titre 63 + marge 14 + rangée sous le
+     rail 54 + barre d'achat 122 + un blanc de 37 avant la barre (assez
+     pour la ligne « soit 6 € de plus » d'une sélection partielle). Au lot
+     (.gridPack), la rangée n'a plus de bouton et la barre plus de ligne
+     de titre. La zone du geste iOS s'ajoute : sans elle, le bas de la
+     rangée passait sous la barre en mode application. */
+  --reserve: 290px;
+  max-height: calc(100vh - var(--reserve));
+  max-height: calc(100svh - var(--reserve) - env(safe-area-inset-bottom));
   border-radius: 14px;
   overflow: hidden;
   background: var(--line-2);
@@ -272,6 +278,9 @@ a.topIn:focus-visible {
   cursor: pointer;
   transition: box-shadow 0.14s, transform 0.14s;
   -webkit-touch-callout: none;
+}
+.gridPack .tile {
+  --reserve: 235px;
 }
 .tile:active {
   transform: scale(0.985);
@@ -336,6 +345,26 @@ a.topIn:focus-visible {
 .pad {
   height: 158px;
 }
+/* Les mentions qui suivent le rail. Assez bas pour que, à l'ouverture, le
+   bord de la barre d'achat tombe dans le blanc : collées au rail, leur
+   première ligne était coupée en deux par la barre, et l'écran avait
+   l'air tronqué.
+
+   La hauteur de la photo dépend de l'écran (bornée par la largeur ou par
+   la réserve de .tile), d'où le calcul : la même hauteur que la vignette,
+   puis ce qui sépare le bas du rail du haut de la barre, + 16 px. Les
+   valeurs sont celles de la vente à l'unité (rangée 54, barre 122) ; au
+   lot (.legalAfterPack) la rangée fait 28 et la barre 88. Doublé de
+   .legal pour passer devant la marge de .legal, déclarée plus bas. */
+.legal.legalAfter {
+  --tile-h: min(calc((100vw - 40px) * 0.86 * 4 / 3), calc(100svh - 290px - env(safe-area-inset-bottom)));
+  margin-top: 52px;
+  margin-top: max(52px, calc(100svh - env(safe-area-inset-bottom) - var(--tile-h) - 237px));
+}
+.legal.legalAfterPack {
+  --tile-h: min(calc((100vw - 40px) * 0.86 * 4 / 3), calc(100svh - 235px - env(safe-area-inset-bottom)));
+  margin-top: max(52px, calc(100svh - env(safe-area-inset-bottom) - var(--tile-h) - 177px));
+}
 
 /* ── La barre d'achat ──────────────────────────────────────────────────
    Un seul endroit pour décider, toujours au même endroit, jamais
@@ -365,6 +394,12 @@ a.topIn:focus-visible {
 }
 .barText {
   flex: 1;
+}
+/* Au lot, sur téléphone, le bouton porte tout : la ligne au-dessus ne
+   faisait que le répéter. Sur ordinateur elle reste, la barre étant une
+   ligne où le bouton se range à droite. */
+.barRowPack {
+  display: none;
 }
 .barLabel {
   display: block;
@@ -411,8 +446,14 @@ a.topIn:focus-visible {
   letter-spacing: -0.02em;
   color: #fff;
   background: var(--op);
-  box-shadow: 0 1px 2px rgba(20, 19, 32, 0.14), 0 6px 16px -6px rgba(20, 19, 32, 0.25);
   cursor: pointer;
+}
+.cta:active {
+  filter: brightness(0.94);
+}
+.cta:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 3px;
 }
 .cta:disabled {
   opacity: 0.5;
@@ -658,8 +699,9 @@ a.topIn:focus-visible {
   margin: 20px auto 0;
   padding: 0 20px;
   font-size: 0.81rem;
-  color: var(--ink-4);
+  color: var(--ink-3);
   line-height: 1.6;
+  text-wrap: pretty;
 }
 .legal a,
 .legal button {
@@ -951,7 +993,7 @@ a.topIn:focus-visible {
   }
   .grid {
     display: grid;
-    padding: 0 40px;
+    padding: 20px 40px 0;
     overflow-x: visible;
   }
   .tile {
@@ -972,11 +1014,17 @@ a.topIn:focus-visible {
     align-items: center;
     gap: 20px;
   }
-  .barRow {
+  .barRow,
+  .barRowPack {
+    display: flex;
     flex: 1;
     margin: 0;
     align-items: center;
     gap: 20px;
+  }
+  .legal.legalAfter,
+  .legal.legalAfterPack {
+    margin-top: 28px;
   }
   .barLabel {
     font-size: 1.03rem;
