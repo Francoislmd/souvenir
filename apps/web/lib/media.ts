@@ -15,13 +15,14 @@
 export const VIDEO_EXTENSIONS = ["mp4", "mov", "m4v", "webm"] as const;
 
 /**
- * Plafond par vidéo, en mégaoctets. Supabase Storage refuse tout fichier
- * au-delà de 50 Mo sur le plan Free (réglage global du projet) : l'envoi
- * échouerait après avoir poussé tous les octets. Le passer au-dessus
- * suppose le plan Pro ET la limite relevée dans Storage → Settings.
+ * Plafond par vidéo, en mégaoctets. R2 accepte 5 Go par envoi, mais tout
+ * le stockage gratuit tient en 9 Go (lib/storage-quota.ts) : 500 Mo, c'est
+ * déjà cinq minutes de 1080p et 5 % de la place totale.
  */
-export const MAX_VIDEO_MB = Number(process.env.NEXT_PUBLIC_MAX_VIDEO_MB) || 50;
+export const MAX_VIDEO_MB = Number(process.env.NEXT_PUBLIC_MAX_VIDEO_MB) || 500;
 export const MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024 * 1024;
+/** Une photo, même RAW : au-delà, c'est une erreur de fichier. */
+export const MAX_PHOTO_BYTES = 150 * 1024 * 1024;
 
 export function extensionOf(filename: string): string {
   const match = /\.([a-z0-9]+)$/i.exec(filename);

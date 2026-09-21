@@ -183,6 +183,7 @@ model Photo {
   isVideo         Boolean     @default(false) // vidéo : même parcours qu'une photo, aperçus tirés de posterKey (lib/media.ts)
   posterKey       String? // vidéo uniquement — image tirée de la vidéo par le navigateur au dépôt, bucket originals (privé : elle n'a pas de filigrane)
   durationSec     Int? // vidéo uniquement — durée arrondie, affichée sur la vignette
+  sizeBytes       Int? // octets de l'original (+ vignette d'une vidéo), signés dans l'URL d'envoi — base du quota de stockage (lib/storage-quota.ts)
   status          PhotoStatus @default(UPLOADED)
   createdAt       DateTime    @default(now())
 

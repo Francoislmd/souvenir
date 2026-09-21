@@ -1,9 +1,21 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
+// Domaine public du bucket R2 des aperçus, logos et couvertures (lib/storage.ts).
+const previewsHost = (() => {
+  try {
+    return new URL(process.env.R2_PREVIEWS_PUBLIC_URL ?? "").hostname;
+  } catch {
+    return null;
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: [
+      ...(previewsHost ? [{ protocol: "https", hostname: previewsHost }] : []),
+      // Logos et couvertures déposés avant le passage à R2, tant que
+      // scripts/migrate-storage-to-r2.ts n'a pas réécrit leurs URL.
       {
         protocol: "https",
         hostname: "*.supabase.co",

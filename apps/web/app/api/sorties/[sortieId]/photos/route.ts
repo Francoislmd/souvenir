@@ -1,17 +1,22 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { supabaseAdmin } from "@/lib/supabase";
-import { getPreviewUrl } from "@/lib/storage";
+import { ORIGINALS_BUCKET, createSignedUploadUrl, getPreviewUrl } from "@/lib/storage";
+import { StorageFullError, withStorageRoom } from "@/lib/storage-quota";
 import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
-import { MAX_VIDEO_BYTES, MAX_VIDEO_MB, extensionOf, isVideoFilename } from "@/lib/media";
+import { MAX_PHOTO_BYTES, MAX_VIDEO_BYTES, MAX_VIDEO_MB, extensionOf, isVideoFilename } from "@/lib/media";
 
 const schema = z.object({
   filename: z.string().min(1),
   // Vidéo : ce que le navigateur a lu du fichier au dépôt (lib/video-probe.ts).
   // Tout est facultatif — une vidéo sans vignette ni heure reste déposable.
   kind: z.enum(["photo", "video"]).optional(),
-  sizeBytes: z.number().int().nonnegative().optional(),
+  // Obligatoire : signée dans l'URL d'envoi et comptée par le quota de
+  // stockage (lib/storage-quota.ts). Un onglet ouvert avant cette règle
+  // échoue à l'enregistrement et reprend après rechargement.
+  sizeBytes: z.number().int().positive(),
+  // Vidéo : la vignette tirée par le navigateur, si elle a pu l'être.
+  posterBytes: z.number().int().positive().max(20_000_000).nullable().optional(),
   durationSec: z.number().nonnegative().max(24 * 3600).nullable().optional(),
   takenAt: z.string().datetime().nullable().optional(),
 });
@@ -67,46 +72,54 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
 
     const ext = extensionOf(parsed.data.filename);
     const isVideo = parsed.data.kind === "video" || isVideoFilename(parsed.data.filename);
+    const { sizeBytes } = parsed.data;
     // Le navigateur filtre déjà (UploadQueueProvider) ; ceci protège d'un
     // envoi qui échouerait côté stockage après avoir poussé tous ses octets.
-    if (isVideo && parsed.data.sizeBytes !== undefined && parsed.data.sizeBytes > MAX_VIDEO_BYTES) {
-      return Response.json({ error: "video_too_large", maxMb: MAX_VIDEO_MB }, { status: 413 });
+    if (sizeBytes > (isVideo ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES)) {
+      return Response.json({ error: isVideo ? "video_too_large" : "photo_too_large", maxMb: MAX_VIDEO_MB }, { status: 413 });
     }
 
     const base = `${sortie.id}/${crypto.randomUUID()}`;
     const originalKey = `${base}${ext ? `.${ext}` : ""}`;
     // La vignette d'une vidéo vit à côté d'elle, dans le bucket privé : c'est
     // une image nette, sans filigrane. Seules ses dérivées vont dans `previews`.
+    const posterBytes = isVideo ? (parsed.data.posterBytes ?? null) : null;
     const posterKey = isVideo ? `${base}-poster.jpg` : null;
-
-    const bucket = supabaseAdmin.storage.from("originals");
-    const [upload, posterUpload] = await Promise.all([
-      bucket.createSignedUploadUrl(originalKey),
-      posterKey ? bucket.createSignedUploadUrl(posterKey) : Promise.resolve(null),
-    ]);
-    if (upload.error || !upload.data) {
-      throw upload.error ?? new Error("Failed to create signed upload URL");
-    }
-    if (posterUpload && (posterUpload.error || !posterUpload.data)) {
-      throw posterUpload.error ?? new Error("Failed to create poster signed upload URL");
-    }
+    const totalBytes = sizeBytes + (posterBytes ?? 0);
 
     const takenAt = parsed.data.takenAt ? new Date(parsed.data.takenAt) : null;
-    const photo = await prisma.photo.create({
-      data: {
-        sortieId: sortie.id,
-        originalKey,
-        status: "UPLOADED",
-        ...(isVideo
-          ? {
-              isVideo: true,
-              posterKey,
-              durationSec: parsed.data.durationSec != null ? Math.round(parsed.data.durationSec) : null,
-              takenAt,
-            }
-          : {}),
-      },
-    });
+    let photo;
+    try {
+      photo = await withStorageRoom(totalBytes, (tx) =>
+        tx.photo.create({
+          data: {
+            sortieId: sortie.id,
+            originalKey,
+            status: "UPLOADED",
+            sizeBytes: totalBytes,
+            ...(isVideo
+              ? {
+                  isVideo: true,
+                  posterKey,
+                  durationSec: parsed.data.durationSec != null ? Math.round(parsed.data.durationSec) : null,
+                  takenAt,
+                }
+              : {}),
+          },
+        }),
+      );
+    } catch (error) {
+      if (error instanceof StorageFullError) {
+        await track("storage_full", { operatorId: dbUser.operatorId, meta: { usedBytes: error.usedBytes, requestedBytes: totalBytes } });
+        return Response.json({ error: "storage_full" }, { status: 507 });
+      }
+      throw error;
+    }
+
+    const [signedUrl, posterSignedUrl] = await Promise.all([
+      createSignedUploadUrl(ORIGINALS_BUCKET, originalKey, sizeBytes),
+      posterKey && posterBytes ? createSignedUploadUrl(ORIGINALS_BUCKET, posterKey, posterBytes) : Promise.resolve(null),
+    ]);
 
     // Aucune répartition automatique — les photos arrivent communes (ownerId
     // null), le pro les attribue lui-même depuis l'écran de tri. On marque
@@ -119,7 +132,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     await track("photos_uploaded", { operatorId: dbUser.operatorId, meta: { photoId: photo.id, ...(isVideo ? { video: true } : {}) } });
 
     return Response.json(
-      { photoId: photo.id, signedUrl: upload.data.signedUrl, posterSignedUrl: posterUpload?.data?.signedUrl ?? null },
+      { photoId: photo.id, signedUrl, posterSignedUrl },
       { status: 201 },
     );
   } catch (error) {

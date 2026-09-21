@@ -46,6 +46,23 @@ const envSchema = z.object({
     z.string().url().optional(),
   ),
   CRON_SECRET: z.string().min(20),
+  // Stockage des fichiers : Cloudflare R2 (lib/storage.ts).
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET_ORIGINALS: z.string().min(1).default("originals"),
+  R2_BUCKET_PREVIEWS: z.string().min(1).default("previews"),
+  // Domaine public du bucket previews (ex. https://media.linktrip.co).
+  R2_PREVIEWS_PUBLIC_URL: z.string().url(),
+  // Facultative : un autre point d'accès S3 (MinIO en test). Vide = R2.
+  R2_ENDPOINT: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().url().optional(),
+  ),
+  // Plafond total de stockage, en Go (10^9 octets). 9 par défaut : l'offre
+  // gratuite de R2 est de 10 Go, on garde 1 Go de marge (logos, couvertures,
+  // envois en cours). Voir lib/storage-quota.ts.
+  STORAGE_QUOTA_GB: z.coerce.number().positive().default(9),
   // Mesure d'audience — optionnelles : sans elles, aucune balise n'est chargée
   // (utile en local et sur les previews Vercel, qui ne doivent pas polluer GA4).
   NEXT_PUBLIC_GTM_ID: optionalPattern(/^GTM-[A-Z0-9]+$/, "Format attendu : GTM-XXXXXXX"),

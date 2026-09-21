@@ -2,7 +2,12 @@ import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
 import { throttleBackfill } from "./preview-backfill";
-import { imageSourceKeyOf } from "./media";
+import { extensionOf, imageSourceKeyOf } from "./media";
+
+function downloadName(originalKey: string, photoId: string): string {
+  const ext = extensionOf(originalKey) || "jpg";
+  return `linktrip-${photoId.slice(-8)}.${ext}`;
+}
 import type { BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
 
 /**
@@ -67,6 +72,9 @@ export async function getBoutiquePhotos(
         previewUrl,
         // Jamais d'original pour une photo non achetée (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
+        // Lien à part pour « enregistrer » : un paramètre ajouté à une URL
+        // signée en casserait la signature.
+        downloadUrl: unlocked ? await getOriginalSignedUrl(p.originalKey, downloadName(p.originalKey, p.id)) : null,
         isVideo: p.isVideo,
         durationSec: p.durationSec,
       };

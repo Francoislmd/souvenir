@@ -15,6 +15,8 @@ export interface BoutiquePhoto {
   id: string;
   previewUrl: string | null;
   originalUrl: string | null;
+  /** Même fichier, servi en pièce jointe (Content-Disposition signé). */
+  downloadUrl?: string | null;
   isVideo?: boolean;
   durationSec?: number | null;
 }
@@ -225,7 +227,7 @@ export function BoutiqueGallery({
                       <PlayMark />
                     </a>
                     <VideoBadge durationSec={p.durationSec} />
-                    <a className={styles.save} href={`${p.originalUrl}&download=`} aria-label="Télécharger cette vidéo">
+                    <a className={styles.save} href={p.downloadUrl ?? p.originalUrl} download aria-label="Télécharger cette vidéo">
                       <DownloadIcon size={15} />
                     </a>
                   </>
@@ -233,7 +235,7 @@ export function BoutiqueGallery({
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.originalUrl} alt="" />
-                    <a className={styles.save} href={`${p.originalUrl}&download=`} aria-label="Télécharger cette photo">
+                    <a className={styles.save} href={p.downloadUrl ?? p.originalUrl} download aria-label="Télécharger cette photo">
                       <DownloadIcon size={15} />
                     </a>
                   </>

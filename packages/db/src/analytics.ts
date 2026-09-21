@@ -25,7 +25,8 @@ export type EventName =
   | "order_refunded"
   | "order_disputed"
   | "order_dispute_resolved"
-  | "sortie_deleted";
+  | "sortie_deleted"
+  | "storage_full";
 
 interface TrackParams {
   operatorId: string;

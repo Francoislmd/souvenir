@@ -5,8 +5,7 @@ import sharp from "sharp";
 import exifr from "exifr";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
-import { supabaseAdmin } from "./supabase";
-import { ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
+import { ORIGINALS_BUCKET, PREVIEWS_BUCKET, downloadObject, uploadObject } from "./storage";
 import { generateGroupPreview } from "./group-watermark";
 
 const LOCK_BADGE_SVG = `
@@ -104,7 +103,7 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // foulée : la grille de l'opérateur se remplit pendant que le filigrane et
     // le flou se calculent, plutôt qu'à la toute fin du traitement.
     const thumbBuffer = await base().resize({ width: 480 }).jpeg({ quality: 70 }).toBuffer();
-    await supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(thumbKey, thumbBuffer, { contentType: "image/jpeg", upsert: true });
+    await uploadObject(PREVIEWS_BUCKET, thumbKey, thumbBuffer, { contentType: "image/jpeg" });
     await prisma.photo.update({ where: { id: photoId }, data: { thumbKey } });
 
     const previewBuffer = await watermarkBuffer(base().jpeg({ quality: 78 }), operator, 1280);
@@ -130,12 +129,10 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     const groupPreviewKey = groupPreviewBuffer ? `${photoId}/group-preview.jpg` : null;
 
     await Promise.all([
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(previewKey, previewBuffer, { contentType: "image/jpeg", upsert: true }),
-      supabaseAdmin.storage.from(PREVIEWS_BUCKET).upload(blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg", upsert: true }),
+      uploadObject(PREVIEWS_BUCKET, previewKey, previewBuffer, { contentType: "image/jpeg" }),
+      uploadObject(PREVIEWS_BUCKET, blurEmailKey, blurEmailBuffer, { contentType: "image/jpeg" }),
       groupPreviewKey && groupPreviewBuffer
-        ? supabaseAdmin.storage
-            .from(PREVIEWS_BUCKET)
-            .upload(groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg", upsert: true, cacheControl: "60" })
+        ? uploadObject(PREVIEWS_BUCKET, groupPreviewKey, groupPreviewBuffer, { contentType: "image/jpeg", cacheControl: "public, max-age=60" })
         : Promise.resolve(),
     ]);
 
@@ -164,9 +161,7 @@ export async function runPhotoProcessing(photoId: string): Promise<void> {
 }
 
 async function downloadOriginalBuffer(key: string): Promise<Buffer> {
-  const { data, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(key);
-  if (error || !data) throw error ?? new Error("Failed to download original");
-  return Buffer.from(await data.arrayBuffer());
+  return downloadObject(ORIGINALS_BUCKET, key);
 }
 
 /**
@@ -188,7 +183,7 @@ async function loadVideoPoster(photoId: string, sortieId: string, posterKey: str
   }
   const key = posterKey ?? `${sortieId}/${photoId}-poster.jpg`;
   const buffer = await sharp(Buffer.from(fallbackPosterSvg())).jpeg({ quality: 86 }).toBuffer();
-  await supabaseAdmin.storage.from(ORIGINALS_BUCKET).upload(key, buffer, { contentType: "image/jpeg", upsert: true });
+  await uploadObject(ORIGINALS_BUCKET, key, buffer, { contentType: "image/jpeg" });
   if (!posterKey) await prisma.photo.update({ where: { id: photoId }, data: { posterKey: key } });
   return buffer;
 }

@@ -1,6 +1,5 @@
 import { getOperatorUser } from "@/lib/current-user";
-import { supabaseAdmin } from "@/lib/supabase";
-import { PREVIEWS_BUCKET } from "@/lib/storage";
+import { PREVIEWS_BUCKET, getPreviewUrl, uploadObject } from "@/lib/storage";
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
@@ -26,15 +25,14 @@ export async function POST(request: Request): Promise<Response> {
   const extension = file.type === "image/svg+xml" ? "svg" : file.type.split("/")[1];
   const key = `logos/${dbUser.operatorId}-${Date.now()}.${extension}`;
 
-  const { error } = await supabaseAdmin.storage
-    .from(PREVIEWS_BUCKET)
-    .upload(key, await file.arrayBuffer(), { contentType: file.type, upsert: true });
-
-  if (error) {
+  try {
+    await uploadObject(PREVIEWS_BUCKET, key, Buffer.from(await file.arrayBuffer()), { contentType: file.type });
+  } catch (error) {
+    console.error("[API operator upload]", error);
     return Response.json({ error: "L'envoi a échoué, réessaie." }, { status: 502 });
   }
 
-  const logoUrl = supabaseAdmin.storage.from(PREVIEWS_BUCKET).getPublicUrl(key).data.publicUrl;
+  const logoUrl = getPreviewUrl(key);
 
   return Response.json({ logoUrl }, { status: 200 });
 }

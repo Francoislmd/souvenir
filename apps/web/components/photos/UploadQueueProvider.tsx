@@ -35,7 +35,8 @@ const MAX_ATTEMPTS = 4;
 const RETRY_DELAY_MS = 2500;
 const PAINT_INTERVAL_MS = 120;
 const INTENTS_KEY = "linktrip-publications-programmees";
-const TOO_LARGE = `Vidéo trop lourde (${MAX_VIDEO_MB} Mo max)`;
+const TOO_LARGE = `Fichier trop lourd (vidéo : ${MAX_VIDEO_MB} Mo max)`;
+const STORAGE_FULL = "Espace de stockage plein";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -233,6 +234,14 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   // Étape rapide, séparée de l'envoi du fichier : crée la fiche photo côté
   // serveur (pour connaître le total exact tout de suite) sans attendre que
   // les octets du fichier soient envoyés.
+  // Un seul message pour tout un lot refusé, pas un par photo.
+  const fullNoticeAt = useRef(0);
+  const storageFullNotice = useCallback(() => {
+    if (Date.now() - fullNoticeAt.current < 10_000) return;
+    fullNoticeAt.current = Date.now();
+    toast("Espace de stockage plein : ces fichiers n'ont pas été ajoutés. La place se libère quand les sorties de plus de 90 jours sont supprimées.");
+  }, [toast]);
+
   const registerOne = useCallback(async (item: UploadItem): Promise<void> => {
     if (registering.current.has(item.id)) return;
     registering.current.add(item.id);
@@ -259,14 +268,17 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
                 filename: current.filename,
                 kind: "video",
                 sizeBytes: current.file.size,
+                posterBytes: current.poster?.size || null,
                 durationSec: current.durationSec ?? null,
                 takenAt: current.takenAt ?? null,
               }
-            : { filename: current.filename },
+            : { filename: current.filename, sizeBytes: current.file.size },
         ),
       });
-      if (res.status === 413) {
-        await updateUploadItem(item.id, { status: "failed", attempts: MAX_ATTEMPTS, error: TOO_LARGE });
+      // Refus définitifs : réessayer n'y changerait rien.
+      if (res.status === 413 || res.status === 507) {
+        await updateUploadItem(item.id, { status: "failed", attempts: MAX_ATTEMPTS, error: res.status === 507 ? STORAGE_FULL : TOO_LARGE });
+        if (res.status === 507) storageFullNotice();
         return;
       }
       if (!res.ok) throw new Error("init failed");
@@ -277,7 +289,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     } finally {
       registering.current.delete(item.id);
     }
-  }, []);
+  }, [storageFullNotice]);
 
   /** Envoi des octets seulement. Se termine en "sent" : le traitement serveur
    *  (miniature, filigrane — plusieurs secondes de calcul par photo) n'est pas
@@ -316,7 +328,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         return true;
       } catch {
         const latest = (await getAllUploadItems()).find((i) => i.id === item.id);
-        if (latest?.status === "failed" && latest.error === TOO_LARGE) {
+        if (latest?.status === "failed" && (latest.error === TOO_LARGE || latest.error === STORAGE_FULL)) {
           await refresh();
           return true;
         }
