@@ -6,7 +6,6 @@ import { sendGroupInviteEmail } from "@/lib/email";
 import { deriveChannel } from "@/lib/channel";
 import { nameFromEmail } from "@/lib/emails";
 import { ensureShareCode, storeUrl } from "@/lib/store";
-import { getPreviewUrl } from "@/lib/storage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -18,33 +17,7 @@ const schema = z.object({
 });
 
 function formatDateFr(d: Date): string {
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" });
-}
-
-/**
- * Quatre aperçus filigranés pour l'email, pris à intervalles réguliers dans
- * la journée : les quatre premiers viendraient tous du même créneau. Photos
- * seulement (la vignette d'une vidéo sans son lecteur ressemble à une photo
- * ratée). Ce sont les images déjà publiques de la boutique.
- */
-async function emailPreviews(sortieId: string): Promise<{ urls: string[]; count: number }> {
-  const visible = { sortieId, hiddenAt: null, status: { not: "FAILED" as const } };
-  const [count, photos] = await Promise.all([
-    prisma.photo.count({ where: visible }),
-    prisma.photo.findMany({
-      where: { ...visible, status: "READY", isVideo: false, groupPreviewKey: { not: null } },
-      select: { groupPreviewKey: true },
-      orderBy: [{ takenAt: "asc" }, { createdAt: "asc" }],
-      take: 400,
-    }),
-  ]);
-  const want = Math.min(4, photos.length);
-  const urls: string[] = [];
-  for (let i = 0; i < want; i++) {
-    const key = photos[Math.floor((i * photos.length) / want)]?.groupPreviewKey;
-    if (key) urls.push(getPreviewUrl(key));
-  }
-  return { urls, count };
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
 
 /**
@@ -83,7 +56,6 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     const galleryUrl = storeUrl(sortie.operator.slug, code);
     const emails = Array.from(new Set(parsed.data.emails.map((e) => e.trim().toLowerCase())));
 
-    const previews = await emailPreviews(sortie.id);
     const now = new Date();
     let sent = 0;
     for (const to of emails) {
@@ -119,9 +91,6 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
           sortieDate: formatDateFr(sortie.startsAt),
           sortiePlace: sortie.place,
           galleryUrl,
-          previewUrls: previews.urls,
-          mediaCount: previews.count,
-          purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
         });
         // La date d'envoi n'est posée qu'après l'envoi : une ligne sans
         // `sentAt` est une adresse à qui l'email n'est jamais parti.

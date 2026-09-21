@@ -297,9 +297,6 @@ export async function sendGroupInviteEmail(params: {
   sortieDate: string;
   sortiePlace: string | null;
   galleryUrl: string;
-  previewUrls?: string[];
-  mediaCount?: number;
-  purgeDate?: string | null;
 }): Promise<void> {
   const replyTo = await getReplyTo(params.operatorId);
   const props: GroupInviteProps = {
@@ -311,9 +308,6 @@ export async function sendGroupInviteEmail(params: {
     sortieDate: params.sortieDate,
     sortiePlace: params.sortiePlace ?? undefined,
     galleryUrl: params.galleryUrl,
-    previewUrls: params.previewUrls ?? [],
-    mediaCount: params.mediaCount,
-    purgeDate: params.purgeDate ?? undefined,
   };
   // Objet propre à la sortie : avec un objet fixe, Gmail empile toutes les
   // sorties de la saison dans une seule conversation.
