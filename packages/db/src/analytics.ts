@@ -14,6 +14,7 @@ export type EventName =
   | "review_link_clicked"
   | "automation_resend_sent"
   | "automation_offer_sent"
+  | "automation_group_reminder_sent"
   | "automation_review_sent"
   | "gdpr_deletion"
   | "onboarding_qualified"

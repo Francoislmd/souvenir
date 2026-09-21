@@ -2,13 +2,29 @@ import type { Operator, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { sendWhatsAppMessage } from "./twilio";
-import { sendPhotosReminderEmail, sendPhotosOfferEmail } from "./email";
+import { sendPhotosReminderEmail, sendPhotosOfferEmail, sendGroupReminderEmail } from "./email";
+import { buildEmailCover } from "./email-cover";
+import { ensureShareCode, storeUrl } from "./store";
 import { getPreviewUrl } from "./storage";
 import { formatEuros } from "./format";
 import { applyReducedOffer, REDUCED_OFFER_DISCOUNT_PERCENT } from "./pricing";
 import { env } from "./env";
 
 const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+
+/**
+ * Relances de la boutique de groupe, comptées depuis l'envoi du lien
+ * (Participant.sentAt) :
+ * - 1re relance à J+2 : la plupart des achats se font dans les 48 h, celle-ci
+ *   rattrape ceux qui ont oublié ;
+ * - 2e et dernière à J+6 : elle tombe dans le week-end suivant.
+ * Le cron est quotidien (18 h, heure de Paris l'été) : une marge de 6 h évite
+ * qu'un lien envoyé à 19 h glisse d'un jour entier.
+ */
+export const GROUP_REMINDER_1_AFTER = 2 * DAY;
+export const GROUP_REMINDER_2_AFTER = 6 * DAY;
+const CRON_SLACK = 6 * HOUR;
 
 // Plafond par passage. Le scan est quotidien et chaque participant coûte un
 // envoi (Resend ou Twilio) en séquentiel : sans borne, la route finit par
@@ -135,10 +151,98 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
 export interface AutomationScanResult {
   resent: number;
   offersSent: number;
+  groupReminders: number;
+}
+
+function formatDayFr(d: Date): string {
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" });
+}
+
+/**
+ * Relances GROUPE : adresses prévenues par l'opérateur (sentAt posé par
+ * /api/sorties/[sortieId]/invite) qui n'ont pas payé. Aucune ouverture n'est
+ * suivie en mode GROUPE (le lien est commun à tout le groupe) : seul le
+ * paiement arrête les relances, avec la désinscription. Le paiement reprend
+ * la ligne invitée (même adresse), donc un acheteur n'est plus relancé.
+ */
+async function runGroupReminderScan(now: Date): Promise<number> {
+  let sent = 0;
+  const unpaid = { OR: [{ order: null }, { order: { status: { notIn: ["succeeded", "refunded", "disputed"] } } }] };
+  const liveSortie = { mode: "GROUPE" as const, purgeAt: { gt: now } };
+
+  const due = await prisma.participant.findMany({
+    where: {
+      channel: "EMAIL",
+      deletedAt: null,
+      unsubscribedAt: null,
+      finalRemindedAt: null,
+      sortie: liveSortie,
+      AND: [
+        unpaid,
+        // Les invitations d'avant cette mise en place ne sont pas relancées des semaines après.
+        { sentAt: { gte: new Date(now.getTime() - 30 * DAY) } },
+        {
+          OR: [
+            { remindedAt: null, sentAt: { lte: new Date(now.getTime() - GROUP_REMINDER_1_AFTER + CRON_SLACK) } },
+            {
+              remindedAt: { lte: new Date(now.getTime() - (GROUP_REMINDER_2_AFTER - GROUP_REMINDER_1_AFTER) + CRON_SLACK) },
+              sentAt: { lte: new Date(now.getTime() - GROUP_REMINDER_2_AFTER + CRON_SLACK) },
+            },
+          ],
+        },
+      ],
+    },
+    include: { sortie: { include: { operator: true } } },
+    orderBy: { sentAt: "asc" },
+    take: MAX_PER_SCAN,
+  });
+
+  // Un bandeau et un lien par sortie, partagés par tous ses destinataires.
+  const perSortie = new Map<string, { coverUrl: string | null; galleryUrl: string }>();
+
+  for (const participant of due) {
+    const { sortie } = participant;
+    const operator = sortie.operator;
+    if (!readAutomations(operator.automations).resendUnopened) continue;
+    const step: 1 | 2 = participant.remindedAt ? 2 : 1;
+
+    try {
+      let shared = perSortie.get(sortie.id);
+      if (!shared) {
+        const code = await ensureShareCode(sortie);
+        shared = { coverUrl: await buildEmailCover(sortie.id), galleryUrl: storeUrl(operator.slug, code) };
+        perSortie.set(sortie.id, shared);
+      }
+      await sendGroupReminderEmail({
+        step,
+        to: participant.contact,
+        token: participant.token,
+        operatorId: operator.id,
+        operatorName: operator.name,
+        operatorLogoUrl: operator.logoUrl,
+        brandColor: operator.brandColor,
+        activity: sortie.activity,
+        sortieDate: formatDayFr(sortie.startsAt),
+        sortiePlace: sortie.place,
+        galleryUrl: shared.galleryUrl,
+        coverUrl: shared.coverUrl,
+        purgeDate: sortie.purgeAt ? formatDayFr(sortie.purgeAt) : null,
+      });
+      await prisma.participant.update({
+        where: { id: participant.id },
+        data: step === 1 ? { remindedAt: now } : { finalRemindedAt: now },
+      });
+      await track("automation_group_reminder_sent", { operatorId: operator.id, participantId: participant.id, meta: { step } });
+      sent += 1;
+    } catch (error) {
+      console.error("[automations] group reminder failed:", error);
+    }
+  }
+  return sent;
 }
 
 export async function runAutomationScan(now: Date = new Date()): Promise<AutomationScanResult> {
-  const result: AutomationScanResult = { resent: 0, offersSent: 0 };
+  const result: AutomationScanResult = { resent: 0, offersSent: 0, groupReminders: 0 };
 
   // Mode GROUPE exclu des deux scans : depuis que l'envoi du lien crée une
   // ligne par adresse, ces participants ont un `sentAt` sans rien posséder en
@@ -197,6 +301,8 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
       console.error("[automations] reduced offer failed:", error);
     }
   }
+
+  result.groupReminders = await runGroupReminderScan(now);
 
   return result;
 }

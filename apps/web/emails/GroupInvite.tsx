@@ -2,11 +2,23 @@ import { Body, Column, Container, Head, Hr, Html, Img, Link, Preview, Row, Secti
 import { brand, s } from "./brand";
 
 /**
- * Souvenir — invitation à la galerie de groupe. Envoyée à la volée par
- * l'opérateur depuis "Envoyer au groupe" (une liste d'emails saisie à la
- * main, pas des Participant — personne n'est encore identifié en mode
- * GROUPE). Un seul bouton vers le lien partagé, pas de suivi individuel.
+ * Invitation à la boutique d'une sortie GROUPE, et ses deux relances.
+ *
+ * - "invite"   : envoyée par l'opérateur depuis la carte d'envoi.
+ * - "reminder" : 1re relance, J+2, à ceux qui n'ont pas payé (lib/automations.ts).
+ * - "last"     : 2e et dernière relance, J+6.
+ *
+ * Même gabarit pour les trois : seuls le titre, la phrase et le pied changent.
+ * Les relances portent un lien de désinscription, l'invitation non.
  */
+
+export type GroupEmailVariant = "invite" | "reminder" | "last";
+
+const COPY: Record<GroupEmailVariant, { title: string; lead: string }> = {
+  invite: { title: "Vos photos vous attendent", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos." },
+  reminder: { title: "Vos photos sont toujours là", lead: "Choisissez l\u2019heure de votre sortie pour les retrouver." },
+  last: { title: "Dernier rappel", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos. C\u2019est notre dernier message à ce sujet." },
+};
 
 export interface GroupInviteProps {
   operatorName: string;
@@ -19,6 +31,11 @@ export interface GroupInviteProps {
   galleryUrl: string;
   /** Bandeau très flouté tiré d'une photo de la sortie (lib/email-cover.ts). */
   coverUrl?: string;
+  variant?: GroupEmailVariant;
+  /** « 20 décembre » : dernier jour en ligne (Sortie.purgeAt). */
+  purgeDate?: string;
+  /** Relances uniquement : page de désinscription. */
+  unsubUrl?: string;
 }
 
 export default function GroupInvite({
@@ -31,11 +48,15 @@ export default function GroupInvite({
   sortiePlace,
   galleryUrl,
   coverUrl,
+  variant = "invite",
+  purgeDate,
+  unsubUrl,
 }: GroupInviteProps) {
+  const copy = COPY[variant];
   return (
     <Html lang="fr">
       <Head />
-      <Preview>{`${activity}, le ${sortieDate}. Choisissez l’heure de votre sortie pour retrouver vos photos.`}</Preview>
+      <Preview>{`${activity}, le ${sortieDate}. ${copy.lead}`}</Preview>
       <Body style={{ ...s.body, padding: "16px 8px" }}>
         <Container style={s.card}>
           <Section style={{ padding: "20px 24px", borderBottom: `1px solid ${brand.line}` }}>
@@ -80,9 +101,9 @@ export default function GroupInvite({
           )}
 
           <Section style={{ padding: `${coverUrl ? 22 : 26}px 24px 0` }}>
-            <Text style={{ ...s.h1, fontSize: "24px", lineHeight: "1.2" }}>Vos photos vous attendent</Text>
+            <Text style={{ ...s.h1, fontSize: "24px", lineHeight: "1.2" }}>{copy.title}</Text>
             <Text style={{ ...s.lead, color: brand.ink2, fontSize: "16px", lineHeight: "1.6", margin: "10px 0 0" }}>
-              Choisissez l&rsquo;heure de votre sortie pour retrouver vos photos.
+              {copy.lead}
             </Text>
           </Section>
 
@@ -99,7 +120,7 @@ export default function GroupInvite({
               </tbody>
             </table>
             <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", textAlign: "center", marginTop: 12 }}>
-              Aucun compte à créer · lien valable 90 jours
+              Aucun compte à créer · {purgeDate ? `en ligne jusqu\u2019au ${purgeDate}` : "lien valable 90 jours"}
             </Text>
           </Section>
 
@@ -108,7 +129,18 @@ export default function GroupInvite({
             <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", lineHeight: "1.6" }}>
               Une question&nbsp;? Répondez à ce mail, il arrive directement chez {operatorName}.
             </Text>
-            <Text style={{ ...s.small, marginTop: 6 }}>Envoyé par {operatorName} via Linktrip.</Text>
+            <Text style={{ ...s.small, marginTop: 6 }}>
+              Envoyé par {operatorName} via Linktrip
+              {unsubUrl ? (
+                <>
+                  {" · "}
+                  <Link href={unsubUrl} style={{ color: brand.ink3 }}>
+                    ne plus recevoir de rappel
+                  </Link>
+                </>
+              ) : null}
+              .
+            </Text>
           </Section>
         </Container>
       </Body>

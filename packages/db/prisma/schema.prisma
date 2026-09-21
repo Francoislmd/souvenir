@@ -145,7 +145,8 @@ model Participant {
 
   sentAt                DateTime?
   openedAt              DateTime?
-  remindedAt            DateTime? // +2h resend idempotency
+  remindedAt            DateTime? // INDIVIDUEL : relance +2h · GROUPE : 1re relance J+2 — idempotence
+  finalRemindedAt       DateTime? // GROUPE uniquement : 2e et dernière relance, J+6
   reducedOfferSentAt    DateTime? // +24h offer idempotency
   reducedOfferExpiresAt DateTime? // offer valid 48h, read by quote()
   reviewRequestSentAt   DateTime? // post-purchase idempotency

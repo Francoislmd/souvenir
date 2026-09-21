@@ -95,6 +95,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
           sortiePlace: sortie.place,
           galleryUrl,
           coverUrl,
+          purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
         });
         // La date d'envoi n'est posée qu'après l'envoi : une ligne sans
         // `sentAt` est une adresse à qui l'email n'est jamais parti.

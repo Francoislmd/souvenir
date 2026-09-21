@@ -298,6 +298,7 @@ export async function sendGroupInviteEmail(params: {
   sortiePlace: string | null;
   galleryUrl: string;
   coverUrl?: string | null;
+  purgeDate?: string | null;
 }): Promise<void> {
   const replyTo = await getReplyTo(params.operatorId);
   const props: GroupInviteProps = {
@@ -310,6 +311,7 @@ export async function sendGroupInviteEmail(params: {
     sortiePlace: params.sortiePlace ?? undefined,
     galleryUrl: params.galleryUrl,
     coverUrl: params.coverUrl ?? undefined,
+    purgeDate: params.purgeDate ?? undefined,
   };
   // Objet propre à la sortie : avec un objet fixe, Gmail empile toutes les
   // sorties de la saison dans une seule conversation.
@@ -319,5 +321,54 @@ export async function sendGroupInviteEmail(params: {
     element: <GroupInvite {...props} />,
     fromName: params.operatorName,
     replyTo,
+  });
+}
+
+/**
+ * Relances de la boutique de groupe (mode GROUPE) — marketing : coupées par
+ * la désinscription, en-tête List-Unsubscribe. `step` 1 = J+2, 2 = J+6 et
+ * dernière. Même gabarit que l'invitation (emails/GroupInvite.tsx).
+ */
+export async function sendGroupReminderEmail(params: {
+  step: 1 | 2;
+  to: string;
+  token: string;
+  operatorId: string;
+  operatorName: string;
+  operatorLogoUrl: string | null;
+  brandColor: string;
+  activity: string;
+  sortieDate: string;
+  sortiePlace: string | null;
+  galleryUrl: string;
+  coverUrl: string | null;
+  purgeDate: string | null;
+}): Promise<void> {
+  const replyTo = await getReplyTo(params.operatorId);
+  const props: GroupInviteProps = {
+    operatorName: params.operatorName,
+    operatorInitials: params.operatorName.slice(0, 2).toUpperCase(),
+    operatorColor: params.brandColor,
+    operatorLogoUrl: params.operatorLogoUrl ?? undefined,
+    activity: params.activity,
+    sortieDate: params.sortieDate,
+    sortiePlace: params.sortiePlace ?? undefined,
+    galleryUrl: params.galleryUrl,
+    coverUrl: params.coverUrl ?? undefined,
+    variant: params.step === 1 ? "reminder" : "last",
+    purgeDate: params.purgeDate ?? undefined,
+    unsubUrl: `${env.NEXT_PUBLIC_APP_URL}/g/${params.token}/desinscription`,
+  };
+  const of = photosOf(params.activity);
+  await dispatch({
+    to: params.to,
+    subject:
+      params.step === 1
+        ? `Vos photos ${of} du ${params.sortieDate} sont toujours en ligne`
+        : `Dernier rappel pour vos photos ${of} du ${params.sortieDate}`,
+    element: <GroupInvite {...props} />,
+    fromName: params.operatorName,
+    replyTo,
+    headers: unsubscribeHeaders(params.token),
   });
 }
