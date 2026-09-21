@@ -36,7 +36,7 @@ export default function PhotoWithdrawn({ operatorName, activity, sortieDate, slo
           </Section>
           <Hr style={{ borderColor: brand.line, margin: 0 }} />
           <Section style={{ padding: "16px 22px 22px" }}>
-            <Text style={s.small}>Envoyé par Souvenir pour {operatorName}.</Text>
+            <Text style={s.small}>Envoyé par Linktrip pour {operatorName}.</Text>
           </Section>
         </Container>
       </Body>

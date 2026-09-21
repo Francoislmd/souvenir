@@ -162,7 +162,7 @@ export default function PhotosReady({
               Vos photos sont conservées 90 jours puis supprimées.{" "}
               <Link href={deleteUrl} style={{ color: brand.ink3 }}>Les supprimer maintenant</Link>.
               <br />
-              Envoyé par {operatorName} via Souvenir ·{" "}
+              Envoyé par {operatorName} via Linktrip ·{" "}
               <Link href={unsubUrl} style={{ color: brand.ink3 }}>ne plus recevoir ces messages</Link>
             </Text>
           </Section>

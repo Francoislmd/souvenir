@@ -39,9 +39,24 @@ function unsubscribeHeaders(token: string): Record<string, string> {
   };
 }
 
+// Le nom affiché dans la boîte de réception est celui de l'école, pas une
+// adresse technique : « Nauticà Adventures <photos@…> ». RESEND_FROM_EMAIL
+// fournit l'adresse (seule ou déjà sous la forme « Nom <adresse> ») ; le nom
+// vient de l'opérateur. Guillemets, chevrons et retours ligne retirés : un
+// nom d'école ne doit jamais pouvoir casser l'en-tête From.
+function fromHeader(displayName?: string): string {
+  const raw = env.RESEND_FROM_EMAIL.trim();
+  const match = raw.match(/<([^>]+)>/);
+  const address = (match ? match[1] : raw).trim();
+  const name = (displayName ?? "").replace(/["<>\\\r\n]/g, "").trim();
+  if (!name) return raw;
+  return `"${name}" <${address}>`;
+}
+
 async function dispatch(params: {
   to: string;
   subject: string;
+  fromName?: string;
   element: ReactElement;
   replyTo?: string;
   headers?: Record<string, string>;
@@ -49,7 +64,7 @@ async function dispatch(params: {
   const [html, text] = await Promise.all([render(params.element), render(params.element, { plainText: true })]);
 
   const { error } = await getResendClient().emails.send({
-    from: env.RESEND_FROM_EMAIL,
+    from: fromHeader(params.fromName),
     to: params.to,
     subject: params.subject,
     html,
@@ -105,6 +120,7 @@ export async function sendPhotosReadyEmail(params: {
     to: params.to,
     subject: `${params.firstName}, vos photos du ${params.sortieDate}`,
     element: <PhotosReady {...props} />,
+    fromName: params.operatorName,
     replyTo,
   });
 }
@@ -141,6 +157,7 @@ export async function sendPhotosReminderEmail(params: {
     to: params.to,
     subject: `Vos photos vous attendent, ${params.firstName}`,
     element: <PhotosReminder {...props} />,
+    fromName: params.operatorName,
     replyTo,
     headers: unsubscribeHeaders(params.token),
   });
@@ -184,6 +201,7 @@ export async function sendPhotosOfferEmail(params: {
     to: params.to,
     subject: `-${params.discountPercent} % sur vos photos, jusqu'à ${params.offerDeadlineDay}`,
     element: <PhotosOffer {...props} />,
+    fromName: params.operatorName,
     replyTo,
     headers: unsubscribeHeaders(params.token),
   });
@@ -219,6 +237,7 @@ export async function sendOrderConfirmedEmail(params: {
     to: params.to,
     subject: "Vos photos sont à vous",
     element: <OrderConfirmed {...props} />,
+    fromName: params.operatorName,
     replyTo,
   });
 }
@@ -248,7 +267,19 @@ export async function sendPhotoWithdrawalNotifiedEmail(params: {
     slotLabel: params.slotLabel,
     galleryUrl: params.galleryUrl,
   };
-  await dispatch({ to, subject: "Une photo a été retirée de votre galerie de groupe", element: <PhotoWithdrawn {...props} /> });
+  await dispatch({
+    to,
+    subject: "Une photo a été retirée de votre galerie de groupe",
+    element: <PhotoWithdrawn {...props} />,
+    fromName: "Linktrip",
+  });
+}
+
+/** « de jet-ski », « d'escalade » : minuscule initiale et élision devant voyelle ou h. */
+export function photosOf(activity: string): string {
+  const a = activity.trim();
+  const lower = a.charAt(0).toLocaleLowerCase("fr") + a.slice(1);
+  return /^[aeiouyhàâéèêëîïôöûùü]/i.test(lower) ? `d\u2019${lower}` : `de ${lower}`;
 }
 
 /**
@@ -278,5 +309,13 @@ export async function sendGroupInviteEmail(params: {
     sortiePlace: params.sortiePlace ?? undefined,
     galleryUrl: params.galleryUrl,
   };
-  await dispatch({ to: params.to, subject: "Vos photos vous attendent", element: <GroupInvite {...props} />, replyTo });
+  // Objet propre à la sortie : avec un objet fixe, Gmail empile toutes les
+  // sorties de la saison dans une seule conversation.
+  await dispatch({
+    to: params.to,
+    subject: `Vos photos ${photosOf(params.activity)} du ${params.sortieDate}`,
+    element: <GroupInvite {...props} />,
+    fromName: params.operatorName,
+    replyTo,
+  });
 }

@@ -32,7 +32,7 @@ export default function GroupInvite({
   return (
     <Html lang="fr">
       <Head />
-      <Preview>Vos photos de {activity} vous attendent.</Preview>
+      <Preview>{`${activity}, le ${sortieDate}. Choisissez l’heure de votre sortie pour retrouver vos photos.`}</Preview>
       <Body style={s.body}>
         <Container style={s.card}>
           <Section style={{ padding: "18px 22px", borderBottom: `1px solid ${brand.line}` }}>
@@ -66,7 +66,7 @@ export default function GroupInvite({
             <Text style={s.h1}>Vos photos vous attendent</Text>
             <Text style={s.lead}>
               {activity}
-              {sortiePlace ? ` à ${sortiePlace}` : ""}, le {sortieDate}. Retrouvez votre créneau et vos photos avec le lien ci-dessous.
+              {sortiePlace ? ` à ${sortiePlace}` : ""}, le {sortieDate}. Choisissez l&rsquo;heure de votre sortie pour retrouver vos photos.
             </Text>
           </Section>
 
@@ -89,7 +89,10 @@ export default function GroupInvite({
 
           <Hr style={{ borderColor: brand.line, margin: 0 }} />
           <Section style={{ padding: "16px 22px 22px" }}>
-            <Text style={s.small}>Envoyé par {operatorName} via Souvenir, à la demande de l&rsquo;opérateur.</Text>
+            <Text style={s.small}>
+              Une question&nbsp;? Répondez à ce mail, il arrive directement chez {operatorName}.
+            </Text>
+            <Text style={{ ...s.small, marginTop: 6 }}>Envoyé par {operatorName} via Linktrip.</Text>
           </Section>
         </Container>
       </Body>

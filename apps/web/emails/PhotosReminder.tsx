@@ -81,7 +81,7 @@ export default function PhotosReminder({
           <Hr style={{ borderColor: brand.line, margin: 0 }} />
           <Section style={{ padding: "16px 22px 20px" }}>
             <Text style={s.small}>
-              {operatorName} via Souvenir ·{" "}
+              {operatorName} via Linktrip ·{" "}
               <Link href={unsubUrl} style={{ color: brand.ink3 }}>ne plus recevoir ces messages</Link>
             </Text>
           </Section>

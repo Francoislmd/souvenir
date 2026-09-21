@@ -126,7 +126,7 @@ export default function OrderConfirmed({
             <Text style={s.small}>
               Votre lien de téléchargement reste actif 90 jours.
               <br />
-              {operatorName} via Souvenir ·{" "}
+              {operatorName} via Linktrip ·{" "}
               <Link href={supportUrl} style={{ color: brand.ink3 }}>une question ?</Link>
             </Text>
           </Section>
