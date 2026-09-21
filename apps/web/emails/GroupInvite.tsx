@@ -17,6 +17,8 @@ export interface GroupInviteProps {
   sortieDate: string;
   sortiePlace?: string;
   galleryUrl: string;
+  /** Bandeau très flouté tiré d'une photo de la sortie (lib/email-cover.ts). */
+  coverUrl?: string;
 }
 
 export default function GroupInvite({
@@ -28,6 +30,7 @@ export default function GroupInvite({
   sortieDate,
   sortiePlace,
   galleryUrl,
+  coverUrl,
 }: GroupInviteProps) {
   return (
     <Html lang="fr">
@@ -62,7 +65,21 @@ export default function GroupInvite({
             </Row>
           </Section>
 
-          <Section style={{ padding: "26px 24px 0" }}>
+          {coverUrl && (
+            <Section style={{ padding: "20px 24px 0" }}>
+              <Link href={galleryUrl}>
+                <Img
+                  src={coverUrl}
+                  width={512}
+                  height={170}
+                  alt=""
+                  style={{ display: "block", width: "100%", maxWidth: 512, height: "auto", borderRadius: 14 }}
+                />
+              </Link>
+            </Section>
+          )}
+
+          <Section style={{ padding: `${coverUrl ? 22 : 26}px 24px 0` }}>
             <Text style={{ ...s.h1, fontSize: "24px", lineHeight: "1.2" }}>Vos photos vous attendent</Text>
             <Text style={{ ...s.lead, color: brand.ink2, fontSize: "16px", lineHeight: "1.6", margin: "10px 0 0" }}>
               Choisissez l&rsquo;heure de votre sortie pour retrouver vos photos.

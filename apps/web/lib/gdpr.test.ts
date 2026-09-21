@@ -133,7 +133,7 @@ describe("purgeGroupSortie", () => {
     await purgeGroupSortie("s1");
 
     expect(deleteStorageObjectsMock).toHaveBeenCalledWith("originals", ["o1"]);
-    expect(deleteStorageObjectsMock).toHaveBeenCalledWith("previews", ["p1", "gp1"]);
+    expect(deleteStorageObjectsMock).toHaveBeenCalledWith("previews", ["p1", "gp1", "sorties/s1/cover-email.jpg"]);
     expect(prismaMock.$transaction).toHaveBeenCalled();
     expect(trackMock).toHaveBeenCalledWith("group_purge", { operatorId: "operator_1", meta: { sortieId: "s1" } });
   });

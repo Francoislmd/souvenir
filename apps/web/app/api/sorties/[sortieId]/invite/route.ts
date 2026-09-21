@@ -6,6 +6,7 @@ import { sendGroupInviteEmail } from "@/lib/email";
 import { deriveChannel } from "@/lib/channel";
 import { nameFromEmail } from "@/lib/emails";
 import { ensureShareCode, storeUrl } from "@/lib/store";
+import { buildEmailCover } from "@/lib/email-cover";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -56,6 +57,8 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     const galleryUrl = storeUrl(sortie.operator.slug, code);
     const emails = Array.from(new Set(parsed.data.emails.map((e) => e.trim().toLowerCase())));
 
+    // Un bandeau par envoi, partagé par tous les destinataires.
+    const coverUrl = await buildEmailCover(sortie.id);
     const now = new Date();
     let sent = 0;
     for (const to of emails) {
@@ -91,6 +94,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
           sortieDate: formatDateFr(sortie.startsAt),
           sortiePlace: sortie.place,
           galleryUrl,
+          coverUrl,
         });
         // La date d'envoi n'est posée qu'après l'envoi : une ligne sans
         // `sentAt` est une adresse à qui l'email n'est jamais parti.

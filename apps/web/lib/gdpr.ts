@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { deleteStorageObjects, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
 import { originalKeysOf, previewKeysOf } from "./media";
+import { emailCoverKey } from "./email-cover";
 
 export async function purgeParticipant(participantId: string): Promise<void> {
   const participant = await prisma.participant.findUnique({
@@ -65,7 +66,7 @@ export async function purgeGroupSortie(sortieId: string): Promise<void> {
   if (!sortie || sortie.mode !== "GROUPE" || !sortie.purgeAt) return;
 
   const originalKeys = sortie.photos.flatMap(originalKeysOf);
-  const previewKeys = sortie.photos.flatMap(previewKeysOf);
+  const previewKeys = [...sortie.photos.flatMap(previewKeysOf), emailCoverKey(sortie.id)];
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
   await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);
