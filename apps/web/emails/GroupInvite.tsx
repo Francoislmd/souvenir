@@ -33,18 +33,18 @@ export default function GroupInvite({
     <Html lang="fr">
       <Head />
       <Preview>{`${activity}, le ${sortieDate}. Choisissez l’heure de votre sortie pour retrouver vos photos.`}</Preview>
-      <Body style={s.body}>
+      <Body style={{ ...s.body, padding: "16px 8px" }}>
         <Container style={s.card}>
-          <Section style={{ padding: "18px 22px", borderBottom: `1px solid ${brand.line}` }}>
+          <Section style={{ padding: "20px 24px", borderBottom: `1px solid ${brand.line}` }}>
             <Row>
-              <Column style={{ width: 34, paddingRight: 11 }}>
+              <Column style={{ width: 40, paddingRight: 12, verticalAlign: "middle" }}>
                 {operatorLogoUrl ? (
-                  <Img src={operatorLogoUrl} width={34} height={34} alt="" style={{ display: "block", width: 34, height: 34, objectFit: "cover", borderRadius: 10 }} />
+                  <Img src={operatorLogoUrl} width={40} height={40} alt="" style={{ display: "block", width: 40, height: 40, objectFit: "contain", borderRadius: 10, border: `1px solid ${brand.line}` }} />
                 ) : (
-                  <table cellPadding={0} cellSpacing={0} border={0} width={34} style={{ backgroundColor: operatorColor, borderRadius: 10 }}>
+                  <table cellPadding={0} cellSpacing={0} border={0} width={40} style={{ backgroundColor: operatorColor, borderRadius: 10 }}>
                     <tbody>
                       <tr>
-                        <td height={34} align="center" style={{ color: brand.white, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 12 }}>
+                        <td height={40} align="center" style={{ color: brand.white, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 14 }}>
                           {operatorInitials}
                         </td>
                       </tr>
@@ -52,25 +52,24 @@ export default function GroupInvite({
                   </table>
                 )}
               </Column>
-              <Column>
-                <Text style={{ ...s.h1, fontSize: "15px", letterSpacing: "-0.2px", margin: 0 }}>{operatorName}</Text>
-                <Text style={{ ...s.small, marginTop: 2 }}>
-                  Sortie du {sortieDate}
+              <Column style={{ verticalAlign: "middle" }}>
+                <Text style={{ ...s.h1, fontSize: "16px", letterSpacing: "-0.2px", margin: 0 }}>{operatorName}</Text>
+                <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", marginTop: 1 }}>
+                  {activity} · {sortieDate}
                   {sortiePlace ? ` · ${sortiePlace}` : ""}
                 </Text>
               </Column>
             </Row>
           </Section>
 
-          <Section style={{ padding: "22px 22px 0" }}>
-            <Text style={s.h1}>Vos photos vous attendent</Text>
-            <Text style={s.lead}>
-              {activity}
-              {sortiePlace ? ` à ${sortiePlace}` : ""}, le {sortieDate}. Choisissez l&rsquo;heure de votre sortie pour retrouver vos photos.
+          <Section style={{ padding: "26px 24px 0" }}>
+            <Text style={{ ...s.h1, fontSize: "24px", lineHeight: "1.2" }}>Vos photos vous attendent</Text>
+            <Text style={{ ...s.lead, color: brand.ink2, fontSize: "16px", lineHeight: "1.6", margin: "10px 0 0" }}>
+              Choisissez l&rsquo;heure de votre sortie pour retrouver vos photos.
             </Text>
           </Section>
 
-          <Section style={{ padding: 22 }}>
+          <Section style={{ padding: "24px 24px 26px" }}>
             <table width="100%" cellPadding={0} cellSpacing={0} border={0}>
               <tbody>
                 <tr>
@@ -82,14 +81,14 @@ export default function GroupInvite({
                 </tr>
               </tbody>
             </table>
-            <Text style={{ ...s.small, textAlign: "center", marginTop: 11 }}>
+            <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", textAlign: "center", marginTop: 12 }}>
               Aucun compte à créer · lien valable 90 jours
             </Text>
           </Section>
 
           <Hr style={{ borderColor: brand.line, margin: 0 }} />
-          <Section style={{ padding: "16px 22px 22px" }}>
-            <Text style={s.small}>
+          <Section style={{ padding: "18px 24px 22px" }}>
+            <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", lineHeight: "1.6" }}>
               Une question&nbsp;? Répondez à ce mail, il arrive directement chez {operatorName}.
             </Text>
             <Text style={{ ...s.small, marginTop: 6 }}>Envoyé par {operatorName} via Linktrip.</Text>
