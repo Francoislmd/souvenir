@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
 import { throttleBackfill } from "./preview-backfill";
+import { imageSourceKeyOf } from "./media";
 import type { BoutiquePhoto } from "@/components/gallery/BoutiqueGallery";
 
 /**
@@ -38,7 +39,7 @@ export async function getBoutiquePhotos(
   // une route publique.
   const missing = throttleBackfill(rawPhotos.filter((p) => !p.groupPreviewKey && !purchasedSet.has(p.id)));
   const backfilled = await backfillGroupPreviews(
-    missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
+    missing.map((p) => ({ id: p.id, originalKey: imageSourceKeyOf(p) })),
     operatorName,
   );
 
@@ -66,6 +67,8 @@ export async function getBoutiquePhotos(
         previewUrl,
         // Jamais d'original pour une photo non achetée (critère d'acceptation #4).
         originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
+        isVideo: p.isVideo,
+        durationSec: p.durationSec,
       };
     }),
   );

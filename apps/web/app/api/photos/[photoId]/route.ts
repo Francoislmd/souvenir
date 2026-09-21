@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
 import { deleteStorageObjects, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "@/lib/storage";
+import { originalKeysOf, previewKeysOf } from "@/lib/media";
 
 const schema = z.object({ ownerId: z.string().min(1).nullable() });
 
@@ -68,9 +69,10 @@ export async function DELETE(_request: Request, { params }: { params: { photoId:
 
     await prisma.photo.delete({ where: { id: photo.id } });
 
-    await deleteStorageObjects(ORIGINALS_BUCKET, [photo.originalKey]);
-    const previewKeys = [photo.thumbKey, photo.previewKey].filter((key): key is string => Boolean(key));
-    await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);
+    await deleteStorageObjects(ORIGINALS_BUCKET, originalKeysOf(photo));
+    // Toutes les dérivées : le bucket previews est public, un aperçu oublié
+    // (flou email, filigrane) resterait lisible par son URL.
+    await deleteStorageObjects(PREVIEWS_BUCKET, previewKeysOf(photo));
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {

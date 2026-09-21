@@ -85,6 +85,7 @@ async function main() {
   const photos = await prisma.photo.findMany({
     select: {
       originalKey: true,
+      posterKey: true,
       previewKey: true,
       thumbKey: true,
       blurEmailKey: true,
@@ -93,7 +94,7 @@ async function main() {
   });
   const referenced = new Set<string>();
   for (const p of photos) {
-    for (const key of [p.originalKey, p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey]) {
+    for (const key of [p.originalKey, p.posterKey, p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey]) {
       if (key) referenced.add(key);
     }
   }

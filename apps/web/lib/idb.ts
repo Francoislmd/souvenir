@@ -25,6 +25,16 @@ export interface UploadItem {
   signedUrl?: string;
   error?: string;
   createdAt: number;
+  /** Vidéo : sa vignette et ce que le navigateur en a lu (lib/video-probe.ts),
+   *  une fois pour toutes — un rechargement ne refait pas la sonde. */
+  isVideo?: boolean;
+  lastModified?: number;
+  probed?: boolean;
+  poster?: Blob | null;
+  durationSec?: number | null;
+  takenAt?: string | null;
+  posterSignedUrl?: string | null;
+  posterSent?: boolean;
 }
 
 interface UploadQueueDB extends DBSchema {

@@ -9,11 +9,14 @@ import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
+import { PlayMark, VideoBadge } from "@/components/ui/VideoBadge";
 
 export interface BoutiquePhoto {
   id: string;
   previewUrl: string | null;
   originalUrl: string | null;
+  isVideo?: boolean;
+  durationSec?: number | null;
 }
 
 /**
@@ -184,7 +187,7 @@ export function BoutiqueGallery({
                 {title}, {when.toLowerCase()}
               </p>
               <p className={styles.hint}>
-                {yours.length} photo{yours.length > 1 ? "s" : ""} en pleine résolution, sans filigrane.
+                {boughtLabel(yours)} en pleine résolution, sans filigrane.
               </p>
             </div>
             {/* La promesse de l'écran, enfin tenue : un seul geste. Avant, la
@@ -209,7 +212,24 @@ export function BoutiqueGallery({
           <div className={styles.doneGrid}>
             {yours.map((p) => (
               <span key={p.id} className={styles.doneTile}>
-                {p.originalUrl ? (
+                {p.originalUrl && p.isVideo ? (
+                  // La vidéo s'ouvre dans le lecteur du téléphone, plein écran :
+                  // un lecteur intégré dans une tuile de cette taille n'aurait
+                  // pas la place de ses commandes.
+                  <>
+                    <a href={p.originalUrl} target="_blank" rel="noreferrer" aria-label="Regarder la vidéo" style={{ position: "absolute", inset: 0 }}>
+                      {p.previewUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.previewUrl} alt="" />
+                      ) : null}
+                      <PlayMark />
+                    </a>
+                    <VideoBadge durationSec={p.durationSec} />
+                    <a className={styles.save} href={`${p.originalUrl}&download=`} aria-label="Télécharger cette vidéo">
+                      <DownloadIcon size={15} />
+                    </a>
+                  </>
+                ) : p.originalUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.originalUrl} alt="" />
@@ -297,6 +317,17 @@ export function BoutiqueGallery({
       ) : null}
     </>
   );
+}
+
+/** « 12 photos », « 10 photos et 2 vidéos », « 1 vidéo ». */
+function boughtLabel(items: BoutiquePhoto[]): string {
+  const videos = items.filter((p) => p.isVideo).length;
+  const photos = items.length - videos;
+  const parts = [
+    photos > 0 ? `${photos} photo${photos > 1 ? "s" : ""}` : null,
+    videos > 0 ? `${videos} vidéo${videos > 1 ? "s" : ""}` : null,
+  ].filter(Boolean);
+  return parts.join(" et ") || "0 photo";
 }
 
 function allLabel(count: number): string {

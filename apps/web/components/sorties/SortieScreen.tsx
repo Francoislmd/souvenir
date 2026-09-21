@@ -15,11 +15,14 @@ import { ClientsSection } from "@/components/sorties/ClientsSection";
 import { EmailsField } from "@/components/sorties/EmailsField";
 import { clientCount } from "@/lib/emails";
 import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
+import { LocalVideoThumb, VideoBadge } from "@/components/ui/VideoBadge";
 
 export interface ScreenPhoto {
   id: string;
   ownerId: string | null;
   thumbUrl: string | null;
+  isVideo?: boolean;
+  durationSec?: number | null;
 }
 
 export interface ScreenClient {
@@ -121,7 +124,7 @@ export function SortieScreen({
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
     if (!res.ok) return [];
     const data = (await res.json()) as { photos: ScreenPhoto[] };
-    return data.photos.map((p) => ({ id: p.id, ownerId: p.ownerId, thumbUrl: p.thumbUrl }));
+    return data.photos.map((p) => ({ id: p.id, ownerId: p.ownerId, thumbUrl: p.thumbUrl, isVideo: p.isVideo, durationSec: p.durationSec }));
   }, [sortieId]);
 
   // Une seule boucle de rattrapage : elle tourne pendant que la file travaille
@@ -309,11 +312,11 @@ export function SortieScreen({
   // le fichier est déjà sur l'appareil, sa vignette aussi.
   const known = new Set(photos.map((p) => p.id));
   const fresh = state.items.filter((item) => item.status !== "failed" && (!item.photoId || !known.has(item.photoId)));
-  const localByPhoto = new Map<string, string>();
+  const localByPhoto = new Map<string, { url: string; isVideo: boolean }>();
   for (const item of state.items) {
     if (!item.photoId) continue;
     const url = upload.previewUrl(item.id);
-    if (url) localByPhoto.set(item.photoId, url);
+    if (url) localByPhoto.set(item.photoId, { url, isVideo: !!item.isVideo });
   }
 
   const photoCount = photos.length + fresh.length;
@@ -326,7 +329,8 @@ export function SortieScreen({
   const grid = (
     <div className={`${styles.sdGrid} ${selected.size > 0 ? styles.sdGridPicking : ""} ${lighting ? styles.sdGridPub : ""}`}>
       {photos.map((p) => {
-        const src = p.thumbUrl ?? localByPhoto.get(p.id) ?? null;
+        const local = p.thumbUrl ? null : localByPhoto.get(p.id);
+        const src = p.thumbUrl ?? local?.url ?? null;
         const on = selected.has(p.id);
         return (
           <span
@@ -349,7 +353,8 @@ export function SortieScreen({
             }
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
+            {local?.isVideo ? <LocalVideoThumb src={local.url} /> : src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
+            {p.isVideo || local?.isVideo ? <VideoBadge durationSec={p.durationSec} /> : null}
             {selectable ? (
               <span className={`${styles.sdPhCheck} ${on ? styles.sdPhCheckOn : ""}`}>
                 <CheckIcon />
@@ -367,7 +372,8 @@ export function SortieScreen({
         return (
           <span key={item.id} className={styles.sdPh} style={{ cursor: "default" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
+            {src && item.isVideo ? <LocalVideoThumb src={src} /> : src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
+            {item.isVideo ? <VideoBadge durationSec={item.durationSec} /> : null}
           </span>
         );
       })}
@@ -717,7 +723,7 @@ export function SortieScreen({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <path d="M12 5.8v12.4M5.8 12h12.4" />
               </svg>
-              <span className={styles.sdChipLabel}>Ajouter des photos</span>
+              <span className={styles.sdChipLabel}>Ajouter photos et vidéos</span>
             </button>
             {scheduled ? (
               <button type="button" className={`${styles.sdChip} ${styles.sdChipGhost}`} onClick={() => upload.cancelPublish(sortieId)}>

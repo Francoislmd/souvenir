@@ -180,6 +180,9 @@ model Photo {
   blurEmailKey    String? // même principe, flou un cran plus fort — les emails n'ont pas le cadenas/contexte visuel de la galerie
   groupPreviewKey String? // mode GROUPE uniquement — aperçu filigrané (motif répété), servi non floué avant paiement (lib/group-watermark.ts)
   takenAt         DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
+  isVideo         Boolean     @default(false) // vidéo : même parcours qu'une photo, aperçus tirés de posterKey (lib/media.ts)
+  posterKey       String? // vidéo uniquement — image tirée de la vidéo par le navigateur au dépôt, bucket originals (privé : elle n'a pas de filigrane)
+  durationSec     Int? // vidéo uniquement — durée arrondie, affichée sur la vignette
   status          PhotoStatus @default(UPLOADED)
   createdAt       DateTime    @default(now())
 

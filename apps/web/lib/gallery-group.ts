@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { getPreviewUrl } from "./storage";
+import { imageSourceKeyOf } from "./media";
 import { backfillGroupPreviews } from "./group-publish";
 import { throttleBackfill } from "./preview-backfill";
 
@@ -31,6 +32,8 @@ export interface GroupSlotSummary {
 export interface GroupPhoto {
   id: string;
   previewUrl: string | null;
+  isVideo?: boolean;
+  durationSec?: number | null;
 }
 
 // Pas de fuseau horaire par opérateur dans le modèle actuel — tout le
@@ -323,12 +326,14 @@ export async function getSlotPhotos(slotId: string, operatorName: string): Promi
 
   const missing = throttleBackfill(photos.filter((p) => !p.groupPreviewKey));
   const backfilled = await backfillGroupPreviews(
-    missing.map((p) => ({ id: p.id, originalKey: p.originalKey })),
+    missing.map((p) => ({ id: p.id, originalKey: imageSourceKeyOf(p) })),
     operatorName,
   );
 
   return photos.map((p) => ({
     id: p.id,
     previewUrl: previewUrlFor({ groupPreviewKey: p.groupPreviewKey ?? backfilled.get(p.id) ?? null }),
+    isVideo: p.isVideo,
+    durationSec: p.durationSec,
   }));
 }

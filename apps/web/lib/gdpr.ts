@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { deleteStorageObjects, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
+import { originalKeysOf, previewKeysOf } from "./media";
 
 export async function purgeParticipant(participantId: string): Promise<void> {
   const participant = await prisma.participant.findUnique({
@@ -9,15 +10,13 @@ export async function purgeParticipant(participantId: string): Promise<void> {
   });
   if (!participant || participant.deletedAt) return;
 
-  const originalKeys = participant.photos.map((p) => p.originalKey);
+  const originalKeys = participant.photos.flatMap(originalKeysOf);
   // TOUTES les dérivées, pas seulement previewKey/thumbKey. Le bucket
   // `previews` est public : un aperçu flouté ou filigrané oublié ici reste
   // lisible par son URL après que la personne a demandé sa suppression — et
   // il porte son visage. purgeGroupSortie listait déjà les cinq clés, la
   // version individuelle en oubliait trois.
-  const previewKeys = participant.photos.flatMap((p) =>
-    [p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
-  );
+  const previewKeys = participant.photos.flatMap(previewKeysOf);
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
   await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);
@@ -65,10 +64,8 @@ export async function purgeGroupSortie(sortieId: string): Promise<void> {
   });
   if (!sortie || sortie.mode !== "GROUPE" || !sortie.purgeAt) return;
 
-  const originalKeys = sortie.photos.map((p) => p.originalKey);
-  const previewKeys = sortie.photos.flatMap((p) =>
-    [p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey].filter((k): k is string => !!k),
-  );
+  const originalKeys = sortie.photos.flatMap(originalKeysOf);
+  const previewKeys = sortie.photos.flatMap(previewKeysOf);
 
   await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
   await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);

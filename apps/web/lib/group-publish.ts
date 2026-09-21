@@ -5,6 +5,7 @@ import { supabaseAdmin } from "./supabase";
 import { ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "./storage";
 import { generateGroupPreview } from "./group-watermark";
 import { clusterByTime, type ClusterItem } from "./cluster";
+import { imageSourceKeyOf } from "./media";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -214,7 +215,8 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
     progress.onPhoto?.(photo.id, done, total);
   }
   const freshlyPrepared = await mapWithConcurrency(toPrepare, PREPARE_CONCURRENCY, async (photo) => {
-    const prepared = await preparePhoto(photo.id, photo.originalKey, sortie.operator.name);
+    // Vidéo : l'aperçu part de sa vignette, jamais du fichier vidéo (lib/media.ts).
+    const prepared = await preparePhoto(photo.id, imageSourceKeyOf(photo), sortie.operator.name);
     done += 1;
     progress.onPhoto?.(photo.id, done, total);
     return prepared;
@@ -223,9 +225,16 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
   // Dans l'ordre de dépôt, comme avant : la couverture d'un créneau sans
   // heure de prise de vue est sa première photo.
   const byId = new Map<string, PhotoPrep>(freshlyPrepared.map((p) => [p.id, p]));
-  const preparedRaw: PhotoPrep[] = sortie.photos.map(
-    (photo) => byId.get(photo.id) ?? { id: photo.id, takenAt: photo.takenAt, groupPreviewKey: photo.groupPreviewKey },
-  );
+  // Une heure déjà connue n'est jamais effacée par une préparation qui n'en
+  // trouve pas : c'est le cas de toute vidéo (sa vignette n'a pas d'EXIF,
+  // l'heure a été lue au dépôt), et d'une photo dont l'EXIF est illisible au
+  // second passage.
+  const preparedRaw: PhotoPrep[] = sortie.photos.map((photo) => {
+    const fresh = byId.get(photo.id);
+    return fresh
+      ? { ...fresh, takenAt: fresh.takenAt ?? photo.takenAt, groupPreviewKey: fresh.groupPreviewKey ?? photo.groupPreviewKey }
+      : { id: photo.id, takenAt: photo.takenAt, groupPreviewKey: photo.groupPreviewKey };
+  });
   progress.onSorting?.();
   // L'EXIF n'est fiable que si elle tombe le même jour (heure de Paris) que
   // la date renseignée par l'opérateur pour la sortie — sinon on l'ignore

@@ -5,6 +5,7 @@ import Link from "next/link";
 import styles from "@/components/gallery/collective.module.css";
 import { BackLink } from "@/components/gallery/BackLink";
 import { LoadingBlock, Spinner, TileSpinner } from "@/components/ui/Spinner";
+import { VideoBadge } from "@/components/ui/VideoBadge";
 import type { GroupDaySummary, GroupPhoto, GroupSlotSummary } from "@/lib/gallery-group";
 
 type Step = "days" | "slots" | "photos";
@@ -143,6 +144,7 @@ export function WithdrawPhotoPicker({
             ) : (
               <TileSpinner />
             )}
+            {photo.isVideo ? <VideoBadge durationSec={photo.durationSec} /> : null}
             <button type="button" className={styles.hideBar} onClick={() => confirmHide(photo.id)} disabled={pending === photo.id}>
               {pending === photo.id ? (
                 <>

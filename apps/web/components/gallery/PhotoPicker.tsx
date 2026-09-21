@@ -5,10 +5,15 @@ import styles from "@/components/gallery/gallery.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
+import { PlayMark, VideoBadge } from "@/components/ui/VideoBadge";
+import { formatDuration } from "@/lib/media";
 
 export interface PickerPhoto {
   id: string;
   previewUrl: string | null;
+  /** Vidéo : l'aperçu est sa vignette filigranée, la vidéo se regarde après achat. */
+  isVideo?: boolean;
+  durationSec?: number | null;
 }
 
 /**
@@ -245,6 +250,7 @@ export function PhotoPicker({
                 // muette passait pour une photo manquante.
                 <TileSpinner />
               )}
+              {photo.isVideo ? <VideoBadge durationSec={photo.durationSec} /> : null}
               <button
                 type="button"
                 aria-label="Voir en grand"
@@ -387,6 +393,12 @@ export function PhotoPicker({
             ) : (
               <TileSpinner tone="light" size={30} />
             )}
+            {zoomed.isVideo ? (
+              <>
+                <PlayMark />
+                <VideoBadge durationSec={zoomed.durationSec} />
+              </>
+            ) : null}
 
             {total > 1 ? (
               <>
@@ -407,18 +419,22 @@ export function PhotoPicker({
             {packOnly ? null : (
               <button type="button" className={styles.cta} onClick={() => toggle(zoomed.id)}>
                 {zoomedOn ? (
-                  "Retirer cette photo"
+                  zoomed.isVideo ? "Retirer cette vidéo" : "Retirer cette photo"
                 ) : (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
-                    Choisir cette photo · {formatEuros(pricing.pricePhotoCents)}
+                    {zoomed.isVideo ? "Choisir cette vidéo" : "Choisir cette photo"} · {formatEuros(pricing.pricePhotoCents)}
                   </>
                 )}
               </button>
             )}
-            <p className={styles.boxNote}>Le filigrane disparaît après le paiement.</p>
+            <p className={styles.boxNote}>
+              {zoomed.isVideo
+                ? `Vidéo${formatDuration(zoomed.durationSec) ? ` de ${formatDuration(zoomed.durationSec)}` : ""}, à regarder en entier et sans filigrane après le paiement.`
+                : "Le filigrane disparaît après le paiement."}
+            </p>
           </div>
         </div>
       ) : null}

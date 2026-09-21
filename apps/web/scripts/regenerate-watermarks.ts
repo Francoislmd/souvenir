@@ -42,6 +42,7 @@ async function main(): Promise<void> {
 
   const { prisma } = await import("../lib/prisma");
   const { regenerateGroupPreview } = await import("../lib/group-publish");
+  const { imageSourceKeyOf } = await import("../lib/media");
 
   const photos = await prisma.photo.findMany({
     where: {
@@ -50,7 +51,7 @@ async function main(): Promise<void> {
       ...(operatorFilter ? { sortie: { operator: { name: { contains: operatorFilter, mode: "insensitive" } } } } : {}),
     },
     orderBy: { createdAt: "asc" },
-    select: { id: true, originalKey: true, sortie: { select: { operator: { select: { name: true } } } } },
+    select: { id: true, originalKey: true, isVideo: true, posterKey: true, sortie: { select: { operator: { select: { name: true } } } } },
   });
 
   const todo = photos.slice(0, limit === Infinity ? undefined : limit);
@@ -77,7 +78,7 @@ async function main(): Promise<void> {
   // (détection de visages TF.js) et ce script tourne sur un poste, pas sur
   // une fonction. Rien ne presse, et rien ne doit tomber en route.
   for (const photo of todo) {
-    const key = await regenerateGroupPreview(photo.id, photo.originalKey, photo.sortie.operator.name);
+    const key = await regenerateGroupPreview(photo.id, imageSourceKeyOf(photo), photo.sortie.operator.name);
     if (key) {
       await prisma.photo.update({ where: { id: photo.id }, data: { groupPreviewKey: key } });
       done += 1;

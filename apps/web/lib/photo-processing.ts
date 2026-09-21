@@ -45,10 +45,13 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
 
   const dir = await mkdtemp(join(tmpdir(), "souvenir-"));
   try {
-    const { data: original, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(photo.originalKey);
-    if (error || !original) throw error ?? new Error("Failed to download original");
-
-    const originalBuffer = Buffer.from(await original.arrayBuffer());
+    // Une vidéo n'est jamais décodée ici : tout part de sa vignette, tirée
+    // par le navigateur au dépôt (lib/media.ts). Sans vignette (format que le
+    // navigateur ne savait pas lire, envoi raté), une image de repli est
+    // posée à sa place pour que la vidéo reste visible et vendable.
+    const originalBuffer = photo.isVideo
+      ? await loadVideoPoster(photo.id, photo.sortieId, photo.posterKey)
+      : await downloadOriginalBuffer(photo.originalKey);
     const inputPath = join(dir, "input");
     await writeFile(inputPath, originalBuffer);
 
@@ -63,9 +66,15 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // Heure de prise de vue, pour le rangement par créneau à la publication.
     // Stockée brute : la publication écarte celles qui ne tombent pas le jour
     // de la sortie (lib/group-publish.ts).
-    const exif = await exifr.parse(originalBuffer, ["DateTimeOriginal"]).catch(() => null);
+    // Vidéo : l'heure a été lue par le navigateur au dépôt (la vignette n'a
+    // pas d'EXIF) — on garde celle de la fiche.
+    const exif = photo.isVideo ? null : await exifr.parse(originalBuffer, ["DateTimeOriginal"]).catch(() => null);
     const takenAtRaw: unknown = exif?.DateTimeOriginal;
-    const takenAt = takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime()) ? takenAtRaw : null;
+    const takenAt = photo.isVideo
+      ? photo.takenAt
+      : takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime())
+        ? takenAtRaw
+        : null;
 
     // Une seule décompression de l'original (24 Mpx sur un reflex récent) au
     // lieu de trois : miniature, aperçu filigrané et flou email dérivent tous
@@ -152,6 +161,48 @@ export async function runPhotoProcessing(photoId: string): Promise<void> {
     console.error(`[photo-processing] ${photoId} failed`, error);
     await prisma.photo.update({ where: { id: photoId }, data: { status: "FAILED" } });
   }
+}
+
+async function downloadOriginalBuffer(key: string): Promise<Buffer> {
+  const { data, error } = await supabaseAdmin.storage.from(ORIGINALS_BUCKET).download(key);
+  if (error || !data) throw error ?? new Error("Failed to download original");
+  return Buffer.from(await data.arrayBuffer());
+}
+
+/**
+ * La vignette d'une vidéo, ou à défaut une image de repli (fond sombre,
+ * triangle de lecture) enregistrée à sa place : le
+ * reste du traitement, la publication et le rattrapage des aperçus
+ * (imageSourceKeyOf) la lisent ensuite comme n'importe quelle vignette.
+ */
+async function loadVideoPoster(photoId: string, sortieId: string, posterKey: string | null): Promise<Buffer> {
+  if (posterKey) {
+    try {
+      const buffer = await downloadOriginalBuffer(posterKey);
+      // Une vignette vide ou corrompue ne doit pas faire échouer la vidéo.
+      await sharp(buffer).metadata();
+      return buffer;
+    } catch (error) {
+      console.warn(`[photo-processing] ${photoId} video poster missing, using fallback`, error);
+    }
+  }
+  const key = posterKey ?? `${sortieId}/${photoId}-poster.jpg`;
+  const buffer = await sharp(Buffer.from(fallbackPosterSvg())).jpeg({ quality: 86 }).toBuffer();
+  await supabaseAdmin.storage.from(ORIGINALS_BUCKET).upload(key, buffer, { contentType: "image/jpeg", upsert: true });
+  if (!posterKey) await prisma.photo.update({ where: { id: photoId }, data: { posterKey: key } });
+  return buffer;
+}
+
+// Pas de texte : Vercel n'a pas de polices système pour librsvg, un libellé
+// sortirait en carrés. Le nom du professionnel arrive de toute façon avec le
+// filigrane des aperçus.
+function fallbackPosterSvg(): string {
+  return `<svg width="1600" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2838"/><stop offset="1" stop-color="#141320"/></linearGradient></defs>
+  <rect width="1600" height="1200" fill="url(#g)"/>
+  <circle cx="800" cy="560" r="120" fill="rgba(255,255,255,0.12)"/>
+  <path d="M760 490 L880 560 L760 630 Z" fill="#ffffff"/>
+</svg>`;
 }
 
 interface OperatorBrand {

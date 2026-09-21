@@ -47,7 +47,7 @@ export function PhotoDropZone({
     void queue.enqueue(sortieId, chosen);
   }
 
-  const input = <input ref={inputRef} type="file" multiple accept="image/*" onChange={handleFilesSelected} className="hidden" />;
+  const input = <input ref={inputRef} type="file" multiple accept="image/*,video/*" onChange={handleFilesSelected} className="hidden" />;
 
   if (variant === "silent") return input;
 
@@ -59,7 +59,7 @@ export function PhotoDropZone({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <path d="M12 5.8v12.4M5.8 12h12.4" />
           </svg>
-          <span className={styles.sdChipLabel}>{label ?? "Ajouter des photos"}</span>
+          <span className={styles.sdChipLabel}>{label ?? "Ajouter photos et vidéos"}</span>
         </button>
       </>
     );
@@ -76,9 +76,9 @@ export function PhotoDropZone({
             <path d="M4 15.5v2.8A2.2 2.2 0 0 0 6.2 20.5h11.6a2.2 2.2 0 0 0 2.2-2.2v-2.8" />
           </svg>
         </span>
-        <span className={styles.sdDropT}>{label ?? "Déposez les photos de la sortie"}</span>
+        <span className={styles.sdDropT}>{label ?? "Déposez les photos et vidéos de la sortie"}</span>
         <span className={styles.sdDropH}>Videz la carte mémoire d&rsquo;un coup. Glissez-les ici, ou choisissez-les sur l&rsquo;appareil.</span>
-        <span className={`${styles.sBtn} ${styles.sBtnPri}`}>Choisir les photos</span>
+        <span className={`${styles.sBtn} ${styles.sBtnPri}`}>Choisir les fichiers</span>
       </button>
     </>
   );

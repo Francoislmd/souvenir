@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
 import { track } from "@/lib/analytics";
 import { deleteStorageObjects, ORIGINALS_BUCKET, PREVIEWS_BUCKET } from "@/lib/storage";
+import { originalKeysOf, previewKeysOf } from "@/lib/media";
 
 const schema = z.object({
   activity: z.string().min(1).optional(),
@@ -78,10 +79,8 @@ export async function DELETE(_request: Request, { params }: { params: { sortieId
     // partent avec la sortie (schema.prisma, onDelete: Cascade).
     await prisma.sortie.delete({ where: { id: sortie.id } });
 
-    const originalKeys = sortie.photos.map((p) => p.originalKey);
-    const previewKeys = sortie.photos.flatMap((p) =>
-      [p.previewKey, p.thumbKey, p.blurEmailKey, p.groupPreviewKey].filter((key): key is string => Boolean(key)),
-    );
+    const originalKeys = sortie.photos.flatMap(originalKeysOf);
+    const previewKeys = sortie.photos.flatMap(previewKeysOf);
     await deleteStorageObjects(ORIGINALS_BUCKET, originalKeys);
     await deleteStorageObjects(PREVIEWS_BUCKET, previewKeys);
 

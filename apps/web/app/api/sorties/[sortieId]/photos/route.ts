@@ -4,9 +4,16 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { getPreviewUrl } from "@/lib/storage";
 import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
+import { MAX_VIDEO_BYTES, MAX_VIDEO_MB, extensionOf, isVideoFilename } from "@/lib/media";
 
 const schema = z.object({
   filename: z.string().min(1),
+  // Vidéo : ce que le navigateur a lu du fichier au dépôt (lib/video-probe.ts).
+  // Tout est facultatif — une vidéo sans vignette ni heure reste déposable.
+  kind: z.enum(["photo", "video"]).optional(),
+  sizeBytes: z.number().int().nonnegative().optional(),
+  durationSec: z.number().nonnegative().max(24 * 3600).nullable().optional(),
+  takenAt: z.string().datetime().nullable().optional(),
 });
 
 export async function GET(_request: Request, { params }: { params: { sortieId: string } }): Promise<Response> {
@@ -23,7 +30,7 @@ export async function GET(_request: Request, { params }: { params: { sortieId: s
   const photos = await prisma.photo.findMany({
     where: { sortieId: sortie.id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, status: true, ownerId: true, thumbKey: true },
+    select: { id: true, status: true, ownerId: true, thumbKey: true, isVideo: true, durationSec: true },
   });
 
   return Response.json({
@@ -32,6 +39,8 @@ export async function GET(_request: Request, { params }: { params: { sortieId: s
       status: p.status,
       ownerId: p.ownerId,
       thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
+      isVideo: p.isVideo,
+      durationSec: p.durationSec,
     })),
   });
 }
@@ -56,17 +65,47 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const extensionMatch = /\.([a-zA-Z0-9]+)$/.exec(parsed.data.filename);
-    const extension = extensionMatch ? `.${extensionMatch[1].toLowerCase()}` : "";
-    const originalKey = `${sortie.id}/${crypto.randomUUID()}${extension}`;
-
-    const { data, error } = await supabaseAdmin.storage.from("originals").createSignedUploadUrl(originalKey);
-    if (error || !data) {
-      throw error ?? new Error("Failed to create signed upload URL");
+    const ext = extensionOf(parsed.data.filename);
+    const isVideo = parsed.data.kind === "video" || isVideoFilename(parsed.data.filename);
+    // Le navigateur filtre déjà (UploadQueueProvider) ; ceci protège d'un
+    // envoi qui échouerait côté stockage après avoir poussé tous ses octets.
+    if (isVideo && parsed.data.sizeBytes !== undefined && parsed.data.sizeBytes > MAX_VIDEO_BYTES) {
+      return Response.json({ error: "video_too_large", maxMb: MAX_VIDEO_MB }, { status: 413 });
     }
 
+    const base = `${sortie.id}/${crypto.randomUUID()}`;
+    const originalKey = `${base}${ext ? `.${ext}` : ""}`;
+    // La vignette d'une vidéo vit à côté d'elle, dans le bucket privé : c'est
+    // une image nette, sans filigrane. Seules ses dérivées vont dans `previews`.
+    const posterKey = isVideo ? `${base}-poster.jpg` : null;
+
+    const bucket = supabaseAdmin.storage.from("originals");
+    const [upload, posterUpload] = await Promise.all([
+      bucket.createSignedUploadUrl(originalKey),
+      posterKey ? bucket.createSignedUploadUrl(posterKey) : Promise.resolve(null),
+    ]);
+    if (upload.error || !upload.data) {
+      throw upload.error ?? new Error("Failed to create signed upload URL");
+    }
+    if (posterUpload && (posterUpload.error || !posterUpload.data)) {
+      throw posterUpload.error ?? new Error("Failed to create poster signed upload URL");
+    }
+
+    const takenAt = parsed.data.takenAt ? new Date(parsed.data.takenAt) : null;
     const photo = await prisma.photo.create({
-      data: { sortieId: sortie.id, originalKey, status: "UPLOADED" },
+      data: {
+        sortieId: sortie.id,
+        originalKey,
+        status: "UPLOADED",
+        ...(isVideo
+          ? {
+              isVideo: true,
+              posterKey,
+              durationSec: parsed.data.durationSec != null ? Math.round(parsed.data.durationSec) : null,
+              takenAt,
+            }
+          : {}),
+      },
     });
 
     // Aucune répartition automatique — les photos arrivent communes (ownerId
@@ -77,9 +116,12 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       await prisma.sortie.update({ where: { id: sortie.id }, data: { status: "SORTED" } });
     }
 
-    await track("photos_uploaded", { operatorId: dbUser.operatorId, meta: { photoId: photo.id } });
+    await track("photos_uploaded", { operatorId: dbUser.operatorId, meta: { photoId: photo.id, ...(isVideo ? { video: true } : {}) } });
 
-    return Response.json({ photoId: photo.id, signedUrl: data.signedUrl }, { status: 201 });
+    return Response.json(
+      { photoId: photo.id, signedUrl: upload.data.signedUrl, posterSignedUrl: posterUpload?.data?.signedUrl ?? null },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("[API /api/sorties/[sortieId]/photos]", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

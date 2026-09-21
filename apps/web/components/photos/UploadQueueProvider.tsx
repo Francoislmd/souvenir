@@ -14,6 +14,8 @@ import {
   type UploadItem,
 } from "@/lib/idb";
 import { runPublication } from "@/lib/publish-client";
+import { MAX_VIDEO_BYTES, MAX_VIDEO_MB, isVideoFile } from "@/lib/media";
+import { probeVideo } from "@/lib/video-probe";
 
 /**
  * La file d'envoi des photos, montée une fois pour tout l'espace opérateur.
@@ -33,6 +35,7 @@ const MAX_ATTEMPTS = 4;
 const RETRY_DELAY_MS = 2500;
 const PAINT_INTERVAL_MS = 120;
 const INTENTS_KEY = "linktrip-publications-programmees";
+const TOO_LARGE = `Vidéo trop lourde (${MAX_VIDEO_MB} Mo max)`;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -236,16 +239,39 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     try {
       // Relire l'état courant plutôt que de faire confiance à `item` : un
       // appel concurrent a pu l'enregistrer entre-temps.
-      const current = (await getAllUploadItems()).find((i) => i.id === item.id);
+      let current = (await getAllUploadItems()).find((i) => i.id === item.id);
       if (current?.photoId && current?.signedUrl) return;
+      if (!current) return;
+      // Vidéo : vignette, durée et heure lues avant d'enregistrer la fiche,
+      // qui les porte dès sa création. Une vidéo à la fois (probeVideo).
+      if (current.isVideo && !current.probed) {
+        const probe = await probeVideo(current.file, current.lastModified);
+        const patch = { probed: true, poster: probe.poster, durationSec: probe.durationSec, takenAt: probe.takenAt };
+        await updateUploadItem(item.id, patch);
+        current = { ...current, ...patch };
+      }
       const res = await fetch(`/api/sorties/${item.sortieId}/photos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: item.filename }),
+        body: JSON.stringify(
+          current.isVideo
+            ? {
+                filename: current.filename,
+                kind: "video",
+                sizeBytes: current.file.size,
+                durationSec: current.durationSec ?? null,
+                takenAt: current.takenAt ?? null,
+              }
+            : { filename: current.filename },
+        ),
       });
+      if (res.status === 413) {
+        await updateUploadItem(item.id, { status: "failed", attempts: MAX_ATTEMPTS, error: TOO_LARGE });
+        return;
+      }
       if (!res.ok) throw new Error("init failed");
-      const data = (await res.json()) as { photoId: string; signedUrl: string };
-      await updateUploadItem(item.id, { photoId: data.photoId, signedUrl: data.signedUrl });
+      const data = (await res.json()) as { photoId: string; signedUrl: string; posterSignedUrl?: string | null };
+      await updateUploadItem(item.id, { photoId: data.photoId, signedUrl: data.signedUrl, posterSignedUrl: data.posterSignedUrl ?? null });
     } catch {
       // L'envoi (uploadOne) réessaiera l'enregistrement s'il manque encore.
     } finally {
@@ -266,7 +292,18 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         const fresh = (await getAllUploadItems()).find((i) => i.id === item.id);
         const photoId = fresh?.photoId;
         const signedUrl = fresh?.signedUrl;
+        if (fresh?.status === "failed") {
+          await refresh();
+          return true;
+        }
         if (!photoId || !signedUrl) throw new Error("not registered");
+
+        // La vignette d'une vidéo part avant la vidéo : quelques centaines de
+        // Ko, et c'est elle que le traitement serveur attend.
+        if (fresh.isVideo && fresh.poster && fresh.posterSignedUrl && !fresh.posterSent) {
+          await putToSignedUrl(fresh.posterSignedUrl, fresh.poster, () => undefined);
+          await updateUploadItem(item.id, { posterSent: true });
+        }
 
         await putToSignedUrl(signedUrl, item.file, (progress) => {
           liveProgress.current.set(item.id, progress);
@@ -278,6 +315,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         await refresh();
         return true;
       } catch {
+        const latest = (await getAllUploadItems()).find((i) => i.id === item.id);
+        if (latest?.status === "failed" && latest.error === TOO_LARGE) {
+          await refresh();
+          return true;
+        }
         const attempts = (item.attempts ?? 0) + 1;
         liveProgress.current.set(item.id, 0);
         await updateUploadItem(item.id, {
@@ -542,10 +584,28 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const enqueue = useCallback(
     async (sortieId: string, files: File[]): Promise<void> => {
       if (files.length === 0) return;
+      // Photos et vidéos seulement ; une vidéo au-delà du plafond de stockage
+      // (lib/media.ts) est écartée tout de suite, plutôt que d'échouer après
+      // des minutes d'envoi.
+      // Type vide : un HEIC sur certains navigateurs, traité en photo comme avant.
+      const media = files.filter((file) => !file.type || file.type.startsWith("image/") || isVideoFile(file));
+      const accepted = media.filter((file) => !isVideoFile(file) || file.size <= MAX_VIDEO_BYTES);
+      const tooLarge = media.length - accepted.length;
+      const ignored = files.length - media.length;
+      if (tooLarge > 0) {
+        toast(
+          tooLarge === 1
+            ? `Une vidéo dépasse ${MAX_VIDEO_MB} Mo, elle n'a pas été ajoutée`
+            : `${tooLarge} vidéos dépassent ${MAX_VIDEO_MB} Mo, elles n'ont pas été ajoutées`,
+        );
+      } else if (ignored > 0) {
+        toast(ignored === 1 ? "Un fichier n'est ni une photo ni une vidéo" : `${ignored} fichiers ne sont ni des photos ni des vidéos`);
+      }
+      if (accepted.length === 0) return;
       // Le dépôt précédent est soldé : le compteur ne parle que des photos
       // qu'on vient de choisir.
       await purgeFinishedForSortie(sortieId);
-      const created: UploadItem[] = files.map((file) => ({
+      const created: UploadItem[] = accepted.map((file) => ({
         id: crypto.randomUUID(),
         sortieId,
         file,
@@ -554,6 +614,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         progress: 0,
         attempts: 0,
         createdAt: Date.now(),
+        ...(isVideoFile(file) ? { isVideo: true, lastModified: file.lastModified } : {}),
       }));
 
       // Les vignettes apparaissent ici, avant le moindre appel réseau et avant
@@ -581,7 +642,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       await refresh();
       router.refresh();
     },
-    [refresh, registerOne, pump, router],
+    [refresh, registerOne, pump, router, toast],
   );
 
   const retryFailed = useCallback(

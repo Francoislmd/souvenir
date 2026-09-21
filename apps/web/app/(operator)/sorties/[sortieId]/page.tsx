@@ -60,6 +60,8 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
         id: p.id,
         ownerId: p.ownerId,
         thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
+        isVideo: p.isVideo,
+        durationSec: p.durationSec,
       }))}
     />
   );
