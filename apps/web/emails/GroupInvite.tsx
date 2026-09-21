@@ -17,7 +17,7 @@ export type GroupEmailVariant = "invite" | "reminder" | "last";
 const COPY: Record<GroupEmailVariant, { title: string; lead: string }> = {
   invite: { title: "Vos photos vous attendent", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos." },
   reminder: { title: "Vos photos sont toujours là", lead: "Choisissez l\u2019heure de votre sortie pour les retrouver." },
-  last: { title: "Dernier rappel", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos. C\u2019est notre dernier message à ce sujet." },
+  last: { title: "Dernier rappel", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos." },
 };
 
 export interface GroupInviteProps {
@@ -32,7 +32,7 @@ export interface GroupInviteProps {
   /** Bandeau très flouté tiré d'une photo de la sortie (lib/email-cover.ts). */
   coverUrl?: string;
   variant?: GroupEmailVariant;
-  /** « 20 décembre » : dernier jour en ligne (Sortie.purgeAt). */
+  /** « 20 décembre » : dernier jour en ligne (Sortie.purgeAt), affiché sur la dernière relance seulement. */
   purgeDate?: string;
   /** Relances uniquement : page de désinscription. */
   unsubUrl?: string;
@@ -120,7 +120,7 @@ export default function GroupInvite({
               </tbody>
             </table>
             <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", textAlign: "center", marginTop: 12 }}>
-              Aucun compte à créer · {purgeDate ? `en ligne jusqu\u2019au ${purgeDate}` : "lien valable 90 jours"}
+              Aucun compte à créer{variant === "last" && purgeDate ? ` · en ligne jusqu\u2019au ${purgeDate}` : ""}
             </Text>
           </Section>
 
