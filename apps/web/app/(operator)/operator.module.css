@@ -1371,19 +1371,10 @@ a.sRow:hover .sTh {
 .sdRise {
   animation: sdRise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.sdRise .sdOk {
-  animation: sdPop 0.5s 0.25s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
-}
 @keyframes sdRise {
   from {
     opacity: 0;
     transform: translateY(12px);
-  }
-}
-@keyframes sdPop {
-  from {
-    opacity: 0;
-    transform: scale(0.7);
   }
 }
 
@@ -1410,10 +1401,12 @@ a.sRow:hover .sTh {
   margin: 46px 0 8px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
+  text-align: center;
 }
 .sDangerLink {
   font-family: inherit;
   font-size: 0.88rem;
+  font-weight: 400;
   color: var(--ink-4);
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -1424,7 +1417,7 @@ a.sRow:hover .sTh {
 .sDangerConfirm {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
 }
 .sDangerConfirm p {
@@ -1432,6 +1425,7 @@ a.sRow:hover .sTh {
   font-size: 0.92rem;
   color: var(--ink-2);
   max-width: 480px;
+  text-align: center;
 }
 .sDangerActions {
   display: flex;
@@ -1629,19 +1623,6 @@ a.sRow:hover .sTh {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sdOk {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 8px;
-  background: var(--ok-bg);
-  color: var(--ok-ink);
-  font-size: 0.81rem;
-  font-weight: 500;
-}
-
 .sdClients {
   display: flex;
   flex-direction: column;
@@ -1836,6 +1817,25 @@ a.sdClient:hover {
   align-items: center;
   gap: 12px;
   margin-top: 14px;
+}
+/* Les clients déjà prévenus, sous le champ, séparés par un filet. */
+.sdMailClients {
+  display: block;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.sdMailClients .sdClients {
+  margin-bottom: 0;
+}
+.sdMailSub {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
 }
 
 /* ---------- clients d'une sortie nominative ---------- */

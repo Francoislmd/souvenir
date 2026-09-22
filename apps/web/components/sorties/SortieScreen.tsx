@@ -644,6 +644,14 @@ export function SortieScreen({
             </button>
           </span>
         ) : null}
+        {/* Une fois la galerie en ligne, ceux qui ont reçu le lien se lisent
+            sous le champ, dans la même carte : c'est la suite du même geste. */}
+        {published && clients.length > 0 ? (
+          <span className={styles.sdMailClients}>
+            <span className={styles.sdMailSub}>Vos clients</span>
+            <span className={styles.sdClients}>{clients.map((c) => clientRow(c))}</span>
+          </span>
+        ) : null}
       </span>
     </div>
   );
@@ -775,12 +783,6 @@ export function SortieScreen({
               )}
             </span>
             <span className={styles.sdShareMain}>
-              <span className={styles.sdOk}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-                {justPublished ? "Galerie en ligne" : "En ligne"} · {photoCount} photo{photoCount > 1 ? "s" : ""}
-              </span>
               <span className={styles.sdShareT}>Le lien de la galerie</span>
               <span className={styles.sdShareH}>Montrez le code au retour, ou envoyez le lien.</span>
               <span className={styles.sdShareRow}>
@@ -824,12 +826,13 @@ export function SortieScreen({
         )}
 
         {inFlight || confirmPublishOpen ? null : published ? (
-          clients.length > 0 ? (
+          // En groupe, les clients sont dans la carte d'envoi (emailsSection).
+          !isGroup && clients.length > 0 ? (
             <>
               <p className={styles.sDay} style={{ marginTop: 34 }}>
                 Vos clients
               </p>
-              <div className={`${styles.sdClients} ${justPublished && !isGroup ? styles.sdRise : ""}`}>{clients.map((c) => clientRow(c))}</div>
+              <div className={`${styles.sdClients} ${justPublished ? styles.sdRise : ""}`}>{clients.map((c) => clientRow(c))}</div>
             </>
           ) : null
         ) : !isGroup ? (
