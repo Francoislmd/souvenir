@@ -65,20 +65,11 @@ function meta(row: SortieRow, d: Date): string {
   return bits.join(" · ");
 }
 
-/** Ce que la ligne dit une fois la galerie en ligne : le montant généré et
- *  le nombre d'achats. Sans achat, la ligne affiche « 0,00 € » seul (plus de
- *  statut « En ligne » depuis le 22/09/2026). */
-function outcome(row: SortieRow): { value: string; sub: string; subShort: string } | null {
-  if (row.paidCount === 0) return null;
-  const plural = row.paidCount > 1 ? "s" : "";
-  const denominator = !row.isGroup && row.participantCount > 0 ? ` sur ${row.participantCount}` : "";
-  // Sur téléphone la colonne de droite prend sa place sur le titre : le
-  // « sur 12 » saute, le nombre d'achats reste.
-  return {
-    value: formatEuros(row.revenueCents),
-    sub: `${row.paidCount} achat${plural}${denominator}`,
-    subShort: `${row.paidCount} achat${plural}`,
-  };
+/** Ce que la ligne dit une fois la galerie en ligne : le montant généré,
+ *  seul, « 0,00 € » compris. Ni statut « En ligne » ni nombre d'achats
+ *  (retirés le 22/09/2026) : la colonne ne porte qu'un chiffre. */
+function outcome(row: SortieRow): string {
+  return formatEuros(row.paidCount > 0 ? row.revenueCents : 0);
 }
 
 function UploadIcon() {
@@ -184,7 +175,6 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
               }
 
               const online = action === null && row.publicationStatus === "online";
-              const result = online ? outcome(row) : null;
 
               return (
                 <Link key={row.id} href={`/sorties/${row.id}`} className={styles.sRow}>
@@ -212,17 +202,9 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                         <span className={styles.sdBtnShort}>{action.short}</span>
                       </span>
                     </span>
-                  ) : result ? (
-                    <span className={styles.sVal}>
-                      <b>{result.value}</b>
-                      <span className={styles.sdBtnLong}>{result.sub}</span>
-                      <span className={styles.sdBtnShort}>{result.subShort}</span>
-                    </span>
                   ) : online ? (
-                    // En ligne sans achat : le montant, 0 €, plutôt qu'un
-                    // état. La colonne dit toujours la même chose.
                     <span className={styles.sVal}>
-                      <b>{formatEuros(0)}</b>
+                      <b>{outcome(row)}</b>
                     </span>
                   ) : null}
                 </Link>
