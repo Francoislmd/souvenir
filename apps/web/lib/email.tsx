@@ -74,7 +74,9 @@ async function dispatch(params: {
   });
 
   if (error) {
-    throw new Error(error.message);
+    // Le nom (validation_error, rate_limit_exceeded…) dit pourquoi Resend
+    // refuse ; le message seul ne suffit pas à le traduire pour l'opérateur.
+    throw new Error(`${error.name}: ${error.message}`);
   }
 }
 

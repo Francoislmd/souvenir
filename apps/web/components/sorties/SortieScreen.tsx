@@ -271,32 +271,35 @@ export function SortieScreen({
 
   // Une liste d'adresses saisies à la main par l'opérateur, pas des
   // Participant : en mode GROUPE personne n'est identifié avant l'achat.
-  async function sendInvites(): Promise<boolean> {
-    if (emails.length === 0) return true;
-    const res = await fetch(`/api/sorties/${sortieId}/invite`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emails }),
-    });
-    if (!res.ok) return false;
-    setEmails([]);
-    return true;
+  async function sendInvites(): Promise<{ sent: number; total: number; error?: string }> {
+    if (emails.length === 0) return { sent: 0, total: 0 };
+    const total = emails.length;
+    try {
+      const res = await fetch(`/api/sorties/${sortieId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { sent?: number; total?: number; error?: string };
+      const sent = res.ok ? (data.sent ?? total) : 0;
+      if (sent > 0) setEmails([]);
+      return { sent, total: data.total ?? total, error: data.error };
+    } catch {
+      return { sent: 0, total, error: "Connexion perdue." };
+    }
   }
 
   async function sendInvitesNow(): Promise<void> {
     if (sendingInvite || emails.length === 0) return;
     setSendingInvite(true);
-    const count = emails.length;
-    const ok = await sendInvites();
+    const { sent, total, error } = await sendInvites();
     setSendingInvite(false);
-    if (ok) {
-      // Les adresses deviennent des clients « Envoyé » dans la liste juste
-      // en dessous : elle est rendue côté serveur, donc il faut la relire.
-      router.refresh();
-      toast(`Lien envoyé à ${clientCount(count)}`);
-    } else {
-      toast("L'envoi a échoué, réessayez.");
-    }
+    // Les adresses deviennent des clients « Envoyé » dans la liste juste
+    // en dessous : elle est rendue côté serveur, donc il faut la relire.
+    if (sent > 0) router.refresh();
+    if (sent === total) toast(`Lien envoyé à ${clientCount(sent)}`);
+    else if (sent > 0) toast(`Lien envoyé à ${sent} sur ${total}. ${error ?? ""}`.trim());
+    else toast(`L'envoi a échoué. ${error ?? "Réessayez."}`);
   }
 
   async function copyLink(): Promise<void> {

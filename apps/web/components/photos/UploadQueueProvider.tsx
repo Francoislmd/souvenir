@@ -493,15 +493,18 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       // Un envoi raté ne remet pas la publication en question : elle a eu
       // lieu, et l'écran de la sortie permet de renvoyer.
       let invitedOk = true;
+      let inviteError = "";
       if (invites > 0) {
         patchRun(sortieId, { phase: "inviting" });
         try {
-          const sent = await fetch(`/api/sorties/${sortieId}/invite`, {
+          const res = await fetch(`/api/sorties/${sortieId}/invite`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ emails: intent.emails }),
           });
-          invitedOk = sent.ok;
+          const data = (await res.json().catch(() => ({}))) as { sent?: number; error?: string };
+          invitedOk = res.ok && (data.sent ?? invites) === invites;
+          inviteError = data.error ?? "";
         } catch {
           invitedOk = false;
         }
@@ -515,7 +518,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
             ? "Galerie publiée"
             : invitedOk
               ? `Galerie publiée, lien envoyé à ${invites} client${invites > 1 ? "s" : ""}`
-              : "Galerie publiée, mais l'envoi du lien a échoué"
+              : `Galerie publiée, mais l'envoi du lien a échoué. ${inviteError}`.trim()
           : `Envoyé à ${intent.clients} client${intent.clients > 1 ? "s" : ""}`,
       );
       // L'écran garde l'avancement affiché jusqu'à ce que la page relue

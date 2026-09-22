@@ -17,6 +17,25 @@ const schema = z.object({
   emails: z.array(z.string().email()).min(1).max(200),
 });
 
+/**
+ * Ce que l'opérateur lit quand Resend refuse. Les deux causes connues sont
+ * de configuration, pas de saisie : elles se règlent dans Resend, pas en
+ * réessayant.
+ */
+function sendFailureReason(error: unknown): string {
+  const msg = error instanceof Error ? error.message : String(error);
+  if (/testing emails|verify a domain|domain is not verified/i.test(msg)) {
+    return "Resend refuse l'adresse d'expédition : le domaine n'est pas vérifié (en test, Resend n'écrit qu'au titulaire du compte).";
+  }
+  if (/rate_limit|quota|too many/i.test(msg)) {
+    return "Quota d'envoi Resend atteint, réessayez plus tard.";
+  }
+  if (/RESEND_API_KEY|api key/i.test(msg)) {
+    return "Clé Resend absente ou invalide.";
+  }
+  return msg;
+}
+
 function formatDateFr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
@@ -61,6 +80,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     const coverUrl = await buildEmailCover(sortie.id);
     const now = new Date();
     let sent = 0;
+    let failure: string | null = null;
     for (const to of emails) {
       try {
         // Une ligne par adresse, réutilisée si elle existe déjà : l'opérateur
@@ -97,18 +117,26 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
           coverUrl,
           purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
         });
+        sent += 1;
         // La date d'envoi n'est posée qu'après l'envoi : une ligne sans
         // `sentAt` est une adresse à qui l'email n'est jamais parti.
-        await prisma.participant.update({ where: { id: participant.id }, data: { sentAt: now } });
-        sent += 1;
+        await prisma.participant.update({ where: { id: participant.id }, data: { sentAt: now } }).catch((error) => {
+          console.error("[API /api/sorties/[sortieId]/invite] sentAt not recorded for", to, error);
+        });
       } catch (error) {
         console.error("[API /api/sorties/[sortieId]/invite] send failed for", to, error);
+        failure ??= sendFailureReason(error);
       }
     }
 
     await track("group_invite_sent", { operatorId: sortie.operatorId, meta: { sortieId: sortie.id, sent, total: emails.length } });
 
-    return Response.json({ sent, total: emails.length }, { status: 200 });
+    // Rien n'est parti : ce n'est pas un succès. Avant, la route répondait 200
+    // quoi qu'il arrive et l'écran annonçait « Lien envoyé » sur un refus de Resend.
+    if (sent === 0) {
+      return Response.json({ sent, total: emails.length, error: failure ?? "L'envoi a échoué." }, { status: 502 });
+    }
+    return Response.json({ sent, total: emails.length, ...(failure ? { error: failure } : {}) }, { status: 200 });
   } catch (error) {
     console.error("[API /api/sorties/[sortieId]/invite]", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
