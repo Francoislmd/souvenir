@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
+import { SCROLL_ROOT_ID } from "@/components/operator/ScrollRoot";
 
 /**
  * Le même en-tête pour les quatre écrans de l'espace opérateur.
@@ -36,11 +37,18 @@ export function AppHeader({
 
   // L'ombre n'apparaît qu'une fois la page défilée : elle dit que l'en-tête
   // flotte au-dessus du contenu, elle ne décore pas le haut de page.
+  // Au-dessus de 760 px c'est la carte du contenu qui défile, en dessous
+  // la fenêtre : on écoute les deux.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 6);
+    const root = document.getElementById(SCROLL_ROOT_ID);
+    const onScroll = () => setScrolled(window.scrollY > 6 || (root?.scrollTop ?? 0) > 6);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    root?.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      root?.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   return (

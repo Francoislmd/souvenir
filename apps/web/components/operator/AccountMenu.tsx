@@ -78,6 +78,7 @@ export function AccountMenu({
         </span>
         <span className={styles.sWho}>
           <b>{operatorName}</b>
+          <span>{email}</span>
         </span>
         <svg className={styles.sAcctChev} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="m8 10 4-4 4 4M8 14l4 4 4-4" />

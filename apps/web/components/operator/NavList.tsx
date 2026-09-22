@@ -29,10 +29,10 @@ export function NavList({
         {/* Le logo complet, et le symbole seul pour la colonne réduite
             (1120 px et moins) où le nom ne tient pas. */}
         <span className={styles.sBrandFull}>
-          <Logo variant="lockup" height={36} title={null} />
+          <Logo variant="lockup" height={25} title={null} />
         </span>
         <span className={styles.sBrandMark}>
-          <Logo variant="symbol" height={34} title={null} />
+          <Logo variant="symbol" height={30} title={null} />
         </span>
       </Link>
 
@@ -52,17 +52,17 @@ export function NavList({
         );
       })}
 
+      <div className={styles.sp} />
+
       {/* La boutique telle que la voient les clients : l'opérateur la montre,
-          la copie dans ses confirmations. Absente de la barre d'onglets du
+          la copie dans ses confirmations. Elle sort de l'espace pro, d'où sa
+          place en bas, à part, et la flèche. Absente de la barre d'onglets du
           téléphone, qui n'a de place que pour trois entrées. */}
-      <p className={styles.sNavHead}>Vos clients</p>
       <a href={storeHref} target="_blank" rel="noopener noreferrer" className={`${styles.sNav} ${styles.sNavAside}`}>
         <BoutiqueIcon />
-        <span className={styles.sNavLabel}>Ma boutique</span>
-        <OutwardIcon size={16} className={styles.sNavExt} />
+        <span className={styles.sNavLabel}>Voir ma boutique</span>
+        <OutwardIcon size={14} className={styles.sNavExt} />
       </a>
-
-      <div className={styles.sp} />
 
       <AccountMenu operatorName={operatorName} email={email} logoUrl={logoUrl} />
     </>

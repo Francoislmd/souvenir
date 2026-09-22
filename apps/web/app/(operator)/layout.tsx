@@ -5,6 +5,7 @@ import { MobileTopBar } from "@/components/operator/MobileTopBar";
 import { StripeSyncBanner } from "@/components/operator/StripeSyncBanner";
 import { ToastProvider } from "@/components/operator/ToastProvider";
 import { UploadQueueProvider } from "@/components/photos/UploadQueueProvider";
+import { ScrollRoot } from "@/components/operator/ScrollRoot";
 import { storeHomeUrl } from "@/lib/store";
 import styles from "./operator.module.css";
 
@@ -34,14 +35,14 @@ export default async function OperatorLayout({ children }: { children: React.Rea
             storeHref={storeHomeUrl(operator.slug)}
           />
 
-          <div className={styles.main}>
+          <ScrollRoot>
             {!operator.stripeOnboarded ? <StripeSyncBanner /> : null}
             {/* Le logo et le compte, que la barre d'onglets basse ne peut pas
                 porter. Invisible au-dessus de 760 px : la colonne de gauche
                 s'en charge. */}
             <MobileTopBar operatorName={operator.name} email={dbUser.email} />
             <div className={styles.content}>{children}</div>
-          </div>
+          </ScrollRoot>
         </div>
       </UploadQueueProvider>
     </ToastProvider>

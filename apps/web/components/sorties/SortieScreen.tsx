@@ -16,6 +16,7 @@ import { EmailsField } from "@/components/sorties/EmailsField";
 import { clientCount } from "@/lib/emails";
 import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
 import { LocalVideoThumb, VideoBadge } from "@/components/ui/VideoBadge";
+import { scrollToTop } from "@/components/operator/ScrollRoot";
 
 export interface ScreenPhoto {
   id: string;
@@ -264,7 +265,7 @@ export function SortieScreen({
     setJustPublished(true);
     // Les adresses sont parties avec la publication : le champ repart vide.
     setEmails([]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
     if (run.phase === "done") dismissPublication(sortieId);
   }, [published, run, dismissPublication, sortieId]);
 
