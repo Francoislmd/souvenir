@@ -784,6 +784,20 @@ function StepSortie({ activities }: { activities: string[] }) {
           {busy ? <Spinner size={16} tone="current" label="Création" /> : null}
           {busy ? "Création…" : "Créer la sortie"}
         </button>
+        <button
+          type="button"
+          className={styles.link}
+          disabled={busy}
+          onClick={() => {
+            // Rien ne renvoie ici un pro sans sortie : /sorties l'accueille
+            // avec son écran vide, qui propose de créer la première.
+            gtmEvent("sortie_skipped", { source: "onboarding" });
+            router.push("/sorties");
+            router.refresh();
+          }}
+        >
+          Passer cette étape
+        </button>
       </div>
     </div>
   );

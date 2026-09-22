@@ -45,6 +45,7 @@ export type GtmEventName =
   | "onboarding_complete"
   | "stripe_onboarding_start"
   | "stripe_onboarding_done"
+  | "sortie_skipped"
   // Usage opérateur
   | "sortie_created"
   | "photos_uploaded"
