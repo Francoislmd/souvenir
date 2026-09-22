@@ -53,7 +53,10 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
   const [priceAll, setPriceAll] = useState(toEuros(operator.priceAllCents));
   const [packOnly, setPackOnly] = useState(operator.packOnly);
   const [automations, setAutomations] = useState<Automations>(operator.automations);
-  const [activities, setActivities] = useState<Set<string>>(new Set(operator.activities));
+  const [activities, setActivities] = useState<Set<string>>(
+    // Une activité retirée du catalogue ne doit pas faire refuser l'enregistrement.
+    () => new Set(operator.activities.filter((id) => ACTIVITIES.some((a) => a.id === id))),
+  );
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
 
   // Plus de bouton « Enregistrer » : les interrupteurs avaient l'air immédiats

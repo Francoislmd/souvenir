@@ -41,6 +41,8 @@ const BY_ACTIVITY: Record<string, string> = {
   canoe: "kayaking",
   paddle: "rowing",
   tubing: "pool",
+  "bouee tractee": "pool",
+  bouee: "pool",
   snuba: "scuba_diving",
   plongee: "scuba_diving",
   snorkeling: "scuba_diving",

@@ -6,20 +6,25 @@ export interface ActivityDef {
   label: string;
 }
 
+/* Même périmètre que les pages /activites du site (components/marketing/
+   activitesNav.ts), plus le parachute ascensionnel. Les verticales visées en
+   prospection d'abord, puis le reste par milieu. Les id existants ne changent
+   pas : ils sont stockés dans Operator.activities. */
 export const ACTIVITIES: ActivityDef[] = [
-  { id: "canyoning", label: "Canyoning" },
-  { id: "tyrolienne", label: "Tyrolienne" },
-  { id: "quad", label: "Quad" },
-  { id: "parapente", label: "Parapente" },
-  { id: "helicoptere", label: "Hélicoptère" },
   { id: "rafting", label: "Rafting" },
-  { id: "tubing", label: "Tubing" },
-  { id: "jetski", label: "Jet-ski" },
-  { id: "kayak", label: "Kayak" },
   { id: "parachute", label: "Parachute ascensionnel" },
-  { id: "snuba", label: "Snuba" },
+  { id: "jetski", label: "Jet-ski" },
+  { id: "parapente", label: "Parapente" },
+  { id: "bouee", label: "Bouée tractée" },
+  { id: "ski-nautique", label: "Ski nautique" },
+  { id: "canyoning", label: "Canyoning" },
+  { id: "kayak", label: "Kayak" },
   { id: "paddle", label: "Paddle" },
   { id: "surf", label: "Surf" },
-  { id: "baleines", label: "Observation des baleines" },
+  { id: "plongee", label: "Plongée" },
+  { id: "helicoptere", label: "Hélicoptère" },
+  { id: "tyrolienne", label: "Tyrolienne" },
+  { id: "quad", label: "Quad" },
+  { id: "parc-aventure", label: "Parc aventure" },
   { id: "autre", label: "Autre" },
 ];
