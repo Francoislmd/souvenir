@@ -65,9 +65,9 @@ function meta(row: SortieRow, d: Date): string {
   return bits.join(" · ");
 }
 
-/** Ce que la ligne dit une fois la galerie en ligne : le résultat. Sans
- *  achat, il n'y a pas de résultat à chiffrer, seulement l'état : « En
- *  ligne », sur une ligne, sans « 0 € ». */
+/** Ce que la ligne dit une fois la galerie en ligne : le montant généré et
+ *  le nombre d'achats. Sans achat, la ligne affiche « 0,00 € » seul (plus de
+ *  statut « En ligne » depuis le 22/09/2026). */
 function outcome(row: SortieRow): { value: string; sub: string; subShort: string } | null {
   if (row.paidCount === 0) return null;
   const plural = row.paidCount > 1 ? "s" : "";
@@ -219,7 +219,11 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                       <span className={styles.sdBtnShort}>{result.subShort}</span>
                     </span>
                   ) : online ? (
-                    <span className={styles.sValState}>En ligne</span>
+                    // En ligne sans achat : le montant, 0 €, plutôt qu'un
+                    // état. La colonne dit toujours la même chose.
+                    <span className={styles.sVal}>
+                      <b>{formatEuros(0)}</b>
+                    </span>
                   ) : null}
                 </Link>
               );

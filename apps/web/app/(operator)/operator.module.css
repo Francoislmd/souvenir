@@ -799,27 +799,10 @@ a.sRow:hover .sTh {
 }
 /* Galerie en ligne, aucun achat : une seule mention, à la hauteur de la
    ligne d'infos. Un « 0 € » gris répété sur chaque ligne ne disait rien. */
-.sValState {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
-  font-size: 0.9rem;
-  color: var(--ink-3);
-}
-.sValState::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ok);
-}
 /* La colonne de droite a une largeur fixe : les bandes de vignettes
-   s'alignent d'une ligne à l'autre, qu'elle porte un montant, un état ou un
+   s'alignent d'une ligne à l'autre, qu'elle porte un montant ou un
    bouton. */
 .sRow > .sVal,
-.sRow > .sValState,
 .sRow > .sRowAct {
   min-width: 176px;
 }
@@ -2601,8 +2584,7 @@ a.sdClient:hover {
     border-right: 0;
   }
   .sRow > .sVal,
-  .sRow > .sValState,
-  .sRow > .sRowAct {
+    .sRow > .sRowAct {
     min-width: 0;
   }
 }
