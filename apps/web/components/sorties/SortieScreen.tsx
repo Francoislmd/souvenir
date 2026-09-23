@@ -8,7 +8,7 @@ import styles from "@/app/(operator)/operator.module.css";
 import { formatEuros } from "@/lib/format";
 import { useToast } from "@/components/operator/ToastProvider";
 import { PhotoDropZone, type PhotoDropZoneHandle } from "@/components/photos/PhotoDropZone";
-import { useUploadQueue } from "@/components/photos/UploadQueueProvider";
+import { phaseOneBytes, useUploadQueue } from "@/components/photos/UploadQueueProvider";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
@@ -24,6 +24,8 @@ export interface ScreenPhoto {
   thumbUrl: string | null;
   isVideo?: boolean;
   durationSec?: number | null;
+  /** L'original n'est pas encore arrivé (seconde phase du dépôt). */
+  originalPending?: boolean;
 }
 
 export interface ScreenClient {
@@ -125,7 +127,14 @@ export function SortieScreen({
     const res = await fetch(`/api/sorties/${sortieId}/photos`);
     if (!res.ok) return [];
     const data = (await res.json()) as { photos: ScreenPhoto[] };
-    return data.photos.map((p) => ({ id: p.id, ownerId: p.ownerId, thumbUrl: p.thumbUrl, isVideo: p.isVideo, durationSec: p.durationSec }));
+    return data.photos.map((p) => ({
+      id: p.id,
+      ownerId: p.ownerId,
+      thumbUrl: p.thumbUrl,
+      isVideo: p.isVideo,
+      durationSec: p.durationSec,
+      originalPending: p.originalPending,
+    }));
   }, [sortieId]);
 
   // Une seule boucle de rattrapage : elle tourne pendant que la file travaille
@@ -388,12 +397,13 @@ export function SortieScreen({
   // Transfert : en octets (comme la barre basse), plus les photos finies —
   // une photo arrivée doit encore être traitée avant de compter.
   const liveItems = state.items.filter((i) => i.status !== "failed");
-  const readyCount = liveItems.filter((i) => i.status === "done").length;
-  const bytesTotal = liveItems.reduce((sum, i) => sum + i.file.size, 0);
+  // Seule la première phase compte : copies de travail, pas originaux.
+  const readyCount = liveItems.filter((i) => i.status === "done" || i.status === "background").length;
+  const bytesTotal = liveItems.reduce((sum, i) => sum + phaseOneBytes(i), 0);
   const bytesSent = liveItems.reduce((sum, i) => {
     if (i.status === "queued") return sum;
-    if (i.status === "uploading") return sum + (i.file.size * Math.min(100, Math.max(0, i.progress))) / 100;
-    return sum + i.file.size;
+    if (i.status === "uploading") return sum + (phaseOneBytes(i) * Math.min(100, Math.max(0, i.progress))) / 100;
+    return sum + phaseOneBytes(i);
   }, 0);
   const transferFrac =
     liveItems.length === 0 ? 1 : 0.8 * (bytesTotal > 0 ? bytesSent / bytesTotal : 1) + 0.2 * (readyCount / liveItems.length);
@@ -571,6 +581,24 @@ export function SortieScreen({
       </div>
     </div>
   );
+
+  // Seconde phase : la sortie est publiable, les originaux finissent d'arriver.
+  // Ceux de cet appareil partent tout seuls ; ceux d'un autre appareil (dépôt
+  // fait sur le téléphone, écran ouvert sur l'ordinateur) l'attendent.
+  const localPhotoIds = new Set(state.items.map((i) => i.photoId).filter((id): id is string => Boolean(id)));
+  const hdElsewhere = photos.filter((p) => p.originalPending && !localPhotoIds.has(p.id)).length;
+  const hdNote =
+    state.hdRemaining > 0 ? (
+      <p className={styles.sdNote} role="status">
+        Vos photos arrivent en haute définition : {state.hdRemaining} encore en route. Gardez Linktrip ouvert sur cet appareil
+        jusqu&rsquo;à la fin.
+      </p>
+    ) : hdElsewhere > 0 ? (
+      <p className={styles.sdNote}>
+        {hdElsewhere} photo{hdElsewhere > 1 ? "s" : ""} en haute définition {hdElsewhere > 1 ? "attendent" : "attend"} l&rsquo;appareil qui
+        {hdElsewhere > 1 ? " les a déposées" : " l\u2019a déposée"}. Rouvrez Linktrip dessus pour finir l&rsquo;envoi.
+      </p>
+    ) : null;
 
   // Une photo abandonnée après plusieurs tentatives se dit, et se rattrape —
   // avant, la file réessayait indéfiniment sans jamais rien annoncer.
@@ -760,6 +788,7 @@ export function SortieScreen({
           </span>
         </div>
         {failedNotice}
+        {hdNote}
       </div>
     );
   }
@@ -797,6 +826,8 @@ export function SortieScreen({
             </span>
           </div>
         ) : null}
+
+        {published ? hdNote : null}
 
         {published && isGroup ? emailsSection : null}
 

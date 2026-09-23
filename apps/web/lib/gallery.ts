@@ -2,7 +2,7 @@ import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
 import { throttleBackfill } from "./preview-backfill";
-import { extensionOf, imageSourceKeyOf } from "./media";
+import { deliverableKeyOf, extensionOf, imageSourceKeyOf } from "./media";
 
 function downloadName(originalKey: string, photoId: string): string {
   const ext = extensionOf(originalKey) || "jpg";
@@ -53,6 +53,9 @@ export async function getBoutiquePhotos(
       const p = backfilled.has(rawP.id) ? { ...rawP, groupPreviewKey: backfilled.get(rawP.id)! } : rawP;
       // Plus de photo offerte : seul le paiement déverrouille.
       const unlocked = purchasedSet.has(p.id);
+      // Original pas encore arrivé : la copie de travail d'une photo, rien
+      // pour une vidéo (la tuile attend, la page se relit toute seule).
+      const deliverable = unlocked ? deliverableKeyOf(p) : null;
       // Verrouillée : aperçu protégé (Photo.groupPreviewKey,
       // lib/group-watermark.ts) — et jamais de repli sur previewKey/thumbKey
       // (aperçus nets) qui exposerait la photo avant achat. Tant que
@@ -71,10 +74,11 @@ export async function getBoutiquePhotos(
         id: p.id,
         previewUrl,
         // Jamais d'original pour une photo non achetée (critère d'acceptation #4).
-        originalUrl: unlocked ? await getOriginalSignedUrl(p.originalKey) : null,
+        originalUrl: deliverable ? await getOriginalSignedUrl(deliverable) : null,
         // Lien à part pour « enregistrer » : un paramètre ajouté à une URL
         // signée en casserait la signature.
-        downloadUrl: unlocked ? await getOriginalSignedUrl(p.originalKey, downloadName(p.originalKey, p.id)) : null,
+        downloadUrl: deliverable ? await getOriginalSignedUrl(deliverable, downloadName(deliverable, p.id)) : null,
+        hdPending: unlocked && p.originalPending,
         isVideo: p.isVideo,
         durationSec: p.durationSec,
       };

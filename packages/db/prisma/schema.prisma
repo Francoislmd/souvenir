@@ -182,7 +182,8 @@ model Photo {
   groupPreviewKey String? // mode GROUPE uniquement — aperçu filigrané (motif répété), servi non floué avant paiement (lib/group-watermark.ts)
   takenAt         DateTime? // horodatage EXIF (DateTimeOriginal) lu à la publication d'une sortie GROUPE ; absent en mode INDIVIDUEL
   isVideo         Boolean     @default(false) // vidéo : même parcours qu'une photo, aperçus tirés de posterKey (lib/media.ts)
-  posterKey       String? // vidéo uniquement — image tirée de la vidéo par le navigateur au dépôt, bucket originals (privé : elle n'a pas de filigrane)
+  posterKey       String? // image d'où partent les aperçus, envoyée avant l'original (bucket originals, privé : pas de filigrane). Vidéo : image tirée par le navigateur. Photo : copie de travail 2048 px faite par le navigateur (lib/fast-copy.ts), absente pour une petite photo
+  originalPending Boolean     @default(false) // l'original (photo pleine définition ou vidéo) n'est pas encore arrivé : la photo est publiable, sa copie de travail sert en attendant (UploadQueueProvider, phase HD)
   durationSec     Int? // vidéo uniquement — durée arrondie, affichée sur la vignette
   sizeBytes       Int? // octets de l'original (+ vignette d'une vidéo), signés dans l'URL d'envoi — base du quota de stockage (lib/storage-quota.ts)
   status          PhotoStatus @default(UPLOADED)

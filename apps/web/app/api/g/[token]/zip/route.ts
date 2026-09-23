@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { downloadOriginal } from "@/lib/storage";
+import { deliverableKeyOf } from "@/lib/media";
 import { zipStream, slugForFilename, type ZipEntrySource } from "@/lib/zip";
 
 // Le zip se fabrique à la volée, photo par photo : il n'existe à aucun
@@ -46,7 +47,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
   const photos = await prisma.photo.findMany({
     where: { id: { in: purchasedIds }, hiddenAt: null },
     orderBy: { createdAt: "asc" },
-    select: { id: true, originalKey: true },
+    select: { id: true, originalKey: true, posterKey: true, isVideo: true, originalPending: true },
   });
   if (photos.length === 0) {
     return Response.json({ error: "empty" }, { status: 404 });
@@ -55,9 +56,18 @@ export async function GET(request: Request, { params }: { params: { token: strin
   const base = slugForFilename(participant.sortie.activity);
   const pad = String(photos.length).length;
 
-  const entries: ZipEntrySource[] = photos.map((photo, i) => ({
-    name: `${base}-${String(i + 1).padStart(pad, "0")}${extensionOf(photo.originalKey)}`,
-    load: () => downloadOriginal(photo.originalKey),
+  // Original pas encore arrivé : copie de travail pour une photo, rien pour
+  // une vidéo (sa vignette n'est pas la vidéo).
+  const deliverable = photos.flatMap((photo) => {
+    const key = deliverableKeyOf(photo);
+    return key ? [key] : [];
+  });
+  if (deliverable.length === 0) {
+    return Response.json({ error: "pending" }, { status: 409 });
+  }
+  const entries: ZipEntrySource[] = deliverable.map((key, i) => ({
+    name: `${base}-${String(i + 1).padStart(pad, "0")}${extensionOf(key)}`,
+    load: () => downloadOriginal(key),
   }));
 
   const day = participant.sortie.startsAt.toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });

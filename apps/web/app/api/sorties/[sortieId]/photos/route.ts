@@ -15,7 +15,9 @@ const schema = z.object({
   // stockage (lib/storage-quota.ts). Un onglet ouvert avant cette règle
   // échoue à l'enregistrement et reprend après rechargement.
   sizeBytes: z.number().int().positive(),
-  // Vidéo : la vignette tirée par le navigateur, si elle a pu l'être.
+  // L'image envoyée d'abord, d'où partent les aperçus : la vignette d'une
+  // vidéo, ou la copie de travail 2048 px d'une photo (lib/fast-copy.ts).
+  // Avec elle, l'original arrive ensuite, en tâche de fond.
   posterBytes: z.number().int().positive().max(20_000_000).nullable().optional(),
   durationSec: z.number().nonnegative().max(24 * 3600).nullable().optional(),
   takenAt: z.string().datetime().nullable().optional(),
@@ -35,7 +37,7 @@ export async function GET(_request: Request, { params }: { params: { sortieId: s
   const photos = await prisma.photo.findMany({
     where: { sortieId: sortie.id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, status: true, ownerId: true, thumbKey: true, isVideo: true, durationSec: true },
+    select: { id: true, status: true, ownerId: true, thumbKey: true, isVideo: true, durationSec: true, originalPending: true },
   });
 
   return Response.json({
@@ -46,6 +48,7 @@ export async function GET(_request: Request, { params }: { params: { sortieId: s
       thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
       isVideo: p.isVideo,
       durationSec: p.durationSec,
+      originalPending: p.originalPending,
     })),
   });
 }
@@ -81,10 +84,14 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
 
     const base = `${sortie.id}/${crypto.randomUUID()}`;
     const originalKey = `${base}${ext ? `.${ext}` : ""}`;
-    // La vignette d'une vidéo vit à côté d'elle, dans le bucket privé : c'est
-    // une image nette, sans filigrane. Seules ses dérivées vont dans `previews`.
-    const posterBytes = isVideo ? (parsed.data.posterBytes ?? null) : null;
-    const posterKey = isVideo ? `${base}-poster.jpg` : null;
+    // La vignette d'une vidéo, ou la copie de travail d'une photo, vit à côté
+    // de l'original dans le bucket privé : c'est une image nette, sans
+    // filigrane. Seules ses dérivées vont dans `previews`.
+    const posterBytes = parsed.data.posterBytes ?? null;
+    const posterKey = isVideo ? `${base}-poster.jpg` : posterBytes ? `${base}-work.jpg` : null;
+    // L'original suit la copie : la photo est publiable avant qu'il n'arrive.
+    // Une vidéo passe toujours par là, même sans vignette (image de repli).
+    const originalPending = isVideo || posterKey !== null;
     const totalBytes = sizeBytes + (posterBytes ?? 0);
 
     const takenAt = parsed.data.takenAt ? new Date(parsed.data.takenAt) : null;
@@ -97,12 +104,14 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
             originalKey,
             status: "UPLOADED",
             sizeBytes: totalBytes,
+            posterKey,
+            originalPending,
+            // Lue par le navigateur : la copie de travail n'a plus d'EXIF.
+            takenAt,
             ...(isVideo
               ? {
                   isVideo: true,
-                  posterKey,
                   durationSec: parsed.data.durationSec != null ? Math.round(parsed.data.durationSec) : null,
-                  takenAt,
                 }
               : {}),
           },
@@ -132,7 +141,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     await track("photos_uploaded", { operatorId: dbUser.operatorId, meta: { photoId: photo.id, ...(isVideo ? { video: true } : {}) } });
 
     return Response.json(
-      { photoId: photo.id, signedUrl, posterSignedUrl },
+      { photoId: photo.id, signedUrl, posterSignedUrl, originalPending },
       { status: 201 },
     );
   } catch (error) {

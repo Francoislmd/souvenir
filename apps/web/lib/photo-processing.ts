@@ -48,9 +48,13 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // par le navigateur au dépôt (lib/media.ts). Sans vignette (format que le
     // navigateur ne savait pas lire, envoi raté), une image de repli est
     // posée à sa place pour que la vidéo reste visible et vendable.
+    // Une photo déposée depuis un téléphone arrive d'abord en copie de
+    // travail (2048 px, lib/fast-copy.ts) : c'est elle qu'on traite, en une
+    // fraction du temps d'un original de 12 à 48 Mpx, qui suit en tâche de
+    // fond et ne sert qu'à la livraison.
     const originalBuffer = photo.isVideo
       ? await loadVideoPoster(photo.id, photo.sortieId, photo.posterKey)
-      : await downloadOriginalBuffer(photo.originalKey);
+      : await downloadOriginalBuffer(photo.posterKey ?? photo.originalKey);
     const inputPath = join(dir, "input");
     await writeFile(inputPath, originalBuffer);
 
@@ -69,11 +73,13 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // pas d'EXIF) — on garde celle de la fiche.
     const exif = photo.isVideo ? null : await exifr.parse(originalBuffer, ["DateTimeOriginal"]).catch(() => null);
     const takenAtRaw: unknown = exif?.DateTimeOriginal;
+    // La copie de travail n'a plus d'EXIF : l'heure lue par le navigateur au
+    // dépôt, déjà sur la fiche, prend le relais.
     const takenAt = photo.isVideo
       ? photo.takenAt
       : takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime())
         ? takenAtRaw
-        : null;
+        : photo.takenAt;
 
     // Une seule décompression de l'original (24 Mpx sur un reflex récent) au
     // lieu de trois : miniature, aperçu filigrané et flou email dérivent tous

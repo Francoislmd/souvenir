@@ -63,7 +63,29 @@ export function previewKeysOf(photo: {
   return [photo.previewKey, photo.thumbKey, photo.blurEmailKey, photo.groupPreviewKey].filter((k): k is string => !!k);
 }
 
-/** L'image d'où partent aperçus et filigranes : la vignette pour une vidéo, l'original pour une photo. */
+/**
+ * L'image d'où partent aperçus et filigranes : `posterKey` quand il existe
+ * (vignette d'une vidéo, copie de travail 2048 px d'une photo), sinon
+ * l'original. La copie de travail arrive en quelques secondes là où
+ * l'original met des minutes depuis un téléphone : tout ce qui s'affiche en
+ * dépend, rien n'attend l'original.
+ */
 export function imageSourceKeyOf(photo: { originalKey: string; isVideo?: boolean; posterKey?: string | null }): string {
-  return photo.isVideo && photo.posterKey ? photo.posterKey : photo.originalKey;
+  return photo.posterKey ?? photo.originalKey;
+}
+
+/**
+ * Le fichier à livrer à un client qui a payé. Tant que l'original n'est pas
+ * arrivé (`originalPending`), une photo est livrée dans sa copie de travail
+ * et une vidéo n'est pas livrée du tout (sa vignette n'est pas la vidéo).
+ */
+export function deliverableKeyOf(photo: {
+  originalKey: string;
+  isVideo?: boolean;
+  posterKey?: string | null;
+  originalPending?: boolean;
+}): string | null {
+  if (!photo.originalPending) return photo.originalKey;
+  if (photo.isVideo || !photo.posterKey) return null;
+  return photo.posterKey;
 }

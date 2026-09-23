@@ -62,6 +62,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
         thumbUrl: p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
         isVideo: p.isVideo,
         durationSec: p.durationSec,
+        originalPending: p.originalPending,
       }))}
     />
   );

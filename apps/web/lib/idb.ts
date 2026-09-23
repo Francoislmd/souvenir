@@ -5,11 +5,14 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
  * (miniature, filigrane) n'est pas encore confirmé. C'est l'état qui permet à
  * l'envoi de ne plus attendre le traitement : l'opérateur voit son envoi
  * terminé dès que ses fichiers sont partis.
+ * "background" = la copie de travail (ou la vignette d'une vidéo) est arrivée
+ * et traitée : la photo est publiable. Reste l'original, qui part en tâche de
+ * fond et ne bloque plus rien (lib/fast-copy.ts).
  * "failed" = abandonné après plusieurs tentatives ; l'écran le dit et propose
  * de réessayer, au lieu de tourner en boucle en laissant la barre à l'écran.
  * "error" n'est plus écrit — gardé pour relire les files d'avant.
  */
-export type UploadStatus = "queued" | "uploading" | "sent" | "done" | "failed" | "error";
+export type UploadStatus = "queued" | "uploading" | "sent" | "background" | "done" | "failed" | "error";
 
 export interface UploadItem {
   id: string;
@@ -33,8 +36,19 @@ export interface UploadItem {
   poster?: Blob | null;
   durationSec?: number | null;
   takenAt?: string | null;
+  /** Pour une photo, `poster*` désigne sa copie de travail : même rôle que
+   *  la vignette d'une vidéo, l'image qui part d'abord. */
   posterSignedUrl?: string | null;
   posterSent?: boolean;
+  /** Photo : copie de travail et vignette locale faites (lib/fast-copy.ts). */
+  prepared?: boolean;
+  work?: Blob | null;
+  thumb?: Blob | null;
+  /** Le serveur attend l'original en seconde phase (Photo.originalPending). */
+  hdLater?: boolean;
+  /** Phase de l'original : prochain essai pas avant (réseau coupé). */
+  retryAt?: number;
+  hdAttempts?: number;
 }
 
 interface UploadQueueDB extends DBSchema {

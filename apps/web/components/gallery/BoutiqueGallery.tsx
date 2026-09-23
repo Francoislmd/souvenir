@@ -19,6 +19,9 @@ export interface BoutiquePhoto {
   downloadUrl?: string | null;
   isVideo?: boolean;
   durationSec?: number | null;
+  /** Achetée, mais l'original n'est pas encore arrivé : copie de travail
+   *  pour une photo, attente pour une vidéo. */
+  hdPending?: boolean;
 }
 
 /**
@@ -71,6 +74,26 @@ export function BoutiqueGallery({
   // début du téléchargement, il peut s'écouler plusieurs secondes pendant
   // lesquelles rien ne bougeait à l'écran.
   const [zipping, setZipping] = useState(false);
+
+  // Achat fait avant que le pro ait fini d'envoyer ses originaux (ils partent
+  // de son téléphone après la publication) : la page les rattrape seule.
+  const hdWaiting = bought && photos.some((p) => p.hdPending && purchasedIds.includes(p.id));
+  useEffect(() => {
+    if (!hdWaiting) return;
+    let cancelled = false;
+    const interval = setInterval(() => {
+      void (async () => {
+        const res = await fetch(`/api/g/${token}/photos`);
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { photos: BoutiquePhoto[] };
+        if (!cancelled) setPhotos(data.photos);
+      })();
+    }, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [hdWaiting, token]);
 
   // Le pro peut envoyer avant que le traitement serveur ait fini — les photos
   // encore en cours n'ont pas d'aperçu à l'ouverture du lien.
@@ -191,6 +214,7 @@ export function BoutiqueGallery({
               <p className={styles.hint}>
                 {boughtLabel(yours)} en pleine résolution, sans filigrane.
               </p>
+              {hdWaiting ? <p className={styles.hint}>Vos photos arrivent en pleine résolution, cette page se met à jour toute seule.</p> : null}
             </div>
             {/* La promesse de l'écran, enfin tenue : un seul geste. Avant, la
                 page écrivait trois fois « téléchargement immédiat » et

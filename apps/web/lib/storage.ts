@@ -1,6 +1,7 @@
 import {
   DeleteObjectsCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
@@ -98,6 +99,16 @@ export async function uploadObject(
       ...(cacheControl ? { CacheControl: cacheControl } : {}),
     }),
   );
+}
+
+/** Taille de l'objet en octets, ou null s'il n'existe pas. */
+export async function objectSize(bucket: string, key: string): Promise<number | null> {
+  try {
+    const head = await r2.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    return head.ContentLength ?? 0;
+  } catch {
+    return null;
+  }
 }
 
 export async function downloadObject(bucket: string, key: string): Promise<Buffer> {
