@@ -80,6 +80,61 @@ async function build(file: Blob): Promise<FastCopy> {
   }
 }
 
+/**
+ * La vignette que l'appareil photo a rangée dans l'EXIF (160 à 320 px), lue
+ * dans les premiers kilo-octets du fichier, sans décoder la photo : la
+ * grille a une image légère en quelques millisecondes. Sans elle, les
+ * premières secondes affichaient les originaux eux-mêmes — une cinquantaine
+ * de photos de 12 Mpx décodées d'un coup, ce qui fait recharger l'onglet d'un
+ * iPhone.
+ *
+ * Remise droite ici (elle n'a pas d'EXIF à elle), et écartée si son cadrage
+ * ne suit pas celui de la photo : certains boîtiers la bordent de noir.
+ */
+export async function quickThumb(file: Blob): Promise<Blob | null> {
+  try {
+    const exifr = (await import("exifr")).default;
+    const [data, tags] = await Promise.all([
+      exifr.thumbnail(file),
+      exifr.parse(file, { pick: ["Orientation", "ExifImageWidth", "ExifImageHeight"], translateValues: false }) as Promise<
+        { Orientation?: number; ExifImageWidth?: number; ExifImageHeight?: number } | undefined
+      >,
+    ]);
+    if (!data || data.byteLength < 1000) return null;
+    const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)], { type: "image/jpeg" }));
+    try {
+      const orientation = tags?.Orientation ?? 1;
+      const turned = orientation >= 5 && orientation <= 8;
+      const w = turned ? bitmap.height : bitmap.width;
+      const h = turned ? bitmap.width : bitmap.height;
+      const fullW = turned ? tags?.ExifImageHeight : tags?.ExifImageWidth;
+      const fullH = turned ? tags?.ExifImageWidth : tags?.ExifImageHeight;
+      if (fullW && fullH && Math.abs(w / h - fullW / fullH) > 0.04) return null;
+      const surface = canvas(w, h);
+      const ctx = surface.getContext("2d") as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
+      if (!ctx) return null;
+      // Les huit orientations EXIF, ramenées au sens de lecture.
+      const transforms: Record<number, [number, number, number, number, number, number]> = {
+        2: [-1, 0, 0, 1, w, 0],
+        3: [-1, 0, 0, -1, w, h],
+        4: [1, 0, 0, -1, 0, h],
+        5: [0, 1, 1, 0, 0, 0],
+        6: [0, 1, -1, 0, w, 0],
+        7: [0, -1, -1, 0, w, h],
+        8: [0, -1, 1, 0, 0, h],
+      };
+      const t = transforms[orientation];
+      if (t) ctx.setTransform(...t);
+      ctx.drawImage(bitmap, 0, 0);
+      return await encode(surface, 0.8);
+    } finally {
+      bitmap.close();
+    }
+  } catch {
+    return null;
+  }
+}
+
 type Surface = HTMLCanvasElement | OffscreenCanvas;
 
 function canvas(width: number, height: number): Surface {

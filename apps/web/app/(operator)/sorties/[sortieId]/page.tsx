@@ -25,7 +25,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
     where: { id: params.sortieId, operatorId: dbUser.operatorId },
     include: {
       participants: { orderBy: { createdAt: "asc" }, include: { order: true } },
-      photos: { orderBy: { createdAt: "asc" } },
+      photos: { orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
     },
   });
   if (!sortie) notFound();
@@ -63,6 +63,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
         isVideo: p.isVideo,
         durationSec: p.durationSec,
         originalPending: p.originalPending,
+        status: p.status,
       }))}
     />
   );

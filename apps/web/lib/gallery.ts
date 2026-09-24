@@ -79,6 +79,9 @@ export async function getBoutiquePhotos(
         // signée en casserait la signature.
         downloadUrl: deliverable ? await getOriginalSignedUrl(deliverable, downloadName(deliverable, p.id)) : null,
         hdPending: unlocked && p.originalPending,
+        // La case d'une photo achetée : la miniature nette, pas l'original
+        // de plusieurs mégaoctets (BoutiqueGallery).
+        tileUrl: unlocked && p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
         isVideo: p.isVideo,
         durationSec: p.durationSec,
       };

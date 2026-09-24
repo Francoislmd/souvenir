@@ -20,6 +20,8 @@ interface PhotoPrep {
   id: string;
   takenAt: Date | null;
   groupPreviewKey: string | null;
+  /** Le fichier source a pu être lu : sans lui, la photo n'a rien à montrer. */
+  readable?: boolean;
 }
 
 const parisDayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -87,7 +89,7 @@ async function preparePhotoOnce(photoId: string, originalKey: string, operatorNa
 
   const groupPreviewKey = await uploadGroupPreview(photoId, buffer, operatorName);
 
-  return { id: photoId, takenAt, groupPreviewKey };
+  return { id: photoId, takenAt, groupPreviewKey, readable: true };
 }
 
 function sleep(ms: number): Promise<void> {
@@ -100,7 +102,11 @@ function sleep(ms: number): Promise<void> {
 // uploadé (juste pas encore répliqué/lisible partout) : sur une sortie de
 // 14 photos, 10 ont échoué ainsi avec un seul essai immédiat, alors que le
 // fichier existait bel et bien une poignée de secondes plus tard.
-const RETRY_DELAYS_MS = [1000, 2000, 4000];
+// Depuis R2 (21/09/2026), un objet écrit est lisible aussitôt partout : un
+// seul second essai suffit contre un accroc réseau. Les trois essais
+// espacés (7 s) servaient Supabase ; ils faisaient attendre la publication
+// entière sur une photo dont le fichier n'était jamais arrivé.
+const RETRY_DELAYS_MS = [1000];
 
 /**
  * Un seul téléchargement de l'original par photo : sert à la fois à lire
@@ -118,7 +124,7 @@ async function preparePhoto(photoId: string, originalKey: string, operatorName: 
     } catch (error) {
       if (attempt === maxAttempts) {
         console.error(`[group-publish] preparation failed for ${originalKey}`, error);
-        return { id: photoId, takenAt: null, groupPreviewKey: null };
+        return { id: photoId, takenAt: null, groupPreviewKey: null, readable: false };
       }
       const delay = RETRY_DELAYS_MS[attempt - 1]!;
       console.warn(`[group-publish] preparation attempt ${attempt} failed for ${originalKey}, retrying in ${delay}ms`, error);
@@ -188,7 +194,7 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
     where: { id: sortieId },
     include: {
       operator: true,
-      photos: { where: { status: { not: "FAILED" } }, orderBy: { createdAt: "asc" } },
+      photos: { where: { status: { not: "FAILED" } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
     },
   });
   if (sortie.mode !== "GROUPE") throw new Error("publishGroupSortie: sortie is not in GROUPE mode");
@@ -203,6 +209,12 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
   progress.onStart?.(total);
   const alreadyReady = sortie.photos.filter((photo) => photo.groupPreviewKey);
   const toPrepare = sortie.photos.filter((photo) => !photo.groupPreviewKey);
+  // Une photo jamais traitée dont le fichier est introuvable (envoi
+  // abandonné, fiche créée sur un autre appareil qui n'a pas fini) n'est pas
+  // publiée : avant le 24/09/2026 elle entrait dans un créneau sans aperçu,
+  // et la boutique affichait une case vide qui tentait de la régénérer toutes
+  // les 4 s. Elle rejoindra la galerie à la prochaine publication.
+  const unpublishable = new Set<string>();
   for (const photo of alreadyReady) {
     done += 1;
     progress.onPhoto?.(photo.id, done, total);
@@ -210,6 +222,7 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
   const freshlyPrepared = await mapWithConcurrency(toPrepare, PREPARE_CONCURRENCY, async (photo) => {
     // Vidéo : l'aperçu part de sa vignette, jamais du fichier vidéo (lib/media.ts).
     const prepared = await preparePhoto(photo.id, imageSourceKeyOf(photo), sortie.operator.name);
+    if (prepared.readable === false && photo.status !== "READY") unpublishable.add(photo.id);
     done += 1;
     progress.onPhoto?.(photo.id, done, total);
     return prepared;
@@ -222,7 +235,7 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
   // trouve pas : c'est le cas de toute vidéo (sa vignette n'a pas d'EXIF,
   // l'heure a été lue au dépôt), et d'une photo dont l'EXIF est illisible au
   // second passage.
-  const preparedRaw: PhotoPrep[] = sortie.photos.map((photo) => {
+  const preparedRaw: PhotoPrep[] = sortie.photos.filter((photo) => !unpublishable.has(photo.id)).map((photo) => {
     const fresh = byId.get(photo.id);
     return fresh
       ? { ...fresh, takenAt: fresh.takenAt ?? photo.takenAt, groupPreviewKey: fresh.groupPreviewKey ?? photo.groupPreviewKey }
@@ -254,21 +267,21 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
       await tx.slot.deleteMany({ where: { sortieId: sortie.id } });
 
       for (const cluster of clusters) {
+        // La couverture est posée à la création : un aller-retour de moins
+        // par créneau dans la transaction.
+        const [coverPhotoId] = cluster.ids;
         const slot = await tx.slot.create({
           data: {
             sortieId: sortie.id,
             label: formatSlotLabel(cluster.startsAt),
             startsAt: cluster.startsAt,
             guide: sortie.guide,
+            ...(coverPhotoId ? { coverPhotoId } : {}),
           },
+          select: { id: true },
         });
 
         await tx.photo.updateMany({ where: { id: { in: cluster.ids } }, data: { slotId: slot.id } });
-
-        const [coverPhotoId] = cluster.ids;
-        if (coverPhotoId) {
-          await tx.slot.update({ where: { id: slot.id }, data: { coverPhotoId } });
-        }
       }
 
       // takenAt et groupPreviewKey sont renseignés sur chaque photo préparée

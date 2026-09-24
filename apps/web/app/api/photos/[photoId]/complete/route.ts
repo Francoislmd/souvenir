@@ -15,11 +15,14 @@ export async function POST(_request: Request, { params }: { params: { photoId: s
 
     const photo = await prisma.photo.findFirst({
       where: { id: params.photoId, sortie: { operatorId: dbUser.operatorId } },
-      select: { id: true },
+      select: { id: true, status: true },
     });
     if (!photo) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
+
+    // Déjà traitée (un envoi réessayé après une coupure) : rien à refaire.
+    if (photo.status === "READY") return Response.json({ ok: true }, { status: 200 });
 
     // Traité ici, dans ce même déploiement — pas de worker séparé (CLAUDE.md
     // §2 : zéro infra en plus). Le dépôt de photos n'attend pas cet appel
@@ -27,7 +30,12 @@ export async function POST(_request: Request, { params }: { params: { photoId: s
     // ça prend quelques secondes. L'avancement se lit sur Photo.status, seule
     // source de vérité — la table ProcessingJob ne servait plus qu'à écrire
     // une ligne que personne ne relisait.
-    await runPhotoProcessing(photo.id);
+    // Un échec se dit : avant le 24/09/2026 la route répondait 200 quoi
+    // qu'il arrive, la file croyait la photo prête, et la grille gardait une
+    // case en chargement pour toujours. Le navigateur réessaie, puis affiche
+    // la photo en échec avec « Réessayer ».
+    const ok = await runPhotoProcessing(photo.id);
+    if (!ok) return Response.json({ error: "processing_failed" }, { status: 502 });
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {

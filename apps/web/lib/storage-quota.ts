@@ -42,22 +42,23 @@ export async function storageUsedBytes(db: Db = prisma): Promise<number> {
   return (counted._sum.sizeBytes ?? 0) + (counted._count._all + legacy) * DERIVATIVES_BYTES + legacy * LEGACY_PHOTO_BYTES;
 }
 
-export class StorageFullError extends Error {
-  constructor(public readonly usedBytes: number) {
-    super("storage_full");
-  }
-}
-
 /**
- * Réserve la place d'un fichier et crée sa fiche dans la même transaction,
- * sous verrou. Lève StorageFullError si le plafond serait dépassé.
+ * Réserve la place d'un lot de fichiers et crée leurs fiches dans la même
+ * transaction, sous verrou : la place libre est lue une fois, le lot la
+ * consomme fiche par fiche (app/api/sorties/[sortieId]/photos). `perPhoto` :
+ * le forfait des dérivées, à ajouter à chaque fichier.
  */
-export async function withStorageRoom<T>(bytes: number, create: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-  return prisma.$transaction(async (tx) => {
-    // 724301 : clé arbitraire, propre à ce verrou. Relâché à la fin de la transaction.
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(724301)::text AS locked`;
-    const used = await storageUsedBytes(tx);
-    if (used + bytes + DERIVATIVES_BYTES > QUOTA_BYTES) throw new StorageFullError(used);
-    return create(tx);
-  });
+export async function withStorageBudget<T>(
+  fill: (tx: Prisma.TransactionClient, budget: { used: number; free: number; perPhoto: number }) => Promise<T>,
+): Promise<T> {
+  return prisma.$transaction(
+    async (tx) => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(724301)::text AS locked`;
+      const used = await storageUsedBytes(tx);
+      return fill(tx, { used, free: Math.max(0, QUOTA_BYTES - used), perPhoto: DERIVATIVES_BYTES });
+    },
+    // Cinquante fiches créées l'une après l'autre dépassent les 5 s par défaut
+    // de Prisma si la base répond lentement.
+    { maxWait: 10_000, timeout: 30_000 },
+  );
 }

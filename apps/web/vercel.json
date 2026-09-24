@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
+  "regions": ["cdg1"],
   "crons": [
     { "path": "/api/cron/automations", "schedule": "0 16 * * *" },
     { "path": "/api/cron/gdpr-purge", "schedule": "0 3 * * *" }

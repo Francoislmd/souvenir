@@ -22,6 +22,27 @@ export interface BoutiquePhoto {
   /** Achetée, mais l'original n'est pas encore arrivé : copie de travail
    *  pour une photo, attente pour une vidéo. */
   hdPending?: boolean;
+  /** Achetée : la miniature nette (480 px) qui remplit la case. L'original
+   *  (3 à 12 Mo) n'est chargé qu'à l'ouverture ou au téléchargement. */
+  tileUrl?: string | null;
+}
+
+/** Une relecture ne remplace une photo que si ce qui s'affiche a changé :
+ *  les liens signés sont neufs à chaque réponse, et remplacer le `src` d'une
+ *  case la vidait le temps de recharger l'image. */
+function mergePhotos(prev: BoutiquePhoto[], fresh: BoutiquePhoto[]): BoutiquePhoto[] {
+  const byId = new Map(prev.map((p) => [p.id, p]));
+  let changed = prev.length !== fresh.length;
+  const next = fresh.map((p, i) => {
+    const old = byId.get(p.id);
+    if (old && old.hdPending === p.hdPending && old.previewUrl === p.previewUrl && old.tileUrl === p.tileUrl && Boolean(old.originalUrl) === Boolean(p.originalUrl)) {
+      if (prev[i]?.id !== p.id) changed = true;
+      return old;
+    }
+    changed = true;
+    return p;
+  });
+  return changed ? next : prev;
 }
 
 /**
@@ -86,7 +107,7 @@ export function BoutiqueGallery({
         const res = await fetch(`/api/g/${token}/photos`);
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as { photos: BoutiquePhoto[] };
-        if (!cancelled) setPhotos(data.photos);
+        if (!cancelled) setPhotos((prev) => mergePhotos(prev, data.photos));
       })();
     }, 15000);
     return () => {
@@ -258,7 +279,7 @@ export function BoutiqueGallery({
                 ) : p.originalUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.originalUrl} alt="" />
+                    <img src={p.tileUrl ?? p.originalUrl} alt="" decoding="async" />
                     <a className={styles.save} href={p.downloadUrl ?? p.originalUrl} download aria-label="Télécharger cette photo">
                       <DownloadIcon size={15} />
                     </a>

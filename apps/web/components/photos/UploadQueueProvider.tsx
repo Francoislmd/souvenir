@@ -4,75 +4,93 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { usePathname, useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { useToast } from "@/components/operator/ToastProvider";
-import {
-  addUploadItem,
-  deleteUploadItemsByPhotoIds,
-  getAllUploadItems,
-  purgeFinished,
-  purgeFinishedForSortie,
-  updateUploadItem,
-  type UploadItem,
-} from "@/lib/idb";
+import { addItem, deleteItems, getBlob, loadItems, putBlob, saveItem, type BlobKind, type UploadItem } from "@/lib/idb";
 import { runPublication } from "@/lib/publish-client";
 import { MAX_VIDEO_BYTES, MAX_VIDEO_MB, isVideoFile } from "@/lib/media";
 import { probeVideo } from "@/lib/video-probe";
-import { makeFastCopy } from "@/lib/fast-copy";
+import { makeFastCopy, quickThumb } from "@/lib/fast-copy";
 
 /**
  * La file d'envoi des photos, montée une fois pour tout l'espace opérateur.
  *
- * Elle vivait dans l'écran de la sortie : quitter l'écran arrêtait l'envoi, et
- * le moindre remontage du composant cassait la file. Ici le dépôt est
- * instantané pour l'opérateur — ses photos s'affichent, il publie, il repart
- * ailleurs — et le transfert continue en tâche de fond tant que l'onglet est
- * ouvert. C'est le navigateur qui envoie : fermer l'onglet met en pause, la
- * file reprend d'elle-même au retour (rien n'est perdu, tout est dans
- * IndexedDB).
+ * Le dépôt est instantané pour l'opérateur : ses photos s'affichent, il
+ * publie, il repart ailleurs, et le transfert continue en tâche de fond tant
+ * que l'onglet est ouvert. Fermer l'onglet met en pause ; la file reprend au
+ * retour (tout est dans IndexedDB, lib/idb.ts).
  *
- * Deux temps depuis le 23/09/2026. Une sortie de 50 photos déposée depuis un
- * téléphone mettait dix minutes à devenir publiable : les originaux (3 à
- * 12 Mo chacun) devaient tous être arrivés. Désormais :
- * 1. le navigateur fait une copie de travail 2048 px de chaque photo
- *    (lib/fast-copy.ts), l'envoie, le serveur en tire miniature et aperçus :
- *    la sortie est publiable en une minute (statut `background`) ;
- * 2. les originaux suivent en tâche de fond, sans rien bloquer. Un client qui
- *    achète avant reçoit la copie de travail, puis l'original dès qu'il est là.
+ * Refondue le 24/09/2026 après un test instrumenté en production (20 photos,
+ * chaque case de la grille relevée toutes les 50 ms) :
+ * - l'état fait foi EN MÉMOIRE, et une seule fois. Avant, chaque ouvrier
+ *   relisait toute la file dans IndexedDB en boucle, décidait sur un
+ *   instantané périmé, et chaque changement d'état réécrivait le fichier
+ *   d'origine (plusieurs Mo). IndexedDB n'est plus qu'une sauvegarde ;
+ * - le travail est découpé en étapes explicites, relancées par `kick()` à
+ *   chaque changement (plus d'ouvriers qui tournent en attendant) :
+ *   préparer (copie de travail + vignette locale) → enregistrer (par lots,
+ *   une requête pour toutes les photos prêtes) → envoyer la copie → faire
+ *   traiter par le serveur → l'original en tâche de fond ;
+ * - les éléments d'une sortie supprimée, d'un autre compte ou d'une photo
+ *   effacée sont retirés au démarrage. 38 photos de juillet, aux URL
+ *   d'envoi expirées, passaient devant chaque nouveau dépôt : les photos du
+ *   test ne sont parties qu'au bout de 35 s ;
+ * - une URL d'envoi de plus de 5 h, ou refusée par le stockage, est
+ *   redemandée (/api/photos/[photoId]/upload) au lieu d'échouer quatre fois.
+ *
+ * Deux temps depuis le 23/09/2026 : la copie de travail 2048 px rend la
+ * photo publiable (statut `background`), l'original suit sans rien bloquer.
  * Une vidéo suit le même chemin : sa vignette d'abord, la vidéo ensuite.
  */
 
+const PREPARE_CONCURRENCY = 2;
+const QUICK_THUMB_CONCURRENCY = 3;
 const UPLOAD_CONCURRENCY = 3;
-// Une copie de travail se traite en une seconde environ (contre plusieurs
-// pour un original de 24 à 48 Mpx) : quatre à la fois tiennent la minute.
-const FINALIZE_CONCURRENCY = 4;
+// Le traitement serveur d'une copie de travail prend une à deux secondes ;
+// chaque appel est une fonction Vercel à part, six à la fois ne se gênent pas.
+const FINALIZE_CONCURRENCY = 6;
+const HD_CONCURRENCY = 2;
+const REGISTER_BATCH = 25;
 const MAX_ATTEMPTS = 4;
-const RETRY_DELAY_MS = 2500;
-const PAINT_INTERVAL_MS = 120;
+/** Les URL d'envoi valent 6 h (lib/storage.ts) : au-delà de 5, on en redemande. */
+const URL_TTL_MS = 5 * 60 * 60 * 1000;
+/** Un élément plus vieux que ça n'a plus rien à faire sur l'appareil. */
+const STALE_MS = 30 * 24 * 60 * 60 * 1000;
+const PAINT_INTERVAL_MS = 100;
 const INTENTS_KEY = "linktrip-publications-programmees";
 const TOO_LARGE = `Fichier trop lourd (vidéo : ${MAX_VIDEO_MB} Mo max)`;
 const STORAGE_FULL = "Espace de stockage plein";
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function backoff(attempts: number): number {
+  return Math.min(60_000, 1500 * 2 ** Math.max(0, attempts - 1));
 }
 
-/** Ce qui part d'abord et rend la photo publiable : sa copie de travail, la
- *  vignette d'une vidéo, ou l'original quand il n'y a rien de plus léger. */
+/** La photo a une seconde phase : sa copie de travail (ou la vignette d'une
+ *  vidéo) part d'abord, l'original ensuite. */
 function hasSecondPhase(item: UploadItem): boolean {
-  return item.hdLater ?? (Boolean(item.isVideo) || Boolean(item.work));
+  return item.hdLater ?? (Boolean(item.isVideo) || Boolean(item.workSize));
 }
 
 /** Octets de la première phase, ceux qu'il faut attendre avant de publier.
  *  Avant la copie de travail, une estimation : la barre ne doit pas partir
  *  sur la taille des originaux pour s'effondrer ensuite. */
 export function phaseOneBytes(item: UploadItem): number {
-  if (item.isVideo) return item.poster?.size ?? 0;
-  if (!item.prepared) return item.file.size >= 900 * 1024 ? Math.min(item.file.size, 600 * 1024) : item.file.size;
-  return hasSecondPhase(item) ? (item.work?.size ?? 0) : item.file.size;
+  if (item.isVideo) return item.posterSize ?? 0;
+  if (!item.prepared && !item.photoId) return item.size >= 900 * 1024 ? Math.min(item.size, 600 * 1024) : item.size;
+  return hasSecondPhase(item) ? (item.workSize ?? 0) : item.size;
 }
 
 /** La photo ne retient plus la publication : prête, ou abandonnée. */
 function isSettled(item: UploadItem): boolean {
   return item.status === "done" || item.status === "background" || item.status === "failed";
+}
+
+function isPhaseOne(item: UploadItem): boolean {
+  return item.status === "queued" || item.status === "uploading" || item.status === "sent";
+}
+
+class HttpError extends Error {
+  constructor(public readonly status: number) {
+    super(`status ${status}`);
+  }
 }
 
 function putToSignedUrl(url: string, file: Blob, onProgress: (pct: number) => void): Promise<void> {
@@ -83,8 +101,9 @@ function putToSignedUrl(url: string, file: Blob, onProgress: (pct: number) => vo
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
     };
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`status ${xhr.status}`)));
-    xhr.onerror = () => reject(new Error("network error"));
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new HttpError(xhr.status)));
+    xhr.onerror = () => reject(new HttpError(0));
+    xhr.ontimeout = () => reject(new HttpError(0));
     xhr.send(file);
   });
 }
@@ -125,8 +144,19 @@ export interface SortieUpload {
   working: boolean;
   /** Originaux encore en route, sortie déjà publiable (seconde phase). */
   hdRemaining: number;
-  /** Les éléments de la file, pour afficher les vignettes locales tout de suite. */
+  /** Photos déposées ici qui n'ont pas encore de fiche côté serveur. */
+  unregistered: number;
+  /** Tous les éléments de la sortie sur cet appareil, dans l'ordre du dépôt. */
   items: UploadItem[];
+  /** Le ou les dépôts pas encore soldés : ce dont parle l'avancement. */
+  current: UploadItem[];
+}
+
+/** L'image locale d'un élément : sa vignette dès qu'elle existe, le fichier
+ *  en attendant (une vidéo se montre par un lecteur, pas une image). */
+export interface LocalPreview {
+  url: string;
+  video: boolean;
 }
 
 /**
@@ -151,17 +181,12 @@ export interface PublicationRun {
   afterTransfer: boolean;
 }
 
-const EMPTY: SortieUpload = {
-  failed: 0,
-  working: false,
-  hdRemaining: 0,
-  items: [],
-};
+const EMPTY: SortieUpload = { failed: 0, working: false, hdRemaining: 0, unregistered: 0, items: [], current: [] };
 
 interface UploadQueueValue {
   forSortie: (sortieId: string) => SortieUpload;
-  /** Aperçu local d'un fichier en attente, tiré du fichier déjà sur l'appareil. */
-  previewUrl: (itemId: string) => string | undefined;
+  /** Aperçu local d'un élément, tiré du fichier déjà sur l'appareil. */
+  preview: (itemId: string) => LocalPreview | undefined;
   enqueue: (sortieId: string, files: File[]) => Promise<void>;
   retryFailed: (sortieId: string) => void;
   /** Après une suppression de photos : elles ne doivent plus peser dans la file. */
@@ -184,6 +209,8 @@ export function useUploadQueue(): UploadQueueValue {
   return value;
 }
 
+type Blobs = Partial<Record<BlobKind, Blob>>;
+
 export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -192,95 +219,130 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [intents, setIntents] = useState<Record<string, PublishIntent>>({});
   const [runs, setRuns] = useState<Record<string, PublicationRun>>({});
-  /** Verrou synchrone : deux déclencheurs (fin de file + montage) ne doivent
-   *  jamais lancer deux fois la même publication. */
+  /** Verrou synchrone : deux déclencheurs ne lancent jamais deux fois la même publication. */
   const running = useRef<Set<string>>(new Set());
 
-  /** L'avancement d'un envoi en cours vit en mémoire, jamais dans IndexedDB :
-   *  y écrire à chaque paquet d'octets réécrivait le fichier entier (plusieurs
-   *  mégaoctets) des dizaines de fois par seconde, et la page se figeait. */
-  const liveProgress = useRef<Map<string, number>>(new Map());
-  /** Vignette locale de chaque élément : le fichier d'abord (affichage
-   *  immédiat), remplacé par la petite vignette dès qu'elle existe — 50
-   *  photos de 12 Mpx décodées dans la grille font recharger l'onglet d'un
-   *  iPhone. */
-  const previews = useRef<Map<string, { url: string; small: boolean }>>(new Map());
-  /** Les photos qu'on vient de choisir, affichées avant d'être recopiées dans
-   *  IndexedDB — sans ça, une relecture de la file pendant la copie les ferait
-   *  disparaître de la grille. */
-  const optimistic = useRef<Map<string, UploadItem>>(new Map());
-  const paintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** `enqueue` enregistre chaque photo côté serveur dès le dépôt (pour un
-   *  total exact tout de suite), et `pump` le refait au moment de l'envoi si
-   *  ce n'est pas déjà fait : sans ce verrou les deux appels concurrents
-   *  passaient chacun le test « pas encore enregistrée » sur un instantané
-   *  périmé de l'item, et créaient chacun leur fiche photo — l'une des deux
-   *  ne recevait jamais ses octets et restait une case vide pour toujours. */
-  const registering = useRef<Map<string, Promise<void>>>(new Map());
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pumpingRef = useRef(false);
-  const pumpRef = useRef<(() => void) | null>(null);
-  const publishRef = useRef<(() => void) | null>(null);
+  // ---- L'état, en mémoire -------------------------------------------------
 
-  const applyItems = useCallback((stored: UploadItem[]): UploadItem[] => {
-    const storedIds = new Set(stored.map((i) => i.id));
-    const waiting = Array.from(optimistic.current.values()).filter((i) => !storedIds.has(i.id));
-    const all = waiting.length === 0 ? stored : [...stored, ...waiting].sort((a, b) => a.createdAt - b.createdAt);
-    const seen = new Set<string>();
-    for (const item of all) {
-      seen.add(item.id);
-      const current = previews.current.get(item.id);
-      if (!current) {
-        previews.current.set(item.id, item.thumb ? { url: URL.createObjectURL(item.thumb), small: true } : { url: URL.createObjectURL(item.file), small: false });
-      } else if (!current.small && item.thumb) {
-        URL.revokeObjectURL(current.url);
-        previews.current.set(item.id, { url: URL.createObjectURL(item.thumb), small: true });
-      }
+  /** La seule vérité sur la file. L'écran en reçoit une copie repeinte au
+   *  plus toutes les 100 ms ; IndexedDB en reçoit une sauvegarde. */
+  const store = useRef<Map<string, UploadItem>>(new Map());
+  /** Les fichiers de chaque élément, gardés sous la main (un File ne coûte
+   *  qu'une référence au fichier sur le disque). */
+  const blobs = useRef<Map<string, Blobs>>(new Map());
+  /** Vignette locale de chaque élément, par ordre de qualité : 0 le fichier,
+   *  1 la vignette EXIF embarquée, 2 la vignette faite ici. Une URL remplacée
+   *  n'est révoquée qu'après coup : la grille ne change d'image qu'une fois
+   *  la nouvelle décodée (SortieScreen, StableImg). */
+  const previews = useRef<Map<string, LocalPreview & { rank: number }>>(new Map());
+  const paintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPaint = useRef(0);
+  /** La file ne démarre qu'une fois les éléments d'avant vérifiés auprès du serveur. */
+  const started = useRef(false);
+
+  const paintNow = useCallback(() => {
+    if (paintTimer.current) {
+      clearTimeout(paintTimer.current);
+      paintTimer.current = null;
     }
-    previews.current.forEach((preview, id) => {
-      if (!seen.has(id)) {
-        URL.revokeObjectURL(preview.url);
-        previews.current.delete(id);
-      }
-    });
-    const merged = all.map((item) => {
-      const live = liveProgress.current.get(item.id);
-      return live === undefined ? item : { ...item, progress: live };
-    });
-    setItems(merged);
-    return merged;
+    lastPaint.current = Date.now();
+    setItems(Array.from(store.current.values()).sort((a, b) => a.createdAt - b.createdAt));
   }, []);
 
-  const refresh = useCallback(async (): Promise<UploadItem[]> => applyItems(await getAllUploadItems()), [applyItems]);
-
-  const paintProgress = useCallback(() => {
+  const paint = useCallback(() => {
     if (paintTimer.current) return;
+    const wait = Math.max(0, PAINT_INTERVAL_MS - (Date.now() - lastPaint.current));
     paintTimer.current = setTimeout(() => {
       paintTimer.current = null;
-      setItems((prev) =>
-        prev.map((item) => {
-          const live = liveProgress.current.get(item.id);
-          return live === undefined || live === item.progress ? item : { ...item, progress: live };
-        }),
-      );
-    }, PAINT_INTERVAL_MS);
+      paintNow();
+    }, wait);
+  }, [paintNow]);
+
+  // Toutes les écritures IndexedDB passent l'une après l'autre : une
+  // suppression ne peut pas être doublée par une sauvegarde partie avant elle.
+  const ioChain = useRef<Promise<void>>(Promise.resolve());
+  const io = useCallback((task: () => Promise<void>) => {
+    ioChain.current = ioChain.current.then(task).catch(() => undefined);
   }, []);
+  const dirty = useRef<Set<string>>(new Set());
+  const persist = useCallback(
+    (id: string) => {
+      if (dirty.current.has(id)) return;
+      dirty.current.add(id);
+      io(async () => {
+        dirty.current.delete(id);
+        const item = store.current.get(id);
+        if (item) await saveItem({ ...item, progress: 0 });
+      });
+    },
+    [io],
+  );
+
+  const patch = useCallback(
+    (id: string, change: Partial<UploadItem>, { save = true }: { save?: boolean } = {}): UploadItem | undefined => {
+      const item = store.current.get(id);
+      if (!item) return undefined;
+      const next = { ...item, ...change };
+      store.current.set(id, next);
+      if (save) persist(id);
+      paint();
+      return next;
+    },
+    [persist, paint],
+  );
+
+  const setPreview = useCallback((id: string, blob: Blob, rank: number, video = false) => {
+    const current = previews.current.get(id);
+    if (current && current.rank >= rank) return;
+    previews.current.set(id, { url: URL.createObjectURL(blob), video, rank });
+    if (current) setTimeout(() => URL.revokeObjectURL(current.url), 30_000);
+  }, []);
+
+  const removeItems = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return;
+      for (const id of ids) {
+        store.current.delete(id);
+        blobs.current.delete(id);
+        const preview = previews.current.get(id);
+        if (preview) setTimeout(() => URL.revokeObjectURL(preview.url), 30_000);
+        previews.current.delete(id);
+      }
+      io(() => deleteItems(ids));
+      paint();
+    },
+    [io, paint],
+  );
+
+  const blobOf = useCallback(async (id: string, kind: BlobKind): Promise<Blob | undefined> => {
+    const held = blobs.current.get(id)?.[kind];
+    if (held) return held;
+    const stored = await getBlob(id, kind).catch(() => undefined);
+    if (stored) blobs.current.set(id, { ...blobs.current.get(id), [kind]: stored });
+    return stored;
+  }, []);
+
+  const keepBlob = useCallback(
+    (id: string, kind: BlobKind, blob: Blob) => {
+      blobs.current.set(id, { ...blobs.current.get(id), [kind]: blob });
+      io(async () => {
+        if (store.current.has(id)) await putBlob(id, kind, blob);
+      });
+    },
+    [io],
+  );
 
   useEffect(() => {
     const urls = previews.current;
     return () => {
       if (paintTimer.current) clearTimeout(paintTimer.current);
       urls.forEach((preview) => URL.revokeObjectURL(preview.url));
-      // Vidée aussi : sinon un remontage (le double montage de React en
-      // développement) retrouverait des URL déjà révoquées et n'afficherait
-      // plus aucune vignette locale.
+      // Vidée aussi : un remontage (le double montage de React en
+      // développement) retrouverait sinon des URL déjà révoquées.
       urls.clear();
     };
   }, []);
 
-  // Étape rapide, séparée de l'envoi du fichier : crée la fiche photo côté
-  // serveur (pour connaître le total exact tout de suite) sans attendre que
-  // les octets du fichier soient envoyés.
   // Un seul message pour tout un lot refusé, pas un par photo.
   const fullNoticeAt = useRef(0);
   const storageFullNotice = useCallback(() => {
@@ -289,326 +351,447 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     toast("Espace de stockage plein : ces fichiers n'ont pas été ajoutés. La place se libère quand les sorties de plus de 90 jours sont supprimées.");
   }, [toast]);
 
-  // Un appel déjà en cours est attendu, pas ignoré : l'envoi qui le
-  // réclamait concluait sinon « pas enregistrée » et brûlait une tentative
-  // pendant que la copie de travail se fabriquait.
-  const registerOne = useCallback((item: UploadItem): Promise<void> => {
-    const inflight = registering.current.get(item.id);
-    if (inflight) return inflight;
-    const run = registerNow(item).finally(() => registering.current.delete(item.id));
-    registering.current.set(item.id, run);
-    return run;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // ---- Les étapes ---------------------------------------------------------
 
-  const registerNow = async (item: UploadItem): Promise<void> => {
-    try {
-      // Relire l'état courant plutôt que de faire confiance à `item` : un
-      // appel concurrent a pu l'enregistrer entre-temps.
-      let current = (await getAllUploadItems()).find((i) => i.id === item.id);
-      if (current?.photoId && current?.signedUrl) return;
-      if (!current) return;
-      // Vidéo : vignette, durée et heure lues avant d'enregistrer la fiche,
-      // qui les porte dès sa création. Une vidéo à la fois (probeVideo).
-      if (current.isVideo && !current.probed) {
-        const probe = await probeVideo(current.file, current.lastModified);
-        const patch = { probed: true, poster: probe.poster, durationSec: probe.durationSec, takenAt: probe.takenAt };
-        await updateUploadItem(item.id, patch);
-        current = { ...current, ...patch };
-      }
-      // Photo : copie de travail, vignette locale et heure de prise de vue,
-      // une fois pour toutes (un rechargement ne refait pas le calcul).
-      if (!current.isVideo && !current.prepared) {
-        const copy = await makeFastCopy(current.file);
-        const patch = { prepared: true, work: copy.work, thumb: copy.thumb, takenAt: copy.takenAt };
-        await updateUploadItem(item.id, patch);
-        current = { ...current, ...patch };
-        void refresh();
-      }
-      const res = await fetch(`/api/sorties/${item.sortieId}/photos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          current.isVideo
-            ? {
-                filename: current.filename,
-                kind: "video",
-                sizeBytes: current.file.size,
-                posterBytes: current.poster?.size || null,
-                durationSec: current.durationSec ?? null,
-                takenAt: current.takenAt ?? null,
-              }
-            : {
-                filename: current.filename,
-                sizeBytes: current.file.size,
-                posterBytes: current.work?.size || null,
-                takenAt: current.takenAt ?? null,
-              },
-        ),
-      });
-      // Refus définitifs : réessayer n'y changerait rien.
-      if (res.status === 413 || res.status === 507) {
-        await updateUploadItem(item.id, { status: "failed", attempts: MAX_ATTEMPTS, error: res.status === 507 ? STORAGE_FULL : TOO_LARGE });
-        if (res.status === 507) storageFullNotice();
+  const active = useRef({
+    prepare: new Set<string>(),
+    quick: 0,
+    register: false,
+    upload: new Set<string>(),
+    finalize: new Set<string>(),
+    hd: new Set<string>(),
+  });
+  const kickRef = useRef<() => void>(() => undefined);
+  const kick = useCallback(() => kickRef.current(), []);
+  /** Vignette EXIF déjà tentée : faite ou impossible, elle ne se retente pas. */
+  const quickTried = useRef<Set<string>>(new Set());
+
+  /** Copie de travail, vignette locale et heure (photo), ou vignette, durée
+   *  et heure (vidéo). Une fois pour toutes : un rechargement ne refait rien. */
+  const prepare = useCallback(
+    async (id: string) => {
+      const item = store.current.get(id);
+      if (!item) return;
+      const file = await blobOf(id, "file");
+      if (!file) {
+        // Le fichier n'est plus sur l'appareil (données du site effacées) :
+        // rien à envoyer, l'élément disparaît.
+        removeItems([id]);
         return;
       }
-      if (!res.ok) throw new Error("init failed");
-      const data = (await res.json()) as { photoId: string; signedUrl: string; posterSignedUrl?: string | null; originalPending?: boolean };
-      await updateUploadItem(item.id, {
-        photoId: data.photoId,
-        signedUrl: data.signedUrl,
-        posterSignedUrl: data.posterSignedUrl ?? null,
-        hdLater: Boolean(data.originalPending),
-      });
-    } catch {
-      // L'envoi (uploadOne) réessaiera l'enregistrement s'il manque encore.
-    }
-  };
+      if (item.isVideo) {
+        const probe = await probeVideo(file, item.lastModified);
+        if (probe.poster) {
+          keepBlob(id, "poster", probe.poster);
+          setPreview(id, probe.poster, 2);
+        }
+        patch(id, { probed: true, posterSize: probe.poster?.size ?? null, durationSec: probe.durationSec, takenAt: probe.takenAt });
+        return;
+      }
+      const copy = await makeFastCopy(file);
+      if (copy.work) keepBlob(id, "work", copy.work);
+      if (copy.thumb) {
+        keepBlob(id, "thumb", copy.thumb);
+        setPreview(id, copy.thumb, 2);
+      }
+      patch(id, { prepared: true, workSize: copy.work?.size ?? null, hasThumb: Boolean(copy.thumb), takenAt: copy.takenAt });
+    },
+    [blobOf, keepBlob, patch, removeItems, setPreview],
+  );
 
-  /** Envoi des octets seulement. Se termine en "sent" : le traitement serveur
-   *  (miniature, filigrane — plusieurs secondes de calcul par photo) n'est pas
-   *  attendu ici, il occupait sinon un envoi sur trois pendant tout ce temps. */
-  const uploadOne = useCallback(
-    async (item: UploadItem): Promise<boolean> => {
-      liveProgress.current.set(item.id, 0);
-      await updateUploadItem(item.id, { status: "uploading", progress: 0, error: undefined });
-      await refresh();
+  /** Toutes les photos prêtes d'une sortie, enregistrées en une requête. */
+  const register = useCallback(
+    async (batch: UploadItem[]) => {
+      const sortieId = batch[0]!.sortieId;
+      let res: Response | null = null;
       try {
-        await registerOne(item);
-        const fresh = (await getAllUploadItems()).find((i) => i.id === item.id);
-        const photoId = fresh?.photoId;
-        const signedUrl = fresh?.signedUrl;
-        if (fresh?.status === "failed") {
-          await refresh();
-          return true;
-        }
-        if (!photoId || !signedUrl) throw new Error("not registered");
-
-        const onProgress = (progress: number) => {
-          liveProgress.current.set(item.id, progress);
-          paintProgress();
-        };
-        // L'image légère part d'abord : copie de travail d'une photo,
-        // vignette d'une vidéo. C'est elle que le traitement serveur attend.
-        const light = fresh.isVideo ? fresh.poster : fresh.work;
-        if (light && fresh.posterSignedUrl && !fresh.posterSent) {
-          await putToSignedUrl(fresh.posterSignedUrl, light, hasSecondPhase(fresh) ? onProgress : () => undefined);
-          await updateUploadItem(item.id, { posterSent: true });
-        }
-        // L'original ne part ici que s'il n'y a pas de seconde phase (petite
-        // photo, ou élément déposé avant les deux temps).
-        if (!hasSecondPhase(fresh)) await putToSignedUrl(signedUrl, item.file, onProgress);
-
-        liveProgress.current.set(item.id, 100);
-        await updateUploadItem(item.id, { status: "sent", progress: 100, attempts: 0 });
-        await refresh();
-        return true;
+        res = await fetch(`/api/sorties/${sortieId}/photos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: batch.map((item) =>
+              item.isVideo
+                ? {
+                    filename: item.filename,
+                    kind: "video",
+                    sizeBytes: item.size,
+                    posterBytes: item.posterSize || null,
+                    durationSec: item.durationSec ?? null,
+                    takenAt: item.takenAt ?? null,
+                  }
+                : { filename: item.filename, sizeBytes: item.size, posterBytes: item.workSize || null, takenAt: item.takenAt ?? null },
+            ),
+          }),
+        });
       } catch {
-        const latest = (await getAllUploadItems()).find((i) => i.id === item.id);
-        if (latest?.status === "failed" && (latest.error === TOO_LARGE || latest.error === STORAGE_FULL)) {
-          await refresh();
-          return true;
+        // Réseau coupé : traité comme une réponse illisible, ci-dessous.
+      }
+      const status = res?.status ?? 0;
+      if (status === 404) {
+        // La sortie n'existe plus (supprimée ailleurs) : ses photos non plus.
+        removeItems(Array.from(store.current.values()).filter((i) => i.sortieId === sortieId).map((i) => i.id));
+        return;
+      }
+      const data = res?.ok
+        ? ((await res.json().catch(() => null)) as {
+            results?: ({ ok: true; photoId: string; signedUrl: string; posterSignedUrl: string | null; originalPending: boolean } | { ok: false; status: number; error: string })[];
+          } | null)
+        : null;
+      if (!data?.results || data.results.length !== batch.length) {
+        for (const item of batch) {
+          const attempts = (store.current.get(item.id)?.attempts ?? 0) + 1;
+          patch(item.id, {
+            attempts,
+            retryAt: Date.now() + backoff(attempts),
+            ...(attempts >= MAX_ATTEMPTS && status !== 401 ? { status: "failed", error: "Envoi impossible" } : {}),
+          });
         }
-        const attempts = (item.attempts ?? 0) + 1;
-        liveProgress.current.set(item.id, 0);
-        await updateUploadItem(item.id, {
+        return;
+      }
+      const now = Date.now();
+      data.results.forEach((result, index) => {
+        const item = batch[index]!;
+        if (result.ok) {
+          patch(item.id, {
+            photoId: result.photoId,
+            signedUrl: result.signedUrl,
+            posterSignedUrl: result.posterSignedUrl,
+            urlsAt: now,
+            hdLater: result.originalPending,
+            attempts: 0,
+            retryAt: undefined,
+          });
+        } else {
+          patch(item.id, { status: "failed", attempts: MAX_ATTEMPTS, error: result.status === 507 ? STORAGE_FULL : TOO_LARGE });
+          if (result.status === 507) storageFullNotice();
+        }
+      });
+    },
+    [patch, removeItems, storageFullNotice],
+  );
+
+  /** URL d'envoi neuves pour une photo déjà enregistrée. `false` : la photo n'existe plus. */
+  const refreshUrls = useCallback(
+    async (item: UploadItem): Promise<UploadItem | false> => {
+      const second = hasSecondPhase(item);
+      const posterBytes = second ? (item.isVideo ? item.posterSize : item.workSize) : null;
+      const qs = new URLSearchParams({ original: String(item.size) });
+      if (posterBytes) qs.set("poster", String(posterBytes));
+      const res = await fetch(`/api/photos/${item.photoId}/upload?${qs.toString()}`);
+      if (res.status === 404) return false;
+      if (!res.ok) throw new HttpError(res.status);
+      const data = (await res.json()) as { signedUrl: string; posterSignedUrl: string | null };
+      return patch(item.id, { signedUrl: data.signedUrl, posterSignedUrl: data.posterSignedUrl, urlsAt: Date.now() }) ?? false;
+    },
+    [patch],
+  );
+
+  /** Première phase : les octets qui rendent la photo publiable. */
+  const upload = useCallback(
+    async (id: string) => {
+      let item = patch(id, { status: "uploading", progress: 0, error: undefined });
+      if (!item) return;
+      const onProgress = (pct: number) => patch(id, { progress: pct }, { save: false });
+      try {
+        if (!item.urlsAt || Date.now() - item.urlsAt > URL_TTL_MS || !item.signedUrl) {
+          const fresh = await refreshUrls(item);
+          if (!fresh) {
+            removeItems([id]);
+            return;
+          }
+          item = fresh;
+        }
+        if (hasSecondPhase(item)) {
+          const light = await blobOf(id, item.isVideo ? "poster" : "work");
+          if (light && item.posterSignedUrl && !item.posterSent) {
+            await putToSignedUrl(item.posterSignedUrl, light, onProgress);
+            patch(id, { posterSent: true });
+          }
+        } else {
+          const file = await blobOf(id, "file");
+          if (!file) {
+            removeItems([id]);
+            return;
+          }
+          await putToSignedUrl(item.signedUrl!, file, onProgress);
+        }
+        patch(id, { status: "sent", progress: 100, attempts: 0, retryAt: undefined });
+      } catch (error) {
+        const status = error instanceof HttpError ? error.status : 0;
+        const attempts = (store.current.get(id)?.attempts ?? 0) + 1;
+        patch(id, {
           status: attempts >= MAX_ATTEMPTS ? "failed" : "queued",
           progress: 0,
           attempts,
+          retryAt: Date.now() + backoff(attempts),
+          // Un refus du stockage (URL expirée, signature) : on en redemande une.
+          ...(status >= 400 && status < 500 ? { urlsAt: 0 } : {}),
           error: attempts >= MAX_ATTEMPTS ? "Envoi impossible" : "Réseau coupé — reprend tout seul",
         });
-        await refresh();
-        return false;
       }
     },
-    [refresh, registerOne, paintProgress],
+    [blobOf, patch, refreshUrls, removeItems],
   );
 
-  /** Seconde phase : l'original, une fois la photo publiable. Jamais
-   *  abandonné — il n'y a plus rien à l'écran qui l'attende — mais espacé
-   *  quand le réseau manque. L'URL d'envoi est redemandée à chaque essai :
-   *  cette phase peut reprendre le lendemain. */
-  const uploadOriginal = useCallback(
-    async (item: UploadItem): Promise<boolean> => {
-      const key = `hd:${item.id}`;
-      liveProgress.current.set(key, 0);
+  /** Le traitement serveur (miniature, aperçus, filigrane) d'une photo arrivée. */
+  const finalize = useCallback(
+    async (id: string) => {
+      const item = store.current.get(id);
+      if (!item?.photoId) return;
       try {
-        const res = await fetch(`/api/photos/${item.photoId}/original?size=${item.file.size}`);
-        // Photo supprimée entre-temps : plus rien à envoyer.
+        const res = await fetch(`/api/photos/${item.photoId}/complete`, { method: "POST" });
         if (res.status === 404) {
-          await updateUploadItem(item.id, { status: "done" });
-          await refresh();
-          return true;
+          removeItems([id]);
+          return;
         }
-        if (!res.ok) throw new Error("original url failed");
+        if (!res.ok) throw new HttpError(res.status);
+        patch(id, { status: hasSecondPhase(item) ? "background" : "done", progress: 100, attempts: 0, retryAt: undefined, error: undefined });
+      } catch {
+        const attempts = (store.current.get(id)?.attempts ?? 0) + 1;
+        patch(
+          id,
+          attempts >= MAX_ATTEMPTS
+            ? { status: "failed", attempts, error: "Aperçu non généré" }
+            : { attempts, retryAt: Date.now() + backoff(attempts), error: "Aperçu en attente" },
+        );
+      }
+    },
+    [patch, removeItems],
+  );
+
+  /** Seconde phase : l'original. Jamais abandonné — plus rien à l'écran ne
+   *  l'attend — mais espacé quand le réseau manque. */
+  const uploadOriginal = useCallback(
+    async (id: string) => {
+      const item = store.current.get(id);
+      if (!item?.photoId) return;
+      try {
+        const file = await blobOf(id, "file");
+        if (!file) {
+          removeItems([id]);
+          return;
+        }
+        const res = await fetch(`/api/photos/${item.photoId}/original?size=${item.size}`);
+        if (res.status === 404) {
+          removeItems([id]);
+          return;
+        }
+        if (!res.ok) throw new HttpError(res.status);
         const data = (await res.json()) as { signedUrl?: string; done?: boolean };
         if (!data.done) {
           if (!data.signedUrl) throw new Error("no url");
-          await putToSignedUrl(data.signedUrl, item.file, (progress) => {
-            liveProgress.current.set(key, progress);
-            paintProgress();
-          });
+          await putToSignedUrl(data.signedUrl, file, () => undefined);
           const confirm = await fetch(`/api/photos/${item.photoId}/original`, { method: "POST" });
-          if (!confirm.ok) throw new Error("original confirm failed");
+          if (!confirm.ok) throw new HttpError(confirm.status);
         }
-        liveProgress.current.delete(key);
-        await updateUploadItem(item.id, { status: "done", retryAt: undefined, hdAttempts: 0 });
-        await refresh();
-        return true;
+        patch(id, { status: "done", retryAt: undefined, hdAttempts: 0 });
       } catch {
-        liveProgress.current.delete(key);
-        const hdAttempts = (item.hdAttempts ?? 0) + 1;
-        await updateUploadItem(item.id, { hdAttempts, retryAt: Date.now() + Math.min(120_000, 3000 * 2 ** Math.min(hdAttempts, 6)) });
-        await refresh();
-        return false;
+        const hdAttempts = (store.current.get(id)?.hdAttempts ?? 0) + 1;
+        patch(id, { hdAttempts, retryAt: Date.now() + Math.min(120_000, 3000 * 2 ** Math.min(hdAttempts, 6)) });
       }
     },
-    [refresh, paintProgress],
+    [blobOf, patch, removeItems],
   );
 
-  /** Déclenche le traitement serveur d'une photo déjà envoyée. En arrière-plan :
-   *  l'opérateur n'attend pas, les miniatures rattrapent la grille toutes seules. */
-  const finalizeOne = useCallback(
-    async (item: UploadItem): Promise<boolean> => {
-      if (!item.photoId) {
-        await updateUploadItem(item.id, { status: "failed", error: "Fiche photo introuvable" });
-        await refresh();
-        return true;
-      }
-      try {
-        const res = await fetch(`/api/photos/${item.photoId}/complete`, { method: "POST" });
-        if (!res.ok) throw new Error("complete failed");
-        await updateUploadItem(item.id, { status: hasSecondPhase(item) ? "background" : "done", progress: 100, attempts: 0 });
-        await refresh();
-        // Une publication programmée n'attend que cette première phase.
-        publishRef.current?.();
-        return true;
-      } catch {
-        const attempts = (item.attempts ?? 0) + 1;
-        await updateUploadItem(
-          item.id,
-          attempts >= MAX_ATTEMPTS
-            ? { status: "failed", attempts, error: "Aperçu non généré" }
-            : { attempts, error: "Aperçu en attente" },
-        );
-        await refresh();
-        return false;
+  /** La vignette embarquée dans l'EXIF, lue sans décoder la photo : la
+   *  grille a une image légère en quelques millisecondes, bien avant la
+   *  vignette faite à partir de la copie de travail. */
+  const quick = useCallback(
+    async (id: string) => {
+      const file = blobs.current.get(id)?.file;
+      if (!file) return;
+      const thumb = await quickThumb(file);
+      if (thumb && store.current.has(id)) {
+        setPreview(id, thumb, 1);
+        paint();
       }
     },
-    [refresh],
+    [paint, setPreview],
   );
 
-  // Deux files qui tournent ensemble, toutes sorties confondues : l'une pousse
-  // les octets, l'autre ramasse les photos déjà envoyées pour lancer leur
-  // traitement. Avant, les deux partageaient les mêmes trois ouvriers et le
-  // traitement — le plus lent de loin — bloquait les envois.
-  const pump = useCallback(async () => {
-    if (pumpingRef.current) return;
-    pumpingRef.current = true;
-    if (retryTimer.current) {
-      clearTimeout(retryTimer.current);
-      retryTimer.current = null;
-    }
-    const uploading = new Set<string>();
-    const hdUploading = new Set<string>();
-    const finalizing = new Set<string>();
-    let sending = true;
-    let phaseOne = false;
-    let hdInFlight = 0;
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasBusy = useRef(false);
+  const publishRef = useRef<() => void>(() => undefined);
 
-    // Les copies de travail passent toujours devant : un original ne part
-    // que quand plus aucune photo n'attend de devenir publiable.
-    const uploadWorker = async (): Promise<void> => {
-      for (;;) {
-        const all = await getAllUploadItems();
-        // Une photo déjà enregistrée (copie de travail faite) passe devant
-        // celle dont la copie se calcule encore.
-        const candidates = all.filter((item) => item.status === "queued" && !uploading.has(item.id));
-        const next = candidates.find((item) => item.photoId && item.signedUrl) ?? candidates[0];
-        if (next) {
-          phaseOne = true;
-          uploading.add(next.id);
-          const ok = await uploadOne(next);
-          if (!ok) {
-            await sleep(RETRY_DELAY_MS);
-            uploading.delete(next.id);
-          }
-          continue;
-        }
-        const now = Date.now();
-        const hd = all.some((item) => item.status === "queued" || item.status === "uploading" || item.status === "sent")
-          ? undefined
-          : all.find((item) => item.status === "background" && !hdUploading.has(item.id) && (item.retryAt ?? 0) <= now);
-        if (!hd) {
-          // Un original part encore sur un autre ouvrier : rester disponible,
-          // un nouveau dépôt ne doit pas attendre la fin de cet envoi.
-          if (hdInFlight > 0) {
-            await sleep(500);
-            continue;
-          }
-          return;
-        }
-        hdUploading.add(hd.id);
-        hdInFlight += 1;
-        try {
-          await uploadOriginal(hd);
-        } finally {
-          hdInFlight -= 1;
-        }
-      }
-    };
-
-    const finalizeWorker = async (): Promise<void> => {
-      for (;;) {
-        const all = await getAllUploadItems();
-        const next = all.find((item) => item.status === "sent" && !finalizing.has(item.id));
-        if (!next) {
-          if (!sending) return;
-          await sleep(400);
-          continue;
-        }
-        finalizing.add(next.id);
-        const ok = await finalizeOne(next);
-        if (!ok) {
-          await sleep(RETRY_DELAY_MS);
-          finalizing.delete(next.id);
-        }
-      }
-    };
-
-    try {
-      const sends = Promise.all(Array.from({ length: UPLOAD_CONCURRENCY }, () => uploadWorker())).finally(() => {
-        sending = false;
+  kickRef.current = () => {
+    if (!started.current) return;
+    const now = Date.now();
+    const all = Array.from(store.current.values()).sort((a, b) => a.createdAt - b.createdAt);
+    const a = active.current;
+    const launch = (set: Set<string>, id: string, task: (id: string) => Promise<void>) => {
+      set.add(id);
+      void task(id).finally(() => {
+        set.delete(id);
+        kick();
       });
-      await Promise.all([sends, ...Array.from({ length: FINALIZE_CONCURRENCY }, () => finalizeWorker())]);
-    } finally {
-      pumpingRef.current = false;
-      const all = await refresh();
-      // Un dépôt arrivé pendant que la file se vidait, ou des copies tout
-      // juste traitées dont l'original peut partir : on repart plutôt que
-      // d'attendre un rechargement.
-      const now = Date.now();
-      const waitingHd = all.filter((item) => item.status === "background");
-      if (all.some((item) => item.status === "queued" || item.status === "sent")) pumpRef.current?.();
-      else {
-        if (phaseOne) router.refresh();
-        publishRef.current?.();
-        if (waitingHd.some((item) => (item.retryAt ?? 0) <= now)) pumpRef.current?.();
-        else if (waitingHd.length > 0) {
-          const next = Math.min(...waitingHd.map((item) => item.retryAt ?? now));
-          retryTimer.current = setTimeout(() => pumpRef.current?.(), Math.max(1000, next - now));
-        }
+    };
+    const due = (item: UploadItem) => (item.retryAt ?? 0) <= now;
+
+    for (const item of all) {
+      if (a.quick >= QUICK_THUMB_CONCURRENCY) break;
+      if (!item.isVideo && !item.prepared && !quickTried.current.has(item.id) && !previews.current.get(item.id)?.rank) {
+        quickTried.current.add(item.id);
+        a.quick += 1;
+        void quick(item.id).finally(() => {
+          a.quick -= 1;
+          kick();
+        });
       }
     }
-  }, [refresh, uploadOne, uploadOriginal, finalizeOne, router]);
+    for (const item of all) {
+      if (a.prepare.size >= PREPARE_CONCURRENCY) break;
+      const needs = item.status === "queued" && !item.photoId && (item.isVideo ? !item.probed : !item.prepared);
+      if (needs && !a.prepare.has(item.id)) launch(a.prepare, item.id, prepare);
+    }
+    if (!a.register) {
+      const ready = all.filter(
+        (item) => item.status === "queued" && !item.photoId && (item.isVideo ? item.probed : item.prepared) && due(item),
+      );
+      if (ready.length > 0) {
+        const sortieId = ready[0]!.sortieId;
+        const batch = ready.filter((item) => item.sortieId === sortieId).slice(0, REGISTER_BATCH);
+        a.register = true;
+        void register(batch).finally(() => {
+          a.register = false;
+          kick();
+        });
+      }
+    }
+    for (const item of all) {
+      if (a.upload.size >= UPLOAD_CONCURRENCY) break;
+      if (item.status === "queued" && item.photoId && due(item) && !a.upload.has(item.id)) launch(a.upload, item.id, upload);
+    }
+    for (const item of all) {
+      if (a.finalize.size >= FINALIZE_CONCURRENCY) break;
+      if (item.status === "sent" && due(item) && !a.finalize.has(item.id)) launch(a.finalize, item.id, finalize);
+    }
+    // Les originaux ne partent que quand plus aucune photo n'attend de
+    // devenir publiable : ils ne prennent jamais la bande passante d'une copie.
+    const busy = all.some(isPhaseOne);
+    if (!busy) {
+      for (const item of all) {
+        if (a.hd.size >= HD_CONCURRENCY) break;
+        if (item.status === "background" && due(item) && !a.hd.has(item.id)) launch(a.hd, item.id, uploadOriginal);
+      }
+    }
 
-  pumpRef.current = () => void pump();
+    // La première phase vient de se solder : la page relit ses chiffres
+    // (nombre de photos de la liste des sorties), et une publication
+    // programmée peut partir.
+    if (wasBusy.current && !busy) router.refresh();
+    wasBusy.current = busy;
+    publishRef.current();
 
-  const patchRun = useCallback((sortieId: string, patch: Partial<PublicationRun> | ((run: PublicationRun) => Partial<PublicationRun>)) => {
+    // Le prochain essai différé.
+    if (retryTimer.current) clearTimeout(retryTimer.current);
+    retryTimer.current = null;
+    const waiting = all.filter((item) => (item.status === "queued" || item.status === "sent" || item.status === "background") && !due(item));
+    if (waiting.length > 0) {
+      const next = Math.min(...waiting.map((item) => item.retryAt ?? now));
+      retryTimer.current = setTimeout(kick, Math.max(500, next - now));
+    }
+  };
+
+  // ---- Démarrage : relire la file, écarter ce qui n'a plus lieu d'être ----
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setIntents(readIntents());
+      let stored: UploadItem[] = [];
+      try {
+        stored = await loadItems();
+      } catch {
+        // IndexedDB indisponible (navigation privée sur un vieux Safari) :
+        // la file vit en mémoire, le reste fonctionne.
+      }
+      if (cancelled) return;
+      const now = Date.now();
+      const drop = new Set<string>();
+      for (const item of stored) {
+        if (item.status === "done" || now - item.createdAt > STALE_MS) drop.add(item.id);
+      }
+      // Chaque sortie est vérifiée auprès du serveur : une sortie supprimée,
+      // ou celle d'un autre compte ouvert un jour dans ce navigateur, n'a
+      // rien à faire dans la file.
+      const sortieIds = Array.from(new Set(stored.filter((i) => !drop.has(i.id)).map((i) => i.sortieId)));
+      let signedIn = true;
+      await Promise.all(
+        sortieIds.map(async (sortieId) => {
+          try {
+            const res = await fetch(`/api/sorties/${sortieId}/photos`);
+            if (res.status === 401) signedIn = false;
+            if (res.status === 404) {
+              for (const item of stored) if (item.sortieId === sortieId) drop.add(item.id);
+              return;
+            }
+            if (!res.ok) return;
+            const data = (await res.json()) as { photos: { id: string }[] };
+            const known = new Set(data.photos.map((p) => p.id));
+            for (const item of stored) {
+              if (item.sortieId === sortieId && item.photoId && !known.has(item.photoId)) drop.add(item.id);
+            }
+          } catch {
+            // Hors ligne : on garde tout, la file repartira avec le réseau.
+          }
+        }),
+      );
+      if (cancelled) return;
+      if (drop.size > 0) io(() => deleteItems(Array.from(drop)));
+      for (const item of stored) {
+        if (drop.has(item.id)) continue;
+        // Un envoi interrompu (onglet fermé, rechargement) reprend au début.
+        const status = item.status === "uploading" || item.status === "error" ? "queued" : item.status;
+        store.current.set(item.id, { ...item, status, progress: 0, retryAt: undefined });
+      }
+      // Les vignettes locales, pour que la grille retrouve ses images.
+      await Promise.all(
+        Array.from(store.current.values()).map(async (item) => {
+          if (item.hasThumb || item.posterSize) {
+            const thumb = await blobOf(item.id, item.isVideo ? "poster" : "thumb");
+            if (thumb) {
+              setPreview(item.id, thumb, 2);
+              return;
+            }
+          }
+          const file = await blobOf(item.id, "file");
+          if (file) setPreview(item.id, file, 0, Boolean(item.isVideo));
+        }),
+      );
+      if (cancelled) return;
+      paintNow();
+      started.current = signedIn;
+      kick();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Une seule fois, au montage de l'espace opérateur.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Réseau revenu, ou téléphone rallumé : un iPhone suspend l'onglet écran
+  // verrouillé, la file repart dès qu'il revient au premier plan.
+  useEffect(() => {
+    const resume = () => {
+      if (document.visibilityState === "visible") kick();
+    };
+    window.addEventListener("online", resume);
+    document.addEventListener("visibilitychange", resume);
+    return () => {
+      window.removeEventListener("online", resume);
+      document.removeEventListener("visibilitychange", resume);
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
+  }, [kick]);
+
+  // ---- Publication --------------------------------------------------------
+
+  const patchRun = useCallback((sortieId: string, change: Partial<PublicationRun> | ((run: PublicationRun) => Partial<PublicationRun>)) => {
     setRuns((prev) => {
       const run = prev[sortieId];
       if (!run) return prev;
-      return { ...prev, [sortieId]: { ...run, ...(typeof patch === "function" ? patch(run) : patch) } };
+      return { ...prev, [sortieId]: { ...run, ...(typeof change === "function" ? change(run) : change) } };
     });
   }, []);
 
@@ -694,69 +877,16 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
 
   /** Les publications demandées avant la fin du transfert partent ici, dès que
    *  la sortie n'a plus rien en vol. */
-  const runScheduledPublishes = useCallback(async () => {
+  publishRef.current = () => {
+    if (!started.current) return;
     const stored = readIntents();
-    const sortieIds = Object.keys(stored);
-    if (sortieIds.length === 0) return;
-    const all = await getAllUploadItems();
-    for (const sortieId of sortieIds) {
+    for (const sortieId of Object.keys(stored)) {
       const intent = stored[sortieId];
       if (!intent) continue;
-      const remaining = all.filter((item) => item.sortieId === sortieId && !isSettled(item));
-      if (remaining.length > 0) continue;
-      void startRun(intent, true);
+      const remaining = Array.from(store.current.values()).some((item) => item.sortieId === sortieId && !isSettled(item));
+      if (!remaining) void startRun(intent, true);
     }
-  }, [startRun]);
-
-  publishRef.current = () => void runScheduledPublishes();
-
-  useEffect(() => {
-    void (async () => {
-      setIntents(readIntents());
-      // Les envois terminés n'ont plus rien à faire dans la file : sans ce
-      // ménage elle grossit à chaque sortie et garde les fichiers d'origine en
-      // mémoire, plusieurs mégaoctets chacun.
-      await purgeFinished();
-      let all = await refresh();
-      if (all.length > 0) {
-        // Un envoi interrompu — onglet fermé, rechargement — laisse des
-        // éléments en "uploading" que personne ne réclame. On les remet en file.
-        const stalled = all.filter((i) => i.status === "uploading" || i.status === "error");
-        if (stalled.length > 0) {
-          await Promise.all(stalled.map((item) => updateUploadItem(item.id, { status: "queued", progress: 0 })));
-          all = await refresh();
-        }
-        const unregistered = all.filter((i) => !i.photoId || !i.signedUrl);
-        if (unregistered.length > 0) {
-          await Promise.all(unregistered.map((item) => registerOne(item)));
-          all = await refresh();
-        }
-        if (all.some((i) => i.status === "queued" || i.status === "sent" || i.status === "background")) {
-          void runScheduledPublishes();
-          void pump();
-          return;
-        }
-      }
-      void runScheduledPublishes();
-    })();
-    // Une seule fois, au montage de l'espace opérateur.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Réseau revenu, ou téléphone rallumé : un iPhone suspend l'onglet écran
-  // verrouillé, la file repart dès qu'il revient au premier plan.
-  useEffect(() => {
-    const resume = () => {
-      if (document.visibilityState === "visible") pumpRef.current?.();
-    };
-    window.addEventListener("online", resume);
-    document.addEventListener("visibilitychange", resume);
-    return () => {
-      window.removeEventListener("online", resume);
-      document.removeEventListener("visibilitychange", resume);
-      if (retryTimer.current) clearTimeout(retryTimer.current);
-    };
-  }, []);
+  };
 
   // C'est le navigateur qui envoie : fermer l'onglet met le transfert en pause.
   // On prévient plutôt que de laisser un opérateur partir en croyant ses photos
@@ -765,7 +895,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     // Une publication en cours compte aussi : fermer l'onglet coupe le récit
     // de l'avancement, et l'invitation par e-mail qui la suit ne partirait pas.
     const inFlight =
-      items.some((i) => i.status === "queued" || i.status === "uploading" || i.status === "sent" || i.status === "background") ||
+      items.some((i) => isPhaseOne(i) || i.status === "background") ||
       Object.values(runs).some((r) => r.phase === "running" || r.phase === "sorting" || r.phase === "inviting");
     if (!inFlight) return;
     const warn = (event: BeforeUnloadEvent) => {
@@ -775,6 +905,8 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [items, runs]);
+
+  // ---- Ce que l'écran demande ---------------------------------------------
 
   const enqueue = useCallback(
     async (sortieId: string, files: File[]): Promise<void> => {
@@ -797,81 +929,71 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         toast(ignored === 1 ? "Un fichier n'est ni une photo ni une vidéo" : `${ignored} fichiers ne sont ni des photos ni des vidéos`);
       }
       if (accepted.length === 0) return;
-      // Le dépôt précédent est soldé : le compteur ne parle que des photos
-      // qu'on vient de choisir.
-      await purgeFinishedForSortie(sortieId);
-      // createdAt strictement croissant : la file suit l'ordre du dépôt. Avec
-      // la même milliseconde partout, l'ordre retombait sur celui des
-      // identifiants (aléatoire) et les envois attendaient des copies de
-      // travail pas encore faites pendant que les prêtes patientaient.
+
+      // createdAt strictement croissant : la file et la grille suivent
+      // l'ordre du dépôt.
       const now = Date.now();
-      const created: UploadItem[] = accepted.map((file, index) => ({
-        id: crypto.randomUUID(),
-        sortieId,
-        file,
-        filename: file.name,
-        status: "queued",
-        progress: 0,
-        attempts: 0,
-        createdAt: now + index,
-        ...(isVideoFile(file) ? { isVideo: true, lastModified: file.lastModified } : {}),
-      }));
-
-      // Les vignettes apparaissent ici, avant le moindre appel réseau et avant
-      // même l'écriture dans IndexedDB : vider une carte mémoire, c'est
-      // plusieurs centaines de mégaoctets à recopier sur le disque, et
-      // l'opérateur n'a pas à regarder un écran vide pendant ce temps.
-      for (const item of created) optimistic.current.set(item.id, item);
-      await refresh();
-
-      let started = false;
-      for (const item of created) {
-        await addUploadItem(item);
-        optimistic.current.delete(item.id);
-        // L'envoi démarre dès la première photo écrite, sans attendre que tout
-        // le lot soit recopié.
-        if (!started) {
-          started = true;
-          void pump();
-        }
-      }
-      await refresh();
-      // Les fiches côté serveur suivent (léger, rapide) : elles donnent le
-      // total exact et les identifiants des photos.
-      await Promise.all(created.map((item) => registerOne(item)));
-      await refresh();
-      router.refresh();
+      accepted.forEach((file, index) => {
+        const video = isVideoFile(file);
+        const item: UploadItem = {
+          id: crypto.randomUUID(),
+          sortieId,
+          filename: file.name,
+          size: file.size,
+          type: file.type,
+          status: "queued",
+          progress: 0,
+          attempts: 0,
+          createdAt: now + index,
+          batchAt: now,
+          ...(video ? { isVideo: true, lastModified: file.lastModified } : {}),
+        };
+        store.current.set(item.id, item);
+        blobs.current.set(item.id, { file });
+        setPreview(item.id, file, 0, video);
+        // Sauvegardé dans l'ordre, sans que rien ne l'attende : vider une
+        // carte mémoire, c'est plusieurs centaines de mégaoctets à recopier.
+        io(async () => {
+          const latest = store.current.get(item.id);
+          if (latest) await addItem({ ...latest, progress: 0 }, file);
+        });
+      });
+      // Les vignettes apparaissent ici, avant le moindre appel réseau.
+      paintNow();
+      kick();
     },
-    [refresh, registerOne, pump, router, toast],
+    [io, kick, paintNow, setPreview, toast],
   );
 
   const retryFailed = useCallback(
     (sortieId: string) => {
-      void (async () => {
-        const all = await getAllUploadItems();
-        const failed = all.filter((item) => item.sortieId === sortieId && item.status === "failed");
-        if (failed.length === 0) return;
-        await Promise.all(
-          failed.map((item) => updateUploadItem(item.id, { status: "queued", progress: 0, attempts: 0, error: undefined })),
-        );
-        await refresh();
-        void pump();
-      })();
+      for (const item of Array.from(store.current.values())) {
+        if (item.sortieId === sortieId && item.status === "failed") {
+          // Une photo arrivée dont seul le traitement a échoué n'est pas renvoyée.
+          const status = item.error === "Aperçu non généré" ? "sent" : "queued";
+          patch(item.id, { status, progress: 0, attempts: 0, retryAt: undefined, error: undefined });
+        }
+      }
+      kick();
     },
-    [refresh, pump],
+    [kick, patch],
   );
 
   const forgetPhotos = useCallback(
     async (sortieId: string, photoIds: string[]): Promise<void> => {
-      await deleteUploadItemsByPhotoIds(sortieId, photoIds);
-      await refresh();
+      const wanted = new Set(photoIds);
+      removeItems(
+        Array.from(store.current.values())
+          .filter((item) => item.sortieId === sortieId && item.photoId && wanted.has(item.photoId))
+          .map((item) => item.id),
+      );
     },
-    [refresh],
+    [removeItems],
   );
 
   const publish = useCallback(
     (intent: PublishIntent) => {
-      const busy = items.some((i) => i.sortieId === intent.sortieId && !isSettled(i));
+      const busy = Array.from(store.current.values()).some((i) => i.sortieId === intent.sortieId && !isSettled(i));
       if (!busy) {
         void startRun(intent, false);
         return;
@@ -880,7 +1002,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       writeIntents(next);
       setIntents(next);
     },
-    [items, startRun],
+    [startRun],
   );
 
   const publicationFor = useCallback((sortieId: string) => runs[sortieId] ?? null, [runs]);
@@ -908,31 +1030,37 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       const mine = items.filter((i) => i.sortieId === sortieId);
       if (mine.length === 0) return EMPTY;
       const live = mine.filter((i) => i.status !== "failed");
-      const ready = live.filter((i) => i.status === "done" || i.status === "background").length;
+      const open = new Set(live.filter((i) => !isSettled(i)).map((i) => i.batchAt ?? i.createdAt));
       return {
         failed: mine.length - live.length,
-        working: ready < live.length,
+        working: open.size > 0,
         hdRemaining: live.filter((i) => i.status === "background").length,
+        unregistered: live.filter((i) => !i.photoId).length,
         items: mine,
+        current: live.filter((i) => open.has(i.batchAt ?? i.createdAt)),
       };
     },
     [items],
   );
 
-  const previewUrl = useCallback((itemId: string) => previews.current.get(itemId)?.url, []);
+  // `items` en dépendance : la vignette locale d'un élément change sans que
+  // la liste change de forme, l'écran doit quand même la relire.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const preview = useCallback((itemId: string): LocalPreview | undefined => previews.current.get(itemId), [items]);
 
   const value = useMemo<UploadQueueValue>(
-    () => ({ forSortie, previewUrl, enqueue, retryFailed, forgetPhotos, publish, cancelPublish, scheduledFor, publicationFor, dismissPublication }),
-    [forSortie, previewUrl, enqueue, retryFailed, forgetPhotos, publish, cancelPublish, scheduledFor, publicationFor, dismissPublication],
+    () => ({ forSortie, preview, enqueue, retryFailed, forgetPhotos, publish, cancelPublish, scheduledFor, publicationFor, dismissPublication }),
+    [forSortie, preview, enqueue, retryFailed, forgetPhotos, publish, cancelPublish, scheduledFor, publicationFor, dismissPublication],
   );
 
   // L'indicateur ne s'affiche que loin de l'écran concerné : sur la sortie
   // elle-même, la barre basse dit déjà tout.
   const elsewhere = items.filter((i) => i.status !== "failed" && !pathname.endsWith(`/sorties/${i.sortieId}`));
-  const remaining = elsewhere.filter((i) => i.status !== "done" && i.status !== "background").length;
+  const pending = elsewhere.filter((i) => !isSettled(i));
+  const remaining = pending.length;
   const hdElsewhere = elsewhere.filter((i) => i.status === "background").length;
-  const elsewhereBytes = elsewhere.reduce((sum, i) => sum + phaseOneBytes(i), 0);
-  const elsewhereSent = elsewhere.reduce((sum, i) => {
+  const elsewhereBytes = pending.reduce((sum, i) => sum + phaseOneBytes(i), 0);
+  const elsewhereSent = pending.reduce((sum, i) => {
     if (i.status === "queued") return sum;
     if (i.status === "uploading") return sum + (phaseOneBytes(i) * Math.min(100, Math.max(0, i.progress))) / 100;
     return sum + phaseOneBytes(i);

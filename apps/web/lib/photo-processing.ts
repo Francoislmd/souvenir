@@ -156,13 +156,15 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
 }
 
 /** Enrobe processPhotoPreview : marque la photo FAILED en cas d'erreur,
- * plutôt que de laisser planter l'appelant. */
-export async function runPhotoProcessing(photoId: string): Promise<void> {
+ * plutôt que de laisser planter l'appelant. Rend `true` si la photo est prête. */
+export async function runPhotoProcessing(photoId: string): Promise<boolean> {
   try {
     await processPhotoPreview(photoId);
+    return true;
   } catch (error) {
     console.error(`[photo-processing] ${photoId} failed`, error);
-    await prisma.photo.update({ where: { id: photoId }, data: { status: "FAILED" } });
+    await prisma.photo.update({ where: { id: photoId }, data: { status: "FAILED" } }).catch(() => undefined);
+    return false;
   }
 }
 
@@ -210,17 +212,32 @@ interface OperatorBrand {
   logoUrl: string | null;
 }
 
-async function watermarkBuffer(image: sharp.Sharp, operator: OperatorBrand, width: number): Promise<Buffer> {
-  if (!operator.logoUrl) return image.toBuffer();
+// Le logo du pro, gardé quelques minutes par instance : une sortie de 50
+// photos le retéléchargeait 50 fois, une requête réseau de plus par photo.
+const LOGO_TTL_MS = 5 * 60 * 1000;
+const logoCache = new Map<string, { at: number; buffer: Promise<Buffer> }>();
 
-  try {
-    const logoRes = await fetch(operator.logoUrl);
+function loadLogo(url: string): Promise<Buffer> {
+  const hit = logoCache.get(url);
+  if (hit && Date.now() - hit.at < LOGO_TTL_MS) return hit.buffer;
+  const buffer = fetch(url).then(async (logoRes) => {
     const contentType = logoRes.headers.get("content-type") ?? "";
     if (!logoRes.ok || !contentType.startsWith("image/")) {
       throw new Error(`logo URL did not return an image (status ${logoRes.status}, content-type "${contentType}")`);
     }
+    return Buffer.from(await logoRes.arrayBuffer());
+  });
+  // Un échec n'est pas gardé : la photo suivante réessaie.
+  buffer.catch(() => logoCache.delete(url));
+  logoCache.set(url, { at: Date.now(), buffer });
+  return buffer;
+}
 
-    const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
+async function watermarkBuffer(image: sharp.Sharp, operator: OperatorBrand, width: number): Promise<Buffer> {
+  if (!operator.logoUrl) return image.toBuffer();
+
+  try {
+    const logoBuffer = await loadLogo(operator.logoUrl);
     const logoWidth = Math.round(width * 0.18);
     const logo = await sharp(logoBuffer)
       .resize({ width: logoWidth })

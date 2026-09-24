@@ -9,6 +9,7 @@ import { formatEuros } from "@/lib/format";
 import { useToast } from "@/components/operator/ToastProvider";
 import { PhotoDropZone, type PhotoDropZoneHandle } from "@/components/photos/PhotoDropZone";
 import { phaseOneBytes, useUploadQueue } from "@/components/photos/UploadQueueProvider";
+import { StableImg } from "@/components/ui/StableImg";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { ClientsSection } from "@/components/sorties/ClientsSection";
@@ -26,6 +27,8 @@ export interface ScreenPhoto {
   durationSec?: number | null;
   /** L'original n'est pas encore arrivé (seconde phase du dépôt). */
   originalPending?: boolean;
+  /** UPLOADED | PROCESSING | READY | FAILED (relu par l'écran, absent au premier rendu). */
+  status?: string;
 }
 
 export interface ScreenClient {
@@ -123,45 +126,77 @@ export function SortieScreen({
   const inFlight = !published && (Boolean(scheduled) || (run !== null && run.phase !== "failed"));
   const failedRun = !published && run?.phase === "failed" ? run : null;
 
-  const fetchPhotos = useCallback(async (): Promise<ScreenPhoto[]> => {
-    const res = await fetch(`/api/sorties/${sortieId}/photos`);
-    if (!res.ok) return [];
-    const data = (await res.json()) as { photos: ScreenPhoto[] };
-    return data.photos.map((p) => ({
-      id: p.id,
-      ownerId: p.ownerId,
-      thumbUrl: p.thumbUrl,
-      isVideo: p.isVideo,
-      durationSec: p.durationSec,
-      originalPending: p.originalPending,
-    }));
+  // null = lecture ratée. Avant le 24/09/2026 elle rendait une liste vide, et
+  // une seule réponse lente ou en erreur vidait toute la grille jusqu'à la
+  // lecture suivante.
+  const fetchPhotos = useCallback(async (): Promise<ScreenPhoto[] | null> => {
+    try {
+      const res = await fetch(`/api/sorties/${sortieId}/photos`, { cache: "no-store" });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { photos: ScreenPhoto[] };
+      return data.photos.map((p) => ({
+        id: p.id,
+        ownerId: p.ownerId,
+        thumbUrl: p.thumbUrl,
+        isVideo: p.isVideo,
+        durationSec: p.durationSec,
+        originalPending: p.originalPending,
+        status: p.status,
+      }));
+    } catch {
+      return null;
+    }
   }, [sortieId]);
 
+  const acceptPhotos = useCallback((fresh: ScreenPhoto[]) => {
+    setPhotos((prev) => {
+      const same =
+        prev.length === fresh.length &&
+        prev.every(
+          (p, i) =>
+            p.id === fresh[i]?.id &&
+            p.thumbUrl === fresh[i]?.thumbUrl &&
+            p.ownerId === fresh[i]?.ownerId &&
+            p.originalPending === fresh[i]?.originalPending &&
+            p.status === fresh[i]?.status,
+        );
+      return same ? prev : fresh;
+    });
+  }, []);
+
+  // La page relue par le serveur (router.refresh) apporte sa liste : elle
+  // remplace l'ancienne, sauf pendant une attribution ou une suppression.
+  useEffect(() => {
+    if (!mutating.current) acceptPhotos(initialPhotos);
+  }, [initialPhotos, acceptPhotos]);
+
   // Une seule boucle de rattrapage : elle tourne pendant que la file travaille
-  // (les fiches et les miniatures arrivent au fil de l'eau) et tant qu'une
-  // photo n'a pas sa miniature. Rien n'attend jamais son tour à l'écran.
-  const needsCatchUp = state.working || photos.some((p) => !p.thumbUrl);
+  // et tant qu'une photo venue d'ailleurs n'a pas sa miniature. Les photos
+  // déposées ici ne l'attendent pas : elles s'affichent depuis l'appareil.
+  const needsCatchUp = state.working || photos.some((p) => !p.thumbUrl && p.status !== "FAILED");
   useEffect(() => {
     if (!needsCatchUp) return;
     let cancelled = false;
-    const timer = setInterval(() => {
-      void (async () => {
-        if (mutating.current) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const tick = async () => {
+      if (!mutating.current && document.visibilityState === "visible") {
         const fresh = await fetchPhotos();
-        if (cancelled || mutating.current) return;
-        setPhotos((prev) => {
-          if (prev.length === fresh.length && prev.every((p, i) => p.id === fresh[i]?.id && p.thumbUrl === fresh[i]?.thumbUrl && p.ownerId === fresh[i]?.ownerId)) {
-            return prev;
-          }
-          return fresh;
-        });
-      })();
-    }, 2500);
+        if (cancelled) return;
+        if (fresh && !mutating.current) acceptPhotos(fresh);
+      }
+      // Une lecture à la fois : la suivante part après la réponse.
+      if (!cancelled) timer = setTimeout(() => void tick(), 2500);
+    };
+    timer = setTimeout(() => void tick(), 1200);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
-  }, [needsCatchUp, fetchPhotos]);
+  }, [needsCatchUp, fetchPhotos, acceptPhotos]);
+
+  // Photos retirées à l'instant : elles quittent la grille avant la réponse
+  // du serveur, qu'elles viennent de la liste ou de la file locale.
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!published || !shareUrl || qrDataUrl) return;
@@ -216,22 +251,30 @@ export function SortieScreen({
   async function deleteSelected(): Promise<void> {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
-    const previous = photos;
     mutating.current = true;
-    setPhotos((prev) => prev.filter((p) => !selected.has(p.id)));
+    // Optimiste : les cases partent tout de suite, on rend celles dont la
+    // suppression échoue.
+    setRemoved((prev) => new Set([...Array.from(prev), ...ids]));
     setSelected(new Set());
     setConfirmDelete(false);
-    const results = await Promise.all(ids.map((id) => fetch(`/api/photos/${id}`, { method: "DELETE" }).then((res) => res.ok)));
-    if (results.some((ok) => !ok)) {
-      mutating.current = false;
-      setPhotos(previous);
+    const results = await Promise.all(
+      ids.map((id) =>
+        fetch(`/api/photos/${id}`, { method: "DELETE" })
+          .then((res) => res.ok || res.status === 404)
+          .catch(() => false),
+      ),
+    );
+    const gone = ids.filter((_, i) => results[i]);
+    const kept = ids.filter((_, i) => !results[i]);
+    setPhotos((prev) => prev.filter((p) => !gone.includes(p.id)));
+    if (kept.length > 0) {
+      setRemoved((prev) => new Set(Array.from(prev).filter((id) => !kept.includes(id))));
       toast("La suppression a échoué pour certaines photos — réessayez.");
-      return;
     }
     // Une photo supprimée doit aussi disparaître de la file locale : sinon elle
     // continue d'être comptée dans l'avancement et son aperçu local survit à sa
     // suppression.
-    await upload.forgetPhotos(sortieId, ids);
+    await upload.forgetPhotos(sortieId, gone);
     mutating.current = false;
     // La liste des sorties affiche un nombre de photos rendu côté serveur : il
     // restait périmé après une suppression comme après un dépôt.
@@ -321,54 +364,113 @@ export function SortieScreen({
     toast("Lien copié");
   }
 
-  // Les photos déposées à l'instant s'affichent avant tout aller-retour réseau :
-  // le fichier est déjà sur l'appareil, sa vignette aussi.
-  const known = new Set(photos.map((p) => p.id));
-  const fresh = state.items.filter((item) => item.status !== "failed" && (!item.photoId || !known.has(item.photoId)));
-  const localByPhoto = new Map<string, { url: string; isVideo: boolean }>();
+  // ---- La grille : une case par photo, qui ne change jamais d'identité ----
+  //
+  // Deux sources : les photos déposées sur cet appareil (la file, dans
+  // l'ordre du dépôt, avec leur image locale) et la liste du serveur. Avant
+  // le 24/09/2026, une photo passait de l'une à l'autre au moment où sa
+  // fiche serveur apparaissait : la case était démontée, remontée ailleurs,
+  // et changeait d'image (fichier, puis vignette locale, puis vignette
+  // serveur). Mesuré en production : 20 photos déposées, chaque case changée
+  // trois fois, et la grille passée de 20 à 26 cases puis revenue à 20.
+  // Désormais une photo déposée ici garde sa case et son image locale d'un
+  // bout à l'autre ; la liste du serveur n'ajoute que ce que l'appareil ne
+  // connaît pas (dépôt fait ailleurs, photos d'une visite précédente).
+  const serverById = new Map(photos.map((p) => [p.id, p]));
+  const localPhotoIds = new Set(state.items.map((i) => i.photoId).filter((id): id is string => Boolean(id)));
+  type Tile = {
+    key: string;
+    photoId: string | null;
+    photo: ScreenPhoto | null;
+    local: ReturnType<typeof upload.preview>;
+    failed: boolean;
+    /** Publiable : son aperçu filigrané est fait (au dépôt, depuis le 19/09). */
+    lit: boolean;
+    isVideo: boolean;
+    durationSec: number | null | undefined;
+  };
+  const tiles: Tile[] = [];
+  for (const p of photos) {
+    if (localPhotoIds.has(p.id) || removed.has(p.id)) continue;
+    // Une fiche sans miniature que l'appareil ne reconnaît pas encore, pendant
+    // qu'il enregistre ses propres photos, est presque sûrement l'une d'elles :
+    // elle apparaîtra à sa place dès que la réponse arrive, sans doublon.
+    if (!p.thumbUrl && p.status !== "FAILED" && state.unregistered > 0) continue;
+    tiles.push({
+      key: p.id,
+      photoId: p.id,
+      photo: p,
+      local: undefined,
+      failed: p.status === "FAILED",
+      lit: p.status === "READY",
+      isVideo: Boolean(p.isVideo),
+      durationSec: p.durationSec,
+    });
+  }
   for (const item of state.items) {
-    if (!item.photoId) continue;
-    const url = upload.previewUrl(item.id);
-    if (url) localByPhoto.set(item.photoId, { url, isVideo: !!item.isVideo });
+    if (item.photoId && removed.has(item.photoId)) continue;
+    const photo = item.photoId ? (serverById.get(item.photoId) ?? null) : null;
+    tiles.push({
+      key: item.id,
+      photoId: item.photoId ?? null,
+      photo,
+      local: upload.preview(item.id),
+      failed: item.status === "failed",
+      lit: item.status === "background" || item.status === "done",
+      isVideo: Boolean(item.isVideo),
+      durationSec: photo?.durationSec ?? item.durationSec,
+    });
   }
 
-  const photoCount = photos.length + fresh.length;
-  const empty = photoCount === 0;
+  const photoCount = tiles.filter((t) => !t.failed).length;
+  const empty = tiles.length === 0;
   const selectable = !published && !inFlight;
-  // GROUPE : chaque photo s'allume quand son aperçu filigrané est posé.
+  // GROUPE : chaque photo s'allume quand son aperçu filigrané est posé —
+  // pendant le transfert déjà, puisque le dépôt le fabrique : la grille
+  // avance au même rythme que le compteur « 8 / 20 » de la carte.
   const lighting = inFlight && isGroup;
   const ready = new Set(run?.readyIds ?? []);
 
   const grid = (
     <div className={`${styles.sdGrid} ${selected.size > 0 ? styles.sdGridPicking : ""} ${lighting ? styles.sdGridPub : ""}`}>
-      {photos.map((p) => {
-        const local = p.thumbUrl ? null : localByPhoto.get(p.id);
-        const src = p.thumbUrl ?? local?.url ?? null;
-        const on = selected.has(p.id);
+      {tiles.map((t) => {
+        const id = t.photoId;
+        const canPick = selectable && id !== null;
+        const on = id !== null && selected.has(id);
+        const image = t.local
+          ? t.local.video
+            ? <LocalVideoThumb src={t.local.url} />
+            : <StableImg src={t.local.url} />
+          : t.photo?.thumbUrl
+            ? <StableImg src={t.photo.thumbUrl} />
+            : t.failed
+              ? null
+              : <TileSpinner size={18} />;
         return (
           <span
-            key={p.id}
-            className={`${styles.sdPh} ${on ? styles.sdPhOn : ""} ${lighting && ready.has(p.id) ? styles.sdPhReady : ""}`}
-            role={selectable ? "button" : undefined}
-            tabIndex={selectable ? 0 : undefined}
-            aria-pressed={selectable ? on : undefined}
-            style={selectable ? undefined : { cursor: "default" }}
-            onClick={selectable ? () => toggleSelect(p.id) : undefined}
+            key={t.key}
+            className={`${styles.sdPh} ${on ? styles.sdPhOn : ""} ${lighting && (t.lit || (id !== null && ready.has(id))) ? styles.sdPhReady : ""}`}
+            role={canPick ? "button" : undefined}
+            tabIndex={canPick ? 0 : undefined}
+            aria-pressed={canPick ? on : undefined}
+            // Une photo en échec reste visible, estompée : le bandeau sous la
+            // grille dit combien, et propose de réessayer.
+            style={{ ...(canPick ? {} : { cursor: "default" }), ...(t.failed ? { opacity: 0.4 } : {}) }}
+            onClick={canPick ? () => toggleSelect(id) : undefined}
             onKeyDown={
-              selectable
+              canPick
                 ? (e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      toggleSelect(p.id);
+                      toggleSelect(id);
                     }
                   }
                 : undefined
             }
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {local?.isVideo ? <LocalVideoThumb src={local.url} /> : src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
-            {p.isVideo || local?.isVideo ? <VideoBadge durationSec={p.durationSec} /> : null}
-            {selectable ? (
+            {image}
+            {t.isVideo ? <VideoBadge durationSec={t.durationSec} /> : null}
+            {canPick ? (
               <span className={`${styles.sdPhCheck} ${on ? styles.sdPhCheckOn : ""}`}>
                 <CheckIcon />
               </span>
@@ -380,23 +482,15 @@ export function SortieScreen({
           </span>
         );
       })}
-      {fresh.map((item) => {
-        const src = upload.previewUrl(item.id);
-        return (
-          <span key={item.id} className={styles.sdPh} style={{ cursor: "default" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {src && item.isVideo ? <LocalVideoThumb src={src} /> : src ? <img src={src} alt="" draggable={false} /> : <TileSpinner size={18} />}
-            {item.isVideo ? <VideoBadge durationSec={item.durationSec} /> : null}
-          </span>
-        );
-      })}
     </div>
   );
 
   // ---- Avancement de la publication ----
   // Transfert : en octets (comme la barre basse), plus les photos finies —
   // une photo arrivée doit encore être traitée avant de compter.
-  const liveItems = state.items.filter((i) => i.status !== "failed");
+  // Seulement le dépôt en cours : les photos d'un dépôt précédent, déjà
+  // soldé, ne doivent pas faire partir la barre à mi-course.
+  const liveItems = state.current;
   // Seule la première phase compte : copies de travail, pas originaux.
   const readyCount = liveItems.filter((i) => i.status === "done" || i.status === "background").length;
   const bytesTotal = liveItems.reduce((sum, i) => sum + phaseOneBytes(i), 0);
@@ -406,7 +500,7 @@ export function SortieScreen({
     return sum + phaseOneBytes(i);
   }, 0);
   const transferFrac =
-    liveItems.length === 0 ? 1 : 0.8 * (bytesTotal > 0 ? bytesSent / bytesTotal : 1) + 0.2 * (readyCount / liveItems.length);
+    liveItems.length === 0 ? 1 : 0.55 * (bytesTotal > 0 ? bytesSent / bytesTotal : 1) + 0.45 * (readyCount / liveItems.length);
   const transferring = Boolean(scheduled) && !run;
   const showTransfer = transferring || Boolean(run?.afterTransfer);
   const phase = run?.phase ?? null;
@@ -420,7 +514,10 @@ export function SortieScreen({
       label: "Transfert des dernières photos",
       state: run ? "done" : "on",
       count: run ? undefined : `${readyCount} / ${liveItems.length}`,
-      weight: 3,
+      // Le gros du temps : les octets, puis le traitement serveur qui fait
+      // déjà miniature et filigrane. Avant le 24/09/2026 il ne pesait qu'un
+      // tiers, et la barre sautait de 33 à 93 % quand la publication partait.
+      weight: 8,
       frac: run ? 1 : transferFrac,
     });
   }
@@ -432,7 +529,9 @@ export function SortieScreen({
       label: "Aperçus filigranés",
       state: prepared ? "done" : preparing ? "on" : "todo",
       count: preparing && run && run.total > 0 ? `${run.done} / ${run.total}` : undefined,
-      weight: 5,
+      // Faits au dépôt : à la publication il ne reste en général rien à
+      // préparer. Lourd seulement quand la publication part sans transfert.
+      weight: showTransfer ? 1 : 5,
       frac: prepared ? 1 : preparing && run && run.total > 0 ? run.done / run.total : 0,
     });
     steps.push({
@@ -585,7 +684,6 @@ export function SortieScreen({
   // Seconde phase : la sortie est publiable, les originaux finissent d'arriver.
   // Ceux de cet appareil partent tout seuls ; ceux d'un autre appareil (dépôt
   // fait sur le téléphone, écran ouvert sur l'ordinateur) l'attendent.
-  const localPhotoIds = new Set(state.items.map((i) => i.photoId).filter((id): id is string => Boolean(id)));
   const hdElsewhere = photos.filter((p) => p.originalPending && !localPhotoIds.has(p.id)).length;
   const hdNote =
     state.hdRemaining > 0 ? (
