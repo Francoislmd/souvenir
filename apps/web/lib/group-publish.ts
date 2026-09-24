@@ -54,8 +54,9 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
 
 /**
  * Télécharge l'original et génère+stocke son aperçu filigrané de galerie
- * de groupe (lib/group-watermark.ts) — jamais servi flouté, la protection
- * tient entièrement au filigrane. Partagé entre la publication initiale
+ * de groupe (lib/group-watermark.ts) : photo à peine floutée sous une trame
+ * diagonale au nom du professionnel — voir PARAMS là-bas pour l'arbitrage.
+ * Partagé entre la publication initiale
  * (preparePhotoOnce, qui lit aussi l'EXIF sur le même buffer) et le
  * rattrapage silencieux (regenerateGroupPreview, backfillGroupPreviews).
  */
@@ -75,8 +76,7 @@ async function uploadGroupPreview(photoId: string, buffer: Buffer, operatorName:
 /**
  * Un seul téléchargement de l'original par photo : sert à la fois à lire
  * l'EXIF (regroupement par créneau) et à générer l'aperçu filigrané de
- * galerie de groupe (lib/group-watermark.ts) — jamais servi flouté, la
- * protection tient entièrement au filigrane.
+ * galerie de groupe (lib/group-watermark.ts).
  */
 async function preparePhotoOnce(photoId: string, originalKey: string, operatorName: string): Promise<PhotoPrep> {
   const buffer = await downloadObject(ORIGINALS_BUCKET, originalKey);
@@ -105,8 +105,7 @@ const RETRY_DELAYS_MS = [1000, 2000, 4000];
 /**
  * Un seul téléchargement de l'original par photo : sert à la fois à lire
  * l'EXIF (regroupement par créneau) et à générer l'aperçu filigrané de
- * galerie de groupe (lib/group-watermark.ts) — jamais servi flouté, la
- * protection tient entièrement au filigrane. Plusieurs essais espacés avant
+ * galerie de groupe (lib/group-watermark.ts). Plusieurs essais espacés avant
  * d'abandonner : le rendu sollicite fortement le CPU (détection de visage
  * TF.js, contention possible), et un original tout juste uploadé peut
  * renvoyer "Object not found" le temps d'être répliqué côté stockage.
@@ -244,48 +243,57 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
   const items: ClusterItem[] = prepared.map((p) => ({ id: p.id, takenAt: p.takenAt }));
   const clusters = clusterByTime(items, undefined, sortie.startsAt);
 
-  await prisma.$transaction(async (tx) => {
-    // Republier (photos ajoutées après coup, ou nouvelle tentative) doit
-    // repartir d'une ardoise propre : sans ça, les anciens Slot d'une
-    // publication précédente restent en base à côté des nouveaux — déjà vu
-    // produire deux Slot distincts coïncidant sur le même horaire de repli.
-    // La suppression met simplement Photo.slotId à null (onDelete: SetNull),
-    // aussitôt réassigné ci-dessous.
-    await tx.slot.deleteMany({ where: { sortieId: sortie.id } });
+  await prisma.$transaction(
+    async (tx) => {
+      // Republier (photos ajoutées après coup, ou nouvelle tentative) doit
+      // repartir d'une ardoise propre : sans ça, les anciens Slot d'une
+      // publication précédente restent en base à côté des nouveaux — déjà vu
+      // produire deux Slot distincts coïncidant sur le même horaire de repli.
+      // La suppression met simplement Photo.slotId à null (onDelete: SetNull),
+      // aussitôt réassigné ci-dessous.
+      await tx.slot.deleteMany({ where: { sortieId: sortie.id } });
 
-    for (const cluster of clusters) {
-      const slot = await tx.slot.create({
-        data: {
-          sortieId: sortie.id,
-          label: formatSlotLabel(cluster.startsAt),
-          startsAt: cluster.startsAt,
-          guide: sortie.guide,
-        },
-      });
+      for (const cluster of clusters) {
+        const slot = await tx.slot.create({
+          data: {
+            sortieId: sortie.id,
+            label: formatSlotLabel(cluster.startsAt),
+            startsAt: cluster.startsAt,
+            guide: sortie.guide,
+          },
+        });
 
-      await tx.photo.updateMany({ where: { id: { in: cluster.ids } }, data: { slotId: slot.id } });
+        await tx.photo.updateMany({ where: { id: { in: cluster.ids } }, data: { slotId: slot.id } });
 
-      const [coverPhotoId] = cluster.ids;
-      if (coverPhotoId) {
-        await tx.slot.update({ where: { id: slot.id }, data: { coverPhotoId } });
+        const [coverPhotoId] = cluster.ids;
+        if (coverPhotoId) {
+          await tx.slot.update({ where: { id: slot.id }, data: { coverPhotoId } });
+        }
       }
-    }
 
-    // takenAt et groupPreviewKey sont renseignés sur chaque photo préparée
-    // ici, indépendamment du slot. Celles déjà prêtes au dépôt ont les leurs
-    // en base : les réécrire coûterait un aller-retour par photo dans la
-    // transaction pour rien.
-    await Promise.all(
-      prepared
-        .filter((p) => freshIds.has(p.id) && (p.takenAt || p.groupPreviewKey))
-        .map((p) => tx.photo.update({ where: { id: p.id }, data: { takenAt: p.takenAt, groupPreviewKey: p.groupPreviewKey } })),
-    );
+      // takenAt et groupPreviewKey sont renseignés sur chaque photo préparée
+      // ici, indépendamment du slot. Celles déjà prêtes au dépôt ont les leurs
+      // en base : les réécrire coûterait un aller-retour par photo dans la
+      // transaction pour rien.
+      await Promise.all(
+        prepared
+          .filter((p) => freshIds.has(p.id) && (p.takenAt || p.groupPreviewKey))
+          .map((p) => tx.photo.update({ where: { id: p.id }, data: { takenAt: p.takenAt, groupPreviewKey: p.groupPreviewKey } })),
+      );
 
-    await tx.sortie.update({
-      where: { id: sortie.id },
-      data: { status: "SENT", purgeAt: new Date(sortie.startsAt.getTime() + 90 * DAY_MS) },
-    });
-  });
+      await tx.sortie.update({
+        where: { id: sortie.id },
+        data: { status: "SENT", purgeAt: new Date(sortie.startsAt.getTime() + 90 * DAY_MS) },
+      });
+    },
+    // Un round-trip DB par slot (create+updateMany+update) plus un par photo :
+    // sur une grosse sortie ça dépasse largement le timeout par défaut de
+    // Prisma (5s), qui referme la transaction pendant qu'on continue de s'en
+    // servir — vu en prod sous forme de "P2028 Transaction not found" sur la
+    // publication. Aligné sur le maxDuration de la route (120s) plutôt que
+    // sur les 5s par défaut.
+    { maxWait: 10_000, timeout: 100_000 },
+  );
 
   await track("sortie_published", { operatorId: sortie.operatorId, meta: { sortieId: sortie.id, slots: clusters.length } });
 }
