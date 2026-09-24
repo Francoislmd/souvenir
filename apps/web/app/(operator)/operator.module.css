@@ -2556,12 +2556,14 @@ a.sdClient:hover {
     font-size: 2.35rem;
   }}
 
-/* La barre de navigation basse occupe les 72 px du bas sur téléphone : la
-   pastille d'envoi se pose au-dessus, sur toute la largeur. */
+/* Téléphone : pas de pastille d'envoi flottante, l'état d'un envoi reste
+   lisible dans la barre d'action de la sortie concernée. Le toast, lui,
+   reste : il se pose au-dessus de la barre d'onglets du bas (72 px). */
 @media (max-width: 760px) {
   .upPill {
-    left: 14px;
-    right: 14px;
+    display: none;
+  }
+  .toast {
     bottom: calc(84px + env(safe-area-inset-bottom));
   }
 }
