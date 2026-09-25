@@ -322,10 +322,7 @@
 .accx .flow .dt > em{overflow:hidden;display:block;font-style:normal;font-size:15px;line-height:1.5;color:rgba(255,255,255,.72)}
 .accx .flow li.on .dt{grid-template-rows:1fr}
 .accx .flow li.on .dt > em{padding-top:3px}
-.accx .flow li::after{content:"";position:absolute;left:46px;right:0;bottom:0;height:2px;border-radius:2px;background:rgba(255,255,255,.14)}
-.accx .flow li i{position:absolute;left:46px;bottom:0;height:2px;border-radius:2px;background:#fff;width:0;z-index:1}
-.accx .flow li.on i{animation:acc-prog var(--dur,4s) linear forwards}
-.accx .hx.paused .flow li.on i{animation-play-state:paused}
+.accx .flow li > i{display:none}
 @keyframes acc-prog{to{width:calc(100% - 46px)}}
 
 .accx .hxCta{margin-top:32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
@@ -446,6 +443,8 @@
 .accx .sh .sum b{font-size:14px}
 .accx .apay{position:relative}
 .accx .apay .spin{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;opacity:0;animation:acc-rot .8s linear infinite}
+.accx .apay .lbl{display:inline-flex;align-items:center;gap:5px}
+.accx .apay .lbl svg{display:block;margin-top:-2px}
 .accx .apay.busy .lbl{opacity:0}.accx .apay.busy .spin{opacity:1}
 @keyframes acc-rot{to{transform:rotate(360deg)}}
 .accx .sD .ok{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;opacity:0;visibility:hidden;transition:opacity .4s var(--ease),visibility 0s .4s}

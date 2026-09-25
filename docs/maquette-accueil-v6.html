@@ -539,6 +539,78 @@ p{text-wrap:pretty}
   .rv{opacity:1;transform:none}
   .prog i{width:64%}
 }
+
+.stepsHint{display:none;align-items:center;gap:8px;margin-top:14px;font-size:13.5px;color:var(--ink-3)}
+/* ── Mobile : passe d'optimisation ── */
+@media (max-width:640px){
+  /* rythme vertical resserré */
+  .acts{padding:48px 0 64px}
+  .moment{padding:0 0 72px}
+  .how{padding:64px 0}
+  .price{padding:56px 0}
+  .fq{padding-top:40px;padding-bottom:48px}
+  .end{padding-bottom:56px}
+  .h2{font-size:32px}
+  /* héros : démo plus compacte, sans vide dans les écrans */
+  .hxDemo,.hxDemo.rv,.hxDemo.rv.in{width:236px;margin-top:84px}
+  .hxPhone .scr{height:470px}
+  .sC .ph{flex-basis:168px;height:226px}
+  .sD .bgG img{height:226px}
+  .lt{margin-top:40px}.lt b{font-size:54px}
+  .sA .gr{grid-template-columns:repeat(4,1fr)}
+  .hxCta small{font-size:13.5px}
+  /* bandeau d'activités : cartes plus petites, on en voit deux et demie */
+  .card{flex-basis:142px;border-radius:18px}
+  .card span{font-size:14px;left:12px;bottom:11px}
+  .actsHead p{font-size:15px}
+  /* collage : la vignette ne mange plus la photo */
+  .collage{padding:0 28px 32px 0;max-width:340px}
+  .collage .small{width:40%;border-width:4px}
+  .moment .q{font-size:38px}
+  .today b{flex-basis:104px}
+  .today div{font-size:14.5px;padding:12px 0}
+  /* fonctionnement : carrousel horizontal au lieu de trois cartes empilées */
+  .steps{display:flex;gap:12px;margin:32px calc(-1 * var(--gutter)) 0;padding:0 var(--gutter) 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--gutter);scrollbar-width:none;max-width:none}
+  .steps::-webkit-scrollbar{display:none}
+  .step{flex:0 0 84%;scroll-snap-align:start}
+  .step.rv{opacity:1;transform:none}
+  .stage{height:300px;padding:22px 14px 0}
+  .stage .pro,.stage .mini{transform:scale(.86);transform-origin:top center;margin-bottom:-60px}
+  .meta{padding:20px 20px 24px}
+  .meta h3{font-size:20px;margin-top:12px}
+  .meta p{font-size:15px}
+  .stepsHint{display:flex}
+  /* tarif : l'exemple se lit de haut en bas */
+  .rate b{font-size:64px}
+  .rate span{max-width:none}
+  .sA .row2 span{font-size:12px}
+  .sA .row2 .btn{padding:0 13px;height:34px;font-size:12.5px}
+  .sA .ft2{padding:10px 12px 14px}
+  .stage .pro .top em{display:none}
+  .split{grid-template-columns:1fr auto;gap:0}
+  .split > div{display:flex;justify-content:space-between;align-items:baseline;grid-column:1/-1;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+  .split > div .l br{display:none}
+  .split > div .l{margin:0;order:-1;font-size:14px}
+  .split .ar{display:none}
+  .split .mine{margin-top:10px;border:0;padding:14px 16px}
+  .split .mine .v{font-size:26px}
+  .split .v{font-size:20px}
+  /* FAQ */
+  .fqH2{font-size:30px}
+  .fqAns{padding-right:0}
+  /* pied : deux colonnes, cibles tactiles de 40 px */
+  .ftrBand .btn{width:100%}
+  .ftrGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 16px}
+  .ftrGrid > div:first-child{grid-column:1/-1}
+  .ftrCol{gap:0}
+  .ftrCol a{min-height:40px;display:flex;align-items:center;font-size:15px}
+  .soc a{width:40px;height:40px}
+  .ftrBot{justify-content:space-between}
+}
+@media (max-width:370px){
+  .step{flex-basis:88%}
+  .card{flex-basis:132px}
+}
 </style>
 </head>
 <body>
@@ -786,6 +858,7 @@ p{text-wrap:pretty}
           </div>
         </article>
       </div>
+      <p class="stepsHint" aria-hidden="true">Faites glisser pour voir les trois étapes<svg width="18" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h19M15 1l5 5-5 5"/></svg></p>
     </div>
   </section>
 
@@ -803,9 +876,9 @@ p{text-wrap:pretty}
           <div class="ex">
             <p class="case">Exemple : un client achète un lot de 12 photos à 25&nbsp;€.</p>
             <div class="split">
-              <div><span class="v">25&nbsp;€</span><span class="l">payés par<br>le client</span></div>
+              <div><span class="v">25&nbsp;€</span><span class="l">payés par <br>le client</span></div>
               <span class="ar">→</span>
-              <div class="cut"><span class="v">5&nbsp;€</span><span class="l">commission<br>Linktrip</span></div>
+              <div class="cut"><span class="v">5&nbsp;€</span><span class="l">commission <br>Linktrip</span></div>
               <span class="ar">→</span>
               <div class="mine"><span class="v">20&nbsp;€</span><span class="l">reçus par vous</span></div>
             </div>
