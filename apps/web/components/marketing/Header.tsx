@@ -138,8 +138,8 @@ export function Header({ current }: HeaderProps) {
             {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
           </svg>
         </button>
-        <ButtonLink href="/liste-attente" variant="sunset" size="md" className={styles.headerCta}>
-          Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
+        <ButtonLink href="/signup" variant="sunset" size="md" className={styles.headerCta}>
+          Créer mon espace <span aria-hidden="true">→</span>
         </ButtonLink>
       </nav>
 
@@ -209,13 +209,13 @@ export function Header({ current }: HeaderProps) {
             {/* CTA repris ici : masqué dans la barre sous 1000px (cf. .headerCta),
                 il reste accessible depuis le menu déroulant. */}
             <ButtonLink
-              href="/liste-attente"
+              href="/signup"
               variant="sunset"
               size="md"
               className={styles.menuCta}
               onClick={fermerMenu}
             >
-              Rejoindre la liste d&apos;attente <span aria-hidden="true">→</span>
+              Créer mon espace <span aria-hidden="true">→</span>
             </ButtonLink>
           </nav>
         </>
