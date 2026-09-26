@@ -43,6 +43,9 @@ const nextConfig = {
     return [
       { source: "/fonctionnement", destination: "/produit#demo", permanent: true },
       { source: "/simulation", destination: "/produit#simulateur", permanent: true },
+      /* /tarifs supprimée le 26/09/2026 : la grille vit dans le bloc #tarif de
+         l'accueil. L'URL a pu être partagée (prospection, sitemap). */
+      { source: "/tarifs", destination: "/#tarif", permanent: true },
       /* La racine du sous-domaine des boutiques ne mène nulle part : sans
          slug, il n'y a pas d'opérateur, et sans code il n'y a pas de sortie.
          Renvoi sur le site plutôt qu'une landing marketing servie sous

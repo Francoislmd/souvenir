@@ -11,7 +11,7 @@ import styles from "@/app/(marketing)/landing.module.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
-export type MarketingRoute = "activites" | "produit" | "tarifs" | "liste-attente";
+export type MarketingRoute = "activites" | "produit" | "liste-attente";
 
 interface HeaderProps {
   /** Route affichée en gras ; absent sur l'accueil (le logo fait office de lien racine). */
@@ -20,12 +20,13 @@ interface HeaderProps {
 
 /* Deux entrées : /produit a absorbé /fonctionnement (la démo) et /simulation
    (le simulateur), tous deux redirigés en 301 vers ses ancres dans
-   next.config.mjs ; /tarifs porte la grille depuis le 27/08/2026. Les quatorze
+   next.config.mjs. « Tarif » renvoie au bloc #tarif de l'accueil depuis le
+   26/09/2026 (la page /tarifs est supprimée, redirigée en 301). Les quatorze
    pages /activites/<slug> passent par le volet ci-dessous : elles n'ont pas de
    page d'index qui pourrait tenir en un lien. */
-const NAV_LINKS: { href: string; label: string; route: MarketingRoute }[] = [
+const NAV_LINKS: { href: string; label: string; route?: MarketingRoute }[] = [
   { href: "/produit", label: "Produit", route: "produit" },
-  { href: "/tarifs", label: "Tarif", route: "tarifs" },
+  { href: "/#tarif", label: "Tarif" },
 ];
 
 function Chevron() {
@@ -120,7 +121,7 @@ export function Header({ current }: HeaderProps) {
             href={href}
             className={cx(
               "text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink",
-              current === route && "font-semibold text-ink",
+              route && current === route && "font-semibold text-ink",
             )}
           >
             {label}
@@ -201,7 +202,7 @@ export function Header({ current }: HeaderProps) {
                 key={href}
                 href={href}
                 onClick={fermerMenu}
-                className={cx(current === route && "font-semibold text-ink")}
+                className={cx(route && current === route && "font-semibold text-ink")}
               >
                 {label}
               </Link>

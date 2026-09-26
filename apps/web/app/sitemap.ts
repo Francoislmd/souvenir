@@ -14,7 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // /fonctionnement et /simulation sont redirigés en 301 vers /produit :
     // une URL redirigée n'a rien à faire dans un sitemap.
     { url: `${base}/produit`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${base}/tarifs`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/liste-attente`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     // Les quatorze pages activité, générées depuis la même table que les
     // routes : ajouter une activité l'ajoute ici sans y toucher.
