@@ -1,4 +1,5 @@
 import exifr from "exifr";
+import { EXIF_TIME_TAGS, takenAtFromExif } from "./wall-clock";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { ORIGINALS_BUCKET, PREVIEWS_BUCKET, downloadObject, uploadObject } from "./storage";
@@ -83,9 +84,7 @@ async function uploadGroupPreview(photoId: string, buffer: Buffer, operatorName:
 async function preparePhotoOnce(photoId: string, originalKey: string, operatorName: string): Promise<PhotoPrep> {
   const buffer = await downloadObject(ORIGINALS_BUCKET, originalKey);
 
-  const exif = await exifr.parse(buffer, ["DateTimeOriginal"]).catch(() => null);
-  const takenAtRaw = exif?.DateTimeOriginal;
-  const takenAt = takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime()) ? takenAtRaw : null;
+  const takenAt = takenAtFromExif(await exifr.parse(buffer, { pick: EXIF_TIME_TAGS, reviveValues: false }).catch(() => null));
 
   const groupPreviewKey = await uploadGroupPreview(photoId, buffer, operatorName);
 
@@ -288,10 +287,20 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
       // ici, indépendamment du slot. Celles déjà prêtes au dépôt ont les leurs
       // en base : les réécrire coûterait un aller-retour par photo dans la
       // transaction pour rien.
+      // On écrit les valeurs lues (preparedRaw), jamais celles filtrées pour
+      // le rangement : une heure écartée parce qu'elle ne tombe pas le jour
+      // de la sortie reste vraie, et elle resservira si l'opérateur corrige
+      // la date. Et seulement les champs connus : un null n'écrase jamais
+      // une valeur déjà en base.
       await Promise.all(
-        prepared
+        preparedRaw
           .filter((p) => freshIds.has(p.id) && (p.takenAt || p.groupPreviewKey))
-          .map((p) => tx.photo.update({ where: { id: p.id }, data: { takenAt: p.takenAt, groupPreviewKey: p.groupPreviewKey } })),
+          .map((p) =>
+            tx.photo.update({
+              where: { id: p.id },
+              data: { ...(p.takenAt ? { takenAt: p.takenAt } : {}), ...(p.groupPreviewKey ? { groupPreviewKey: p.groupPreviewKey } : {}) },
+            }),
+          ),
       );
 
       await tx.sortie.update({

@@ -14,6 +14,8 @@
  * null : la photo part alors comme avant, original en premier.
  */
 
+import { EXIF_TIME_TAGS, takenAtFromExif } from "./wall-clock";
+
 const MAX_EDGE = 2048;
 const QUALITY = 0.84;
 const THUMB_EDGE = 360;
@@ -27,8 +29,7 @@ export interface FastCopy {
   /** Petite vignette locale pour la grille : décoder 50 photos de 12 Mpx
    *  dans des <img> suffit à faire recharger l'onglet sur un iPhone. */
   thumb: Blob | null;
-  /** DateTimeOriginal, heure de l'appareil écrite en UTC (même convention
-   *  que le serveur et lib/video-probe.ts). */
+  /** Instant réel de prise de vue (lib/wall-clock.ts), comme le serveur. */
   takenAt: string | null;
 }
 
@@ -179,20 +180,13 @@ function encode(surface: Surface, quality: number): Promise<Blob> {
   );
 }
 
-/** « 2026:09:20 10:03:12 » → 2026-09-20T10:03:12.000Z. Lu en chaîne brute :
- *  revivre la date dans le fuseau du téléphone la décalerait de deux heures
- *  par rapport aux photos lues par le serveur. */
+/** « 2026:09:20 14:03:12 » → l'instant réel (14:03 à Paris = 12:03Z en été),
+ *  lu en chaîne brute pour ne pas dépendre du fuseau du téléphone. */
 export async function readTakenAt(file: Blob): Promise<string | null> {
   try {
     const exifr = (await import("exifr")).default;
-    const tags = (await exifr.parse(file, { pick: ["DateTimeOriginal"], reviveValues: false })) as { DateTimeOriginal?: unknown } | undefined;
-    const raw = tags?.DateTimeOriginal;
-    if (typeof raw !== "string") return null;
-    const m = /^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(raw.trim());
-    if (!m) return null;
-    const date = new Date(Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!, +m[4]!, +m[5]!, +m[6]!));
-    const year = date.getUTCFullYear();
-    return Number.isFinite(date.getTime()) && year >= 2005 && date.getTime() < Date.now() + 2 * 86_400_000 ? date.toISOString() : null;
+    const tags = await exifr.parse(file, { pick: EXIF_TIME_TAGS, reviveValues: false });
+    return takenAtFromExif(tags)?.toISOString() ?? null;
   } catch {
     return null;
   }

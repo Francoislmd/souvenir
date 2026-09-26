@@ -7,11 +7,11 @@ import { ensureShareCode, storeUrl } from "@/lib/store";
 import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
 function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
-  const time = startsAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+  const time = startsAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", " h ");
   const day =
     bucket === "today"
       ? "Aujourd'hui"
-      : startsAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).replace(/^./, (c) => c.toUpperCase());
+      : startsAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" }).replace(/^./, (c) => c.toUpperCase());
   const bits = [`${day} ${time}`];
   if (guide) bits.push(guide);
   if (clientCount > 0) bits.push(`${clientCount} participant${clientCount > 1 ? "s" : ""}`);

@@ -17,7 +17,7 @@ function formatDateFr(d: Date): string {
 }
 
 function formatTimeFr(d: Date): string {
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", " h ");
 }
 
 export async function sendParticipantGallery(

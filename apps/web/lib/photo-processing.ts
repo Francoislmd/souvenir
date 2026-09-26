@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import exifr from "exifr";
+import { EXIF_TIME_TAGS, takenAtFromExif } from "./wall-clock";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { ORIGINALS_BUCKET, PREVIEWS_BUCKET, downloadObject, uploadObject } from "./storage";
@@ -71,15 +72,16 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // de la sortie (lib/group-publish.ts).
     // Vidéo : l'heure a été lue par le navigateur au dépôt (la vignette n'a
     // pas d'EXIF) — on garde celle de la fiche.
-    const exif = photo.isVideo ? null : await exifr.parse(originalBuffer, ["DateTimeOriginal"]).catch(() => null);
-    const takenAtRaw: unknown = exif?.DateTimeOriginal;
+    // Instant réel (lib/wall-clock.ts) : l'heure de l'appareil lue comme une
+    // heure de Paris, ou avec le décalage qu'il a écrit.
+    const exifTakenAt = photo.isVideo
+      ? null
+      : takenAtFromExif(await exifr.parse(originalBuffer, { pick: EXIF_TIME_TAGS, reviveValues: false }).catch(() => null));
     // La copie de travail n'a plus d'EXIF : l'heure lue par le navigateur au
     // dépôt, déjà sur la fiche, prend le relais.
     const takenAt = photo.isVideo
       ? photo.takenAt
-      : takenAtRaw instanceof Date && !Number.isNaN(takenAtRaw.getTime())
-        ? takenAtRaw
-        : photo.takenAt;
+      : (exifTakenAt ?? photo.takenAt);
 
     // Une seule décompression de l'original (24 Mpx sur un reflex récent) au
     // lieu de trois : miniature, aperçu filigrané et flou email dérivent tous

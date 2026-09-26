@@ -13,11 +13,13 @@
  * rejoint le créneau des photos sans EXIF.
  */
 
+import { parisWallClockToInstant, plausibleTakenAt } from "./wall-clock";
+
 export interface VideoProbe {
   poster: Blob | null;
   durationSec: number | null;
-  /** ISO. Même convention que l'EXIF des photos lu sur le serveur : l'heure
-   *  affichée par la caméra, écrite comme si c'était de l'UTC (voir wallClock). */
+  /** ISO, instant réel de tournage — même convention que les photos
+   *  (lib/wall-clock.ts). */
   takenAt: string | null;
 }
 
@@ -39,24 +41,13 @@ export function probeVideo(file: Blob, lastModified?: number): Promise<VideoProb
 async function probeNow(file: Blob, lastModified?: number): Promise<VideoProbe> {
   const [meta, frame] = await Promise.all([readMp4Meta(file).catch(() => null), capturePoster(file).catch(() => null)]);
   const durationSec = frame?.durationSec ?? meta?.durationSec ?? null;
-  const taken = meta?.takenAt ?? (lastModified ? wallClock(new Date(lastModified)) : null);
+  // lastModified est déjà un instant réel : la fin de l'enregistrement quand
+  // le fichier vient d'une carte mémoire.
+  const taken = meta?.takenAt ?? (lastModified ? new Date(lastModified) : null);
   return { poster: frame?.poster ?? null, durationSec, takenAt: taken ? taken.toISOString() : null };
 }
 
-/**
- * Le serveur lit l'EXIF des photos (DateTimeOriginal, sans fuseau) dans le
- * fuseau de Vercel, UTC : 10 h 00 à l'appareil devient 10:00Z. Pour qu'une
- * vidéo tombe dans le même créneau que les photos prises au même moment, son
- * heure suit la même convention : l'heure locale, écrite en UTC.
- */
-export function wallClock(instant: Date): Date {
-  return new Date(instant.getTime() - instant.getTimezoneOffset() * 60_000);
-}
-
-function plausible(d: Date): boolean {
-  const t = d.getTime();
-  return Number.isFinite(t) && d.getUTCFullYear() >= 2005 && t < Date.now() + 2 * 86_400_000;
-}
+const plausible = plausibleTakenAt;
 
 // ---- Métadonnées MP4 / QuickTime (boîte moov → mvhd) ----
 
@@ -135,10 +126,10 @@ export function parseMoov(view: DataView): Mp4Meta {
         duration = view.getUint32(body + 16);
       }
       if (timescale > 0 && duration > 0) durationSec = duration / timescale;
-      // mvhd est en UTC selon la norme, mais les caméras d'action (GoPro)
-      // y écrivent l'heure locale : c'est justement la convention voulue
-      // (wallClock). Les iPhone, eux, y mettent le vrai UTC — mais ils
-      // portent aussi la date Apple ci-dessous, prioritaire.
+      // mvhd est en UTC selon la norme (Android, iPhone). Les GoPro y
+      // écrivent l'heure locale : repérées plus bas, et relues comme une
+      // heure de Paris. Les iPhone portent aussi la date Apple ci-dessous,
+      // prioritaire.
       if (created > MAC_EPOCH_OFFSET_SEC) {
         const d = new Date((created - MAC_EPOCH_OFFSET_SEC) * 1000);
         if (plausible(d)) takenAt = d;
@@ -148,16 +139,22 @@ export function parseMoov(view: DataView): Mp4Meta {
     offset += size;
   }
 
-  // iPhone : com.apple.quicktime.creationdate, « 2026-09-05T10:02:11+0200 ».
-  // L'heure locale est écrite telle quelle, avec son décalage : on garde
-  // l'heure locale (wallClock), sans appliquer le décalage.
   const text = latin1(view);
+  if (takenAt && /GoPro/.test(text)) {
+    const w = takenAt;
+    const local = parisWallClockToInstant(w.getUTCFullYear(), w.getUTCMonth() + 1, w.getUTCDate(), w.getUTCHours(), w.getUTCMinutes(), w.getUTCSeconds());
+    takenAt = plausible(local) ? local : null;
+  }
+
+  // iPhone : com.apple.quicktime.creationdate, « 2026-09-05T10:02:11+0200 ».
+  // L'heure locale et son décalage : on applique le décalage.
   // Seulement la forme avec décalage : une date en « Z » (écrite par
   // certains logiciels à côté) est de l'UTC, pas l'heure affichée.
-  const apple = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})[+-]\d{2}:?\d{2}/.exec(text);
+  const apple = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}):?(\d{2})/.exec(text);
   if (apple) {
-    const [, y, mo, d, h, mi, s] = apple.map(Number) as [number, number, number, number, number, number, number];
-    const date = new Date(Date.UTC(y, mo - 1, d, h, mi, s));
+    const [y, mo, d, h, mi, s] = apple.slice(1, 7).map(Number) as [number, number, number, number, number, number];
+    const offsetMin = (apple[7] === "-" ? -1 : 1) * (Number(apple[8]) * 60 + Number(apple[9]));
+    const date = new Date(Date.UTC(y, mo - 1, d, h, mi, s) - offsetMin * 60_000);
     if (plausible(date)) takenAt = date;
   }
 

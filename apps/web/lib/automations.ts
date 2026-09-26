@@ -55,7 +55,7 @@ function formatDateFr(d: Date): string {
 }
 
 function formatTimeFr(d: Date): string {
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", " h ");
 }
 
 /** Email 2 · relance à 2h — contenu distinct de la livraison (email 1), plus court. */
@@ -141,8 +141,8 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
     discountPercent: REDUCED_OFFER_DISCOUNT_PERCENT,
     pricePromo: formatEuros(pricePromoCents),
     priceFull: formatEuros(operator.priceAllCents),
-    offerDeadlineDay: expiresAt.toLocaleDateString("fr-FR", { weekday: "long" }),
-    offerDeadlineLabel: `${expiresAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}, ${expiresAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`,
+    offerDeadlineDay: expiresAt.toLocaleDateString("fr-FR", { weekday: "long", timeZone: "Europe/Paris" }),
+    offerDeadlineLabel: `${expiresAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" })}, ${expiresAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}`,
     galleryUrl,
     unsubUrl: `${galleryUrl}/desinscription`,
   });
