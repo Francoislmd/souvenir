@@ -185,15 +185,21 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
                     <b>{title}</b>
                     <span>{meta(row, d)}</span>
                   </span>
-                  {row.thumbs.length > 0 ? (
-                    <span className={styles.sStrip} aria-hidden="true">
-                      {row.thumbs.map((src) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={src} src={src} alt="" loading="lazy" decoding="async" />
-                      ))}
-                      {row.photoCount > row.thumbs.length ? <span>+{row.photoCount - row.thumbs.length}</span> : null}
-                    </span>
-                  ) : null}
+                  {row.thumbs.length > 0 ? (() => {
+                    // Quand il reste des photos, la pastille « +X » prend la place de la
+                    // 4e vignette : la bande garde toujours 4 cases, alignée à droite.
+                    const more = row.photoCount > row.thumbs.length;
+                    const thumbs = more ? row.thumbs.slice(0, 3) : row.thumbs;
+                    return (
+                      <span className={styles.sStrip} aria-hidden="true">
+                        {thumbs.map((src) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={src} src={src} alt="" loading="lazy" decoding="async" />
+                        ))}
+                        {more ? <span>+{row.photoCount - thumbs.length}</span> : null}
+                      </span>
+                    );
+                  })() : null}
                   {action ? (
                     <span className={styles.sRowAct}>
                       <span className={styles.sdChip}>
