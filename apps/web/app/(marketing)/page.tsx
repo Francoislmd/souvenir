@@ -277,13 +277,12 @@ export default function AccueilPage() {
               </div>
               <div className="txt">
                 <h2 className="q rv">«&nbsp;Vous avez les photos&nbsp;?&nbsp;»</h2>
-                <p className="rv d1">Vos clients vous la posent à chaque fin de sortie. La suite, vous la connaissez&nbsp;:</p>
+                <p className="rv d1">Vos clients vous la posent à chaque fin de sortie. Avec Linktrip, votre réponse vous rapporte trois choses&nbsp;:</p>
                 <div className="today rv d2">
-                  <div><b>WhatsApp</b>vous envoyez les photos une par une, compressées</div>
-                  <div><b>WeTransfer</b>il faut y penser le dimanche soir, et le lien expire</div>
-                  <div><b>Rien</b>la carte est restée dans le sac</div>
+                  <div><b>Revenus</b>chaque photo achetée s’ajoute au prix de la sortie</div>
+                  <div><b>Visibilité</b>vos clients partagent leurs photos sur les réseaux sociaux</div>
+                  <div><b>Temps gagné</b>l’envoi, les relances et la livraison se font sans vous</div>
                 </div>
-                <p className="after rv d3">Linktrip s’occupe de cette suite-là.</p>
               </div>
             </div>
           </section>

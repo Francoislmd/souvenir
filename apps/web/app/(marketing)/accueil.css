@@ -111,7 +111,7 @@
 .accx .moment .q .mk{color:var(--brand)}
 .accx .moment .txt p{margin-top:24px;font-size:clamp(17px, .35vw + 15.5px, 19.5px);line-height:1.6;color:var(--ink-2);max-width:520px}
 .accx .today{margin-top:32px;display:grid;gap:0;border-top:1px solid var(--line);max-width:520px}
-.accx .today div{display:flex;gap:14px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);font-size:15.5px;color:var(--ink-3)}
+.accx .today div{display:flex;gap:14px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);font-size:15.5px;color:var(--ink-3);text-wrap:pretty}
 .accx .today b{flex:0 0 132px;font-weight:600;color:var(--ink)}
 .accx .moment .txt .after{word-spacing:.05em;margin-top:28px;font:600 21px/1.45 var(--display);letter-spacing:-.006em;color:var(--ink);max-width:520px}
 
