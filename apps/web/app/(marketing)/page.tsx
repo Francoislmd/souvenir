@@ -167,12 +167,11 @@ export default function AccueilPage() {
                 </ol>
                 <div className="hxCta rv d3">
                   <Link href="/signup" className="btn btn-white">Créer mon espace<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
-                  <small>Gratuit tant que vous ne vendez rien.</small>
+                  <small>Sans abonnement.</small>
                 </div>
               </div>
               <div className="hxDemo rv d2">
-                <p className="side" id="side" aria-hidden="true"><i /><span>Côté pro</span></p>
-                <div className="phone hxPhone" role="img" aria-label="Démonstration : le pro dépose les photos, le client reçoit sa galerie, choisit deux photos et les paie."><div className="scr" id="scr">
+                                <div className="phone hxPhone" role="img" aria-label="Démonstration : le pro dépose les photos, le client reçoit sa galerie, choisit deux photos et les paie."><div className="scr" id="scr">
                     <div className="sbar"><span className="num" id="clock">19:02</span><i /><span className="sig"><b /></span></div>
                     {/* A · le pro dépose et publie */}
                     <div className="sc sA on">

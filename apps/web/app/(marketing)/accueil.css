@@ -334,10 +334,6 @@
 .accx .hxDemo.rv.in{transform:translateY(-50%)}
 .accx .hxPhone{position:relative;width:100%;box-shadow:0 44px 90px -34px rgba(12,10,18,.6),0 0 0 1px rgba(12,10,18,.04)}
 .accx .hxPhone .scr{height:560px;background:#fff}
-.accx .side{position:absolute;left:50%;top:-52px;transform:translateX(-50%);z-index:3;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;background:var(--ink);color:#fff;font:600 13px var(--display);white-space:nowrap;box-shadow:0 8px 20px -8px rgba(12,10,18,.5)}
-.accx .side i{width:8px;height:8px;border-radius:50%;background:var(--brand);transition:background .3s}
-.accx .side.cl i{background:#2bc4a3}
-.accx .side span{display:inline-block;transition:opacity .2s}
 .accx .pp{position:absolute;right:-52px;bottom:8px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(12,10,18,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s}
 .accx .pp:hover{background:rgba(12,10,18,.55);border-color:#fff}
 .accx .pp .i-play{display:none}.accx .pp.paused .i-play{display:block}.accx .pp.paused .i-pause{display:none}
@@ -628,7 +624,8 @@
   .accx .hxCta small{color:rgba(255,255,255,.7)}
 
   /* La démo, sur fond blanc sous la carte */
-  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{grid-row:5;grid-column:1;margin:76px auto 0}
+  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{grid-row:5;grid-column:1;margin:40px auto 0}
+  .accx .pp{left:auto;top:auto;right:-50px;bottom:8px}
   .accx .hxPhone{box-shadow:0 30px 60px -32px rgba(22,19,32,.4)}
   .accx .pp{border-color:var(--line);background:#fff;color:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none}
   .accx .pp:hover{background:var(--line-2);border-color:var(--ink-4)}
@@ -647,7 +644,7 @@
 }
 @keyframes acc-cap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (max-width:640px){
-  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{margin:76px auto 0}
+  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{margin:36px auto 0}
   .accx .acts{padding-top:56px}
   /* le constat : photo carrée, plus de colonne de 400px avant le titre */
   .accx .collage .big{aspect-ratio:1}

@@ -102,7 +102,7 @@ export function Header({ current }: HeaderProps) {
   return (
     <header ref={barre} className={cx(styles.header, scrolled && styles.headerScrolled)}>
       <Link href="/" aria-label="Linktrip — accueil" className="flex items-center">
-        <Logo variant="lockup" height={36} />
+        <Logo variant="lockup" height={30} />
       </Link>
       <nav className={styles.headerLinks}>
         <button

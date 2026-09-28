@@ -57,9 +57,8 @@ export function AccueilAnime() {
     const hx = $("hx");
     const scr = $("scr");
     const fg = $("fg");
-    const side = $("side");
     const pp = $("pp");
-    if (!hx || !scr || !fg || !side || !pp) return () => cleanups.forEach((c) => c());
+    if (!hx || !scr || !fg || !pp) return () => cleanups.forEach((c) => c());
 
     const sc = Array.from(scr.querySelectorAll<HTMLElement>(".sc"));
     const li = Array.from(document.querySelectorAll<HTMLElement>("#flow li"));
@@ -70,7 +69,6 @@ export function AccueilAnime() {
     const buy = $("buy");
     const dots = Array.from(document.querySelectorAll<HTMLElement>("#dots i"));
     const photos = Array.from(tr.children) as HTMLElement[];
-    const sideLabel = side.querySelector("span") as HTMLElement;
     let cur = 0;
     let timers: number[] = [];
     let raf = 0;
@@ -179,8 +177,6 @@ export function AccueilAnime() {
           l.classList.add("on");
         }
       });
-      side.classList.toggle("cl", n > 0);
-      sideLabel.textContent = n ? "Côté client" : "Côté pro";
       $("clock").textContent = ["19:02", "19:10", "19:11", "19:12"][n];
       cur = n;
       scr.classList.toggle("dark", n === 1);
@@ -272,8 +268,6 @@ export function AccueilAnime() {
     if (reduce) {
       sc.forEach((el, i) => el.classList.toggle("on", i === 2));
       li.forEach((l, i) => l.classList.toggle("on", i === 2));
-      side.classList.add("cl");
-      sideLabel.textContent = "Côté client";
       photos[0].classList.add("sel");
       setTake(true);
       buy.textContent = "Prendre cette photo · 4 €";
