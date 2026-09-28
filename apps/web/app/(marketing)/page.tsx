@@ -272,7 +272,7 @@ export default function AccueilPage() {
           <section className="moment">
             <div className="wrap">
               <div className="collage rv" aria-hidden="true">
-                <div className="big"><img src="/accueil/escalade.webp" alt="" /></div>
+                <div className="big"><img src="/accueil/escalade-duo.webp" alt="" /></div>
                 <div className="small"><img src="/accueil/raft-jaune.webp" alt="" /></div>
               </div>
               <div className="txt">
