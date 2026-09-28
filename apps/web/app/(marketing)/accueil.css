@@ -618,7 +618,7 @@
   .accx .hxBg::after{background:linear-gradient(180deg,rgba(12,10,18,.18) 0%,rgba(12,10,18,0) 22%,rgba(12,10,18,.5) 50%,rgba(12,10,18,.9) 100%)}
   .accx .hxFor,.accx .hero h1,.accx .hxCta{grid-column:1;position:relative;z-index:1;margin-left:22px;margin-right:22px;color:#fff}
   .accx .hxFor{grid-row:2;font-size:14px;align-items:center;color:rgba(255,255,255,.82)}
-  .accx .hxFor svg,.accx .hxForMore{display:none}
+  .accx .hxFor svg{display:none}
   .accx .hero h1{grid-row:3;margin-top:10px;font-size:clamp(34px, 9vw, 46px);line-height:1.04}
   .accx .hxCta{grid-row:4;margin-top:24px;margin-bottom:24px}
   .accx .hxCta small{color:rgba(255,255,255,.7)}
