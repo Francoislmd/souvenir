@@ -182,7 +182,7 @@ export default function AccueilPage() {
                         <div className="pg"><i /></div>
                         <div className="row2"><span id="cnt">0 photo déposée</span><span className="btn btn-ink" id="pub">Publier</span></div>
                       </div>
-                      <div className="toast" id="toast"><svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>Galerie envoyée aux 8 participants</div>
+                      <div className="toast" id="toast"><svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>Envoyée aux 8 participants</div>
                     </div>
                     {/* B · le client reçoit : notification, puis e-mail */}
                     <div className="sc sB">
