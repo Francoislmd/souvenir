@@ -158,7 +158,7 @@ export default function AccueilPage() {
             <div className="hx" id="hx">
               <div className="hxBg"><img src="/accueil/hero-rafting.webp" alt="Un groupe en rafting lève les pagaies au passage d'un rapide" /></div>
               <div className="hxIn">
-                <p className="hxFor rv"><svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.4-2h6.2l1.4 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" /><circle cx={12} cy="12.5" r="3.5" /></svg>Pour les moniteurs et les bases de loisirs qui prennent des photos pendant leurs sorties</p>
+                <p className="hxFor rv"><svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.4-2h6.2l1.4 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" /><circle cx={12} cy="12.5" r="3.5" /></svg><span>Pour les moniteurs et les bases de loisirs<span className="hxForMore"> qui prennent des photos pendant leurs sorties</span></span></p>
                 <h1 className="rv d1">Vendez à vos clients les photos de leur sortie.</h1>
                 <ol className="flow rv d2" id="flow">
                   <li className="on" data-s={0}><span className="nb">1</span><b>Vous déposez les photos de la sortie</b><span className="dt"><em>Le soir, en vidant la carte. Du téléphone ou de l’ordinateur.</em></span><i /></li>
