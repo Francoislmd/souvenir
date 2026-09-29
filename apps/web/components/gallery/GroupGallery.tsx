@@ -265,21 +265,22 @@ export function GroupGallery({
     </>
   );
 
+  // L'activité et le jour à gauche, l'heure du créneau en face du retour :
+  // chaque information a sa place, et plus rien n'est coupé par des points
+  // de suspension sur un petit téléphone (maquette-parcours-achat-v2, C).
   const shotBar = (
-    <div className={store.bar}>
+    <div className={`${store.bar} ${store.barShot}`}>
       <button type="button" className={store.barBtn} onClick={() => go(dateKey, "")} aria-label="Revenir aux heures de départ">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M14.5 5 8 12l6.5 7" />
         </svg>
       </button>
-      <span className={store.barHead}>
+      <span className={store.shotTitle}>
         <b>{slot.activity}</b>
-        <span>
-          {dayLabel ? `${dayLabel}, ` : ""}
-          {slot.label}
-        </span>
+        {/* « samedi 26 septembre » arrive en minuscules : seul sous le titre, il prend sa capitale. */}
+        {dayLabel ? <span>{dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1)}</span> : null}
       </span>
-      <span className={store.barSpacer} />
+      <span className={store.shotTime}>{slot.label}</span>
     </div>
   );
 
