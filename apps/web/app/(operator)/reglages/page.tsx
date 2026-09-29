@@ -22,6 +22,10 @@ export default async function ReglagesPage() {
         feePercent: operator.feePercent,
         stripeOnboarded: operator.stripeOnboarded,
         activities: operator.activities,
+        legalName: operator.legalName ?? "",
+        legalAddress: operator.legalAddress ?? "",
+        siret: operator.siret ?? "",
+        vatExempt: operator.vatExempt,
         automations: {
           resendUnopened: automations.resendUnopened,
           reducedPriceOffer: automations.reducedPriceOffer,

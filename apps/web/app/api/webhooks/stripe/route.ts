@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
+import { prefillLegalIdentity } from "@/lib/stripe-connect";
 import { fulfillPaymentIntent } from "@/lib/order-fulfillment";
 import { handleChargeRefunded, handleDisputeCreated, handleDisputeClosed } from "@/lib/order-refunds";
 import type Stripe from "stripe";
@@ -70,6 +71,7 @@ export async function POST(request: Request): Promise<Response> {
           where: { stripeAccountId: account.id },
           data: { stripeOnboarded: !!account.charges_enabled },
         });
+        await prefillLegalIdentity(account);
         break;
       }
       default:

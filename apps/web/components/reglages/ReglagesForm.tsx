@@ -29,6 +29,10 @@ interface OperatorSettings {
   stripeOnboarded: boolean;
   activities: string[];
   automations: Automations;
+  legalName: string;
+  legalAddress: string;
+  siret: string;
+  vatExempt: boolean;
 }
 
 type Patch = Record<string, unknown>;
@@ -57,6 +61,10 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
     // Une activité retirée du catalogue ne doit pas faire refuser l'enregistrement.
     () => new Set(operator.activities.filter((id) => ACTIVITIES.some((a) => a.id === id))),
   );
+  const [legalName, setLegalName] = useState(operator.legalName);
+  const [legalAddress, setLegalAddress] = useState(operator.legalAddress);
+  const [siret, setSiret] = useState(operator.siret);
+  const [vatExempt, setVatExempt] = useState(operator.vatExempt);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
 
   // Plus de bouton « Enregistrer » : les interrupteurs avaient l'air immédiats
@@ -429,6 +437,82 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                 aria-checked={automations.reviewRequest}
                 aria-label="Demander un avis"
                 onClick={() => toggleAutomation("reviewRequest")}
+              >
+                <i />
+              </button>
+            </div>
+
+            {/* Le vendeur, c'est lui : son identité s'affiche sur la feuille de
+                paiement et sur chaque reçu. Stripe remplit le nom et
+                l'adresse quand il les connaît ; le SIRET se saisit ici. */}
+            <p className={styles.sDay}>Sur les reçus de vos clients</p>
+            <div className={styles.rgField}>
+              <label htmlFor="rgLegalName">Raison sociale</label>
+              <input
+                id="rgLegalName"
+                className={styles.sdInp}
+                value={legalName}
+                placeholder={name}
+                autoComplete="organization"
+                onChange={(e) => {
+                  setLegalName(e.target.value);
+                  queue({ legalName: e.target.value });
+                }}
+              />
+            </div>
+            <div className={styles.rgField}>
+              <label htmlFor="rgLegalAddress">Adresse</label>
+              <input
+                id="rgLegalAddress"
+                className={styles.sdInp}
+                value={legalAddress}
+                placeholder="4 chemin du Moulin, 04400 Barcelonnette"
+                autoComplete="street-address"
+                onChange={(e) => {
+                  setLegalAddress(e.target.value);
+                  queue({ legalAddress: e.target.value });
+                }}
+              />
+            </div>
+            <div className={styles.rgField}>
+              <label htmlFor="rgSiret">SIRET</label>
+              <input
+                id="rgSiret"
+                className={styles.sdInp}
+                value={siret}
+                inputMode="numeric"
+                placeholder="123 456 789 00012"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSiret(value);
+                  // L'API refuse un SIRET incomplet : on n'envoie que 14
+                  // chiffres, ou un champ vidé.
+                  const digits = value.replace(/\s+/g, "");
+                  if (digits === "" || /^\d{14}$/.test(digits)) queue({ siret: value });
+                }}
+              />
+              <span className={styles.rgHint}>
+                {siret.replace(/\s+/g, "") !== "" && !/^\d{14}$/.test(siret.replace(/\s+/g, ""))
+                  ? "Le SIRET compte 14 chiffres."
+                  : "Affichés à vos clients avant qu'ils paient, puis sur leur reçu."}
+              </span>
+            </div>
+            <div className={styles.rgSwitch}>
+              <span className={styles.rgSwitchMain}>
+                <b>Franchise de TVA</b>
+                <span>Vos reçus portent « TVA non applicable, art. 293 B du CGI ».</span>
+              </span>
+              <button
+                type="button"
+                className={`${styles.tog} ${vatExempt ? styles.on : ""}`}
+                role="switch"
+                aria-checked={vatExempt}
+                aria-label="Franchise de TVA"
+                onClick={() => {
+                  const next = !vatExempt;
+                  setVatExempt(next);
+                  queue({ vatExempt: next });
+                }}
               >
                 <i />
               </button>

@@ -17,6 +17,17 @@ const schema = z.object({
   packOnly: z.boolean().optional(),
   googleReviewUrl: z.string().optional(),
   whatsappNumber: z.string().optional(),
+  // L'identité du vendeur, reprise sur la feuille de paiement et les reçus.
+  // Chaîne vide = effacer. Le SIRET s'écrit comme on le lit (avec espaces) et
+  // se range sans : 14 chiffres, ou rien.
+  legalName: z.string().max(120).optional(),
+  legalAddress: z.string().max(200).optional(),
+  siret: z
+    .string()
+    .transform((v) => v.replace(/\s+/g, ""))
+    .refine((v) => v === "" || /^\d{14}$/.test(v), { message: "SIRET : 14 chiffres" })
+    .optional(),
+  vatExempt: z.boolean().optional(),
   activities: z.array(z.string()).refine((ids) => ids.every((id) => knownActivityIds.has(id)), {
     message: "Activité inconnue",
   }).optional(),
@@ -41,7 +52,7 @@ export async function PATCH(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, ...rest } = parsed.data;
+  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, legalName, legalAddress, siret, ...rest } = parsed.data;
 
   const operator = await prisma.operator.update({
     where: { id: dbUser.operatorId },
@@ -53,6 +64,9 @@ export async function PATCH(request: Request): Promise<Response> {
       ...(googleReviewUrl !== undefined && { googleReviewUrl: googleReviewUrl || null }),
       ...(whatsappNumber !== undefined && { whatsappNumber: whatsappNumber || null }),
       ...(automations !== undefined && { automations: { ...automations, referral: false } }),
+      ...(legalName !== undefined && { legalName: legalName.trim() || null }),
+      ...(legalAddress !== undefined && { legalAddress: legalAddress.trim() || null }),
+      ...(siret !== undefined && { siret: siret || null }),
     },
   });
 

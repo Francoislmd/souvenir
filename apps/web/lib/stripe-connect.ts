@@ -1,3 +1,4 @@
+import type Stripe from "stripe";
 import { stripe } from "./stripe";
 import { prisma } from "./prisma";
 import type { OperatorUser } from "./current-user";
@@ -47,4 +48,40 @@ export async function ensureStripeAccount(dbUser: OperatorUser): Promise<string>
   });
   const fresh = await prisma.operator.findUnique({ where: { id: operator.id }, select: { stripeAccountId: true } });
   return fresh?.stripeAccountId ?? account.id;
+}
+
+/** « 4 chemin du Moulin, 04400 Barcelonnette » ; null si Stripe n'a pas d'adresse exploitable. */
+function oneLineAddress(address: Stripe.Address | null | undefined): string | null {
+  if (!address?.line1) return null;
+  const city = [address.postal_code, address.city].filter(Boolean).join(" ");
+  return [address.line1, address.line2, city].filter(Boolean).join(", ");
+}
+
+/**
+ * Remplit l'identité légale du vendeur à partir de ce que Stripe a vérifié :
+ * la raison sociale et l'adresse de l'entreprise, ou le nom et l'adresse de
+ * l'entrepreneur individuel. Seules les colonnes encore vides sont écrites :
+ * ce que l'opérateur a saisi dans Réglages n'est jamais écrasé.
+ *
+ * Le SIRET n'est pas lu : Stripe ne rend au compte plateforme qu'un booléen
+ * (`tax_id_provided`), jamais le numéro. Il se saisit dans Réglages.
+ */
+export async function prefillLegalIdentity(account: Stripe.Account): Promise<void> {
+  const person = account.individual;
+  const legalName =
+    account.company?.name?.trim() ||
+    [person?.first_name, person?.last_name].filter(Boolean).join(" ").trim() ||
+    account.business_profile?.name?.trim() ||
+    null;
+  const legalAddress =
+    oneLineAddress(account.company?.address) ??
+    oneLineAddress(person?.address) ??
+    oneLineAddress(account.business_profile?.support_address);
+
+  if (legalName) {
+    await prisma.operator.updateMany({ where: { stripeAccountId: account.id, legalName: null }, data: { legalName } });
+  }
+  if (legalAddress) {
+    await prisma.operator.updateMany({ where: { stripeAccountId: account.id, legalAddress: null }, data: { legalAddress } });
+  }
 }

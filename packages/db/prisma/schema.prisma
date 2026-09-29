@@ -33,6 +33,16 @@ model Operator {
   feePercent      Int     @default(20)
   packOnly        Boolean @default(false) // true = le client ne peut acheter que le pack complet, pas photo par photo
 
+  // Le vendeur, au sens du Code de la consommation : en charge directe, c'est
+  // l'opérateur qui vend les photos, pas Linktrip. Son identité doit figurer
+  // sur la feuille de paiement, les conditions de vente et chaque reçu.
+  // Remplis depuis Stripe quand il les connaît (lib/stripe-connect.ts,
+  // prefillLegalIdentity), modifiables dans Réglages.
+  legalName    String? // raison sociale ; à défaut, `name`
+  legalAddress String? // une ligne : « 4 chemin du Moulin, 04400 Barcelonnette »
+  siret        String? // 14 chiffres, sans espaces
+  vatExempt    Boolean @default(false) // franchise en base : « TVA non applicable, art. 293 B du CGI » sur les reçus
+
   // { resendUnopened, reducedPriceOffer, reviewRequest, referral } — referral always false, "bientôt"
   automations Json @default("{\"resendUnopened\":true,\"reducedPriceOffer\":true,\"reviewRequest\":true,\"referral\":false}")
 
