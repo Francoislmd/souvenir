@@ -7,6 +7,7 @@ import { formatEuros } from "@/lib/format";
 import styles from "@/components/gallery/gallery.module.css";
 import { LockIcon } from "@/components/gallery/icons";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
+import { formatSiret, type Seller } from "@/lib/seller-format";
 
 function PaymentForm({
   amountCents,
@@ -157,12 +158,61 @@ function PaymentForm({
   );
 }
 
+/**
+ * Les conditions de vente, en trois lignes, par-dessus la feuille de
+ * paiement : le client les lit sans quitter son achat. Le texte complet reste
+ * à un lien.
+ */
+function ConditionsSheet({ seller, conditionsHref, onClose }: { seller: Seller; conditionsHref: string; onClose: () => void }) {
+  return (
+    <div className={`${styles.sheet} ${styles.sheetTop}`} role="dialog" aria-modal="true" aria-labelledby="cvTitle">
+      <div className={styles.bd} onClick={onClose} />
+      <div className={styles.pn}>
+        <span className={styles.grab} />
+        <h2 id="cvTitle" className={styles.cvTitle}>
+          Conditions de vente
+        </h2>
+        <div className={styles.cvWho}>
+          <span className={styles.cvKey}>Vendeur</span>
+          <b>{seller.name}</b>
+          {seller.address ? <span>{seller.address}</span> : null}
+          {seller.siret ? <span>SIRET {formatSiret(seller.siret)}</span> : null}
+          {seller.email ? <span>{seller.email}</span> : null}
+        </div>
+        <p className={styles.cvVia}>Plateforme de vente et de paiement fournie par Linktrip.</p>
+        <dl className={styles.cvList}>
+          <div>
+            <dt>Livraison</dt>
+            <dd>Immédiate après paiement, en haute définition, sans filigrane.</dd>
+          </div>
+          <div>
+            <dt>Rétractation</dt>
+            <dd>Sans objet : vous demandez la livraison immédiate au moment du paiement.</dd>
+          </div>
+          <div>
+            <dt>Garantie</dt>
+            <dd>Photo floue, illisible ou différente de l&rsquo;aperçu : remboursée sur demande au vendeur.</dd>
+          </div>
+        </dl>
+        <a className={styles.cvFull} href={conditionsHref} target="_blank" rel="noreferrer">
+          Conditions complètes
+        </a>
+        <button type="button" className={styles.cta} style={{ marginTop: 16, height: 44 }} onClick={onClose}>
+          Retour au paiement
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function PaymentSheet({
   clientSecret,
   stripeAccountId,
   amountCents,
   label,
   merchantName,
+  seller,
+  conditionsHref,
   onSuccess,
   onClose,
 }: {
@@ -172,9 +222,14 @@ export function PaymentSheet({
   label: string;
   /** Nom de l'opérateur, affiché dans la feuille Apple Pay. */
   merchantName?: string;
+  /** Le vendeur réel (charge directe), nommé avant le paiement. */
+  seller: Seller | null;
+  /** Les CGV complètes. Absolu depuis la boutique, servie sur un autre domaine. */
+  conditionsHref: string;
   onSuccess: () => void;
   onClose: () => void;
 }) {
+  const [conditions, setConditions] = useState(false);
   const stripePromise = getStripe(stripeAccountId);
   if (!stripePromise) return null;
 
@@ -187,6 +242,23 @@ export function PaymentSheet({
           <span>{label}</span>
           <b>{formatEuros(amountCents)}</b>
         </div>
+        {seller ? <p className={styles.vend}>Vendu par {seller.name}</p> : null}
+        {/* La renonciation au droit de rétractation (L221-28 13°) se lit AVANT
+            Apple Pay, qui paie en un seul geste : placée sous le bouton carte,
+            elle arriverait après le paiement. */}
+        <p className={styles.waiver}>
+          Livraison immédiate après paiement. En payant, vous renoncez à votre droit de rétractation et acceptez les{" "}
+          {seller ? (
+            <button type="button" className={styles.waiverLink} onClick={() => setConditions(true)}>
+              conditions de vente
+            </button>
+          ) : (
+            <a className={styles.waiverLink} href={conditionsHref} target="_blank" rel="noreferrer">
+              conditions de vente
+            </a>
+          )}
+          .
+        </p>
         <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe", variables: { borderRadius: "14px" } } }}>
           <PaymentForm amountCents={amountCents} merchantName={merchantName} onSuccess={onSuccess} onClose={onClose} />
         </Elements>
@@ -195,6 +267,7 @@ export function PaymentSheet({
           Paiement sécurisé par Stripe · aucun compte à créer
         </div>
       </div>
+      {conditions && seller ? <ConditionsSheet seller={seller} conditionsHref={conditionsHref} onClose={() => setConditions(false)} /> : null}
     </div>
   );
 }

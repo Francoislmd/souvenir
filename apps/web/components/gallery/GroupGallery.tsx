@@ -7,6 +7,7 @@ import store from "@/components/gallery/store.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
+import type { Seller } from "@/lib/seller-format";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { SessionRetrieval } from "@/components/gallery/SessionRetrieval";
 import { LockIcon } from "@/components/gallery/icons";
@@ -49,6 +50,7 @@ export function GroupGallery({
   initialDayLabel,
   pricing,
   packOnly,
+  seller,
 }: {
   operator: { name: string; logoUrl: string | null; coverUrl: string | null; tagline: string };
   basePath: string;
@@ -60,6 +62,8 @@ export function GroupGallery({
   initialDayLabel?: string;
   pricing: PricingConfig;
   packOnly: boolean;
+  /** Le vendeur au sens légal, nommé avant le paiement. */
+  seller: Seller | null;
 }) {
   // Un seul jour publié : l'écran du jour n'aurait qu'une ligne à offrir, on
   // ouvre directement ses heures de départ. C'est aussi ce vers quoi le
@@ -338,6 +342,8 @@ export function GroupGallery({
           amountCents={checkout.amountCents}
           label={checkout.label}
           merchantName={operator.name}
+          seller={seller}
+          conditionsHref={`${appUrl}/cgv`}
           onSuccess={onPaymentSuccess}
           onClose={() => setCheckout(null)}
         />

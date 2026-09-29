@@ -15,6 +15,7 @@ vi.mock("./env", () => ({ env: { NEXT_PUBLIC_APP_URL: "https://linktrip.test" } 
 vi.mock("./automations", () => ({ readAutomations: vi.fn(() => ({ resendUnopened: false, reducedPriceOffer: false, reviewRequest: false, referral: false })) }));
 vi.mock("./twilio", () => ({ sendWhatsAppMessage: vi.fn() }));
 vi.mock("./email", () => ({ sendOrderConfirmedEmail: vi.fn() }));
+vi.mock("./receipt", () => ({ cardLabelOf: vi.fn(async () => null) }));
 
 function makeIntent(overrides: Partial<Record<string, unknown>> = {}) {
   return { id: "pi_1", metadata: { participantId: "participant_1" }, ...overrides } as never;

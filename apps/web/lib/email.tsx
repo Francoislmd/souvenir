@@ -220,6 +220,10 @@ export async function sendOrderConfirmedEmail(params: {
   amountLabel: string;
   orderRef: string;
   orderDateLabel: string;
+  cardLabel: string | null;
+  sellerLine: string;
+  cgvUrl: string;
+  cgvDateLabel: string;
   reviewUrl: string | null;
   supportUrl: string;
 }): Promise<void> {
@@ -232,6 +236,10 @@ export async function sendOrderConfirmedEmail(params: {
     amountLabel: params.amountLabel,
     orderRef: params.orderRef,
     orderDateLabel: params.orderDateLabel,
+    cardLabel: params.cardLabel,
+    sellerLine: params.sellerLine,
+    cgvUrl: params.cgvUrl,
+    cgvDateLabel: params.cgvDateLabel,
     reviewUrl: params.reviewUrl,
     supportUrl: params.supportUrl,
   };

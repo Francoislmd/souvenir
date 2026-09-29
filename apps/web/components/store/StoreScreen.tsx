@@ -2,6 +2,7 @@ import { getOperatorGroupDays, getStoreSlot } from "@/lib/gallery-group";
 import { publicStorePath, apiStoreBase, type StoreOperator } from "@/lib/store";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { GroupGallery } from "@/components/gallery/GroupGallery";
+import { getSeller } from "@/lib/seller";
 import { Logo } from "@/components/brand/Logo";
 import gallery from "@/components/gallery/gallery.module.css";
 import styles from "@/components/gallery/collective.module.css";
@@ -20,6 +21,7 @@ import styles from "@/components/gallery/collective.module.css";
 export async function StoreScreen({ operator, dateKey, slotId }: { operator: StoreOperator; dateKey?: string; slotId?: string }) {
   const data = await getOperatorGroupDays(operator.slug);
   const initial = slotId ? await getStoreSlot(operator.id, slotId) : null;
+  const seller = await getSeller(operator.id);
 
   // L'enveloppe ne pose ni en-tête ni pied de page : GroupGallery décide des
   // deux écran par écran. L'accueil s'ouvre sur la couverture du prestataire,
@@ -62,6 +64,7 @@ export async function StoreScreen({ operator, dateKey, slotId }: { operator: Sto
       initialDayLabel={initial?.dateLabel}
       pricing={{ pricePhotoCents: operator.pricePhotoCents, priceAllCents: operator.priceAllCents }}
       packOnly={operator.packOnly}
+      seller={seller}
     />,
   );
 }

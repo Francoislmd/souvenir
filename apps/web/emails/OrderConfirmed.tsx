@@ -13,10 +13,14 @@ export interface OrderConfirmedProps {
   operatorName: string;
   photoCount: number;
   downloadUrl: string;
-  orderLabel: string; // « 3 photos + 2 offertes »
-  amountLabel: string; // « 22,00 € » — déjà formaté
-  orderRef: string; // « SV-4821 »
-  orderDateLabel: string; // « 22 juillet »
+  orderLabel: string; // « Rafting, samedi 26 septembre · 4 photos »
+  amountLabel: string; // « 29,00 € » — déjà formaté
+  orderRef: string; // « SV-8K2QF »
+  orderDateLabel: string; // « 29/09/2026 »
+  cardLabel: string | null; // « Visa •••• 4242 » ; null si Stripe ne l'a pas rendu
+  sellerLine: string; // identité du vendeur en une ligne (lib/seller-format.ts)
+  cgvUrl: string;
+  cgvDateLabel: string; // « 29 septembre 2026 »
   reviewUrl: string | null; // null si l'opérateur n'a pas configuré de lien d'avis
   supportUrl: string;
 }
@@ -29,9 +33,14 @@ export default function OrderConfirmed({
   amountLabel,
   orderRef,
   orderDateLabel,
+  cardLabel,
+  sellerLine,
+  cgvUrl,
+  cgvDateLabel,
   reviewUrl,
   supportUrl,
 }: OrderConfirmedProps) {
+  const meta = { fontSize: 12, color: brand.ink3, paddingTop: 4 };
   return (
     <Html lang="fr">
       <Head />
@@ -67,21 +76,47 @@ export default function OrderConfirmed({
             </table>
           </Section>
 
-          {/* reçu */}
+          {/* Le reçu. Il vaut confirmation écrite du contrat (Code de la
+              consommation, L221-13) : il reprend le prix payé, le moyen de
+              paiement et l'accord du client pour une livraison immédiate. */}
           <Section style={{ padding: "20px 22px 0" }}>
-            <table width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ backgroundColor: brand.line2, borderRadius: 14 }}>
+            <table width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ border: `1px solid ${brand.line}`, borderRadius: 14 }}>
               <tbody>
                 <tr>
-                  <td style={{ padding: "15px 16px", fontFamily: brand.fontBody, fontSize: 13, color: brand.ink2 }}>
+                  <td style={{ padding: "14px 15px 13px", fontFamily: brand.fontBody, fontSize: 13, color: brand.ink2 }}>
                     <table width="100%" cellPadding={0} cellSpacing={0} border={0}>
                       <tbody>
                         <tr>
-                          <td style={{ paddingBottom: 7 }}>{orderLabel}</td>
-                          <td align="right" style={{ fontFamily: brand.fontHead, fontWeight: 700, color: brand.ink }}>{amountLabel}</td>
+                          <td colSpan={2} style={{ paddingBottom: 9, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: brand.ink4 }}>
+                            Reçu
+                          </td>
                         </tr>
                         <tr>
-                          <td style={{ color: brand.ink4, fontSize: 12 }}>Commande #{orderRef} · {orderDateLabel}</td>
-                          <td align="right" style={{ color: brand.ink4, fontSize: 12 }}>Payé</td>
+                          <td style={{ paddingBottom: 9 }}>{orderLabel}</td>
+                          <td align="right" style={{ paddingBottom: 9, whiteSpace: "nowrap" }}>{amountLabel}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ borderTop: `1px solid ${brand.line}`, paddingTop: 9, fontWeight: 600, color: brand.ink }}>Total payé</td>
+                          <td align="right" style={{ borderTop: `1px solid ${brand.line}`, paddingTop: 9, fontWeight: 600, color: brand.ink, whiteSpace: "nowrap" }}>
+                            {amountLabel}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={meta}>Commande {orderRef}</td>
+                          <td align="right" style={meta}>{orderDateLabel}</td>
+                        </tr>
+                        {cardLabel && (
+                          <tr>
+                            <td style={meta}>Carte</td>
+                            <td align="right" style={meta}>{cardLabel}</td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td colSpan={2} style={{ paddingTop: 10 }}>
+                            <Text style={{ ...s.small, margin: 0, paddingTop: 10, borderTop: `1px solid ${brand.line2}`, fontSize: 11.5, lineHeight: "1.5" }}>
+                              Livraison immédiate demandée à la commande : droit de rétractation non applicable (art. L221-28 du Code de la consommation).
+                            </Text>
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -123,9 +158,15 @@ export default function OrderConfirmed({
 
           <Hr style={{ borderColor: brand.line, margin: "20px 0 0" }} />
           <Section style={{ padding: "16px 22px 22px" }}>
-            <Text style={s.small}>
-              Votre lien de téléchargement reste actif 90 jours.
-              <br />
+            <Text style={s.small}>Votre lien de téléchargement reste actif 90 jours.</Text>
+            <Text style={{ ...s.small, marginTop: 7 }}>
+              <strong style={{ color: brand.ink2 }}>Vendeur</strong> · {sellerLine}
+            </Text>
+            <Text style={{ ...s.small, marginTop: 7 }}>
+              Une photo défectueuse ou différente de l&rsquo;aperçu ? Répondez à cet e-mail, le vendeur vous la rembourse.{" "}
+              <Link href={cgvUrl} style={{ color: brand.ink3 }}>Conditions de vente du {cgvDateLabel}</Link>
+            </Text>
+            <Text style={{ ...s.small, marginTop: 7 }}>
               {operatorName} via Linktrip ·{" "}
               <Link href={supportUrl} style={{ color: brand.ink3 }}>une question ?</Link>
             </Text>
@@ -141,10 +182,14 @@ OrderConfirmed.PreviewProps = {
   operatorName: "Annecy Vol Libre",
   photoCount: 5,
   downloadUrl: "https://linktrip.co/g/julie-4k2p",
-  orderLabel: "3 photos + 2 offertes",
+  orderLabel: "Parapente, samedi 22 juillet · 5 photos",
   amountLabel: "22,00 €",
   orderRef: "SV-4821",
-  orderDateLabel: "22 juillet",
+  orderDateLabel: "22/07/2026",
+  cardLabel: "Visa •••• 4242",
+  sellerLine: "Annecy Vol Libre, 12 route du Col, 74210 Doussard · SIRET 123 456 789 00012 · TVA non applicable, art. 293 B du CGI",
+  cgvUrl: "https://linktrip.co/cgv",
+  cgvDateLabel: "29 septembre 2026",
   reviewUrl: "https://g.page/r/example/review",
   supportUrl: "https://linktrip.co/g/julie-4k2p",
 } satisfies OrderConfirmedProps;

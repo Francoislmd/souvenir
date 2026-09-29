@@ -9,7 +9,7 @@ export default function CgvPage() {
   return (
     <>
       <h1>Conditions générales de vente</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 19 septembre 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 29 septembre 2026</p>
       <p>
         Les présentes conditions générales de vente (CGV) régissent, d&apos;une part, la vente
         de photos numériques aux participants via la plateforme Linktrip, et d&apos;autre part
@@ -23,8 +23,10 @@ export default function CgvPage() {
       <p>
         Les photos sont vendues par l&apos;opérateur qui a organisé la sortie et les a prises,
         et non par Linktrip. Linktrip fournit à l&apos;opérateur la plateforme technique qui
-        permet de les présenter, de les vendre et de les livrer. Le nom de l&apos;opérateur est
-        affiché sur la galerie et sur le justificatif de paiement.
+        permet de les présenter, de les vendre et de les livrer. L&apos;identité de
+        l&apos;opérateur (raison sociale, adresse, numéro SIRET, contact) est affichée avant le
+        paiement, sur la feuille de paiement et dans ses conditions de vente, puis reprise sur
+        le reçu.
       </p>
 
       <h3 id="prix">Prix et paiement</h3>
@@ -51,18 +53,26 @@ export default function CgvPage() {
         exprès du consommateur et renoncement exprès à son droit de rétractation. En procédant
         au paiement, le participant reconnaît demander une livraison immédiate de ses photos et
         renonce expressément à son droit de rétractation dès que celles-ci sont accessibles
-        dans sa galerie. TODO(françois) : confirmer que cette renonciation est bien recueillie
-        explicitement (case à cocher ou mention équivalente) au moment du paiement — sinon
-        l&apos;ajouter au parcours de paiement.
+        dans sa galerie. Cette renonciation est portée à sa connaissance sur la feuille de
+        paiement, avant tout bouton de paiement, et confirmée sur le reçu qui lui est adressé.
       </p>
 
-      <h3 id="remboursement-participant">Remboursement</h3>
+      <h3 id="remboursement-participant">Garantie et remboursement</h3>
       <p>
-        TODO(françois) : préciser la politique de remboursement applicable aux participants
-        (cas éventuels acceptés — erreur de facturation, photo corrompue — et modalités de
-        demande). En l&apos;absence de politique spécifique, seuls les remboursements décidés au
-        cas par cas par Linktrip ou l&apos;opérateur, ou imposés par une contestation bancaire
-        (chargeback), sont traités.
+        Les photos bénéficient de la garantie légale de conformité des contenus numériques
+        (articles L224-25-1 et suivants du Code de la consommation). Une photo floue, illisible,
+        corrompue ou différente de l&apos;aperçu présenté avant l&apos;achat est remboursée par
+        l&apos;opérateur sur simple demande du participant, en répondant au reçu ou en écrivant
+        à l&apos;adresse de contact de l&apos;opérateur. En dehors de ces cas, le participant
+        ayant demandé la livraison immédiate de ses photos, aucun remboursement n&apos;est dû.
+      </p>
+
+      <h3 id="recu">Reçu</h3>
+      <p>
+        Après chaque paiement, le participant reçoit un reçu par e-mail ou par WhatsApp, selon
+        le moyen par lequel l&apos;opérateur lui a transmis ses photos. Ce reçu reprend le
+        contenu de la commande, le prix payé, l&apos;identité de l&apos;opérateur et la
+        renonciation au droit de rétractation. Il vaut confirmation du contrat.
       </p>
 
       <h2 id="operateurs">B. Relation commerciale avec les opérateurs</h2>
@@ -71,10 +81,8 @@ export default function CgvPage() {
       <p>
         L&apos;inscription sur Linktrip est gratuite et sans engagement. Linktrip prélève une
         commission sur chaque vente réalisée via la plateforme ; le solde est reversé à
-        l&apos;opérateur. Le taux de commission applicable est TODO(françois) : confirmer le
-        taux affiché publiquement (20 % par défaut selon la configuration actuelle de la
-        plateforme) — il est rappelé à l&apos;opérateur dans son espace de réglages avant toute
-        vente. La commission est calculée sur le prix de vente TTC payé par le participant.
+        l&apos;opérateur. Le taux de commission est de 20 %. Il est rappelé à l&apos;opérateur
+        dans son espace de réglages avant toute vente. La commission est calculée sur le prix de vente TTC payé par le participant.
       </p>
 
       <h3 id="frais-paiement">Frais de paiement</h3>

@@ -9,7 +9,7 @@ export default function CguPage() {
   return (
     <>
       <h1>Conditions générales d&apos;utilisation</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 3 août 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 29 septembre 2026</p>
 
       <h2 id="objet">1. Objet</h2>
       <p>
@@ -84,8 +84,9 @@ export default function CguPage() {
 
       <h2 id="paiement">5. Achat de photos</h2>
       <p>
-        L&apos;achat d&apos;une photo ou d&apos;un pack est réalisé via Stripe, prestataire de
-        paiement de Linktrip. Le participant est redirigé vers la galerie dès la confirmation
+        L&apos;achat d&apos;une photo ou d&apos;un pack est conclu avec l&apos;opérateur, qui
+        en est le vendeur ; le paiement est traité par Stripe et encaissé directement sur le
+        compte de l&apos;opérateur. Le participant est redirigé vers la galerie dès la confirmation
         du paiement, où les photos achetées deviennent immédiatement accessibles en haute
         définition. Les conditions de vente, de rétractation et de remboursement applicables à
         cet achat sont détaillées dans les <a href="/cgv">CGV</a>.

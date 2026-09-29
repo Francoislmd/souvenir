@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { getBoutiquePhotos } from "@/lib/gallery";
+import { getSeller } from "@/lib/seller";
 import { formatSortieTitle, formatWhenFr } from "@/lib/format";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { BoutiqueGallery } from "@/components/gallery/BoutiqueGallery";
@@ -35,6 +36,10 @@ export default async function GalleryPage({ params }: { params: { token: string 
     operator.name,
   );
 
+  const seller = await getSeller(operator.id);
+  // Le reçu part par le canal du participant (lib/order-fulfillment.ts).
+  const receiptTo = participant.channel === "WHATSAPP" ? "WhatsApp" : participant.contact;
+
   const reducedOfferActive = !!participant.reducedOfferExpiresAt && participant.reducedOfferExpiresAt > new Date();
 
   return (
@@ -59,6 +64,8 @@ export default async function GalleryPage({ params }: { params: { token: string 
         googleReviewUrl={operator.googleReviewUrl}
         reducedOfferActive={reducedOfferActive}
         operatorName={operator.name}
+        seller={seller}
+        receiptTo={receiptTo}
       />
     </div>
   );

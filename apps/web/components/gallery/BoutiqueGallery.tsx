@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "@/components/gallery/gallery.module.css";
 import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
+import type { Seller } from "@/lib/seller-format";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
@@ -69,6 +70,8 @@ export function BoutiqueGallery({
   googleReviewUrl,
   reducedOfferActive,
   operatorName,
+  seller,
+  receiptTo,
 }: {
   token: string;
   participantId: string;
@@ -85,6 +88,10 @@ export function BoutiqueGallery({
   reducedOfferActive: boolean;
   /** Le vendeur, nommé dans la feuille Apple Pay. */
   operatorName?: string;
+  /** Le vendeur au sens légal, nommé avant le paiement. */
+  seller: Seller | null;
+  /** Où part le reçu : l'adresse e-mail, ou « WhatsApp ». Null si inconnu. */
+  receiptTo: string | null;
 }) {
   const router = useRouter();
   const [photos, setPhotos] = useState(initialPhotos);
@@ -235,6 +242,7 @@ export function BoutiqueGallery({
               <p className={styles.hint}>
                 {boughtLabel(yours)} en pleine résolution, sans filigrane.
               </p>
+              {receiptTo ? <p className={styles.hint}>{receiptTo === "WhatsApp" ? "Reçu envoyé par WhatsApp" : `Reçu envoyé à ${receiptTo}`}</p> : null}
               {hdWaiting ? <p className={styles.hint}>Vos photos arrivent en pleine résolution, cette page se met à jour toute seule.</p> : null}
             </div>
             {/* La promesse de l'écran, enfin tenue : un seul geste. Avant, la
@@ -358,6 +366,8 @@ export function BoutiqueGallery({
           amountCents={checkout.amountCents}
           label={checkout.label}
           merchantName={operatorName}
+          seller={seller}
+          conditionsHref="/cgv"
           onSuccess={onPaymentSuccess}
           onClose={() => setCheckout(null)}
         />
