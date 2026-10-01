@@ -28,6 +28,9 @@ const schema = z.object({
     .refine((v) => v === "" || /^\d{14}$/.test(v), { message: "SIRET : 14 chiffres" })
     .optional(),
   vatExempt: z.boolean().optional(),
+  // L'engagement sur le droit à l'image, coché à la première sortie. Il ne se
+  // retire pas : seule la valeur true est acceptée, et la première date reste.
+  imageRightsAck: z.literal(true).optional(),
   activities: z.array(z.string()).refine((ids) => ids.every((id) => knownActivityIds.has(id)), {
     message: "Activité inconnue",
   }).optional(),
@@ -52,7 +55,14 @@ export async function PATCH(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, legalName, legalAddress, siret, ...rest } = parsed.data;
+  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, legalName, legalAddress, siret, imageRightsAck, ...rest } = parsed.data;
+
+  if (imageRightsAck) {
+    await prisma.operator.updateMany({
+      where: { id: dbUser.operatorId, imageRightsAckAt: null },
+      data: { imageRightsAckAt: new Date() },
+    });
+  }
 
   const operator = await prisma.operator.update({
     where: { id: dbUser.operatorId },

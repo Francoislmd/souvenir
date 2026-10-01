@@ -43,6 +43,14 @@ model Operator {
   siret        String? // 14 chiffres, sans espaces
   vatExempt    Boolean @default(false) // franchise en base : « TVA non applicable, art. 293 B du CGI » sur les reçus
 
+  // Preuves d'engagement du pro, datées (maquette-onboarding-conformite-v1).
+  // termsVersion : la date des CGV acceptées (CGV_DATE_LABEL, lib/seller-format.ts).
+  termsAcceptedAt  DateTime?
+  termsVersion     String?
+  // « Je préviens mes clients que des photos sont prises et proposées à la
+  // vente, et je retire toute photo sur demande » : coché une fois.
+  imageRightsAckAt DateTime?
+
   // { resendUnopened, reducedPriceOffer, reviewRequest, referral } — referral always false, "bientôt"
   automations Json @default("{\"resendUnopened\":true,\"reducedPriceOffer\":true,\"reviewRequest\":true,\"referral\":false}")
 

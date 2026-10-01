@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import { Role } from "@souvenir/db";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { RESERVED_SLUGS } from "@/lib/store";
+import { CGV_DATE_LABEL } from "@/lib/seller-format";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -15,6 +16,15 @@ const schema = z.object({
   brandColor: z.string().optional(),
   googleReviewUrl: z.string().optional(),
   qualification: z.record(z.unknown()).optional(),
+  // L'identité du vendeur, retrouvée par le SIRET à l'écran « Votre structure ».
+  // Facultative : le pro peut s'inscrire avant d'être immatriculé.
+  siret: z
+    .string()
+    .transform((v) => v.replace(/\s+/g, ""))
+    .refine((v) => v === "" || /^\d{14}$/.test(v))
+    .optional(),
+  legalName: z.string().max(120).optional(),
+  legalAddress: z.string().max(200).optional(),
 });
 
 function slugify(input: string): string {
@@ -51,7 +61,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: message, details: parsed.error.errors }, { status: 400 });
   }
 
-  const { name, pricePhotoCents, priceAllCents, brandColor, googleReviewUrl, qualification } = parsed.data;
+  const { name, pricePhotoCents, priceAllCents, brandColor, googleReviewUrl, qualification, siret, legalName, legalAddress } = parsed.data;
 
   // RESERVED_SLUGS existait mais n'était appliqué nulle part : un prestataire
   // nommé « Api » obtenait le slug `api`, que middleware.ts laisse passer sans
@@ -82,6 +92,15 @@ export async function POST(request: Request): Promise<Response> {
       activities,
       ...(brandColor && { brandColor }),
       ...(googleReviewUrl && { googleReviewUrl }),
+      ...(siret && { siret }),
+      ...(legalName?.trim() && { legalName: legalName.trim() }),
+      ...(legalAddress?.trim() && { legalAddress: legalAddress.trim() }),
+      // Le premier écran dit « Compte réservé aux professionnels. En le
+      // créant, vous acceptez les CGU, les CGV et la politique de
+      // confidentialité » : la structure se crée juste après, dans la même
+      // session. On date l'acceptation et on retient la version des CGV.
+      termsAcceptedAt: new Date(),
+      termsVersion: CGV_DATE_LABEL,
       users: { create: { email: user.email, role: Role.ADMIN } },
     },
   });

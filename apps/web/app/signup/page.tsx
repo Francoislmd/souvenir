@@ -60,6 +60,9 @@ export default async function SignupPage({ searchParams }: { searchParams: { nam
         pricePhotoCents: o.pricePhotoCents,
         packOnly: o.packOnly,
         stripeOnboarded: o.stripeOnboarded,
+        feePercent: o.feePercent,
+        vatExempt: o.vatExempt,
+        imageRightsAcked: !!o.imageRightsAckAt,
       };
       step = o.stripeAccountId ? "sortie" : "page";
     }

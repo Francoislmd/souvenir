@@ -9,7 +9,7 @@ export default function CguPage() {
   return (
     <>
       <h1>Conditions générales d&apos;utilisation</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 29 septembre 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 1er octobre 2026</p>
 
       <h2 id="objet">1. Objet</h2>
       <p>
@@ -25,8 +25,10 @@ export default function CguPage() {
 
       <h2 id="comptes">2. Comptes opérateurs</h2>
       <p>
-        La création d&apos;un compte opérateur nécessite une adresse email et un mot de passe.
-        L&apos;opérateur est responsable de la confidentialité de ses identifiants et de
+        Les comptes opérateurs sont réservés aux professionnels : en créant un compte,
+        l&apos;opérateur déclare agir dans le cadre de son activité professionnelle. La
+        création d&apos;un compte nécessite une adresse email et un mot de passe ; la date de
+        l&apos;acceptation des présentes conditions est conservée. L&apos;opérateur est responsable de la confidentialité de ses identifiants et de
         toutes les actions effectuées depuis son compte, y compris par les moniteurs qu&apos;il
         y invite. Les participants finaux n&apos;ont jamais de compte : ils accèdent à leur
         galerie via un lien privé et non devinable, propre à chaque sortie.
@@ -37,7 +39,9 @@ export default function CguPage() {
         L&apos;opérateur garantit être titulaire des droits nécessaires sur les photos et
         vidéos qu&apos;il met en ligne, et avoir informé les participants de la prise de vue
         pendant l&apos;activité, conformément à la réglementation applicable en matière de
-        droit à l&apos;image. Linktrip se réserve le droit de retirer tout contenu manifestement
+        droit à l&apos;image. Il s&apos;y engage expressément à la création de sa première
+        sortie : il prévient ses clients, avant la sortie, que des photos sont prises et
+        proposées à la vente, et retire toute photo sur demande. Linktrip se réserve le droit de retirer tout contenu manifestement
         illicite ou signalé comme tel.
       </p>
 
@@ -98,6 +102,17 @@ export default function CguPage() {
         nos serveurs 90 jours après la fin de la sortie, sauf suppression anticipée demandée
         par le participant. Le détail de ce traitement figure dans notre{" "}
         <a href="/confidentialite">politique de confidentialité</a>.
+      </p>
+      <p>
+        Pour les données des participants (nom, adresse e-mail ou numéro de téléphone, photos),
+        l&apos;opérateur est responsable du traitement et Linktrip agit en qualité de
+        sous-traitant, au sens de l&apos;article 28 du RGPD. Linktrip ne traite ces données que
+        pour fournir le service demandé par l&apos;opérateur (envoi des galeries, vente,
+        livraison, relances qu&apos;il a activées),
+        en garantit la confidentialité et la sécurité, les supprime au terme de la durée
+        indiquée ci-dessus, et aide l&apos;opérateur à répondre aux demandes des participants.
+        Ses propres sous-traitants (hébergement, stockage, paiement, envoi des messages) sont
+        listés dans la politique de confidentialité.
       </p>
 
       <h2 id="disponibilite">7. Disponibilité du service</h2>

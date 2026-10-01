@@ -37,7 +37,37 @@ export interface OnboardingOperator {
   pricePhotoCents: number;
   packOnly: boolean;
   stripeOnboarded: boolean;
+  /** La commission Linktrip, pour dire au pro ce qu'il touche sur un lot. */
+  feePercent: number;
+  vatExempt: boolean;
+  /** L'engagement sur le droit à l'image a déjà été pris. */
+  imageRightsAcked: boolean;
 }
+
+/** L'identité légale retrouvée par le SIRET, envoyée avec la structure. */
+interface LegalIdentity {
+  siret: string;
+  legalName: string;
+  legalAddress: string;
+}
+
+interface SiretMatch {
+  siret: string;
+  name: string;
+  legalForm: string | null;
+  address: string | null;
+  active: boolean;
+}
+
+/** « 834 512 907 00018 » : le SIRET s'affiche par groupes pendant la saisie. */
+function groupSiret(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 14);
+  return [d.slice(0, 3), d.slice(3, 6), d.slice(6, 9), d.slice(9)].filter(Boolean).join(" ");
+}
+
+/** Le texte que le pro colle dans ses confirmations de réservation. */
+const CLIENT_NOTICE =
+  "Pendant la sortie, nous prenons des photos. Elles vous seront proposées à l'achat sur Linktrip, sans obligation. Vous pouvez demander le retrait d'une photo à tout moment.";
 
 type DayChoice = "today" | "tomorrow" | "other";
 
@@ -58,6 +88,11 @@ function localDate(d: Date): string {
 
 function euros(cents: number): string {
   return String(Math.round(cents) / 100).replace(".", ",");
+}
+
+/** « 31,20 € », « 39 € » : les centimes seulement quand il y en a. */
+function euroLabel(c: number): string {
+  return `${(c / 100).toLocaleString("fr-FR", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 })} €`;
 }
 
 function cents(value: string): number | null {
@@ -89,6 +124,23 @@ function BackIcon() {
     </svg>
   );
 }
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2.5" />
+      <path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4h-6A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9" />
+    </svg>
+  );
+}
+
 function LinkIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -194,14 +246,14 @@ export function Onboarding({
           storeBase={storeBase}
           busy={busy}
           error={error}
-          onSubmit={async (name, activities) => {
+          onSubmit={async (name, activities, legal) => {
             setBusy(true);
             setError(null);
             try {
               const res = await fetch("/api/operator", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, qualification: { activities } }),
+                body: JSON.stringify({ name, qualification: { activities }, ...legal }),
               });
               if (res.status === 409) {
                 router.refresh();
@@ -227,6 +279,9 @@ export function Onboarding({
                 pricePhotoCents: 800,
                 packOnly: true,
                 stripeOnboarded: false,
+                feePercent: 20,
+                vatExempt: false,
+                imageRightsAcked: false,
               });
               go("page");
             } catch {
@@ -273,12 +328,16 @@ export function Onboarding({
         />
       ) : null}
 
-      {step === "sortie" && op ? <StepSortie activities={op.activities} /> : null}
+      {step === "sortie" && op ? <StepSortie activities={op.activities} imageRightsAcked={op.imageRightsAcked} /> : null}
     </div>
   );
 }
 
-/* ── 2. Structure : le nom et les activités ────────────────────────── */
+/* ── 2. Structure : le SIRET, le nom et les activités ──────────────
+   Le SIRET retrouve la raison sociale et l'adresse dans l'annuaire des
+   entreprises : elles figureront sur les reçus des clients (le pro est le
+   vendeur). Il reste facultatif, un pro peut s'inscrire avant d'être
+   immatriculé. Maquette : docs/maquette-onboarding-conformite-v1.html. */
 function StepStructure({
   initialName,
   storeBase,
@@ -290,14 +349,50 @@ function StepStructure({
   storeBase: string;
   busy: boolean;
   error: string | null;
-  onSubmit: (name: string, activities: string[]) => Promise<void>;
+  onSubmit: (name: string, activities: string[], legal: Partial<LegalIdentity>) => Promise<void>;
 }) {
   const [name, setName] = useState(initialName);
+  const [nameTouched, setNameTouched] = useState(!!initialName);
+  const [siret, setSiret] = useState("");
+  const [match, setMatch] = useState<SiretMatch | null>(null);
+  const [lookup, setLookup] = useState<"idle" | "busy" | "none">("idle");
   const [picked, setPicked] = useState<string[]>([]);
   const [local, setLocal] = useState<string | null>(null);
 
+  const digits = siret.replace(/\D/g, "");
+
+  // Quatorze chiffres : on interroge l'annuaire. Le nom affiché aux clients se
+  // pré-remplit avec la raison sociale, tant que le pro ne l'a pas écrit.
+  useEffect(() => {
+    if (digits.length !== 14) {
+      setMatch(null);
+      setLookup("idle");
+      return;
+    }
+    let cancelled = false;
+    setLookup("busy");
+    fetch(`/api/onboarding/siret?siret=${digits}`)
+      .then((res) => (res.ok ? (res.json() as Promise<{ match: SiretMatch | null }>) : { match: null }))
+      .then(({ match: found }) => {
+        if (cancelled) return;
+        setMatch(found);
+        setLookup(found ? "idle" : "none");
+        if (found && !nameTouched) setName(found.name);
+      })
+      .catch(() => {
+        if (!cancelled) setLookup("none");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [digits, nameTouched]);
+
   function submit(e: React.FormEvent): void {
     e.preventDefault();
+    if (digits.length > 0 && digits.length !== 14) {
+      setLocal("Le SIRET compte 14 chiffres.");
+      return;
+    }
     if (name.trim().length < 2) {
       setLocal("Il manque le nom de la structure.");
       return;
@@ -307,14 +402,56 @@ function StepStructure({
       return;
     }
     setLocal(null);
-    void onSubmit(name.trim(), picked);
+    void onSubmit(
+      name.trim(),
+      picked,
+      digits.length === 14 ? { siret: digits, legalName: match?.name ?? "", legalAddress: match?.address ?? "" } : {},
+    );
   }
 
   return (
     <form className={styles.scr} onSubmit={submit} noValidate>
       <h1>Votre structure.</h1>
+      <label className={styles.lbl} htmlFor="obSiret">
+        Son SIRET
+      </label>
+      <div className={`${styles.sirIn} ${match ? styles.sirFound : ""}`}>
+        <input
+          id="obSiret"
+          className={styles.inp}
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder="123 456 789 00012"
+          value={siret}
+          onChange={(e) => {
+            setSiret(groupSiret(e.target.value));
+            setLocal(null);
+          }}
+          autoFocus
+        />
+        <span className={styles.sirState} aria-hidden="true">
+          {lookup === "busy" ? <Spinner size={16} /> : match ? <span className={styles.fok}><CheckIcon /></span> : null}
+        </span>
+      </div>
+      {match ? (
+        <div className={styles.found} aria-live="polite">
+          <b>{match.name}</b>
+          <span>
+            {match.legalForm ? `${match.legalForm} · ` : ""}
+            {/* Le code postal et la ville ne se séparent pas : « Vallon-Pont-d'Arc » se coupait au trait d'union. */}
+            {match.address?.replace(/(\d{5} .+)$/, "") ?? ""}
+            {match.address?.match(/\d{5} .+$/) ? <span className={styles.nw}>{match.address.match(/\d{5} .+$/)![0]}</span> : null}
+          </span>
+          <small>{match.active ? "Entreprise active" : "Établissement fermé"} · Annuaire des entreprises</small>
+        </div>
+      ) : lookup === "none" ? (
+        <p className={styles.info} aria-live="polite">
+          Ce numéro n&rsquo;est pas dans l&rsquo;annuaire des entreprises. Vérifiez-le, ou continuez : vous pourrez le corriger dans Réglages.
+        </p>
+      ) : null}
+
       <label className={styles.lbl} htmlFor="obName">
-        Son nom
+        Le nom que voient vos clients
       </label>
       <input
         id="obName"
@@ -322,8 +459,10 @@ function StepStructure({
         value={name}
         autoComplete="organization"
         placeholder="Eaux Vives Ardèche"
-        onChange={(e) => setName(e.target.value)}
-        autoFocus={!initialName}
+        onChange={(e) => {
+          setName(e.target.value);
+          setNameTouched(true);
+        }}
       />
       <p className={styles.url}>
         <LinkIcon />
@@ -357,6 +496,9 @@ function StepStructure({
           {busy ? <Spinner size={16} tone="current" label="Création" /> : null}
           {busy ? "Création…" : "Continuer"}
         </button>
+        {digits.length === 0 ? (
+          <p className={styles.legal}>Pas encore immatriculé ? Continuez sans SIRET, vous l&rsquo;ajouterez dans Réglages. Il figure sur les reçus de vos clients.</p>
+        ) : null}
       </div>
     </form>
   );
@@ -523,11 +665,15 @@ function StepPrices({
   op: OnboardingOperator;
   busy: boolean;
   error: string | null;
-  onSubmit: (patch: { priceAllCents: number; pricePhotoCents: number; packOnly: boolean }) => Promise<void>;
+  onSubmit: (patch: { priceAllCents: number; pricePhotoCents: number; packOnly: boolean; vatExempt: boolean }) => Promise<void>;
 }) {
   const [all, setAll] = useState(euros(op.priceAllCents));
   const [one, setOne] = useState(euros(op.pricePhotoCents));
   const [unit, setUnit] = useState(!op.packOnly);
+  const [vatExempt, setVatExempt] = useState(op.vatExempt);
+  // Ce que touche le pro sur un lot, à partir du prix en cours de saisie.
+  const allNow = cents(all);
+  const netCents = allNow === null ? null : Math.round((allNow * (100 - op.feePercent)) / 100);
   const [local, setLocal] = useState<string | null>(null);
   const oneRef = useRef<HTMLInputElement>(null);
 
@@ -544,7 +690,7 @@ function StepPrices({
       return;
     }
     setLocal(null);
-    void onSubmit({ priceAllCents: allCents, pricePhotoCents: oneCents ?? op.pricePhotoCents, packOnly: !unit });
+    void onSubmit({ priceAllCents: allCents, pricePhotoCents: oneCents ?? op.pricePhotoCents, packOnly: !unit, vatExempt });
   }
 
   return (
@@ -592,7 +738,26 @@ function StepPrices({
             </label>
           ) : null}
         </div>
+        <div className={styles.pxOpt}>
+          <button type="button" className={styles.pxTog} role="switch" aria-checked={vatExempt} onClick={() => setVatExempt(!vatExempt)}>
+            <span className={styles.pxTxt}>
+              <b>Franchise de TVA</b>
+              <small>Mention « TVA non applicable » sur vos reçus</small>
+            </span>
+            <i className={`${styles.sw} ${vatExempt ? styles.swOn : ""}`} aria-hidden="true" />
+          </button>
+        </div>
       </div>
+      {/* La commission dite avant la première vente, en euros, sur son prix. */}
+      {netCents !== null && allNow ? (
+        <div className={styles.net}>
+          <span>Vous recevez par lot</span>
+          <b>{euroLabel(netCents)}</b>
+          <small>
+            Sur {euroLabel(allNow)}, Linktrip prend {op.feePercent} %. Les frais Stripe s&rsquo;appliquent au paiement.
+          </small>
+        </div>
+      ) : null}
       {local || error ? <p className={styles.err}>{local ?? error}</p> : null}
       <div className={styles.foot}>
         <button type="submit" className={`${styles.btn} ${styles.pri}`} disabled={busy}>
@@ -654,7 +819,7 @@ function StepPayments({ onReady, onLater }: { onReady: () => void; onLater: () =
 }
 
 /* ── 6. Première sortie ─────────────────────────────────────────────── */
-function StepSortie({ activities }: { activities: string[] }) {
+function StepSortie({ activities, imageRightsAcked }: { activities: string[]; imageRightsAcked: boolean }) {
   const router = useRouter();
   const labels = (() => {
     const list = ACTIVITIES.filter((a) => a.id !== "autre" && activities.includes(a.id)).map((a) => a.label);
@@ -668,9 +833,26 @@ function StepSortie({ activities }: { activities: string[] }) {
   const [showMode, setShowMode] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // L'engagement sur le droit à l'image : coché une fois, il ne se redemande pas.
+  const [ack, setAck] = useState(imageRightsAcked);
+  const [copied, setCopied] = useState(false);
+
+  async function copyNotice(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(CLIENT_NOTICE);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2400);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   async function create(): Promise<void> {
     if (busy) return;
+    if (!ack) {
+      setError("Cochez l'engagement sur le droit à l'image pour créer la sortie.");
+      return;
+    }
     const d = new Date();
     if (day === "tomorrow") d.setDate(d.getDate() + 1);
     const date = day === "other" ? other : localDate(d);
@@ -681,6 +863,7 @@ function StepSortie({ activities }: { activities: string[] }) {
     setBusy(true);
     setError(null);
     try {
+      if (!imageRightsAcked && !(await patchSettings({ imageRightsAck: true }))) throw new Error("ack");
       const res = await fetch("/api/sorties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -778,9 +961,35 @@ function StepSortie({ activities }: { activities: string[] }) {
         </div>
       ) : null}
 
+      {/* Le pro prend les photos : c'est à lui de prévenir ses clients et de
+          retirer une photo à la demande. L'engagement est daté
+          (Operator.imageRightsAckAt), et le texte à transmettre est prêt. */}
+      <div className={styles.eng}>
+        {imageRightsAcked ? null : (
+          <label className={styles.chk}>
+            <input
+              type="checkbox"
+              checked={ack}
+              onChange={(e) => {
+                setAck(e.target.checked);
+                setError(null);
+              }}
+            />
+            <span className={styles.box} aria-hidden="true">
+              <CheckIcon />
+            </span>
+            <span>Je préviens mes clients, avant la sortie, que des photos sont prises et proposées à la vente. Je retire toute photo sur demande.</span>
+          </label>
+        )}
+        <button type="button" className={styles.cp} onClick={() => void copyNotice()}>
+          <CopyIcon />
+          {copied ? "Texte copié" : "Copier le texte pour vos réservations"}
+        </button>
+      </div>
+
       {error ? <p className={styles.err}>{error}</p> : null}
       <div className={styles.foot}>
-        <button type="button" className={`${styles.btn} ${styles.pri}`} onClick={() => void create()} disabled={busy}>
+        <button type="button" className={`${styles.btn} ${styles.pri}`} onClick={() => void create()} disabled={busy || !ack}>
           {busy ? <Spinner size={16} tone="current" label="Création" /> : null}
           {busy ? "Création…" : "Créer la sortie"}
         </button>
