@@ -25,8 +25,8 @@ export default async function StorePage({ params }: { params: { slug: string } }
       <LinkRequest
         slug={operator.slug}
         operator={operator}
+        place={operator.tagline}
         heading="Retrouvez vos photos"
-        lead="Entrez l'adresse donnée à la réservation. Si une sortie y correspond, votre lien part par e-mail."
       />
     </div>
   );

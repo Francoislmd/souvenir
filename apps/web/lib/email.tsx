@@ -1,3 +1,4 @@
+import { photosOf } from "./format";
 import type { ReactElement } from "react";
 import { render } from "@react-email/render";
 import { Resend } from "resend";
@@ -286,11 +287,7 @@ export async function sendPhotoWithdrawalNotifiedEmail(params: {
 }
 
 /** « de jet-ski », « d'escalade » : minuscule initiale et élision devant voyelle ou h. */
-export function photosOf(activity: string): string {
-  const a = activity.trim();
-  const lower = a.charAt(0).toLocaleLowerCase("fr") + a.slice(1);
-  return /^[aeiouyhàâéèêëîïôöûùü]/i.test(lower) ? `d\u2019${lower}` : `de ${lower}`;
-}
+export { photosOf };
 
 /**
  * "Envoyer au groupe" (mode GROUPE) : l'opérateur saisit une liste d'emails

@@ -1,3 +1,4 @@
+import { formatHourFr } from "./format";
 import { prisma } from "./prisma";
 import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
@@ -30,7 +31,9 @@ export async function getBoutiquePhotos(
   // sortie, tous créneaux confondus.
   const rawPhotos = await prisma.photo.findMany({
     where: visiblePhotoWhere(participant),
-    orderBy: { createdAt: "asc" },
+    // L'ordre de la sortie : l'heure de prise de vue d'abord (sortie de
+    // groupe), puis l'ordre de dépôt.
+    orderBy: [{ takenAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
   const isOwned = (id: string) => unlockAll || purchasedSet.has(id);
 
@@ -82,6 +85,8 @@ export async function getBoutiquePhotos(
         tileUrl: unlocked && p.thumbKey ? getPreviewUrl(p.thumbKey) : null,
         isVideo: p.isVideo,
         durationSec: p.durationSec,
+        // « 10 h 14 », sur la case : la sortie se lit dans l'ordre.
+        timeLabel: p.takenAt ? formatHourFr(p.takenAt) : null,
       };
     }),
   );

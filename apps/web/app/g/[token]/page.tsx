@@ -6,7 +6,7 @@ import { accessFromOrders, remainingCapCents } from "@/lib/access";
 import { departuresWithPhotos } from "@/lib/private-link";
 import { getSeller } from "@/lib/seller";
 import { formatDayFr, formatHourFr, formatSortieTitle, formatWhenFr } from "@/lib/format";
-import { GalleryHeader } from "@/components/gallery/GalleryHeader";
+import { SaleHeader } from "@/components/gallery/SaleHeader";
 import { BoutiqueGallery } from "@/components/gallery/BoutiqueGallery";
 import galleryStyles from "@/components/gallery/gallery.module.css";
 import styles from "./boutique.module.css";
@@ -42,7 +42,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const title = formatSortieTitle(sortie.activity, sortie.place);
   const page = (children: React.ReactNode) => (
     <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
-      <GalleryHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
+      <SaleHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
       {children}
     </div>
   );
@@ -78,7 +78,15 @@ export default async function GalleryPage({ params }: { params: { token: string 
   );
   const purchasedIds = access.packReached ? photos.map((p) => p.id) : Array.from(access.ids);
 
-  const slot = participant.slotId ? await prisma.slot.findUnique({ where: { id: participant.slotId }, select: { startsAt: true } }) : null;
+  const slot = participant.slotId ? await prisma.slot.findUnique({ where: { id: participant.slotId }, select: { startsAt: true, guide: true } }) : null;
+  // « Canyoning · 26 sept. » puis, en gras, « départ 10 h avec Léa » : le
+  // client vérifie d'un coup d'œil que ce sont ses photos.
+  const shortDay = (slot?.startsAt ?? sortie.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
+  const guide = slot?.guide ?? sortie.guide;
+  const context = {
+    line: `${sortie.activity} · ${shortDay}`,
+    strong: slot ? `départ ${formatHourFr(slot.startsAt)}${guide ? ` avec ${guide}` : ""}` : guide ? `avec ${guide}` : null,
+  };
   const when = slot ? `${formatDayFr(slot.startsAt)}, départ de ${formatHourFr(slot.startsAt)}` : formatWhenFr(sortie.startsAt);
 
   const seller = await getSeller(operator.id);
@@ -92,6 +100,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
       participantId={participant.id}
       title={title}
       when={when}
+      context={context}
       photos={photos}
       pricing={{
         pricePhotoCents: operator.pricePhotoCents,

@@ -36,3 +36,10 @@ export function formatDayFr(d: Date): string {
     .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: TZ })
     .replace(/^./, (c) => c.toUpperCase());
 }
+
+/** « de canyoning », « d'escalade » : pour « Vos photos de canyoning du 26 septembre ». */
+export function photosOf(activity: string): string {
+  const a = activity.trim();
+  const lower = a.charAt(0).toLocaleLowerCase("fr") + a.slice(1);
+  return /^[aeiouyhàâéèêëîïôöûùü]/i.test(lower) ? `d\u2019${lower}` : `de ${lower}`;
+}

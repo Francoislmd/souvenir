@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/components/gallery/gallery.module.css";
+import sale from "@/components/gallery/sale.module.css";
 import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
@@ -28,6 +29,8 @@ export interface BoutiquePhoto {
   /** Achetée : la miniature nette (480 px) qui remplit la case. L'original
    *  (3 à 12 Mo) n'est chargé qu'à l'ouverture ou au téléchargement. */
   tileUrl?: string | null;
+  /** « 10 h 14 » : l'heure de prise de vue, quand on la connaît. */
+  timeLabel?: string | null;
 }
 
 /** Une relecture ne remplace une photo que si ce qui s'affiche a changé :
@@ -64,6 +67,7 @@ export function BoutiqueGallery({
   participantId,
   title,
   when,
+  context,
   photos: initialPhotos,
   pricing,
   packOnly,
@@ -82,6 +86,8 @@ export function BoutiqueGallery({
   title: string;
   /** « Samedi 5 septembre, 9 h 30 ». */
   when: string;
+  /** La ligne au-dessus du titre : « Canyoning · 26 sept. » puis, en gras, « départ 10 h avec Léa ». */
+  context: { line: string; strong?: string | null };
   photos: BoutiquePhoto[];
   pricing: PricingConfig;
   packOnly: boolean;
@@ -356,40 +362,76 @@ export function BoutiqueGallery({
     );
   }
 
+  const videoCount = pickable.filter((p) => p.isVideo).length;
+  const heading = bought
+    ? "Le reste de vos photos"
+    : videoCount === pickable.length
+      ? `Vos ${pickable.length > 1 ? `${pickable.length} vidéos` : "vidéo"}`
+      : pickable.length > 1
+        ? `Vos ${pickable.length} photos`
+        : "Votre photo";
+
   return (
     <>
-      <div className={styles.head}>
-        {bought ? (
-          <BackLink onClick={() => setBuyMore(false)} />
-        ) : null}
-        <h1>{bought ? "Le reste de vos photos" : title}</h1>
-        <p className={styles.sub}>{when}</p>
-        <p className={styles.hint}>{packOnly ? "Toutes vos photos, en une fois." : "Touchez celles que vous voulez, ou prenez tout."}</p>
-      </div>
-
       <PhotoPicker
         photos={pickable}
         pricing={pricing}
         packOnly={packOnly}
-        allLabel={allLabel}
-        unitSuffix="l'unité"
         error={error}
         busy={busy}
         discount={reducedOfferActive ? applyReducedOffer : undefined}
-        legal={
+        head={
           <>
-            Vos photos sont conservées 90 jours puis supprimées automatiquement. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a> · <a href={`/g/${token}/retrait`}>Retirer une photo</a>
+            {bought ? <BackLink onClick={() => setBuyMore(false)} /> : null}
+            <div className={sale.ctx}>
+              {context.line}
+              {context.strong ? (
+                <>
+                  {" · "}
+                  <b>{context.strong}</b>
+                </>
+              ) : null}
+            </div>
+            <h1 className={`${sale.title} ${sale.display}`}>{heading}</h1>
+          </>
+        }
+        after={
+          <>
+            <div className={sale.faq}>
+              <h2 className={sale.display}>Avant de payer</h2>
+              <div>
+                <details>
+                  <summary>Combien de temps je garde mes photos ?</summary>
+                  <p>Elles se téléchargent pendant 90 jours, en pleine résolution et sans filigrane.</p>
+                </details>
+                <details>
+                  <summary>D&rsquo;autres photos arrivent après mon achat ?</summary>
+                  <p>Si vous avez tout pris, elles sont à vous sans rien payer de plus. Sinon, elles apparaissent ici, au même prix.</p>
+                </details>
+                <details>
+                  <summary>J&rsquo;achète quelques photos, puis je veux tout ?</summary>
+                  <p>Ce que vous avez déjà payé est déduit. Vous ne payez jamais plus que le prix de toutes les photos.</p>
+                </details>
+                <details>
+                  <summary>Une photo me gêne</summary>
+                  <p>
+                    <a href={`/g/${token}/retrait`}>Retirez-la ici</a>. Elle disparaît tout de suite, sans justification.
+                  </p>
+                </details>
+              </div>
+            </div>
+            <div className={sale.saleFoot}>
+              <span className={sale.powered}>
+                Propulsé par <Logo variant="wordmark" tone="mono" height={12} title="Linktrip" />
+              </span>
+              <span>
+                <a href="/cgv">Conditions de vente</a> · <a href={`/g/${token}/retrait`}>Retirer une photo</a> · <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
+              </span>
+            </div>
           </>
         }
         onCheckout={(ids) => void openCheckout(ids)}
       />
-
-      <div className={styles.powered}>
-        Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
-      </div>
-      {/* Réserve de place sous la barre d'achat, qui flotte au-dessus de la
-          page : elle doit suivre les mentions, sinon elles passent dessous. */}
-      <div className={styles.pad} />
 
       {checkout ? (
         <PaymentSheet

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import styles from "@/components/gallery/gallery.module.css";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import gallery from "@/components/gallery/gallery.module.css";
+import styles from "@/components/gallery/sale.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
@@ -14,52 +15,44 @@ export interface PickerPhoto {
   /** Vidéo : l'aperçu est sa vignette filigranée, la vidéo se regarde après achat. */
   isVideo?: boolean;
   durationSec?: number | null;
+  /** « 10 h 14 » */
+  timeLabel?: string | null;
 }
 
 /**
- * L'écran d'achat, commun à la boutique individuelle et à la galerie de
- * groupe : une grille, une barre, un bouton. C'est littéralement le même
- * écran des deux côtés, d'où un seul composant.
+ * La page de vente : la grille, et une jauge à la place des formules.
+ * Maquette validée le 03/10/2026 : docs/maquette-page-vente-v2.html.
  *
- * Trois règles tiennent tout le reste :
+ * Toucher une photo la choisit. Le total monte à chaque photo et s'arrête au
+ * prix de toutes les photos (lib/pricing.ts plafonne déjà) : la jauge rend
+ * ce plafond visible, et dit au client ce qu'il lui manque pour tout avoir.
+ * Une fois le plafond atteint, les photos restantes sont incluses.
  *
- * 1. Un seul geste sur une vignette — toucher choisit. Le bouton
- *    « agrandir » posé dans le coin de chaque photo (deux actions sur le
- *    même objet, à viser au pouce) n'apparaît plus qu'au survol, donc
- *    jamais sur un écran tactile.
- * 2. Le bouton n'est jamais désactivé et le prix est toujours écrit. Sans
- *    rien choisir, la barre propose déjà ce que presque tout le monde
- *    prend : tout.
- * 3. Pas de choix de formule. C'était une fausse question : le moteur de
- *    prix plafonne déjà le total au prix du lot, donc prendre les douze
- *    photos une par une coûtait exactement le prix du lot.
+ * Sur ordinateur, la commande reste collée à droite ; sur téléphone, la
+ * jauge, le total et le bouton restent en bas de l'écran.
  */
 export function PhotoPicker({
   photos,
   pricing,
   packOnly,
-  allLabel,
-  unitSuffix,
   error,
   busy,
   discount,
-  legal,
+  head,
+  after,
   onCheckout,
 }: {
   photos: PickerPhoto[];
   pricing: PricingConfig;
   packOnly: boolean;
-  /** « Les 12 photos » côté individuel, « Les 34 photos du créneau » côté groupe. */
-  allLabel: (count: number) => string;
-  /** Ce qui suit le prix unitaire dans la barre, ex. « l'unité ». */
-  unitSuffix: string;
   error: string | null;
   busy: boolean;
-  /** Remise en cours (offre à durée limitée) — appliquée à l'affichage comme au débit. */
+  /** Remise en cours (offre à durée limitée), appliquée à l'affichage comme au débit. */
   discount?: (cents: number) => number;
-  /** Les mentions sous le rail. Posées ici parce que leur marge dépend de
-   *  la hauteur de la rangée et de la barre, qui changent au lot. */
-  legal?: ReactNode;
+  /** Le contexte et le titre, au-dessus de la grille. */
+  head: ReactNode;
+  /** Les questions et le pied de page, sous la grille. */
+  after?: ReactNode;
   onCheckout: (photoIds: string[]) => void;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -70,13 +63,6 @@ export function PhotoPicker({
   const total = photos.length;
   const allIds = photos.map((p) => p.id);
 
-  // Vente au lot uniquement (Réglages) : la sélection n'a pas de sens, elle
-  // reste pleine et les vignettes ne réagissent pas.
-  useEffect(() => {
-    if (packOnly) setSelected(new Set(allIds));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [packOnly, total]);
-
   function toggle(id: string): void {
     if (packOnly) return;
     const next = new Set(selected);
@@ -85,14 +71,9 @@ export function PhotoPicker({
     setSelected(next);
   }
 
-  // Navigation clavier de la vue plein écran (ordinateur) — ignorée si le
-  // focus est dans un champ de saisie, pour ne pas voler les flèches à
-  // l'email du paiement.
   useEffect(() => {
     if (zoom === null) return;
     function onKeyDown(e: KeyboardEvent): void {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
       const at = zoomRef.current;
       if (at === null) return;
       if (e.key === "Escape") setZoom(null);
@@ -104,273 +85,208 @@ export function PhotoPicker({
   }, [zoom, total]);
 
   const price = discount ?? ((cents: number) => cents);
-  const selectedCents = price(quote(selected.size, total, pricing).totalCents);
+  const n = packOnly ? total : selected.size;
   const allCents = price(quote(total, total, pricing).totalCents);
-  const extraCents = allCents - selectedCents;
-  const partial = selected.size > 0 && selected.size < total;
+  const selCents = price(quote(n, total, pricing).totalCents);
+  const rawCents = price(n * pricing.pricePhotoCents);
+  // Le plafond est atteint : les photos restantes ne coûtent plus rien.
+  const capped = n > 0 && n < total && selCents >= allCents;
+  const takesAll = n === total || capped;
+  const pct = allCents > 0 ? Math.min(100, Math.round((selCents / allCents) * 100)) : 0;
+  const unit = formatEuros(price(pricing.pricePhotoCents));
+  const countLabel = n === 0 ? "Aucune photo" : n === total ? (total === 1 ? "Votre photo" : `Les ${total} photos`) : `${n} photo${n > 1 ? "s" : ""}`;
 
-  const barLabel = selected.size === 0 || selected.size === total ? allLabel(total) : `${selected.size} photo${selected.size > 1 ? "s" : ""} choisie${selected.size > 1 ? "s" : ""}`;
-  // Vente au lot : le bouton dit seul ce qu'il prend et à quel prix. La
-  // ligne « Les 22 photos » posée au-dessus répétait le bouton mot pour mot.
-  const ctaLabel = packOnly
-    ? `${total === 1 ? "Prendre la photo" : `Prendre les ${total} photos`} · ${formatEuros(allCents)}`
-    : partial
-      ? `Prendre ${selected.size === 1 ? "cette photo" : `ces ${selected.size} photos`} · ${formatEuros(selectedCents)}`
-      : `Tout prendre · ${formatEuros(allCents)}`;
+  function takeAll(): void {
+    setSelected(new Set(allIds));
+  }
+
+  const nudge: ReactNode = packOnly ? (
+    "Sans filigrane, à télécharger dès le paiement."
+  ) : n === 0 ? (
+    allCents < total * price(pricing.pricePhotoCents) ? `${unit} la photo. Au-delà de ${formatEuros(allCents)}, les suivantes sont incluses.` : `${unit} la photo.`
+  ) : capped ? (
+    <>
+      Vous avez atteint {formatEuros(allCents)} : les {total - n} autres photos sont incluses.{" "}
+      <button type="button" className={styles.lnk} onClick={takeAll}>
+        Les ajouter
+      </button>
+    </>
+  ) : n === total ? (
+    `Toutes vos photos pour ${formatEuros(allCents)}, et celles ajoutées ensuite.`
+  ) : (
+    <>
+      Encore {formatEuros(allCents - selCents)} et vous avez les {total}.{" "}
+      <button type="button" className={styles.lnk} onClick={takeAll}>
+        Tout prendre
+      </button>
+    </>
+  );
+  const barLine = packOnly
+    ? countLabel
+    : n === 0
+      ? `${unit} la photo, ${formatEuros(allCents)} toutes`
+      : takesAll
+        ? `${countLabel}, prix maximum`
+        : `${countLabel} · +${formatEuros(allCents - selCents)} pour tout`;
 
   function checkout(): void {
-    onCheckout(partial ? Array.from(selected) : allIds);
+    if (n === 0) return;
+    // Au plafond, le client paie le prix de toutes les photos : il les reçoit toutes.
+    onCheckout(takesAll ? allIds : Array.from(selected));
   }
+
+  const payLabel = busy ? null : n === 0 ? "Choisissez vos photos" : `Payer ${formatEuros(selCents)}`;
+  const payButton = (
+    <button type="button" className={styles.cta} onClick={checkout} disabled={busy || n === 0}>
+      {busy ? (
+        <>
+          <Spinner size={17} tone="light" />
+          Un instant…
+        </>
+      ) : (
+        payLabel
+      )}
+    </button>
+  );
+  const totalNode = (
+    <>
+      {rawCents > selCents ? <s>{formatEuros(rawCents)}</s> : null}
+      {formatEuros(selCents)}
+    </>
+  );
 
   const zoomed = zoom !== null ? photos[zoom] : undefined;
   const zoomedOn = zoomed ? selected.has(zoomed.id) : false;
-
-  // Le même chemin pour les trois gestes : les touches du clavier, les
-  // flèches posées sur la photo et le glissement au doigt. La visionneuse
-  // boucle — arriver au bout d'un créneau de sept photos et se retrouver
-  // bloqué sur un bouton mort n'aide personne.
   function step(delta: number): void {
     setZoom((at) => (at === null ? at : (at + delta + total) % total));
   }
-
   const swipeFrom = useRef<{ x: number; y: number } | null>(null);
-
-  // Sur téléphone, la grille devient un rail : une photo à la fois, calée au
-  // doigt (scroll-snap, feuille de style). Le pas se mesure sur la vignette
-  // elle-même plutôt que de recopier les valeurs du CSS : sa largeur tient à
-  // un pourcentage, et la retoucher ne doit pas décaler le repère.
-  const [at, setAt] = useState(0);
-  function onRailScroll(e: React.UIEvent<HTMLDivElement>): void {
-    const rail = e.currentTarget;
-    if (rail.scrollWidth <= rail.clientWidth) return; // grille : rien à suivre
-    const first = rail.firstElementChild as HTMLElement | null;
-    const gap = Number.parseFloat(getComputedStyle(rail).columnGap) || 0;
-    const step = first ? first.offsetWidth + gap : rail.clientWidth;
-    if (step <= 0) return;
-    setAt(Math.min(total - 1, Math.max(0, Math.round(rail.scrollLeft / step))));
-  }
-
-  // Le blanc entre le rail et la barre d'achat. La photo est au format 3/4
-  // et bornée par la largeur : selon le téléphone, il reste sous elle de 0
-  // à 150 px. Deux cas, jamais un trou d'un seul côté :
-  // - les mentions y tiennent entières : elles s'y affichent ;
-  // - sinon : la photo se centre dans l'espace (même blanc au-dessus et
-  //   au-dessous), et les mentions passent sous la barre, à lire en
-  //   faisant défiler. Coupées en deux par la barre, l'écran avait l'air
-  //   tronqué.
-  // Calculé à l'ouverture et quand la largeur change seulement : sur iOS
-  // la hauteur varie à chaque défilement (barre d'adresse qui se replie),
-  // et recentrer à ce moment ferait sauter la page sous le doigt. Pour la
-  // même raison, on compte d'avance la ligne « soit 6 € de plus » que la
-  // barre gagne à la première photo choisie, plutôt que de recentrer quand
-  // elle apparaît.
-  const gridRef = useRef<HTMLDivElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
-  const legalRef = useRef<HTMLDivElement>(null);
-  const [place, setPlace] = useState<{ top: number; legal: number } | null>(null);
-  const placeRef = useRef(place);
-  placeRef.current = place;
-  useLayoutEffect(() => {
-    let width = window.innerWidth;
-    function placeRail(): void {
-      const grid = gridRef.current;
-      const bar = barRef.current;
-      const legalEl = legalRef.current;
-      if (!grid || !bar || !legalEl || window.matchMedia("(min-width: 821px)").matches) {
-        if (placeRef.current) setPlace(null);
-        return;
-      }
-      const extra = placeRef.current?.top ?? 0;
-      const above = (railRef.current ?? grid).getBoundingClientRect().bottom + window.scrollY - extra;
-      const more = packOnly ? 0 : 33;
-      const space = Math.round(window.innerHeight - bar.offsetHeight - above);
-      const gridTop = Number.parseFloat(getComputedStyle(grid).paddingTop) - extra;
-      if (space - more >= 16 + legalEl.offsetHeight + 12) {
-        setPlace({ top: 0, legal: 16 });
-      } else {
-        const top = Math.max(0, Math.floor((space - more - gridTop) / 2));
-        setPlace({ top, legal: Math.max(16, space - top + 16) });
-      }
-    }
-    placeRail();
-    function onResize(): void {
-      if (window.innerWidth === width) return;
-      width = window.innerWidth;
-      placeRail();
-    }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [total, packOnly]);
-
-  // La photo que le client a sous les yeux dans le rail : c'est elle que
-  // prend le bouton posé dessous.
-  const current = photos[at] ?? photos[0];
-  const currentOn = current ? selected.has(current.id) : false;
 
   return (
     <>
-      <div
-        ref={gridRef}
-        className={`${styles.grid} ${packOnly ? styles.gridPack : ""}`}
-        style={place?.top ? { paddingTop: `calc(14px + ${place.top}px)` } : undefined}
-        onScroll={onRailScroll}
-      >
-        {photos.map((photo, i) => {
-          // Au lot, tout est pris d'office : un liseré sur chaque photo ne
-          // distinguait rien et encadrait l'écran entier de bleu.
-          const on = !packOnly && selected.has(photo.id);
-          return (
-            // Une div plutôt qu'un bouton : le « voir en grand » est un vrai
-            // bouton, et un bouton dans un bouton n'est pas du HTML valide.
-            // Au lot, il n'y a rien à choisir : toucher la photo l'ouvre en
-            // grand, le seul geste utile sur cet écran.
-            <div
-              key={photo.id}
-              role="button"
-              tabIndex={0}
-              aria-pressed={packOnly ? undefined : on}
-              aria-label={packOnly ? "Voir en grand" : undefined}
-              className={`${styles.tile} ${on ? styles.tileOn : ""}`}
-              onClick={() => (packOnly ? setZoom(i) : toggle(photo.id))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  if (packOnly) setZoom(i);
-                  else toggle(photo.id);
-                }
-              }}
-            >
-              {photo.previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.previewUrl} alt="" loading={i < 2 ? "eager" : "lazy"} decoding="async" />
-              ) : (
-                // L'aperçu n'est pas encore prêt : le worker traite encore
-                // cette photo, elle arrivera d'elle-même. Une tuile grise et
-                // muette passait pour une photo manquante.
-                <TileSpinner />
-              )}
-              {photo.isVideo ? <VideoBadge durationSec={photo.durationSec} /> : null}
-              <button
-                type="button"
-                aria-label="Voir en grand"
-                className={styles.zoom}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoom(i);
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
-                  <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
-                </svg>
+      <div className={styles.main}>
+        <div>
+          {head}
+          <div className={styles.sub}>
+            <span>{packOnly ? "Toutes vos photos, en une fois" : n === 0 ? "Touchez celles que vous voulez" : `${n} sur ${total} choisie${n > 1 ? "s" : ""}`}</span>
+            {packOnly || total < 2 ? null : (
+              <button type="button" className={styles.lnk} onClick={() => setSelected(n === total ? new Set() : new Set(allIds))}>
+                {n === total ? "Tout enlever" : "Tout prendre"}
               </button>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Sous le rail : où l'on en est, et le geste de prendre la photo qu'on
-          regarde. Masqué sur ordinateur, où la grille montre tout d'un coup.
-          Au-delà de huit photos, une rangée de points n'est plus lisible :
-          le compte prend le relais.
-
-          Le bouton remplace la pastille posée dans le coin de l'image. Sur
-          un rail, cette pastille était une cible à viser au pouce, et elle
-          écrivait sur la photo. */}
-      {total > 1 ? (
-        <div ref={railRef} className={styles.railPos}>
-          {total <= 8 ? (
-            <div className={styles.dots} aria-hidden="true">
-              {photos.map((photo, i) => (
-                <i key={photo.id} className={`${i === at ? styles.dotOn : ""} ${!packOnly && selected.has(photo.id) ? styles.dotGot : ""}`.trim() || undefined} />
-              ))}
-            </div>
-          ) : (
-            <p className={styles.count} aria-hidden="true">
-              {at + 1} sur {total}
-            </p>
-          )}
-          {packOnly || !current ? null : (
-            <button
-              type="button"
-              className={`${styles.take} ${currentOn ? styles.takeOn : ""}`}
-              aria-pressed={currentOn}
-              onClick={() => toggle(current.id)}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-              {currentOn ? "Choisie" : "Prendre"}
-            </button>
-          )}
-        </div>
-      ) : null}
-
-      {legal ? (
-        <div ref={legalRef} className={`${styles.legal} ${styles.legalAfter}`} style={place ? { marginTop: place.legal } : undefined}>
-          {legal}
-        </div>
-      ) : null}
-
-      <div ref={barRef} className={styles.bar}>
-        <div className={styles.barIn}>
-          {error ? <p className={styles.error}>{error}</p> : null}
-          <div className={`${styles.barRow} ${packOnly ? styles.barRowPack : ""}`}>
-            <span className={styles.barText}>
-              <span className={styles.barLabel}>{barLabel}</span>
-              <span className={styles.barSub}>
-                {packOnly
-                  ? "Sans filigrane, à télécharger dès le paiement"
-                  : partial && extraCents > 0
-                    ? `${allLabel(total)} pour ${formatEuros(allCents)}, soit ${formatEuros(extraCents)} de plus`
-                    : `${formatEuros(pricing.pricePhotoCents)} ${unitSuffix}`}
-              </span>
-            </span>
-            {packOnly ? null : selected.size > 0 ? (
-              <button type="button" className={styles.clear} onClick={() => setSelected(new Set())}>
-                Tout enlever
-              </button>
-            ) : (
-              <span className={styles.barSide}>
-                {formatEuros(pricing.pricePhotoCents)} {unitSuffix}
-              </span>
             )}
           </div>
-          <button type="button" className={styles.cta} onClick={checkout} disabled={busy || total === 0}>
-            {busy ? (
+          <div className={styles.grid}>
+            {photos.map((photo, i) => {
+              const on = !packOnly && selected.has(photo.id);
+              const big = i === 0 && total >= 3;
+              return (
+                <div
+                  key={photo.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={packOnly ? undefined : on}
+                  aria-label={packOnly ? "Voir en grand" : `${photo.isVideo ? "Vidéo" : "Photo"}${photo.timeLabel ? ` de ${photo.timeLabel}` : ""}`}
+                  className={`${styles.tile} ${big ? styles.big : ""} ${on ? styles.on : ""}`}
+                  onClick={() => (packOnly ? setZoom(i) : toggle(photo.id))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (packOnly) setZoom(i);
+                      else toggle(photo.id);
+                    }
+                  }}
+                >
+                  {photo.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photo.previewUrl} alt="" loading={i < 4 ? "eager" : "lazy"} decoding="async" />
+                  ) : (
+                    <TileSpinner />
+                  )}
+                  {photo.isVideo ? <VideoBadge durationSec={photo.durationSec} /> : null}
+                  {photo.timeLabel ? <span className={styles.time}>{photo.timeLabel}</span> : null}
+                  {packOnly ? null : (
+                    <span className={styles.check} aria-hidden="true">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label="Voir en grand"
+                    className={styles.zoom}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setZoom(i);
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <aside className={styles.side}>
+          <div className={styles.panel}>
+            <div className={`${styles.row} ${styles.display}`}>
+              <span>{countLabel}</span>
+              <b>{totalNode}</b>
+            </div>
+            {packOnly ? null : (
               <>
-                <Spinner size={17} tone="light" />
-                Un instant…
+                <div className={styles.gauge} aria-hidden="true">
+                  <i style={{ width: `${pct}%` }} />
+                </div>
+                <div className={styles.legend}>
+                  <span>0 €</span>
+                  <span>Toutes : {formatEuros(allCents)}</span>
+                </div>
               </>
-            ) : (
-              ctaLabel
             )}
-          </button>
-          {partial && extraCents > 0 ? (
-            <p className={styles.more}>
-              <button type="button" className={styles.moreBtn} onClick={() => setSelected(new Set(allIds))}>
-                {allLabel(total)} pour <b>{formatEuros(allCents)}</b>
-              </button>
-              , soit {formatEuros(extraCents)} de plus
-            </p>
-          ) : null}
+            <p className={styles.nudge}>{nudge}</p>
+            {error ? <p className={styles.error}>{error}</p> : null}
+            {payButton}
+            <p className={styles.safe}>Apple Pay, Google Pay ou carte bancaire. Paiement sécurisé par Stripe.</p>
+          </div>
+        </aside>
+      </div>
+
+      {after}
+
+      <div className={styles.bar}>
+        {packOnly ? null : (
+          <div className={styles.gauge} aria-hidden="true">
+            <i style={{ width: `${pct}%` }} />
+          </div>
+        )}
+        {error ? <p className={styles.error}>{error}</p> : null}
+        <div className={styles.barIn}>
+          <div className={styles.barText}>
+            <span>{barLine}</span>
+            <b className={styles.display}>{formatEuros(selCents)}</b>
+          </div>
+          {payButton}
         </div>
       </div>
 
       {zoomed ? (
-        <div className={styles.box}>
-          <div className={styles.boxTop}>
-            <span className={styles.boxCount}>
+        <div className={gallery.box}>
+          <div className={gallery.boxTop}>
+            <span className={gallery.boxCount}>
               {zoom! + 1} sur {total}
             </span>
-            <button type="button" className={styles.boxClose} aria-label="Fermer" onClick={() => setZoom(null)}>
+            <button type="button" className={gallery.boxClose} aria-label="Fermer" onClick={() => setZoom(null)}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
           <div
-            className={styles.boxPh}
+            className={gallery.boxPh}
             onTouchStart={(e) => {
               const t = e.changedTouches[0];
               swipeFrom.current = t ? { x: t.clientX, y: t.clientY } : null;
@@ -402,12 +318,12 @@ export function PhotoPicker({
 
             {total > 1 ? (
               <>
-                <button type="button" className={`${styles.boxNav} ${styles.boxPrev}`} aria-label="Photo précédente" onClick={() => step(-1)}>
+                <button type="button" className={`${gallery.boxNav} ${gallery.boxPrev}`} aria-label="Photo précédente" onClick={() => step(-1)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14.5 5 8 12l6.5 7" />
                   </svg>
                 </button>
-                <button type="button" className={`${styles.boxNav} ${styles.boxNext}`} aria-label="Photo suivante" onClick={() => step(1)}>
+                <button type="button" className={`${gallery.boxNav} ${gallery.boxNext}`} aria-label="Photo suivante" onClick={() => step(1)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9.5 5 16 12l-6.5 7" />
                   </svg>
@@ -415,9 +331,9 @@ export function PhotoPicker({
               </>
             ) : null}
           </div>
-          <div className={styles.boxFoot}>
+          <div className={gallery.boxFoot}>
             {packOnly ? null : (
-              <button type="button" className={styles.cta} onClick={() => toggle(zoomed.id)}>
+              <button type="button" className={gallery.cta} onClick={() => toggle(zoomed.id)}>
                 {zoomedOn ? (
                   zoomed.isVideo ? "Retirer cette vidéo" : "Retirer cette photo"
                 ) : (
@@ -430,7 +346,7 @@ export function PhotoPicker({
                 )}
               </button>
             )}
-            <p className={styles.boxNote}>
+            <p className={gallery.boxNote}>
               {zoomed.isVideo
                 ? `Vidéo${formatDuration(zoomed.durationSec) ? ` de ${formatDuration(zoomed.durationSec)}` : ""}, à regarder en entier et sans filigrane après le paiement.`
                 : "Le filigrane disparaît après le paiement."}

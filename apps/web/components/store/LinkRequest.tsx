@@ -1,164 +1,337 @@
 "use client";
 
 import { useState } from "react";
-import styles from "@/components/gallery/store.module.css";
-import gallery from "@/components/gallery/gallery.module.css";
+import styles from "@/components/gallery/sale.module.css";
 import { Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
 
+/** Les fautes de frappe les plus courantes sur les domaines d'e-mail français. */
+const DOMAIN_FIX: Record<string, string> = {
+  "gmial.com": "gmail.com",
+  "gmal.com": "gmail.com",
+  "gmai.com": "gmail.com",
+  "gnail.com": "gmail.com",
+  "gmail.co": "gmail.com",
+  "gmail.fr": "gmail.com",
+  "gamil.com": "gmail.com",
+  "hotmial.fr": "hotmail.fr",
+  "hotmal.fr": "hotmail.fr",
+  "hotmail.f": "hotmail.fr",
+  "outlok.fr": "outlook.fr",
+  "outlook.f": "outlook.fr",
+  "yahou.fr": "yahoo.fr",
+  "yaho.fr": "yahoo.fr",
+  "orange.f": "orange.fr",
+  "wanado.fr": "wanadoo.fr",
+  "icloud.fr": "icloud.com",
+};
+
+function suggestFix(mail: string): string | null {
+  const [user, domain] = mail.split("@");
+  if (!user || !domain) return null;
+  const fixed = DOMAIN_FIX[domain.toLowerCase()];
+  return fixed ? `${user}@${fixed}` : null;
+}
+
+export interface Teaser {
+  count: number;
+  /** Vignettes très floutées (Photo.blurEmailKey) : on devine une sortie, on ne reconnaît personne. */
+  urls: string[];
+}
+
 /**
- * L'adresse de la boutique et celle du QR code de fin de sortie. Elles ne
- * montrent plus aucune photo : le client donne son e-mail et, s'il figure
- * sur la liste de la sortie, reçoit le lien de SA galerie.
+ * La page du QR de fin de sortie, et celle de la boutique. Elles ne montrent
+ * aucune photo : le client donne l'adresse de sa réservation et, si elle est
+ * sur la liste, reçoit le lien de SA galerie.
+ * Maquette validée le 03/10/2026 : docs/maquette-page-vente-v2.html.
+ *
+ * Trois choses que la page d'une course Finisher Memories ne fait pas :
+ * elle corrige les fautes de frappe avant l'envoi, elle aide quand
+ * l'adresse est inconnue, et elle dit quel mail chercher.
  */
 export function LinkRequest({
   slug,
   code,
   operator,
+  place,
+  eyebrow,
   heading,
-  lead,
+  teaser,
+  guide,
+  mailSubject,
 }: {
   slug: string;
   /** Le code de la sortie, quand on arrive par son QR code. */
   code?: string;
-  operator: { name: string; logoUrl: string | null; coverUrl: string | null; tagline: string };
+  operator: { name: string; logoUrl: string | null; coverUrl: string | null };
+  /** Sous le nom du prestataire, sur la couverture. */
+  place?: string | null;
+  /** « Canyoning · samedi 26 septembre » */
+  eyebrow?: string | null;
   heading: string;
-  lead: string;
+  teaser?: Teaser | null;
+  guide?: string | null;
+  /** L'objet exact du mail qui part, pour que le client le trouve. */
+  mailSubject?: string | null;
 }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  // Comme sur la page d'une course chez Finisher Memories : le formulaire
-  // reste en place, et un bandeau dit ce qui s'est passé juste au-dessus.
-  const [result, setResult] = useState<{ tone: "ok" | "error"; text: React.ReactNode } | null>(null);
-  const [done, setDone] = useState(false);
+  const [state, setState] = useState<"idle" | "typo" | "unknown" | "error" | "sent" | "pending">("idle");
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState("");
 
-  async function onSubmit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
-    const to = email.trim();
+  async function send(raw: string, skipTypo = false): Promise<void> {
+    const to = raw.trim().toLowerCase();
     if (!to || busy) return;
+    if (!skipTypo && suggestFix(to)) {
+      setEmail(to);
+      setState("typo");
+      return;
+    }
     setBusy(true);
-    setResult(null);
+    setErrorText(null);
     try {
       const res = await fetch(`/api/store/${slug}/link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: to, ...(code ? { code } : {}) }),
       });
-      if (res.status === 429) {
-        setResult({ tone: "error", text: "Trop de demandes. Réessayez dans quelques minutes." });
-        return;
-      }
-      if (res.status === 400) {
-        setResult({ tone: "error", text: "Cette adresse ne semble pas valide." });
-        return;
-      }
       if (!res.ok) {
-        setResult({ tone: "error", text: "L'envoi n'a pas abouti. Réessayez." });
+        setState("error");
+        setErrorText(
+          res.status === 429
+            ? "Trop de demandes. Réessayez dans quelques minutes."
+            : res.status === 400
+              ? "Cette adresse ne semble pas valide."
+              : "L'envoi n'a pas abouti. Réessayez.",
+        );
         return;
       }
       const { outcome } = (await res.json()) as { outcome: "sent" | "pending" | "no_match" };
       if (outcome === "no_match") {
-        setResult({
-          tone: "error",
-          text: code
-            ? "Aucune photo de cette sortie ne correspond à cette adresse. Utilisez bien l'adresse donnée à la réservation."
-            : "Aucune sortie ne correspond à cette adresse. Utilisez bien l'adresse donnée à la réservation.",
-        });
+        setEmail(to);
+        setState("unknown");
         return;
       }
-      setDone(true);
-      setResult({
-        tone: "ok",
-        text:
-          outcome === "sent" ? (
-            <>
-              Votre lien personnel vient de partir à <strong>{to}</strong>. Consultez votre boîte de réception.
-            </>
-          ) : (
-            <>
-              Votre adresse est bien sur la liste. Vos photos ne sont pas encore prêtes : votre lien partira à <strong>{to}</strong> dès qu&rsquo;elles le seront.
-            </>
-          ),
-      });
+      setSentTo(to);
+      setState(outcome);
     } catch {
-      setResult({ tone: "error", text: "Le réseau a coupé. Réessayez." });
+      setState("error");
+      setErrorText("Le réseau a coupé. Réessayez.");
     } finally {
       setBusy(false);
     }
   }
 
+  const fixed = state === "typo" ? suggestFix(email) : null;
+  const done = state === "sent" || state === "pending";
+  const askWho = guide ? `demandez à ${guide}, votre guide` : `demandez à ${operator.name}`;
+  const wall = teaser && teaser.urls.length >= 3 ? Array.from({ length: 9 }, (_, i) => teaser.urls[i % teaser.urls.length]!) : null;
+
+  const logo = (
+    <span className={styles.orgLogo}>
+      {operator.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={operator.logoUrl} alt="" />
+      ) : (
+        operator.name.slice(0, 2).toUpperCase()
+      )}
+    </span>
+  );
+  const org = (
+    <span className={styles.org}>
+      <b>{operator.name}</b>
+      {place ? <span>{place}</span> : null}
+    </span>
+  );
+
   return (
     <>
       {operator.coverUrl ? (
-        <div className={styles.cover}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={operator.coverUrl} alt="" />
+        <div className={styles.cover} style={{ backgroundImage: `url(${operator.coverUrl})` }}>
+          <div className={styles.coverIn}>
+            {logo}
+            {org}
+          </div>
         </div>
       ) : null}
 
-      <div className={`${styles.sheet} ${operator.coverUrl ? "" : styles.noCover}`}>
-        <div className={styles.badge}>
-          {operator.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={operator.logoUrl} alt="" />
-          ) : (
-            operator.name.slice(0, 2).toUpperCase()
-          )}
-        </div>
+      <div className={`${styles.sheet} ${operator.coverUrl ? "" : styles.bare}`}>
+        <div className={styles.sheetIn}>
+          <div className={`${styles.access} ${wall ? styles.hasWall : ""}`}>
+            {wall ? (
+              <div className={styles.wall} aria-hidden="true">
+                {wall.map((url, i) => (
+                  <i key={i} style={{ backgroundImage: `url(${url})`, backgroundPosition: `${15 + ((i * 23) % 70)}% ${30 + ((i * 17) % 50)}%` }} />
+                ))}
+                <b className={styles.display}>
+                  {teaser!.count} photo{teaser!.count > 1 ? "s vous attendent" : " vous attend"}
+                  <span>Privées : seul votre lien les ouvre</span>
+                </b>
+              </div>
+            ) : null}
 
-        <div className={styles.id}>
-          <h1>{operator.name}</h1>
-          {operator.tagline ? <p>{operator.tagline}</p> : null}
-        </div>
+            {operator.coverUrl ? null : (
+              <div className={styles.bareOrg}>
+                {logo}
+                {org}
+              </div>
+            )}
+            {eyebrow ? <div className={styles.eyebrow}>{eyebrow}</div> : null}
+            <h1 className={`${styles.h1} ${styles.display}`}>{heading}</h1>
 
-        <div className={styles.label}>
-          <h2>{heading}</h2>
-          <p>{lead}</p>
-          {result ? (
-            <p className={`${styles.linkAlert} ${result.tone === "ok" ? styles.linkAlertOk : styles.linkAlertErr}`} role={result.tone === "ok" ? "status" : "alert"}>
-              {result.text}
-            </p>
-          ) : null}
-          {done ? (
-            <button
-              type="button"
-              className={styles.linkAgain}
-              onClick={() => {
-                setDone(false);
-                setResult(null);
-                setEmail("");
-              }}
-            >
-              Utiliser une autre adresse
-            </button>
-          ) : (
-            <form className={styles.linkForm} onSubmit={(e) => void onSubmit(e)}>
-              <label className={styles.linkField}>
-                Votre e-mail
+            {teaser && teaser.count > 0 && teaser.urls.length > 0 ? (
+              <div className={styles.teaser}>
+                <div className={styles.blur} aria-hidden="true">
+                  {teaser.urls.slice(0, 4).map((url, i) => (
+                    <span key={i}>
+                      <i style={{ backgroundImage: `url(${url})` }} />
+                    </span>
+                  ))}
+                  {teaser.count > 4 ? <span className={styles.more}>+{teaser.count - Math.min(4, teaser.urls.length)}</span> : null}
+                </div>
+                <p>
+                  <b>
+                    {teaser.count} photo{teaser.count > 1 ? "s" : ""}
+                  </b>{" "}
+                  prise{teaser.count > 1 ? "s" : ""} pendant la sortie. Privée{teaser.count > 1 ? "s" : ""} : seul votre lien {teaser.count > 1 ? "les ouvre" : "l\u2019ouvre"}.
+                </p>
+              </div>
+            ) : null}
+
+            {done ? (
+              <div className={styles.done} role="status">
+                <h2 className={styles.display}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  {state === "sent" ? "Votre lien est parti" : "Vous êtes sur la liste"}
+                </h2>
+                <p>
+                  {state === "sent" ? (
+                    <>
+                      Envoyé à <b>{sentTo}</b>. Il ouvre vos photos sur ce téléphone ou un autre, pendant 90 jours.
+                    </>
+                  ) : (
+                    <>
+                      Vos photos ne sont pas encore prêtes. Votre lien partira à <b>{sentTo}</b> dès qu&rsquo;elles le seront.
+                    </>
+                  )}
+                </p>
+                <div className={styles.mail}>
+                  <span>Cherchez ce mail</span>
+                  <b>{operator.name}</b>
+                  {mailSubject ? <span>{mailSubject}</span> : null}
+                </div>
+                {state === "sent" ? <div className={styles.doneRow}>Rien après une minute ? Regardez dans les spams.</div> : null}
+                <div className={styles.doneRow}>
+                  <button
+                    type="button"
+                    className={styles.lnk}
+                    onClick={() => {
+                      setState("idle");
+                      setEmail("");
+                    }}
+                  >
+                    Utiliser une autre adresse
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                className={styles.form}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void send(email);
+                }}
+              >
+                {state === "unknown" ? (
+                  <div className={styles.msgErr} role="alert">
+                    <b>Cette adresse n&rsquo;est pas sur la liste {code ? "de la sortie" : "de nos sorties"}.</b>
+                    <p>La réservation est peut-être au nom d&rsquo;une autre personne de votre groupe : essayez son adresse. Sinon, {askWho}.</p>
+                  </div>
+                ) : null}
+                <label className={styles.label} htmlFor="link-email">
+                  L&rsquo;adresse e-mail donnée à la réservation
+                </label>
                 <input
-                  className={styles.linkInput}
+                  id="link-email"
+                  className={`${styles.input} ${state === "unknown" ? styles.inputBad : ""}`}
                   type="email"
                   inputMode="email"
                   autoComplete="email"
                   autoCapitalize="none"
                   spellCheck={false}
                   required
+                  placeholder="prenom.nom@gmail.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (state !== "idle") setState("idle");
+                  }}
                 />
-              </label>
-              <button type="submit" className={gallery.cta} disabled={busy || !email.trim()}>
-                {busy ? <Spinner size={17} tone="light" /> : null}
-                Recevoir mon lien
-              </button>
-            </form>
-          )}
-          <p className={styles.linkNote}>Nous vérifions que votre adresse figure sur la liste de la sortie. Aucune photo n&rsquo;est visible sans votre lien.</p>
-        </div>
-      </div>
+                {fixed ? (
+                  <div className={styles.suggest}>
+                    Vous vouliez dire{" "}
+                    <button
+                      type="button"
+                      className={styles.lnk}
+                      onClick={() => {
+                        setEmail(fixed);
+                        void send(fixed, true);
+                      }}
+                    >
+                      {fixed}
+                    </button>{" "}
+                    ?{" "}
+                    <button type="button" className={styles.lnk} onClick={() => void send(email, true)}>
+                      Non, garder la mienne
+                    </button>
+                  </div>
+                ) : null}
+                {state === "error" && errorText ? (
+                  <p className={styles.msgErr} role="alert">
+                    {errorText}
+                  </p>
+                ) : null}
+                <button type="submit" className={styles.cta} disabled={busy || !email.trim()}>
+                  {busy ? <Spinner size={17} tone="light" /> : null}
+                  Recevoir mon lien
+                </button>
+              </form>
+            )}
 
-      <div className={gallery.powered}>
-        Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
+            <div className={styles.facts}>
+              <span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="5" y="11" width="14" height="9" rx="2.5" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                </svg>
+                Paiement sécurisé
+              </span>
+              <span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <circle cx="9" cy="10" r="1.6" />
+                  <path d="m21 16-5-5-9 8" />
+                </svg>
+                Pleine résolution
+              </span>
+              <span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />
+                </svg>
+                Téléchargement immédiat
+              </span>
+            </div>
+            <div className={styles.foot}>
+              <span className={styles.powered}>
+                Propulsé par <Logo variant="wordmark" tone="mono" height={12} title="Linktrip" />
+              </span>
+              <a href="/cgv">Conditions de vente</a>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
