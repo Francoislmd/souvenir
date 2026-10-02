@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
 
     // Une adresse ne reçoit pas plus de quelques e-mails par heure, quelle que
     // soit la machine qui les demande.
-    const perEmail = await checkRateLimit(`link:email:${email}`, { max: 4, windowMs: 60 * 60 * 1000 });
+    const perEmail = await checkRateLimit(`link:email:${email}`, { max: 10, windowMs: 60 * 60 * 1000 });
     if (!perEmail.allowed) return Response.json({ ok: true });
 
     const operator = await prisma.operator.findUnique({ where: { slug: params.slug.trim().toLowerCase() }, select: { id: true } });
