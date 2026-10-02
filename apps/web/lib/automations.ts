@@ -4,7 +4,6 @@ import { track } from "./analytics";
 import { sendWhatsAppMessage } from "./twilio";
 import { sendPhotosReminderEmail, sendPhotosOfferEmail, sendGroupReminderEmail } from "./email";
 import { buildEmailCover } from "./email-cover";
-import { ensureShareCode, storeUrl } from "./store";
 import { getPreviewUrl } from "./storage";
 import { formatEuros } from "./format";
 import { applyReducedOffer, REDUCED_OFFER_DISCOUNT_PERCENT } from "./pricing";
@@ -167,7 +166,8 @@ function formatDayFr(d: Date): string {
  */
 async function runGroupReminderScan(now: Date): Promise<number> {
   let sent = 0;
-  const unpaid = { OR: [{ order: null }, { order: { status: { notIn: ["succeeded", "refunded", "disputed"] } } }] };
+  // Aucune commande payée, remboursée ou en litige : un acheteur n'est plus relancé.
+  const unpaid = { orders: { none: { status: { in: ["succeeded", "refunded", "disputed"] } } } };
   const liveSortie = { mode: "GROUPE" as const, purgeAt: { gt: now } };
 
   const due = await prisma.participant.findMany({
@@ -197,8 +197,9 @@ async function runGroupReminderScan(now: Date): Promise<number> {
     take: MAX_PER_SCAN,
   });
 
-  // Un bandeau et un lien par sortie, partagés par tous ses destinataires.
-  const perSortie = new Map<string, { coverUrl: string | null; galleryUrl: string }>();
+  // Un bandeau par sortie, partagé par tous ses destinataires. Le lien, lui,
+  // est celui de chaque client : sa galerie privée.
+  const perSortie = new Map<string, { coverUrl: string | null }>();
 
   for (const participant of due) {
     const { sortie } = participant;
@@ -209,8 +210,7 @@ async function runGroupReminderScan(now: Date): Promise<number> {
     try {
       let shared = perSortie.get(sortie.id);
       if (!shared) {
-        const code = await ensureShareCode(sortie);
-        shared = { coverUrl: await buildEmailCover(sortie.id), galleryUrl: storeUrl(operator.slug, code) };
+        shared = { coverUrl: await buildEmailCover(sortie.id) };
         perSortie.set(sortie.id, shared);
       }
       await sendGroupReminderEmail({
@@ -224,7 +224,7 @@ async function runGroupReminderScan(now: Date): Promise<number> {
         activity: sortie.activity,
         sortieDate: formatDayFr(sortie.startsAt),
         sortiePlace: sortie.place,
-        galleryUrl: shared.galleryUrl,
+        galleryUrl: `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`,
         coverUrl: shared.coverUrl,
         purgeDate: sortie.purgeAt ? formatDayFr(sortie.purgeAt) : null,
       });
@@ -279,7 +279,7 @@ export async function runAutomationScan(now: Date = new Date()): Promise<Automat
       reducedOfferSentAt: null,
       deletedAt: null,
       unsubscribedAt: null,
-      OR: [{ order: null }, { order: { status: { notIn: ["succeeded", "refunded", "disputed"] } } }],
+      orders: { none: { status: { in: ["succeeded", "refunded", "disputed"] } } },
     },
     include: { sortie: { include: { operator: true } } },
     orderBy: { openedAt: "asc" },

@@ -60,7 +60,7 @@ export function NavList({
           téléphone, qui n'a de place que pour trois entrées. */}
       <a href={storeHref} target="_blank" rel="noopener noreferrer" className={`${styles.sNav} ${styles.sNavAside}`}>
         <BoutiqueIcon />
-        <span className={styles.sNavLabel}>Voir ma boutique</span>
+        <span className={styles.sNavLabel}>Voir ma page client</span>
         <OutwardIcon size={14} className={styles.sNavExt} />
       </a>
 

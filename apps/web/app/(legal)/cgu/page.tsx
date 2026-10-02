@@ -31,7 +31,8 @@ export default function CguPage() {
         l&apos;acceptation des présentes conditions est conservée. L&apos;opérateur est responsable de la confidentialité de ses identifiants et de
         toutes les actions effectuées depuis son compte, y compris par les moniteurs qu&apos;il
         y invite. Les participants finaux n&apos;ont jamais de compte : ils accèdent à leur
-        galerie via un lien privé et non devinable, propre à chaque sortie.
+        galerie via un lien personnel et non devinable, envoyé à leur adresse email. En
+        sortie de groupe, chaque participant ne voit que les photos de son départ.
       </p>
 
       <h2 id="contenu">3. Contenu mis en ligne par les opérateurs</h2>
@@ -77,8 +78,8 @@ export default function CguPage() {
         Tout participant qui apparaît sur une photo, qu&apos;il l&apos;ait achetée ou non, peut à
         tout moment demander le retrait de son image de la galerie. Cette demande est traitée
         sans justification à apporter, et la photo concernée est immédiatement masquée pour
-        l&apos;ensemble des participants de la sortie. TODO(françois) : confirmer le canal de
-        demande à afficher ici (email dédié, formulaire dans la galerie, etc.).
+        l&apos;ensemble des participants de la sortie. La demande se fait depuis la galerie du
+        participant, par le lien « Retirer une photo ».
       </p>
       <p>
         L&apos;opérateur reste responsable, vis-à-vis des participants, d&apos;avoir recueilli

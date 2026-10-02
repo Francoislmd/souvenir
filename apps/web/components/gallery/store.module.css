@@ -589,3 +589,70 @@
     font-size: 1.62rem;
   }
 }
+
+/* ── Recevoir son lien (galerie privée) ────────────────────────────────
+   La boutique ne montre plus rien. Une question, l'adresse, et le lien
+   personnel part par e-mail : c'est lui qui prouve que l'adresse est la
+   sienne. Maquette : docs/maquette-galerie-privee-v1.html, écrans 1, 2, 6. */
+.linkForm {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.linkField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.linkInput {
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 1.02rem;
+  color: var(--ink);
+  outline: none;
+}
+.linkInput:focus {
+  border-color: var(--op);
+  box-shadow: 0 0 0 1px var(--op);
+}
+.linkNote {
+  margin: 14px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ink-4);
+  text-align: center;
+}
+.linkError {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #b42318;
+}
+.linkActions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+}
+.linkActions button {
+  flex: 1;
+  height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.linkActions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

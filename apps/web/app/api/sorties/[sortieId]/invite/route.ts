@@ -2,10 +2,9 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
-import { sendGroupInviteEmail } from "@/lib/email";
 import { deriveChannel } from "@/lib/channel";
 import { nameFromEmail } from "@/lib/emails";
-import { ensureShareCode, storeUrl } from "@/lib/store";
+import { sendPrivateInvite } from "@/lib/private-link";
 import { buildEmailCover } from "@/lib/email-cover";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -36,18 +35,13 @@ function sendFailureReason(error: unknown): string {
   return msg;
 }
 
-function formatDateFr(d: Date): string {
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
-}
-
 /**
- * Envoyer le lien de la boutique à une liste d'adresses (mode GROUPE).
+ * Envoyer à une liste d'adresses leur galerie privée (mode GROUPE).
  *
  * Chaque adresse devient un Participant, marqué `sentAt` : c'est ce qui la
  * fait apparaître dans « Vos clients » avec l'état « Envoyé ». Avant, l'envoi
  * ne laissait aucune trace et l'opérateur ne savait plus à qui il avait écrit.
- * La ligne existe donc avant l'achat, et le paiement la reprend au lieu d'en
- * créer une seconde (cf. api/store/[slug]/slots/[slotId]/checkout).
+ * Chaque client choisit son départ à la première ouverture de son lien.
  *
  * Réenvoyer à une adresse déjà présente ne la duplique pas.
  */
@@ -72,8 +66,6 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const code = await ensureShareCode(sortie);
-    const galleryUrl = storeUrl(sortie.operator.slug, code);
     const emails = Array.from(new Set(parsed.data.emails.map((e) => e.trim().toLowerCase())));
 
     // Un bandeau par envoi, partagé par tous les destinataires.
@@ -87,7 +79,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
         // qui renvoie à toute sa liste ne doit pas la voir doubler.
         const existing = await prisma.participant.findFirst({
           where: { sortieId: sortie.id, contact: { equals: to, mode: "insensitive" }, deletedAt: null },
-          select: { id: true },
+          select: { id: true, token: true, contact: true },
         });
         const participant =
           existing ??
@@ -101,28 +93,12 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
               consentAt: now,
               deleteAt: new Date(now.getTime() + 90 * DAY_MS),
             },
-            select: { id: true },
+            select: { id: true, token: true, contact: true },
           }));
 
-        await sendGroupInviteEmail({
-          to,
-          operatorId: sortie.operatorId,
-          operatorName: sortie.operator.name,
-          operatorLogoUrl: sortie.operator.logoUrl,
-          brandColor: sortie.operator.brandColor,
-          activity: sortie.activity,
-          sortieDate: formatDateFr(sortie.startsAt),
-          sortiePlace: sortie.place,
-          galleryUrl,
-          coverUrl,
-          purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
-        });
+        // Chacun reçoit SA galerie : le lien n'ouvre que son départ.
+        await sendPrivateInvite(participant, sortie, coverUrl);
         sent += 1;
-        // La date d'envoi n'est posée qu'après l'envoi : une ligne sans
-        // `sentAt` est une adresse à qui l'email n'est jamais parti.
-        await prisma.participant.update({ where: { id: participant.id }, data: { sentAt: now } }).catch((error) => {
-          console.error("[API /api/sorties/[sortieId]/invite] sentAt not recorded for", to, error);
-        });
       } catch (error) {
         console.error("[API /api/sorties/[sortieId]/invite] send failed for", to, error);
         failure ??= sendFailureReason(error);

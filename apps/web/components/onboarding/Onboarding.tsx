@@ -67,7 +67,7 @@ function groupSiret(raw: string): string {
 
 /** Le texte que le pro colle dans ses confirmations de réservation. */
 const CLIENT_NOTICE =
-  "Pendant la sortie, nous prenons des photos. Elles vous seront proposées à l'achat sur Linktrip, sans obligation. Vous pouvez demander le retrait d'une photo à tout moment.";
+  "Pendant la sortie, nous prenons des photos. Elles vous seront proposées à l'achat dans une galerie privée, visible seulement par les participants de votre départ, sans obligation. Vous pouvez demander le retrait d'une photo à tout moment.";
 
 type DayChoice = "today" | "tomorrow" | "other";
 

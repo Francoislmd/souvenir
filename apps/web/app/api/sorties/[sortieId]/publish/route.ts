@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
 import { publishGroupSortie } from "@/lib/group-publish";
 import { progressResponse, wantsStream } from "@/lib/progress-stream";
+import { sendPendingInvites } from "@/lib/private-link";
 
 // Regroupe les photos par créneau (lecture EXIF de chaque original) puis
 // publie le lien — peut prendre plusieurs secondes sur un gros lot.
@@ -31,16 +32,19 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     // L'écran de la sortie suit la publication photo par photo : c'est ce
     // qui remplace l'attente « dans le vide » d'avant.
     if (wantsStream(request)) {
-      return progressResponse("API /api/sorties/[sortieId]/publish", (emit) =>
-        publishGroupSortie(sortie.id, {
+      return progressResponse("API /api/sorties/[sortieId]/publish", async (emit) => {
+        await publishGroupSortie(sortie.id, {
           onStart: (total) => emit({ t: "start", total }),
           onPhoto: (id, done, total) => emit({ t: "photo", id, done, total }),
           onSorting: () => emit({ t: "sorting" }),
-        }),
-      );
+        });
+        // Les clients inscrits par le QR code avant la mise en ligne.
+        await sendPendingInvites(sortie.id);
+      });
     }
 
     await publishGroupSortie(sortie.id);
+    await sendPendingInvites(sortie.id);
 
     return Response.json({ ok: true }, { status: 200 });
   } catch (error) {

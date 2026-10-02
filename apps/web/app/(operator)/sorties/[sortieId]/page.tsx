@@ -24,7 +24,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
   const sortie = await prisma.sortie.findFirst({
     where: { id: params.sortieId, operatorId: dbUser.operatorId },
     include: {
-      participants: { orderBy: { createdAt: "asc" }, include: { order: true } },
+      participants: { orderBy: { createdAt: "asc" }, include: { orders: { where: { status: "succeeded" } } } },
       photos: { orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
     },
   });
@@ -42,8 +42,8 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
     contact: p.contact,
     sentAt: p.sentAt ? p.sentAt.toISOString() : null,
     token: p.token,
-    paid: p.order?.status === "succeeded",
-    amountCents: p.order?.status === "succeeded" ? p.order.amountCents : 0,
+    paid: p.orders.length > 0,
+    amountCents: p.orders.reduce((sum, o) => sum + o.amountCents, 0),
   }));
 
   return (

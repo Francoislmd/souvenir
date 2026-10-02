@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { accessFromOrders, visiblePhotoWhere } from "@/lib/access";
 import { downloadOriginal } from "@/lib/storage";
 import { deliverableKeyOf } from "@/lib/media";
 import { zipStream, slugForFilename, type ZipEntrySource } from "@/lib/zip";
@@ -24,28 +25,26 @@ function extensionOf(key: string): string {
  *
  * Public et non authentifié comme le reste de /g/[token] : le token non
  * devinable EST le droit d'accès. Mais la commande doit être payée, et on
- * ne sert que les photos réellement achetées — jamais tout le lot.
+ * ne sert que les photos réellement achetées, ou tout le créneau une fois le
+ * lot atteint (lib/access.ts).
  */
 export async function GET(request: Request, { params }: { params: { token: string } }): Promise<Response> {
   const participant = await prisma.participant.findUnique({
     where: { token: params.token },
-    include: { sortie: true, order: true },
+    include: { sortie: { include: { operator: { select: { priceAllCents: true } } } }, orders: true },
   });
 
   if (!participant || participant.deletedAt) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
-  if (participant.order?.status !== "succeeded") {
+  // L'union des commandes payées, ou tout le créneau quand le lot est atteint.
+  const access = accessFromOrders(participant.orders, participant.sortie.operator.priceAllCents);
+  if (!access.bought) {
     return Response.json({ error: "not_paid" }, { status: 402 });
   }
 
-  const purchasedIds = participant.order.photoIds;
-  if (purchasedIds.length === 0) {
-    return Response.json({ error: "empty" }, { status: 404 });
-  }
-
   const photos = await prisma.photo.findMany({
-    where: { id: { in: purchasedIds }, hiddenAt: null },
+    where: access.packReached ? visiblePhotoWhere(participant) : { ...visiblePhotoWhere(participant), id: { in: Array.from(access.ids) } },
     orderBy: { createdAt: "asc" },
     select: { id: true, originalKey: true, posterKey: true, isVideo: true, originalPending: true },
   });

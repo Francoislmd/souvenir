@@ -1,5 +1,5 @@
 import { LoadingBlock } from "@/components/ui/Spinner";
 
 export default function Loading() {
-  return <LoadingBlock label="Chargement des créneaux…" pad={140} />;
+  return <LoadingBlock label="Chargement…" pad={140} />;
 }

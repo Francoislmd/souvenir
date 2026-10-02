@@ -15,9 +15,9 @@ import { brand, s } from "./brand";
 export type GroupEmailVariant = "invite" | "reminder" | "last";
 
 const COPY: Record<GroupEmailVariant, { title: string; lead: string }> = {
-  invite: { title: "Vos photos vous attendent", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos." },
-  reminder: { title: "Vos photos sont toujours là", lead: "Choisissez l\u2019heure de votre sortie pour les retrouver." },
-  last: { title: "Dernier rappel", lead: "Choisissez l\u2019heure de votre sortie pour retrouver vos photos." },
+  invite: { title: "Vos photos vous attendent", lead: "Voici votre galerie privée. Seuls les participants de votre départ y ont accès." },
+  reminder: { title: "Vos photos sont toujours là", lead: "Votre galerie privée vous attend, avec les photos de votre départ." },
+  last: { title: "Dernier rappel", lead: "Votre galerie privée sera bientôt supprimée, avec les photos de votre départ." },
 };
 
 export interface GroupInviteProps {
@@ -120,7 +120,7 @@ export default function GroupInvite({
               </tbody>
             </table>
             <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", textAlign: "center", marginTop: 12 }}>
-              Aucun compte à créer{variant === "last" && purgeDate ? ` · en ligne jusqu\u2019au ${purgeDate}` : ""}
+              Ce lien est personnel · aucun compte à créer{variant === "last" && purgeDate ? ` · en ligne jusqu\u2019au ${purgeDate}` : ""}
             </Text>
           </Section>
 

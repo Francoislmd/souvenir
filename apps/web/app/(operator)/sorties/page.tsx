@@ -46,13 +46,14 @@ export default async function SortiesPage() {
   const paidBySortie = new Map<string, { count: number; cents: number }>();
   if (sorties.length > 0) {
     const paidParticipants = await prisma.participant.findMany({
-      where: { sortieId: { in: sorties.map((s) => s.id) }, order: { status: "succeeded" } },
-      select: { sortieId: true, order: { select: { amountCents: true } } },
+      where: { sortieId: { in: sorties.map((s) => s.id) }, orders: { some: { status: "succeeded" } } },
+      select: { sortieId: true, orders: { where: { status: "succeeded" }, select: { amountCents: true } } },
     });
     for (const p of paidParticipants) {
       const current = paidBySortie.get(p.sortieId) ?? { count: 0, cents: 0 };
       current.count += 1;
-      current.cents += p.order?.amountCents ?? 0;
+      // Un client peut payer en plusieurs fois : on additionne ses commandes.
+      current.cents += p.orders.reduce((sum, o) => sum + o.amountCents, 0);
       paidBySortie.set(p.sortieId, current);
     }
   }

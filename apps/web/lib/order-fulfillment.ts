@@ -118,7 +118,9 @@ export async function fulfillPaymentIntent(intent: Stripe.PaymentIntent): Promis
   const participantId = intent.metadata?.participantId;
   if (!participantId) return;
 
-  const order = await prisma.order.findUnique({ where: { participantId } });
+  // Plusieurs commandes par client : la commande se retrouve par son
+  // PaymentIntent (unique), plus par le participant.
+  const order = await prisma.order.findUnique({ where: { stripePi: intent.id } });
   if (!order || order.stripePi !== intent.id || order.status === "succeeded") return;
 
   const updated = await prisma.order.update({

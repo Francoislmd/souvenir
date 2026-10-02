@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { stripe } from "./stripe";
 import { quote, applyReducedOffer, type PricingConfig } from "./pricing";
+import { accessFromOrders, remainingCapCents, visiblePhotoWhere } from "./access";
 import { ensurePaymentDomains } from "./payment-domains";
 
 export class CheckoutError extends Error {
@@ -15,58 +16,58 @@ export async function createOrUpdatePaymentIntent(params: {
 }): Promise<{ clientSecret: string; amountCents: number; stripeAccountId: string }> {
   const participant = await prisma.participant.findUnique({
     where: { id: params.participantId },
-    include: { sortie: { include: { operator: true } }, order: true },
+    include: { sortie: { include: { operator: true } }, orders: true },
   });
   if (!participant || participant.deletedAt) throw new CheckoutError("not_found");
-
-  // Une commande déjà payée ne se rouvre pas. L'upsert ci-dessous repasse le
-  // statut à "pending", et lib/gallery.ts n'ouvre la galerie qu'en égalité
-  // stricte sur "succeeded" : sans ce garde-fou, un simple rappel de la route
-  // reverrouille les photos d'un client qui les a payées. Même raisonnement
-  // pour un remboursement ou un litige, dont le statut ne doit pas être
-  // écrasé par une nouvelle tentative d'achat.
-  if (participant.order && participant.order.status !== "pending" && participant.order.status !== "failed") {
-    throw new CheckoutError("already_paid");
-  }
 
   const operator = participant.sortie.operator;
   if (!operator.stripeOnboarded || !operator.stripeAccountId) throw new CheckoutError("stripe_not_ready");
   const stripeAccountId = operator.stripeAccountId;
 
+  // Plusieurs commandes par client (galerie privée) : ce qui est déjà payé
+  // n'est ni revendu ni recompté, et le prix du lot est un plafond qui court
+  // d'une commande à l'autre (lib/access.ts).
+  const access = accessFromOrders(participant.orders, operator.priceAllCents);
+  if (access.packReached) throw new CheckoutError("already_paid");
+
   const purchasablePhotos = await prisma.photo.findMany({
-    where: participant.slotId
-      ? { slotId: participant.slotId, hiddenAt: null, status: "READY" }
-      : {
-          sortieId: participant.sortieId,
-          status: "READY",
-          OR: [{ ownerId: participant.id }, { ownerId: null }],
-        },
+    // Seules les photos traitées s'achètent ; le statut écrase celui de visiblePhotoWhere.
+    where: { ...visiblePhotoWhere(participant), status: "READY" },
     select: { id: true },
   });
-  const purchasableIds = new Set(purchasablePhotos.map((p) => p.id));
+  const remainingIds = purchasablePhotos.map((p) => p.id).filter((id) => !access.ids.has(id));
+  const remaining = new Set(remainingIds);
+  if (remaining.size === 0) throw new CheckoutError("already_paid");
+
   // Le pro peut restreindre la vente au pack complet (Réglages) — dans ce
-  // cas on ignore la sélection reçue et on facture tout le lot, quoi que le
-  // client ait envoyé. C'est la seule application réellement fiable de la
-  // règle : la galerie ne fait que refléter ce choix côté UI.
-  const selected = operator.packOnly ? Array.from(purchasableIds) : params.photoIds.filter((id) => purchasableIds.has(id));
+  // cas on ignore la sélection reçue et on facture tout ce qui reste, quoi
+  // que le client ait envoyé. C'est la seule application réellement fiable
+  // de la règle : la galerie ne fait que refléter ce choix côté UI.
+  const selected = operator.packOnly ? remainingIds : params.photoIds.filter((id) => remaining.has(id));
 
-  const pricing: PricingConfig = {
-    pricePhotoCents: operator.pricePhotoCents,
-    priceAllCents: operator.priceAllCents,
-  };
-
-  const q = quote(selected.length, purchasableIds.size, pricing);
+  const capCents = remainingCapCents(access, operator.priceAllCents);
+  const pricing: PricingConfig = { pricePhotoCents: operator.pricePhotoCents, priceAllCents: capCents };
+  const q = quote(selected.length, remaining.size, pricing);
   const offerActive = !!participant.reducedOfferExpiresAt && participant.reducedOfferExpiresAt > new Date();
   const amountCents = offerActive ? applyReducedOffer(q.totalCents) : q.totalCents;
   const feeCents = Math.round((amountCents * operator.feePercent) / 100);
 
   if (amountCents <= 0) throw new CheckoutError("not_found");
 
-  const order = await prisma.order.upsert({
-    where: { participantId: participant.id },
-    update: { photoIds: selected, amountCents, feeCents, status: "pending" },
-    create: { participantId: participant.id, photoIds: selected, amountCents, feeCents, status: "pending" },
-  });
+  // La commande complète le lot si elle prend tout ce qui reste, ou si, avec
+  // ce qui est déjà payé, elle atteint le prix du lot.
+  const isPack = selected.length >= remaining.size || q.totalCents >= capCents;
+
+  // Une commande ouverte (pas encore payée) se reprend ; une commande payée,
+  // remboursée ou en litige ne se rouvre jamais : son statut ne doit pas être
+  // écrasé par une nouvelle tentative d'achat. lib/gallery.ts n'ouvre l'accès
+  // qu'en égalité stricte sur "succeeded".
+  const open = participant.orders
+    .filter((o) => o.status === "pending" || o.status === "failed")
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  const order = open
+    ? await prisma.order.update({ where: { id: open.id }, data: { photoIds: selected, amountCents, feeCents, isPack, status: "pending" } })
+    : await prisma.order.create({ data: { participantId: participant.id, photoIds: selected, amountCents, feeCents, isPack, status: "pending" } });
 
   // Charge directe : le paiement est créé SUR le compte Stripe de
   // l'opérateur, qui est le vendeur (ses CGV, ses remboursements, les frais

@@ -903,7 +903,7 @@ export function SortieScreen({
             <span className={styles.sdQr}>
               {qrDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={qrDataUrl} alt="QR code de la galerie" />
+                <img src={qrDataUrl} alt="QR code de la sortie" />
               ) : (
                 // Le code se dessine côté navigateur : la place est réservée
                 // pour que la carte ne saute pas quand il apparaît.
@@ -913,8 +913,8 @@ export function SortieScreen({
               )}
             </span>
             <span className={styles.sdShareMain}>
-              <span className={styles.sdShareT}>Le lien de la galerie</span>
-              <span className={styles.sdShareH}>Montrez le code au retour, ou envoyez le lien.</span>
+              <span className={styles.sdShareT}>Le code de la sortie</span>
+              <span className={styles.sdShareH}>Vos clients le scannent et reçoivent leur galerie privée par e-mail.</span>
               <span className={styles.sdShareRow}>
                 <span className={styles.sdShareUrl}>{shareUrl.replace(/^https?:\/\//, "")}</span>
                 <button type="button" className={`${styles.sBtn} ${styles.sdChip}`} onClick={() => void copyLink()}>

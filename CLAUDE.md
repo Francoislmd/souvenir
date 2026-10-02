@@ -141,11 +141,11 @@ souvenir/
 │   │   │   ├── (legal)/            # mentions-legales, cgu, cgv, confidentialite — pages racine
 │   │   │   ├── onboarding/         # wizard de création de compte + qualification
 │   │   │   ├── signup/
-│   │   │   ├── g/[token]/          # galerie individuelle (mode INDIVIDUEL) — pas de compte, token = seul secret
-│   │   │   │   └── confidentialite/, desinscription/, supprimer/
-│   │   │   ├── s/[slug]/          # boutique (mode GROUPE) — servie sur store.linktrip.co/{slug}
-│   │   │   │   ├── [code]/         # même boutique, ouverte sur le jour de cette sortie
-│   │   │   │   └── retrait/        # demander le retrait d'une photo, sans justification
+│   │   │   ├── g/[token]/          # galerie privée d'un client (les deux modes) — pas de compte, token = seul secret
+│   │   │   │   └── confidentialite/, desinscription/, supprimer/, retrait/
+│   │   │   ├── s/[slug]/          # « Retrouvez vos photos » : e-mail → lien privé. Servie sur store.linktrip.co/{slug}
+│   │   │   │   ├── [code]/         # le QR de fin de sortie : inscrit l'e-mail à la sortie, envoie le lien
+│   │   │   │   └── retrait/        # ancienne adresse, redirige vers la boutique
 │   │   │   ├── sitemap.ts, robots.ts   # landing + pages légales uniquement, le reste est exclu
 │   │   │   └── api/
 │   │   │       ├── webhooks/stripe/        # payment_intent.*, charge.refunded, charge.dispute.*, account.updated
@@ -154,18 +154,22 @@ souvenir/
 │   │   │       ├── cron/automations/       # relances email/WhatsApp — Vercel Cron, secured by CRON_SECRET
 │   │   │       ├── cron/gdpr-purge/        # purge RGPD — Vercel Cron, secured by CRON_SECRET
 │   │   │       ├── sorties/, participants/, photos/, operator/
-│   │   │       └── g/[token]/, store/[slug]/  # endpoints publics des galeries (jours, poll, achats, retrait)
+│   │   │       └── g/[token]/, store/[slug]/link  # galerie privée (poll, achats, choix du départ, retrait) ; demande de lien
 │   │   ├── sentry.client.config.ts, sentry.server.config.ts, sentry.edge.config.ts, instrumentation.ts
 │   │   ├── components/
 │   │   └── lib/                    # stripe.ts, twilio.ts, supabase-server.ts, analytics.ts, gdpr.ts, order-fulfillment.ts, order-refunds.ts, automations.ts…
 └── packages/db/                    # schema.prisma + client Prisma partagé (source TS brute, pas de build)
 ```
 
-- **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie individuelle (`/g/[token]`) ou, en mode GROUPE, via l'adresse de la boutique de sa sortie. `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
+- **Auth** : Supabase Auth **email + mot de passe** (pas de magic link) pour les opérateurs/moniteurs uniquement, avec rate-limiting maison (`AuthAttempt` : 5 tentatives/email et 20/IP sur une fenêtre de 15 min — voir `lib/env.ts`/`api/auth/*`). Le participant final n'a JAMAIS de compte — il accède via le token de sa galerie individuelle (`/g/[token]`) dans les deux modes ; en GROUPE, ce lien ne montre que son départ (`Participant.slotId`). `middleware.ts` rafraîchit la session Supabase sur tout le site sauf la landing (`/`), `/g/*` et `/api/webhooks/*`.
 
-**Adresse des boutiques GROUPE** : `store.linktrip.co/{operator.slug}`, une adresse permanente par opérateur, réutilisée par toutes ses sorties. 🔒 **La boutique est publique** : le slug est lisible et devinable, et n'importe qui l'ouvre sans code. Ce qui protège les clients tient donc entièrement aux aperçus filigranés, au `noindex` et au lien « demander le retrait », joignable depuis chaque écran et qui n'exige rien. Décidé le 10/09/2026 après avoir essayé l'inverse (un code court par sortie, seul secret) : ne pas rediscuter, c'est un choix produit assumé.
+**Galerie privée uniquement** (🔒 décidé le 02/10/2026, remplace la boutique publique du 10/09) : aucune photo n'est visible sans le lien personnel `/g/{token}`, reçu par e-mail. `store.linktrip.co/{operator.slug}` ne montre plus rien : le client y entre son e-mail et reçoit les liens des sorties publiées où il figure (réponse identique que l'adresse soit connue ou non). `store.linktrip.co/{slug}/{sortie.shareCode}` est l'adresse du QR de fin de sortie : l'e-mail devient un Participant de la sortie, son lien part tout de suite si la sortie est publiée, sinon à la publication (`lib/private-link.ts`, `sendPendingInvites`). Le code n'est jamais réémis (`ensureShareCode`) : un QR imprimé doit continuer de marcher.
 
-`store.linktrip.co/{slug}/{sortie.shareCode}` reste servi, mais le code n'est plus un secret : il ne fait qu'ouvrir la boutique sur le jour de cette sortie, pour le QR code affiché à la fin de la journée. Il est créé avec la sortie GROUPE, et à la volée pour les sorties antérieures (`lib/store.ts`, `ensureShareCode`), jamais réémis : un QR code imprimé doit continuer de marcher.
+En GROUPE, un client sans `slotId` choisit son heure de départ à la première ouverture (`components/gallery/SlotChooser.tsx`, `POST /api/g/[token]/slot`), une fois pour toutes ; s'il n'y a qu'un départ, il est attribué d'office. Ce qu'un lien montre est défini à un seul endroit : `visiblePhotoWhere` (`lib/access.ts`).
+
+**Achats multiples, pack plafonné** : un Participant a plusieurs `Order`. L'accès est l'union des commandes `succeeded` ; le pack est atteint si une commande `isPack` existe ou si le cumul payé atteint `priceAllCents`, et il débloque tout, y compris les photos ajoutées ensuite. Le prix d'un nouvel achat est plafonné à `priceAllCents − déjà payé` (`accessFromOrders`, `remainingCapCents`).
+
+Retrait sans justification : depuis la galerie privée (`/g/{token}/retrait`, `POST /api/g/[token]/hide`), limité aux photos que ce lien montre.
 
 La traduction sous-domaine → chemin interne `/s/{slug}` se fait dans `middleware.ts`, qui y pose aussi le `X-Robots-Tag: noindex` ; sans `NEXT_PUBLIC_STORE_URL` (local, previews) les boutiques se servent depuis le domaine principal sur `/s/...`.
 - **Storage** : Cloudflare R2, buckets `originals` (privé, liens signés) et `previews` (public via `R2_PREVIEWS_PUBLIC_URL`). `lib/storage.ts` est la **seule couture** : rien d'autre ne parle au SDK S3. 🔒 **On reste dans l'offre gratuite** (10 Go) : `lib/storage-quota.ts` refuse tout dépôt qui ferait dépasser `STORAGE_QUOTA_GB` (9 Go), la taille déclarée est signée dans l'URL d'envoi (R2 refuse un autre fichier), le contrôle se fait sous verrou Postgres. Ne jamais créer d'objet en dehors de ce compte sans l'y ajouter (`Photo.sizeBytes`). Une URL signée ne supporte aucun paramètre ajouté : un lien de téléchargement se demande à `getOriginalSignedUrl(key, nom)`.
@@ -181,7 +185,7 @@ Tout se passe **en ligne, dans la requête Vercel**, il n'y a aucun processus de
 
 - **Une photo déposée** : `/api/photos/[photoId]/complete` → `lib/photo-processing.ts` (sharp) → miniature, aperçu, aperçu flouté pour l'email (`blurEmailKey`), l'aperçu filigrané (`groupPreviewKey`, `lib/group-watermark.ts`) dans les deux modes, et l'heure de prise de vue (`takenAt`, EXIF brute). `maxDuration = 60`.
 - **Une sortie GROUPE publiée** : `/api/sorties/[sortieId]/publish` → `lib/group-publish.ts` → regroupement en `Slot` à partir de ce que le dépôt a préparé ; seules les photos sans `groupPreviewKey` (déposées avant le 19/09/2026, ou rendu raté au dépôt) sont retéléchargées pour EXIF + aperçu, 6 en parallèle. L'avancement est renvoyé en flux NDJSON (`lib/progress-stream.ts`) et affiché par l'écran de la sortie. `maxDuration = 120`.
-- **Rattrapage** : un aperçu filigrané raté à la publication est régénéré à la demande par `backfillGroupPreviews`, appelé depuis `lib/gallery.ts` et `lib/gallery-group.ts`. **Au plus une tentative par photo et par tranche de 10 minutes** (`lib/preview-backfill.ts`) : ces deux routes sont sondées toutes les 4 s par la galerie, régénérer sans garde-fou revenait à relancer sharp + canvas toutes les 4 secondes, indéfiniment, sur une route publique.
+- **Rattrapage** : un aperçu filigrané raté à la publication est régénéré à la demande par `backfillGroupPreviews`, appelé depuis `lib/gallery.ts`. **Au plus une tentative par photo et par tranche de 10 minutes** (`lib/preview-backfill.ts`) : ces deux routes sont sondées toutes les 4 s par la galerie, régénérer sans garde-fou revenait à relancer sharp + canvas toutes les 4 secondes, indéfiniment, sur une route publique.
 
 Écarts à connaître par rapport à la vision produit (§1) et au schéma :
 - **Vidéos (depuis le 21/09/2026), sans ffmpeg** : une vidéo est une ligne `Photo` avec `isVideo = true` — même prix, même panier, même purge. Le navigateur de l'opérateur en tire au dépôt une vignette, la durée et l'heure de tournage (`lib/video-probe.ts`, boîte `mvhd` / date Apple) ; la vignette part dans `originals` (`posterKey`, privée : elle est nette) et le serveur la traite comme une photo. **Aucune vidéo n'est jamais décodée côté serveur.** Sans vignette (format illisible par le navigateur), `lib/photo-processing.ts` pose une image de repli. Toute dérivée d'image passe par `imageSourceKeyOf` (`lib/media.ts`), jamais par `originalKey` directement. Avant achat, le client voit la vignette filigranée et la durée ; après, la vidéo s'ouvre dans le lecteur du téléphone. Plafond par vidéo : `NEXT_PUBLIC_MAX_VIDEO_MB` (500 par défaut, pour ne pas consommer le quota gratuit en quelques fichiers).

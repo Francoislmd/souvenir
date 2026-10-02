@@ -3,6 +3,7 @@ import { getPreviewUrl, getOriginalSignedUrl } from "./storage";
 import { backfillGroupPreviews } from "./group-publish";
 import { throttleBackfill } from "./preview-backfill";
 import { deliverableKeyOf, extensionOf, imageSourceKeyOf } from "./media";
+import { visiblePhotoWhere } from "./access";
 
 function downloadName(originalKey: string, photoId: string): string {
   const ext = extensionOf(originalKey) || "jpg";
@@ -20,21 +21,18 @@ export async function getBoutiquePhotos(
   participant: { id: string; sortieId: string; slotId?: string | null },
   purchasedSet: Set<string>,
   operatorName: string,
+  /** Le lot est atteint (lib/access.ts) : tout est débloqué, y compris les photos arrivées depuis. */
+  unlockAll = false,
 ): Promise<BoutiquePhoto[]> {
   // Un Participant de mode GROUPE n'est jamais propriétaire d'une photo
   // (ownerId reste toujours null côté groupe) : il faut filtrer par slot,
   // sinon la requête ownerId-based renverrait toutes les photos de la
   // sortie, tous créneaux confondus.
   const rawPhotos = await prisma.photo.findMany({
-    where: participant.slotId
-      ? { slotId: participant.slotId, hiddenAt: null, status: { not: "FAILED" } }
-      : {
-          sortieId: participant.sortieId,
-          status: { not: "FAILED" },
-          OR: [{ ownerId: participant.id }, { ownerId: null }],
-        },
+    where: visiblePhotoWhere(participant),
     orderBy: { createdAt: "asc" },
   });
+  const isOwned = (id: string) => unlockAll || purchasedSet.has(id);
 
   // Rattrapage : processPhotoPreview (lib/photo-processing.ts) peut échouer à
   // générer groupPreviewKey pour une poignée de photos (même mécanisme que
@@ -42,7 +40,7 @@ export async function getBoutiquePhotos(
   // (lib/preview-backfill.ts) : cette route est sondée toutes les 4 s par
   // BoutiqueGallery, retenter à chaque appel relançait sharp en boucle sur
   // une route publique.
-  const missing = throttleBackfill(rawPhotos.filter((p) => !p.groupPreviewKey && !purchasedSet.has(p.id)));
+  const missing = throttleBackfill(rawPhotos.filter((p) => !p.groupPreviewKey && !isOwned(p.id)));
   const backfilled = await backfillGroupPreviews(
     missing.map((p) => ({ id: p.id, originalKey: imageSourceKeyOf(p) })),
     operatorName,
@@ -52,7 +50,7 @@ export async function getBoutiquePhotos(
     rawPhotos.map(async (rawP) => {
       const p = backfilled.has(rawP.id) ? { ...rawP, groupPreviewKey: backfilled.get(rawP.id)! } : rawP;
       // Plus de photo offerte : seul le paiement déverrouille.
-      const unlocked = purchasedSet.has(p.id);
+      const unlocked = isOwned(p.id);
       // Original pas encore arrivé : la copie de travail d'une photo, rien
       // pour une vidéo (la tuile attend, la page se relit toute seule).
       const deliverable = unlocked ? deliverableKeyOf(p) : null;

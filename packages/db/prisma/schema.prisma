@@ -174,7 +174,10 @@ model Participant {
 
   sortie Sortie  @relation(fields: [sortieId], references: [id], onDelete: Cascade)
   slot   Slot?   @relation(fields: [slotId], references: [id], onDelete: SetNull)
-  order  Order?
+  // Plusieurs commandes par client depuis la galerie privée (02/10/2026) :
+  // il peut prendre deux photos, puis le reste plus tard. L'accès est l'union
+  // des commandes payées (lib/access.ts).
+  orders Order[]
   photos Photo[] @relation("PhotoOwner")
 
   @@index([sortieId])
@@ -226,9 +229,13 @@ enum PhotoStatus {
 
 model Order {
   id            String    @id @default(cuid())
-  participantId String    @unique
+  participantId String
   photoIds      String[]
   amountCents   Int
+  // Cette commande a complété le lot (toutes les photos restantes, ou le
+  // plafond du lot atteint avec les achats précédents) : tout le créneau est
+  // au client, y compris les photos ajoutées ensuite.
+  isPack        Boolean   @default(false)
   feeCents      Int
   stripePi      String?   @unique
   status        String    @default("pending") // pending | succeeded | failed | refunded | disputed
@@ -242,6 +249,8 @@ model Order {
   disputeClosedAt     DateTime?
 
   participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([participantId])
 }
 
 model Event {

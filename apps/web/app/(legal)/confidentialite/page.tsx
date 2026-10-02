@@ -78,8 +78,8 @@ export default function ConfidentialitePage() {
       <h2 id="destinataires">Qui a accès à vos données</h2>
       <p>
         Vos photos ne sont accessibles qu&apos;à vous, via le lien privé de votre galerie (et,
-        en mode groupe, aux autres participants de la même sortie pour les photos où ils
-        figurent également — voir les <a href="/cgu">CGU</a>). L&apos;opérateur qui a organisé
+        en sortie de groupe, aux participants du même départ, qui reçoivent chacun leur propre
+        lien : voir les <a href="/cgu">CGU</a>). L&apos;opérateur qui a organisé
         votre sortie a accès à vos coordonnées de contact et à l&apos;historique de vos achats.
       </p>
 

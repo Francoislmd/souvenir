@@ -282,7 +282,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                   </span>
                 )}
               </button>
-              <span className={styles.rgHint}>En haut de votre boutique, la première chose que voient vos clients. Format paysage.</span>
+              <span className={styles.rgHint}>En haut de la page où vos clients demandent leur lien. Format paysage.</span>
               <input
                 ref={coverInputRef}
                 type="file"
@@ -312,7 +312,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                 </button>
               </div>
               <span className={styles.rgHint}>
-                La même pour toutes vos sorties. Dans vos confirmations de réservation, elle évite un envoi après chacune.
+                La même pour toutes vos sorties. Vos clients y entrent leur e-mail et reçoivent le lien de leur galerie privée.
               </span>
             </div>
 

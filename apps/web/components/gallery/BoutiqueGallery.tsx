@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/components/gallery/gallery.module.css";
 import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
+import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
 import type { Seller } from "@/lib/seller-format";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
+import { BackLink } from "@/components/gallery/BackLink";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import { PlayMark, VideoBadge } from "@/components/ui/VideoBadge";
 
@@ -66,6 +68,7 @@ export function BoutiqueGallery({
   pricing,
   packOnly,
   bought,
+  packReached = false,
   purchasedIds,
   googleReviewUrl,
   reducedOfferActive,
@@ -83,6 +86,9 @@ export function BoutiqueGallery({
   pricing: PricingConfig;
   packOnly: boolean;
   bought: boolean;
+  /** Le pack est atteint (acheté d'un coup ou par cumul) : tout est à lui,
+   *  y compris ce que le pro ajoutera ensuite. Plus rien à vendre. */
+  packReached?: boolean;
   purchasedIds: string[];
   googleReviewUrl: string | null;
   reducedOfferActive: boolean;
@@ -102,6 +108,9 @@ export function BoutiqueGallery({
   // début du téléchargement, il peut s'écouler plusieurs secondes pendant
   // lesquelles rien ne bougeait à l'écran.
   const [zipping, setZipping] = useState(false);
+  // Après un premier achat, le client peut revenir prendre le reste. Le
+  // plafond du pack tient compte de ce qu'il a déjà payé (lib/access.ts).
+  const [buyMore, setBuyMore] = useState(false);
 
   // Achat fait avant que le pro ait fini d'envoyer ses originaux (ils partent
   // de son téléphone après la publication) : la page les rattrape seule.
@@ -160,6 +169,10 @@ export function BoutiqueGallery({
     };
   }, [token, bought, photos]);
 
+  const purchasedSet = new Set(purchasedIds);
+  const remaining = packReached ? [] : photos.filter((p) => !purchasedSet.has(p.id));
+  const pickable = bought ? remaining : photos;
+
   async function openCheckout(photoIds: string[]): Promise<void> {
     if (photoIds.length === 0) return;
     setError(null);
@@ -180,7 +193,7 @@ export function BoutiqueGallery({
         clientSecret: data.clientSecret,
         stripeAccountId: data.stripeAccountId,
         amountCents: data.amountCents,
-        label: photoIds.length >= photos.length ? allLabel(photos.length) : `${photoIds.length} photo${photoIds.length > 1 ? "s" : ""}`,
+        label: photoIds.length >= pickable.length ? (bought ? "Le reste de vos photos" : allLabel(pickable.length)) : `${photoIds.length} photo${photoIds.length > 1 ? "s" : ""}`,
         photoIds,
       });
     } catch {
@@ -192,6 +205,7 @@ export function BoutiqueGallery({
 
   async function onPaymentSuccess(): Promise<void> {
     setCheckout(null);
+    setBuyMore(false);
     await fetch("/api/checkout/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -222,8 +236,7 @@ export function BoutiqueGallery({
     }, 400);
   }
 
-  if (bought) {
-    const purchasedSet = new Set(purchasedIds);
+  if (bought && !(buyMore && remaining.length > 0)) {
     const yours = photos.filter((p) => purchasedSet.has(p.id));
     return (
       <>
@@ -299,6 +312,22 @@ export function BoutiqueGallery({
             ))}
           </div>
 
+          {remaining.length > 0 ? (
+            <div className={styles.card}>
+              <span className={styles.cardText}>
+                <span className={styles.cardT}>
+                  Il reste {remaining.length} photo{remaining.length > 1 ? "s" : ""} de votre départ
+                </span>
+                <span className={styles.cardD}>
+                  {pricing.priceAllCents > 0 ? `Le tout pour ${formatEuros(pricing.priceAllCents)}, déduction faite de votre achat.` : "Elles vous attendent."}
+                </span>
+              </span>
+              <button type="button" className={styles.quiet} onClick={() => setBuyMore(true)}>
+                Les voir
+              </button>
+            </div>
+          ) : null}
+
           {googleReviewUrl ? (
             <div className={styles.card}>
               <span className={styles.cardText}>
@@ -318,7 +347,7 @@ export function BoutiqueGallery({
         </div>
 
         <p className={styles.legal}>
-          Vos photos restent disponibles 90 jours, puis sont supprimées. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a>.
+          Vos photos restent disponibles 90 jours, puis sont supprimées. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a> · <a href={`/g/${token}/retrait`}>Retirer une photo</a>
         </p>
         <div className={styles.powered}>
           Propulsé par <Logo variant="wordmark" tone="mono" height={13} />
@@ -330,13 +359,16 @@ export function BoutiqueGallery({
   return (
     <>
       <div className={styles.head}>
-        <h1>{title}</h1>
+        {bought ? (
+          <BackLink onClick={() => setBuyMore(false)} />
+        ) : null}
+        <h1>{bought ? "Le reste de vos photos" : title}</h1>
         <p className={styles.sub}>{when}</p>
         <p className={styles.hint}>{packOnly ? "Toutes vos photos, en une fois." : "Touchez celles que vous voulez, ou prenez tout."}</p>
       </div>
 
       <PhotoPicker
-        photos={photos}
+        photos={pickable}
         pricing={pricing}
         packOnly={packOnly}
         allLabel={allLabel}
@@ -346,7 +378,7 @@ export function BoutiqueGallery({
         discount={reducedOfferActive ? applyReducedOffer : undefined}
         legal={
           <>
-            Vos photos sont conservées 90 jours puis supprimées automatiquement. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a>.
+            Vos photos sont conservées 90 jours puis supprimées automatiquement. <a href={`/g/${token}/supprimer`}>Les supprimer maintenant</a> · <a href={`/g/${token}/retrait`}>Retirer une photo</a>
           </>
         }
         onCheckout={(ids) => void openCheckout(ids)}

@@ -44,10 +44,10 @@ export async function POST(request: Request): Promise<Response> {
       }
       case "payment_intent.payment_failed": {
         const intent = event.data.object as Stripe.PaymentIntent;
-        const participantId = intent.metadata?.participantId;
-        if (participantId) {
-          await prisma.order.updateMany({ where: { participantId }, data: { status: "failed" } });
-        }
+        // Seule la commande de CE paiement, et seulement si elle est encore
+        // ouverte : un client a plusieurs commandes depuis la galerie privée,
+        // et marquer « failed » ses commandes payées les re-verrouillerait.
+        await prisma.order.updateMany({ where: { stripePi: intent.id, status: "pending" }, data: { status: "failed" } });
         break;
       }
       case "charge.refunded": {

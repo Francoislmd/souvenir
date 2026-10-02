@@ -27,8 +27,12 @@ export function formatHourFr(d: Date): string {
  * date : c'est comme ça qu'on se souvient d'une sortie.
  */
 export function formatWhenFr(d: Date): string {
-  const day = d
+  return `${formatDayFr(d)}, ${formatHourFr(d)}`;
+}
+
+/** "Samedi 5 septembre". */
+export function formatDayFr(d: Date): string {
+  return d
     .toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: TZ })
     .replace(/^./, (c) => c.toUpperCase());
-  return `${day}, ${formatHourFr(d)}`;
 }

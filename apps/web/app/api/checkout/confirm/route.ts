@@ -13,8 +13,10 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Validation failed" }, { status: 400 });
     }
 
-    const order = await prisma.order.findUnique({
-      where: { participantId: parsed.data.participantId },
+    // La commande en cours : la plus récente du client qui porte un paiement.
+    const order = await prisma.order.findFirst({
+      where: { participantId: parsed.data.participantId, stripePi: { not: null } },
+      orderBy: { createdAt: "desc" },
       include: { participant: { select: { sortie: { select: { operator: { select: { stripeAccountId: true } } } } } } },
     });
     const stripeAccount = order?.participant.sortie.operator.stripeAccountId;
