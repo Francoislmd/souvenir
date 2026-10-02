@@ -665,9 +665,10 @@ export function SortieScreen({
       <p className={styles.sdPublishingText}>{isGroup ? "Publier la galerie ?" : "Envoyer les photos ?"}</p>
       <p className={styles.sdPublishingHint}>
         {isGroup
-          ? `${photoCount} photo${photoCount > 1 ? "s" : ""} deviendront visibles par tous vos clients.`
+          ? `${photoCount} photo${photoCount > 1 ? "s" : ""} seront visibles dans la galerie privée de chaque client de la liste.`
           : `${photoCount} photo${photoCount > 1 ? "s" : ""} seront envoyées à vos ${clients.length} client${clients.length > 1 ? "s" : ""}.`}
         {isGroup && emails.length > 0 ? ` Le lien partira à ${clientCount(emails.length)}.` : ""}
+        {isGroup && emails.length === 0 && clients.length === 0 ? " Aucune adresse pour l'instant : seuls les clients de la liste peuvent recevoir un lien." : ""}
         {state.working ? " Le transfert n'est pas fini : l'envoi partira automatiquement dès qu'il le sera." : ""}
       </p>
       <div className={styles.sdConfirmActions}>
@@ -848,7 +849,9 @@ export function SortieScreen({
         : needsClients
           ? "Ajoutez au moins un client pour les envoyer."
           : isGroup
-            ? "Vos clients les retrouveront par créneau."
+            ? clients.length > 0
+              ? "Vos clients les retrouveront dans leur galerie privée."
+              : "Ajoutez les adresses de vos clients : seules elles recevront un lien."
             : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`;
     bar = (
       <div className={styles.sdBar}>

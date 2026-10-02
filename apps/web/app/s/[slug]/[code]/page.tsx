@@ -5,8 +5,9 @@ import { formatDayFr } from "@/lib/format";
 import { LinkRequest } from "@/components/store/LinkRequest";
 import styles from "@/components/gallery/collective.module.css";
 
-// Le lien du QR code affiché à la fin de la sortie. Il ne montre rien : il
-// inscrit l'adresse du client à cette sortie et lui envoie sa galerie privée.
+// Le lien du QR code affiché à la fin de la sortie. Il ne montre rien : si
+// l'adresse saisie figure sur la liste de la sortie, la galerie privée de ce
+// client lui est envoyée.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
@@ -35,7 +36,7 @@ export default async function StoreSortiePage({ params }: { params: { slug: stri
         code={code}
         operator={operator}
         heading="Vos photos de la sortie"
-        lead={`${sortie.activity}, ${day.charAt(0).toLowerCase()}${day.slice(1)}. Votre lien personnel arrive par e-mail.`}
+        lead={`${sortie.activity}, ${day.charAt(0).toLowerCase()}${day.slice(1)}. Entrez l'adresse donnée à la réservation : votre lien personnel arrive par e-mail.`}
       />
     </div>
   );

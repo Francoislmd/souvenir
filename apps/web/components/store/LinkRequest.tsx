@@ -8,8 +8,8 @@ import { Logo } from "@/components/brand/Logo";
 
 /**
  * L'adresse de la boutique et celle du QR code de fin de sortie. Elles ne
- * montrent plus aucune photo : le client donne son e-mail et reçoit le lien
- * de SA galerie. La réponse est la même que l'adresse soit connue ou non,
+ * montrent plus aucune photo : le client donne son e-mail et, s'il figure
+ * sur la liste de la sortie, reçoit le lien de SA galerie. La réponse est la même que l'adresse soit connue ou non,
  * pour ne rien apprendre à qui essaie des adresses au hasard.
  */
 export function LinkRequest({
@@ -96,7 +96,7 @@ export function LinkRequest({
           <div className={styles.label}>
             <h2>Regardez vos e-mails</h2>
             <p>
-              Si une sortie correspond, votre lien est parti à <strong>{sentTo}</strong>. Il ouvre vos photos sur ce téléphone ou un autre, pendant 90 jours.
+              Si cette adresse figure sur la liste {code ? "de la sortie" : "d'une sortie"}, votre lien est parti à <strong>{sentTo}</strong>. Il ouvre vos photos sur ce téléphone ou un autre, pendant 90 jours.
             </p>
             <div className={styles.linkActions}>
               <button

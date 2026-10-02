@@ -1,11 +1,9 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { nameFromEmail } from "@/lib/emails";
 import { sendPrivateInvite } from "@/lib/private-link";
 import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_LINKS = 5;
 
 const schema = z.object({
@@ -14,12 +12,13 @@ const schema = z.object({
 });
 
 /**
- * Recevoir le lien de sa galerie privée. Deux portes :
- *  - avec le code du QR de fin de sortie, l'adresse devient un client de
- *    cette sortie ; son lien part tout de suite si les photos sont en ligne,
- *    sinon à la publication (lib/private-link.ts, sendPendingInvites) ;
- *  - sans code (l'adresse de la boutique), on renvoie les liens des sorties
- *    publiées de ce prestataire où cette adresse figure déjà.
+ * Recevoir le lien de sa galerie privée. Comme le numéro de dossard chez
+ * Finisher Memories, l'adresse e-mail est l'identifiant : elle doit figurer
+ * sur la liste de la sortie, donnée par le prestataire. Une adresse inconnue
+ * ne reçoit rien, et rien ne s'inscrit ici.
+ *  - avec le code du QR de fin de sortie : le lien de CETTE sortie ;
+ *  - sans code (l'adresse de la boutique) : les liens des sorties publiées
+ *    de ce prestataire où cette adresse figure.
  * La réponse est toujours la même : elle ne dit pas si l'adresse est connue.
  */
 export async function POST(request: Request, { params }: { params: { slug: string } }): Promise<Response> {
@@ -46,24 +45,15 @@ export async function POST(request: Request, { params }: { params: { slug: strin
       });
       if (!sortie) return Response.json({ ok: true });
 
-      const now = new Date();
-      const participant =
-        (await prisma.participant.findFirst({
-          where: { sortieId: sortie.id, contact: { equals: email, mode: "insensitive" }, deletedAt: null },
-          select: { id: true, token: true, contact: true },
-        })) ??
-        (await prisma.participant.create({
-          data: {
-            sortieId: sortie.id,
-            name: nameFromEmail(email),
-            contact: email,
-            channel: "EMAIL",
-            token: crypto.randomUUID(),
-            consentAt: now,
-            deleteAt: new Date(now.getTime() + 90 * DAY_MS),
-          },
-          select: { id: true, token: true, contact: true },
-        }));
+      const participant = await prisma.participant.findFirst({
+        where: { sortieId: sortie.id, contact: { equals: email, mode: "insensitive" }, deletedAt: null },
+        select: { id: true, token: true, contact: true },
+      });
+      // Adresse absente de la liste : même réponse, aucun envoi.
+      if (!participant) {
+        await track("gallery_link_requested", { operatorId: operator.id, meta: { via: "qr", found: 0 } });
+        return Response.json({ ok: true });
+      }
 
       if (sortie.status === "SENT") await sendPrivateInvite(participant, sortie);
       await track("gallery_link_requested", { operatorId: operator.id, participantId: participant.id, meta: { via: "qr", published: sortie.status === "SENT" } });
