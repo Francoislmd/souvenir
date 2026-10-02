@@ -4,7 +4,7 @@ import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
 import { deriveChannel } from "@/lib/channel";
 import { nameFromEmail } from "@/lib/emails";
-import { sendPrivateInvite } from "@/lib/private-link";
+import { departureKnown, departuresWithPhotos, sendPrivateInvite } from "@/lib/private-link";
 import { buildEmailCover } from "@/lib/email-cover";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -71,7 +71,11 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     // Un bandeau par envoi, partagé par tous les destinataires.
     const coverUrl = await buildEmailCover(sortie.id);
     const now = new Date();
+    // Plusieurs départs : l'adresse est ajoutée à la liste, et son lien part
+    // quand le prestataire indique son départ (api/participants/[id]/slot).
+    const departureCount = sortie.status === "SENT" ? (await departuresWithPhotos(sortie.id)).length : 0;
     let sent = 0;
+    let waiting = 0;
     let failure: string | null = null;
     for (const to of emails) {
       try {
@@ -79,7 +83,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
         // qui renvoie à toute sa liste ne doit pas la voir doubler.
         const existing = await prisma.participant.findFirst({
           where: { sortieId: sortie.id, contact: { equals: to, mode: "insensitive" }, deletedAt: null },
-          select: { id: true, token: true, contact: true },
+          select: { id: true, token: true, contact: true, slotId: true },
         });
         const participant =
           existing ??
@@ -93,9 +97,13 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
               consentAt: now,
               deleteAt: new Date(now.getTime() + 90 * DAY_MS),
             },
-            select: { id: true, token: true, contact: true },
+            select: { id: true, token: true, contact: true, slotId: true },
           }));
 
+        if (!departureKnown(participant, departureCount)) {
+          waiting += 1;
+          continue;
+        }
         // Chacun reçoit SA galerie : le lien n'ouvre que son départ.
         await sendPrivateInvite(participant, sortie, coverUrl);
         sent += 1;
@@ -105,14 +113,14 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       }
     }
 
-    await track("group_invite_sent", { operatorId: sortie.operatorId, meta: { sortieId: sortie.id, sent, total: emails.length } });
+    await track("group_invite_sent", { operatorId: sortie.operatorId, meta: { sortieId: sortie.id, sent, waiting, total: emails.length } });
 
     // Rien n'est parti : ce n'est pas un succès. Avant, la route répondait 200
     // quoi qu'il arrive et l'écran annonçait « Lien envoyé » sur un refus de Resend.
-    if (sent === 0) {
-      return Response.json({ sent, total: emails.length, error: failure ?? "L'envoi a échoué." }, { status: 502 });
+    if (sent === 0 && waiting === 0) {
+      return Response.json({ sent, waiting, total: emails.length, error: failure ?? "L'envoi a échoué." }, { status: 502 });
     }
-    return Response.json({ sent, total: emails.length, ...(failure ? { error: failure } : {}) }, { status: 200 });
+    return Response.json({ sent, waiting, total: emails.length, ...(failure ? { error: failure } : {}) }, { status: 200 });
   } catch (error) {
     console.error("[API /api/sorties/[sortieId]/invite]", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

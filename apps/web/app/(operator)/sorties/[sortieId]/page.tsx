@@ -4,6 +4,8 @@ import { requireOperatorUser } from "@/lib/current-user";
 import { getPreviewUrl } from "@/lib/storage";
 import { bucketSortie } from "@/lib/sorties";
 import { ensureShareCode, storeUrl } from "@/lib/store";
+import { departuresWithPhotos } from "@/lib/private-link";
+import { formatHourFr } from "@/lib/format";
 import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
 function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
@@ -42,9 +44,13 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
     contact: p.contact,
     sentAt: p.sentAt ? p.sentAt.toISOString() : null,
     token: p.token,
+    slotId: p.slotId,
     paid: p.orders.length > 0,
     amountCents: p.orders.reduce((sum, o) => sum + o.amountCents, 0),
   }));
+
+  // Les départs entre lesquels répartir les clients (sortie de groupe publiée).
+  const departures = isGroup && sortie.status === "SENT" ? (await departuresWithPhotos(sortie.id)).map((d) => ({ id: d.id, label: formatHourFr(d.startsAt), photoCount: d.photoCount })) : [];
 
   return (
     <SortieScreen
@@ -55,6 +61,7 @@ export default async function SortieDetailPage({ params }: { params: { sortieId:
       published={sortie.status === "SENT"}
       shareUrl={shareUrl}
       clients={clients}
+      departures={departures}
       paymentsReady={dbUser.operator.stripeOnboarded}
       initialPhotos={sortie.photos.map((p) => ({
         id: p.id,

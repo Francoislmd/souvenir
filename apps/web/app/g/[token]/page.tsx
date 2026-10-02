@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { getBoutiquePhotos } from "@/lib/gallery";
 import { accessFromOrders, remainingCapCents } from "@/lib/access";
+import { departuresWithPhotos } from "@/lib/private-link";
 import { getSeller } from "@/lib/seller";
 import { formatDayFr, formatHourFr, formatSortieTitle, formatWhenFr } from "@/lib/format";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { BoutiqueGallery } from "@/components/gallery/BoutiqueGallery";
-import { SlotChooser } from "@/components/gallery/SlotChooser";
 import galleryStyles from "@/components/gallery/gallery.module.css";
 import styles from "./boutique.module.css";
 
@@ -19,9 +19,9 @@ export const dynamic = "force-dynamic";
  * La galerie privée d'un client. C'est la seule porte vers des photos : le
  * QR code de la sortie ne montre rien, il envoie ce lien par e-mail.
  *
- * Sortie de groupe : le client voit son départ et rien d'autre. S'il est
- * arrivé par le QR code, il n'a pas encore de départ ; il le choisit à la
- * première ouverture (ou on le choisit pour lui s'il n'y en a qu'un).
+ * Sortie de groupe : le client voit son départ et rien d'autre. Le départ
+ * est indiqué par le prestataire, jamais choisi par le client ; s'il n'y en
+ * a qu'un, il est attribué d'office.
  */
 export default async function GalleryPage({ params }: { params: { token: string } }) {
   let participant = await prisma.participant.findUnique({
@@ -48,39 +48,23 @@ export default async function GalleryPage({ params }: { params: { token: string 
   );
 
   if (sortie.mode === "GROUPE" && !participant.slotId) {
-    const slots = await prisma.slot.findMany({
-      where: { sortieId: sortie.id },
-      orderBy: { startsAt: "asc" },
-      include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },
-    });
-    const withPhotos = slots.filter((s) => s._count.photos > 0);
+    const withPhotos = await departuresWithPhotos(sortie.id);
 
-    if (withPhotos.length === 0) {
+    if (withPhotos.length !== 1) {
       return page(
         <div className={galleryStyles.head}>
           <h1>{title}</h1>
           <p className={galleryStyles.sub}>{formatWhenFr(sortie.startsAt)}</p>
-          <p className={galleryStyles.hint}>Vos photos arrivent. Ce lien reste le bon : revenez-y un peu plus tard.</p>
+          <p className={galleryStyles.hint}>
+            {withPhotos.length === 0
+              ? "Vos photos arrivent. Ce lien reste le bon : revenez-y un peu plus tard."
+              : `${operator.name} n'a pas encore indiqué votre départ. Ce lien reste le bon : revenez-y un peu plus tard.`}
+          </p>
         </div>,
       );
     }
 
-    if (withPhotos.length > 1) {
-      return page(
-        <SlotChooser
-          token={participant.token}
-          dayLabel={`${title}, ${formatDayFr(sortie.startsAt).toLowerCase()}`}
-          slots={withPhotos.map((s) => ({
-            id: s.id,
-            hour: formatHourFr(s.startsAt),
-            activity: s.guide ? `Avec ${s.guide}` : sortie.activity,
-            photoCount: s._count.photos,
-          }))}
-        />,
-      );
-    }
-
-    // Un seul départ : pas de question à poser.
+    // Un seul départ : c'est forcément le sien.
     await prisma.participant.updateMany({ where: { id: participant.id, slotId: null }, data: { slotId: withPhotos[0]!.id } });
     participant = { ...participant, slotId: withPhotos[0]!.id };
   }

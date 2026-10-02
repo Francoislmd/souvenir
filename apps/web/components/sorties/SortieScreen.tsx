@@ -37,8 +37,17 @@ export interface ScreenClient {
   contact: string;
   sentAt: string | null;
   token: string;
+  /** Sortie de groupe : le départ indiqué par le prestataire. */
+  slotId: string | null;
   paid: boolean;
   amountCents: number;
+}
+
+/** Un départ d'une sortie de groupe publiée : « 10 h », 12 photos. */
+export interface ScreenDeparture {
+  id: string;
+  label: string;
+  photoCount: number;
 }
 
 function CheckIcon() {
@@ -76,6 +85,7 @@ export function SortieScreen({
   published,
   shareUrl,
   clients,
+  departures = [],
   initialPhotos,
   paymentsReady: initialPaymentsReady,
 }: {
@@ -86,6 +96,8 @@ export function SortieScreen({
   published: boolean;
   shareUrl: string | null;
   clients: ScreenClient[];
+  /** Deux départs ou plus : chaque client doit être rattaché au sien. */
+  departures?: ScreenDeparture[];
   initialPhotos: ScreenPhoto[];
   /** Stripe peut encaisser pour ce compte. Sans lui, publier ouvre d'abord
    *  l'inscription Stripe : une galerie en ligne où personne ne peut payer
@@ -99,6 +111,7 @@ export function SortieScreen({
   const scheduled = upload.scheduledFor(sortieId);
 
   const [photos, setPhotos] = useState<ScreenPhoto[]>(initialPhotos);
+  const [assigning, setAssigning] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
@@ -323,8 +336,8 @@ export function SortieScreen({
 
   // Une liste d'adresses saisies à la main par l'opérateur, pas des
   // Participant : en mode GROUPE personne n'est identifié avant l'achat.
-  async function sendInvites(): Promise<{ sent: number; total: number; error?: string }> {
-    if (emails.length === 0) return { sent: 0, total: 0 };
+  async function sendInvites(): Promise<{ sent: number; waiting: number; total: number; error?: string }> {
+    if (emails.length === 0) return { sent: 0, waiting: 0, total: 0 };
     const total = emails.length;
     try {
       const res = await fetch(`/api/sorties/${sortieId}/invite`, {
@@ -332,24 +345,27 @@ export function SortieScreen({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emails }),
       });
-      const data = (await res.json().catch(() => ({}))) as { sent?: number; total?: number; error?: string };
+      const data = (await res.json().catch(() => ({}))) as { sent?: number; waiting?: number; total?: number; error?: string };
       const sent = res.ok ? (data.sent ?? total) : 0;
-      if (sent > 0) setEmails([]);
-      return { sent, total: data.total ?? total, error: data.error };
+      const waiting = res.ok ? (data.waiting ?? 0) : 0;
+      if (sent + waiting > 0) setEmails([]);
+      return { sent, waiting, total: data.total ?? total, error: data.error };
     } catch {
-      return { sent: 0, total, error: "Connexion perdue." };
+      return { sent: 0, waiting: 0, total, error: "Connexion perdue." };
     }
   }
 
   async function sendInvitesNow(): Promise<void> {
     if (sendingInvite || emails.length === 0) return;
     setSendingInvite(true);
-    const { sent, total, error } = await sendInvites();
+    const { sent, waiting, total, error } = await sendInvites();
     setSendingInvite(false);
     // Les adresses deviennent des clients « Envoyé » dans la liste juste
     // en dessous : elle est rendue côté serveur, donc il faut la relire.
-    if (sent > 0) router.refresh();
-    if (sent === total) toast(`Lien envoyé à ${clientCount(sent)}`);
+    if (sent + waiting > 0) router.refresh();
+    if (waiting > 0 && sent + waiting === total)
+      toast(sent > 0 ? `Lien envoyé à ${clientCount(sent)}. Indiquez le départ des ${waiting} autres.` : "Ajoutés. Indiquez leur départ pour leur envoyer le lien.");
+    else if (sent === total) toast(`Lien envoyé à ${clientCount(sent)}`);
     else if (sent > 0) toast(`Lien envoyé à ${sent} sur ${total}. ${error ?? ""}`.trim());
     else toast(`L'envoi a échoué. ${error ?? "Réessayez."}`);
   }
@@ -715,7 +731,33 @@ export function SortieScreen({
   // Trois états, dans l'ordre où ils arrivent : le lien est parti, puis la
   // photo est payée. Une ligne sans envoi est une adresse ajoutée à la main
   // qui n'a pas encore reçu la sienne.
+  const needsDeparture = isGroup && departures.length > 1;
+
+  async function assignDeparture(client: ScreenClient, slotId: string): Promise<void> {
+    if (!slotId || slotId === client.slotId || assigning) return;
+    setAssigning(client.id);
+    try {
+      const res = await fetch(`/api/participants/${client.id}/slot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { sent?: boolean; error?: string };
+      if (!res.ok) {
+        toast(data.error ?? "Le départ n'a pas été enregistré. Réessayez.");
+        return;
+      }
+      toast(data.error ?? (data.sent ? `Départ enregistré, lien envoyé à ${client.name}` : "Départ enregistré"));
+      router.refresh();
+    } catch {
+      toast("Connexion perdue. Réessayez.");
+    } finally {
+      setAssigning(null);
+    }
+  }
+
   function clientRow(c: ScreenClient): React.ReactNode {
+    const missingDeparture = needsDeparture && !c.slotId;
     const inside = (
       <>
         <span className={styles.sdAv}>{c.name.slice(0, 2).toUpperCase()}</span>
@@ -723,8 +765,26 @@ export function SortieScreen({
           <b>{c.name}</b>
           <span>{c.contact}</span>
         </span>
+        {needsDeparture ? (
+          // Le dossard : le lien du client n'ouvrira que ce départ. Figé une
+          // fois qu'il a payé, sinon ses photos achetées disparaîtraient.
+          <select
+            className={`${styles.sdDep} ${missingDeparture ? styles.sdDepWait : ""}`}
+            value={c.slotId ?? ""}
+            disabled={assigning === c.id || (c.paid && !!c.slotId)}
+            onChange={(e) => void assignDeparture(c, e.target.value)}
+            aria-label={`Départ de ${c.name}`}
+          >
+            {c.slotId ? null : <option value="">Départ ?</option>}
+            {departures.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <span className={`${styles.sdTag} ${c.paid ? styles.sdTagPaid : c.sentAt ? "" : styles.sdTagWait}`}>
-          {c.paid ? formatEuros(c.amountCents) : c.sentAt ? "Envoyé" : "En attente"}
+          {c.paid ? formatEuros(c.amountCents) : c.sentAt ? "Envoyé" : missingDeparture ? "Lien en attente" : "En attente"}
         </span>
       </>
     );
@@ -779,6 +839,11 @@ export function SortieScreen({
         {published && clients.length > 0 ? (
           <span className={styles.sdMailClients}>
             <span className={styles.sdMailSub}>Vos clients</span>
+            {needsDeparture ? (
+              <span className={styles.sdMailH}>
+                {departures.length} départs : indiquez celui de chaque client. Son lien part à ce moment, et n&rsquo;ouvre que les photos de ce départ.
+              </span>
+            ) : null}
             <span className={styles.sdClients}>{clients.map((c) => clientRow(c))}</span>
           </span>
         ) : null}

@@ -2640,3 +2640,41 @@ a.sdClient:hover {
     border-radius: 0;
   }
 }
+
+/* Le départ d'un client de sortie de groupe (le « dossard ») : un choix
+   natif, à la taille d'une étiquette. Encore vide, il prend la couleur de
+   ce qui reste à faire. */
+.sdDep {
+  flex: 0 0 auto;
+  height: 30px;
+  max-width: 96px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sdDep:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.sdDepWait {
+  border-color: transparent;
+  background: var(--wait-bg);
+  color: var(--wait-ink);
+}
+@media (max-width: 760px) {
+  /* Sur téléphone, le départ rejoint l'état sous le nom, devant lui. */
+  .sdClient .sdDep {
+    order: 2;
+    margin-left: 46px;
+  }
+  .sdClient .sdDep + .sdTag {
+    margin-left: 0;
+  }
+}

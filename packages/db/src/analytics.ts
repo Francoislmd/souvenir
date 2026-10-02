@@ -28,7 +28,7 @@ export type EventName =
   | "order_dispute_resolved"
   | "sortie_deleted"
   | "storage_full"
-  | "slot_chosen"
+  | "slot_assigned"
   | "gallery_link_requested";
 
 interface TrackParams {

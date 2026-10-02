@@ -841,6 +841,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       // lieu, et l'écran de la sortie permet de renvoyer.
       let invitedOk = true;
       let inviteError = "";
+      let waiting = 0;
       if (invites > 0) {
         patchRun(sortieId, { phase: "inviting" });
         try {
@@ -849,8 +850,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ emails: intent.emails }),
           });
-          const data = (await res.json().catch(() => ({}))) as { sent?: number; error?: string };
-          invitedOk = res.ok && (data.sent ?? invites) === invites;
+          const data = (await res.json().catch(() => ({}))) as { sent?: number; waiting?: number; error?: string };
+          waiting = res.ok ? (data.waiting ?? 0) : 0;
+          invitedOk = res.ok && (data.sent ?? invites) + waiting === invites;
           inviteError = data.error ?? "";
         } catch {
           invitedOk = false;
@@ -863,7 +865,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         intent.isGroup
           ? invites === 0
             ? "Galerie publiée"
-            : invitedOk
+            : invitedOk && waiting > 0
+              ? "Galerie publiée. Indiquez le départ de chaque client pour lui envoyer son lien."
+              : invitedOk
               ? `Galerie publiée, lien envoyé à ${invites} client${invites > 1 ? "s" : ""}`
               : `Galerie publiée, mais l'envoi du lien a échoué. ${inviteError}`.trim()
           : `Envoyé à ${intent.clients} client${intent.clients > 1 ? "s" : ""}`,
