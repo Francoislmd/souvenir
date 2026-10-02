@@ -126,6 +126,10 @@ export function SortieScreen({
   // Rien n'est enregistré côté serveur avant, et rien n'est conservé après.
   const [emails, setEmails] = useState<string[]>([]);
   const [sendingInvite, setSendingInvite] = useState(false);
+  // Sortie de groupe à plusieurs départs : une liste par départ, comme les
+  // inscrits d'une course rangés par dossard.
+  const [depEmails, setDepEmails] = useState<Record<string, string[]>>({});
+  const [sendingDep, setSendingDep] = useState<string | null>(null);
 
   // Ouvre le sélecteur de fichiers du dépôt, depuis n'importe quel bouton.
   const dropZone = useRef<PhotoDropZoneHandle | null>(null);
@@ -336,19 +340,22 @@ export function SortieScreen({
 
   // Une liste d'adresses saisies à la main par l'opérateur, pas des
   // Participant : en mode GROUPE personne n'est identifié avant l'achat.
-  async function sendInvites(): Promise<{ sent: number; waiting: number; total: number; error?: string }> {
-    if (emails.length === 0) return { sent: 0, waiting: 0, total: 0 };
-    const total = emails.length;
+  async function sendInvites(list: string[] = emails, slotId?: string): Promise<{ sent: number; waiting: number; total: number; error?: string }> {
+    if (list.length === 0) return { sent: 0, waiting: 0, total: 0 };
+    const total = list.length;
     try {
       const res = await fetch(`/api/sorties/${sortieId}/invite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emails }),
+        body: JSON.stringify({ emails: list, ...(slotId ? { slotId } : {}) }),
       });
       const data = (await res.json().catch(() => ({}))) as { sent?: number; waiting?: number; total?: number; error?: string };
       const sent = res.ok ? (data.sent ?? total) : 0;
       const waiting = res.ok ? (data.waiting ?? 0) : 0;
-      if (sent + waiting > 0) setEmails([]);
+      if (sent + waiting > 0) {
+        if (slotId) setDepEmails((prev) => ({ ...prev, [slotId]: [] }));
+        else setEmails([]);
+      }
       return { sent, waiting, total: data.total ?? total, error: data.error };
     } catch {
       return { sent: 0, waiting: 0, total, error: "Connexion perdue." };
@@ -366,6 +373,18 @@ export function SortieScreen({
     if (waiting > 0 && sent + waiting === total)
       toast(sent > 0 ? `Lien envoyé à ${clientCount(sent)}. Indiquez le départ des ${waiting} autres.` : "Ajoutés. Indiquez leur départ pour leur envoyer le lien.");
     else if (sent === total) toast(`Lien envoyé à ${clientCount(sent)}`);
+    else if (sent > 0) toast(`Lien envoyé à ${sent} sur ${total}. ${error ?? ""}`.trim());
+    else toast(`L'envoi a échoué. ${error ?? "Réessayez."}`);
+  }
+
+  async function sendDepartureInvites(slotId: string, label: string): Promise<void> {
+    const list = depEmails[slotId] ?? [];
+    if (sendingDep || list.length === 0) return;
+    setSendingDep(slotId);
+    const { sent, total, error } = await sendInvites(list, slotId);
+    setSendingDep(null);
+    if (sent > 0) router.refresh();
+    if (sent === total) toast(`Départ de ${label} : lien envoyé à ${clientCount(sent)}`);
     else if (sent > 0) toast(`Lien envoyé à ${sent} sur ${total}. ${error ?? ""}`.trim());
     else toast(`L'envoi a échoué. ${error ?? "Réessayez."}`);
   }
@@ -765,7 +784,7 @@ export function SortieScreen({
           <b>{c.name}</b>
           <span>{c.contact}</span>
         </span>
-        {needsDeparture ? (
+        {missingDeparture ? (
           // Le dossard : le lien du client n'ouvrira que ce départ. Figé une
           // fois qu'il a payé, sinon ses photos achetées disparaîtraient.
           <select
@@ -816,12 +835,14 @@ export function SortieScreen({
       <span className={styles.sdMailMain}>
         <span className={styles.sdMailT}>Envoyez le lien à vos clients</span>
         <span className={styles.sdMailH}>
-          {published
-            ? "Collez la liste de votre carnet de réservation. Seules les adresses sont retenues, sans doublon."
-            : "Collez la liste de votre carnet de réservation. Vos clients recevront le lien dès la publication."}
+          {published && needsDeparture
+            ? `${departures.length} départs. Collez les adresses de chacun : chaque client reçoit un lien qui n'ouvre que les photos de son départ.`
+            : published
+              ? "Collez la liste de votre carnet de réservation. Seules les adresses sont retenues, sans doublon."
+              : "Collez la liste de votre carnet de réservation. Vos clients recevront le lien dès la publication. Plusieurs départs : vous collerez les adresses de chacun une fois la galerie en ligne."}
         </span>
-        <EmailsField emails={emails} onChange={setEmails} />
-        {published && emails.length > 0 ? (
+        {published && needsDeparture ? null : <EmailsField emails={emails} onChange={setEmails} />}
+        {published && !needsDeparture && emails.length > 0 ? (
           <span className={styles.sdMailFoot}>
             <button
               type="button"
@@ -836,14 +857,55 @@ export function SortieScreen({
         ) : null}
         {/* Une fois la galerie en ligne, ceux qui ont reçu le lien se lisent
             sous le champ, dans la même carte : c'est la suite du même geste. */}
-        {published && clients.length > 0 ? (
-          <span className={styles.sdMailClients}>
-            <span className={styles.sdMailSub}>Vos clients</span>
-            {needsDeparture ? (
-              <span className={styles.sdMailH}>
-                {departures.length} départs : indiquez celui de chaque client. Son lien part à ce moment, et n&rsquo;ouvre que les photos de ce départ.
+        {published && needsDeparture ? (
+          <>
+            {departures.map((d) => {
+              const list = depEmails[d.id] ?? [];
+              const theirs = clients.filter((c) => c.slotId === d.id);
+              return (
+                <span key={d.id} className={styles.sdMailClients}>
+                  <span className={styles.sdDepHead}>
+                    Départ de {d.label}
+                    <span>
+                      {d.photoCount} photo{d.photoCount > 1 ? "s" : ""}
+                      {theirs.length > 0 ? ` · ${clientCount(theirs.length)}` : ""}
+                    </span>
+                  </span>
+                  <EmailsField
+                    emails={list}
+                    onChange={(next) => setDepEmails((prev) => ({ ...prev, [d.id]: next }))}
+                    placeholder={`Les adresses du départ de ${d.label}`}
+                  />
+                  {list.length > 0 ? (
+                    <span className={styles.sdMailFoot}>
+                      <button
+                        type="button"
+                        className={`${styles.sBtn} ${styles.sBtnPri}`}
+                        onClick={() => void sendDepartureInvites(d.id, d.label)}
+                        disabled={!!sendingDep}
+                      >
+                        {sendingDep === d.id ? <Spinner size={16} tone="current" /> : null}
+                        {sendingDep === d.id ? "Envoi…" : `Envoyer à ${clientCount(list.length)}`}
+                      </button>
+                    </span>
+                  ) : null}
+                  {theirs.length > 0 ? <span className={styles.sdClients}>{theirs.map((c) => clientRow(c))}</span> : null}
+                </span>
+              );
+            })}
+            {clients.some((c) => !c.slotId) ? (
+              <span className={styles.sdMailClients}>
+                <span className={styles.sdDepHead}>
+                  Départ à indiquer
+                  <span>leur lien part dès que vous l&rsquo;indiquez</span>
+                </span>
+                <span className={styles.sdClients}>{clients.filter((c) => !c.slotId).map((c) => clientRow(c))}</span>
               </span>
             ) : null}
+          </>
+        ) : published && clients.length > 0 ? (
+          <span className={styles.sdMailClients}>
+            <span className={styles.sdMailSub}>Vos clients</span>
             <span className={styles.sdClients}>{clients.map((c) => clientRow(c))}</span>
           </span>
         ) : null}

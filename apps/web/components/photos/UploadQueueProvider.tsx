@@ -866,7 +866,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
           ? invites === 0
             ? "Galerie publiée"
             : invitedOk && waiting > 0
-              ? "Galerie publiée. Indiquez le départ de chaque client pour lui envoyer son lien."
+              ? "Galerie publiée. Plusieurs départs : indiquez celui de chaque client pour lui envoyer son lien."
               : invitedOk
               ? `Galerie publiée, lien envoyé à ${invites} client${invites > 1 ? "s" : ""}`
               : `Galerie publiée, mais l'envoi du lien a échoué. ${inviteError}`.trim()

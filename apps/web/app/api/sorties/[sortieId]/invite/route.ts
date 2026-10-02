@@ -14,6 +14,8 @@ export const maxDuration = 60;
 
 const schema = z.object({
   emails: z.array(z.string().email()).min(1).max(200),
+  /** Le départ de ces adresses : la liste collée sous « Départ de 10 h ». */
+  slotId: z.string().min(1).optional(),
 });
 
 /**
@@ -74,6 +76,11 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     // Plusieurs départs : l'adresse est ajoutée à la liste, et son lien part
     // quand le prestataire indique son départ (api/participants/[id]/slot).
     const departureCount = sortie.status === "SENT" ? (await departuresWithPhotos(sortie.id)).length : 0;
+    const slotId = parsed.data.slotId;
+    if (slotId) {
+      const slot = await prisma.slot.findFirst({ where: { id: slotId, sortieId: sortie.id }, select: { id: true } });
+      if (!slot) return Response.json({ error: "Départ introuvable" }, { status: 404 });
+    }
     let sent = 0;
     let waiting = 0;
     let failure: string | null = null;
@@ -83,7 +90,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
         // qui renvoie à toute sa liste ne doit pas la voir doubler.
         const existing = await prisma.participant.findFirst({
           where: { sortieId: sortie.id, contact: { equals: to, mode: "insensitive" }, deletedAt: null },
-          select: { id: true, token: true, contact: true, slotId: true },
+          select: { id: true, token: true, contact: true, slotId: true, orders: { where: { status: "succeeded" }, select: { id: true } } },
         });
         const participant =
           existing ??
@@ -96,10 +103,17 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
               token: crypto.randomUUID(),
               consentAt: now,
               deleteAt: new Date(now.getTime() + 90 * DAY_MS),
+              slotId: slotId ?? null,
             },
-            select: { id: true, token: true, contact: true, slotId: true },
+            select: { id: true, token: true, contact: true, slotId: true, orders: { where: { status: "succeeded" }, select: { id: true } } },
           }));
 
+        // Collée sous un autre départ : on la déplace, sauf si elle a déjà
+        // payé des photos du sien (elles disparaîtraient de sa galerie).
+        if (slotId && participant.slotId !== slotId && participant.orders.length === 0) {
+          await prisma.participant.update({ where: { id: participant.id }, data: { slotId } });
+          participant.slotId = slotId;
+        }
         if (!departureKnown(participant, departureCount)) {
           waiting += 1;
           continue;
