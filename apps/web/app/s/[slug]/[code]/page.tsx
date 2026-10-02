@@ -36,7 +36,7 @@ export default async function StoreSortiePage({ params }: { params: { slug: stri
         code={code}
         operator={operator}
         heading="Vos photos de la sortie"
-        lead={`${sortie.activity}, ${day.charAt(0).toLowerCase()}${day.slice(1)}. Entrez l'adresse donnée à la réservation. Nous vérifions qu'elle figure sur la liste de votre sortie, puis votre lien personnel part par e-mail.`}
+        lead={`${sortie.activity}, ${day.charAt(0).toLowerCase()}${day.slice(1)}. Entrez l'adresse donnée à la réservation : votre lien personnel part par e-mail.`}
       />
     </div>
   );
