@@ -146,19 +146,23 @@
 .accx .pro .top b{display:block;font:700 14.5px var(--display);letter-spacing:0}
 .accx .pro .top span{font-size:12px;color:var(--ink-3)}
 .accx .pro .top em{margin-left:auto;font-style:normal;font-size:11px;font-weight:600;color:var(--ink-2);background:var(--line-2);border-radius:999px;padding:4px 10px}
-.accx .grid{padding:14px 16px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.accx .grid{padding:12px 16px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .accx .grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
 .accx .grid .more{display:grid;place-items:center;aspect-ratio:1;border-radius:8px;background:var(--line-2);font:700 13px var(--display);color:var(--ink-3)}
-.accx .drop{margin:12px 16px 0;border:1.5px dashed var(--line);border-radius:12px;height:42px;display:flex;align-items:center;justify-content:center;gap:7px;font:600 12.5px var(--display);color:var(--ink-2)}
+.accx .drop{margin:10px 16px 0;border:1.5px dashed var(--line);border-radius:12px;height:38px;display:flex;align-items:center;justify-content:center;gap:7px;font:600 12.5px var(--display);color:var(--ink-2)}
 /* La barre suit la grille au lieu de tomber au pied de l'écran : le
    téléphone dépasse du cadre, « Publier » doit rester visible. */
-.accx .pro .bar{margin-top:14px;border-top:1px solid var(--line-2);padding:12px 16px 16px}
+.accx .pro .bar{margin-top:10px;border-top:1px solid var(--line-2);padding:12px 16px 16px}
 .accx .prog{height:3px;border-radius:2px;background:var(--line-2);overflow:hidden;margin-bottom:12px}
 .accx .prog i{display:block;height:100%;width:0;background:var(--ink);border-radius:2px}
 .accx .step.in .prog i{animation:acc-fill 2.6s var(--ease) .4s forwards}
 @keyframes acc-fill{to{width:64%}}
 .accx .pro .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.accx .pro .row span{font-size:13px;font-weight:600;white-space:nowrap}
+.accx .pro .row > span:first-child{font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.accx .pro .row > span:first-child b{font-weight:700;color:var(--ink)}
+/* Le retour « Sorties » / « Boîte de réception » des vrais écrans, dans les
+   maquettes des étapes comme dans celle du héros. */
+.accx .stage .nav2{padding:2px 12px 6px}
 .accx .pro .row .btn{height:34px;font-size:12.5px;padding:0 16px}
 
 /* Écran 2 : e-mail */
@@ -195,7 +199,8 @@
 .accx .fld small{display:block;margin-top:6px;font-size:10.5px;line-height:1.4;color:var(--ink-3)}
 .accx .apay{margin-top:14px;height:42px;border-radius:11px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;gap:5px;font:600 14.5px -apple-system,var(--font-inter),sans-serif}
 .accx .or{margin-top:10px;text-align:center;font-size:11.5px;color:var(--ink-3)}
-.accx .sheet .sec{margin-top:26px;padding-top:14px;border-top:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--ink-3)}
+.accx .cardPay{margin-top:8px;height:42px;border-radius:11px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:7px;font:600 13px var(--font-inter),sans-serif;color:var(--ink)}
+.accx .sheet .sec{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--ink-3)}
 
 /* ── 4. Prix (03/10/2026) : une seule information, ce que le pro reçoit ── */
 .accx .price{padding:clamp(80px, 8vw, 120px) 0}
