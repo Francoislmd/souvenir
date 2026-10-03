@@ -259,8 +259,10 @@ export default function AccueilPage() {
                   <div className="stage" aria-hidden="true">
                     <img className="stageBg" src="/accueil/fond-etape-1.webp" alt="" />
                     <div className="stageIn">
+                    <div className="mini"><div className="phone"><div className="scr">
+                    <div className="sbar"><span className="num">19:02</span><i /><span className="sig"><b /></span></div>
                     <div className="pro">
-                      <div className="top"><div><b>Canyoning</b><span>Samedi 19 septembre, 14 h</span></div><em>8 participants</em></div>
+                      <div className="top"><div><b>Canyoning, 14 h</b><span>Sam. 19 sept. · 8 participants</span></div></div>
                       <div className="grid">
                         <img src="/accueil/canyoning-1.webp" alt="" /><img src="/accueil/canyoning-2.webp" alt="" /><img src="/accueil/canyoning-3.webp" alt="" /><img src="/accueil/canyoning-4.webp" alt="" />
                         <img src="/accueil/canyoning-5.webp" alt="" /><img src="/accueil/canyoning-6.webp" alt="" /><img src="/accueil/canyoning-7.webp" alt="" /><span className="more">+41</span>
@@ -271,6 +273,7 @@ export default function AccueilPage() {
                         <div className="row"><span>48 photos déposées</span><span className="btn btn-ink">Publier</span></div>
                       </div>
                     </div>
+                    </div></div></div>
                     </div>
                   </div>
                   <div className="meta">
