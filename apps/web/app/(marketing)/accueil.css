@@ -103,17 +103,24 @@
 .accx .pbar .btn{width:100%;height:42px;font-size:13.5px}
 
 /* ── Bandeau d'activités ── */
-.accx .acts{padding:28px 0 clamp(80px, 8vw, 120px)}
-.accx .acts .wrap{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14.5px;color:var(--ink-3)}
+/* Ligne d'activités : centrée sous le héros, noms séparés par un point
+   médian, en retrait par rapport au texte courant (03/10/2026). */
+.accx .acts{padding:32px 0 0}
+.accx .acts .wrap{display:flex;flex-wrap:wrap;justify-content:center;row-gap:6px;font-size:14px;color:var(--ink-3)}
+.accx .acts a + a::before{content:"·";display:inline-block;margin:0 12px;color:var(--ink-4)}
+/* Sous 1100 px la ligne passe sur plusieurs rangs : un point en début de
+   rang ferait désordre, on remplace les points par un simple espacement. */
+@media (max-width:1100px){.accx .acts .wrap{column-gap:16px}.accx .acts a + a::before{display:none}}
 .accx .acts a{transition:color .15s}
 @media (hover:hover){.accx .acts a:hover{color:var(--ink)}}
 
 /* ── 2. Le constat (03/10/2026) : la question et le vrai problème, sans
    photo ni liste ── */
-.accx .moment{padding:0 0 clamp(96px, 10vw, 144px)}
+.accx .moment{padding:clamp(88px, 9vw, 128px) 0}
 .accx .moment .wrap{max-width:880px;text-align:center}
 .accx .moment .q{line-height:1.08}
-.accx .moment p{margin:22px auto 0;max-width:580px;font-size:18px;line-height:1.55;color:var(--ink-2)}
+.accx .moment .q .gm{color:var(--ink-4)}
+.accx .moment p{margin:20px auto 0;max-width:640px;font-size:18px;line-height:1.55;color:var(--ink-3);text-wrap:balance}
 
 /* ── 3. Fonctionnement ── */
 .accx .how{background:var(--paper);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:clamp(96px, 10vw, 144px) 0}
@@ -541,7 +548,6 @@
 /* ── Mobile : passe d'optimisation ── */
 @media (max-width:640px){
   /* rythme vertical resserré */
-  .accx .moment{padding:0 0 72px}
   .accx .how{padding:64px 0}
   .accx .price{padding:56px 0}
   .accx .fq{padding-top:40px;padding-bottom:48px}
@@ -633,8 +639,9 @@
 @keyframes acc-cap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (max-width:640px){
   .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{margin:36px auto 0}
-  .accx .acts{padding:28px 0 64px}
-  .accx .acts .wrap{gap:6px 16px;font-size:14.5px}
+  .accx .acts{padding:28px 0 0}
+  .accx .acts .wrap{font-size:13.5px}
+  .accx .moment{padding:64px 0 72px}
 }
 @media (min-width:641px) and (max-width:860px){
   .accx .hxCta .btn{flex:0 0 auto;padding:0 28px}

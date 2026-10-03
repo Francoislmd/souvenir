@@ -232,7 +232,7 @@ export default function AccueilPage() {
           {/* 2. Pourquoi c'est utile */}
           <section className="moment">
             <div className="wrap">
-              <h2 className="h2 q">«&nbsp;Vous avez les photos&nbsp;?&nbsp;»</h2>
+              <h2 className="h2 q"><span className="gm">«&nbsp;</span>Vous avez les photos&nbsp;?<span className="gm">&nbsp;»</span></h2>
               <p>Tous vos groupes vous la posent. Aujourd’hui, les photos finissent dans un groupe WhatsApp, un WeTransfer du dimanche soir, ou sur la carte SD.</p>
             </div>
           </section>
