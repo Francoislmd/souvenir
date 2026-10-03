@@ -153,8 +153,7 @@ export default function AccueilPage() {
                       <div className="hd2"><b>Rafting, 10 h</b><span>Samedi 19 septembre</span></div>
                       <div className="gr"><img src="/accueil/depot-1.webp" alt="" /><img src="/accueil/depot-2.webp" alt="" /><img src="/accueil/depot-3.webp" alt="" /><img src="/accueil/depot-4.webp" alt="" /><img src="/accueil/depot-5.webp" alt="" /><img src="/accueil/depot-6.webp" alt="" /><img src="/accueil/depot-7.webp" alt="" /><img src="/accueil/depot-8.webp" alt="" /><img src="/accueil/depot-9.webp" alt="" /><img src="/accueil/depot-10.webp" alt="" /><img src="/accueil/depot-11.webp" alt="" /><img src="/accueil/depot-12.webp" alt="" /><img src="/accueil/depot-13.webp" alt="" /><img src="/accueil/depot-14.webp" alt="" /><img src="/accueil/depot-15.webp" alt="" /><img src="/accueil/depot-16.webp" alt="" /></div>
                       <div className="ft2">
-                        <div className="pg"><i /></div>
-                        <div className="row2"><span id="cnt">0 photo déposée</span><span className="btn btn-ink" id="pub">Publier</span></div>
+                        <div className="row2"><span id="cnt"><b>0</b> photo</span><span className="btn btn-ink" id="pub">Publier</span></div>
                       </div>
                       <div className="toast" id="toast"><svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>Envoyée aux 8 participants</div>
                     </div>
@@ -170,12 +169,12 @@ export default function AccueilPage() {
                       </div>
                       <div className="mail" id="mail">
                         <div className="mh">
-                          <div className="fr"><span className="av"><svg viewBox="0 0 32 32" width="100%" height="100%" aria-hidden="true"><circle cx={16} cy={16} r={16} fill="#0e4a7b" /><path d="M7.5 18.5 12.6 11.5l3.1 4.1 2.3-2.9 6.5 5.8" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" /><path d="M8 22.6c1.4-1.1 2.9-1.1 4.3 0s2.9 1.1 4.3 0 2.9-1.1 4.3 0 2.2.9 2.9.6" fill="none" stroke="#7fd0ff" strokeWidth={1.9} strokeLinecap="round" /></svg></span><div><b>Bleu Torrent</b><span>à Julie · 19:10</span></div></div>
+                          <div className="fr"><span className="av"><svg viewBox="0 0 32 32" width="100%" height="100%" aria-hidden="true"><circle cx={16} cy={16} r={16} fill="#0e4a7b" /><path d="M7.5 18.5 12.6 11.5l3.1 4.1 2.3-2.9 6.5 5.8" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" /><path d="M8 22.6c1.4-1.1 2.9-1.1 4.3 0s2.9 1.1 4.3 0 2.9-1.1 4.3 0 2.2.9 2.9.6" fill="none" stroke="#7fd0ff" strokeWidth={1.9} strokeLinecap="round" /></svg></span><div><b>Bleu Torrent</b></div></div>
                           <p className="sj">Julie, vos photos du 19 septembre</p>
                         </div>
                         <div className="bd">
                           <img src="/accueil/email-couverture.webp" alt="" />
-                          <p>14 photos de votre sortie rafting vous attendent dans votre galerie privée.</p>
+                          <p>14 photos de votre sortie rafting vous attendent.</p>
                           <span className="btn btn-brand" id="open">Voir mes photos</span>
                         </div>
                       </div>
@@ -183,7 +182,6 @@ export default function AccueilPage() {
                     {/* C · il choisit */}
                     <div className="sc sC">
                       <div className="gh">
-                        <span className="back"><svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></span>
                         <div><b>Rafting, 10 h</b><span>14 photos</span></div>
                       </div>
                       <div className="vp"><div className="tr" id="tr">
@@ -199,7 +197,7 @@ export default function AccueilPage() {
                     </div>
                     {/* D · il paie, reçoit ses photos */}
                     <div className="sc sD">
-                      <div className="bgG"><div className="gh"><span className="back" /><div><b>Rafting, 10 h</b><span>14 photos</span></div></div><img src="/accueil/apercu-2.webp" alt="" /></div>
+                      <div className="bgG"><div className="gh"><div><b>Rafting, 10 h</b><span>14 photos</span></div></div><img src="/accueil/apercu-2.webp" alt="" /></div>
                       <div className="dim" />
                       <div className="sh" id="sheet">
                         <span className="grab" />
@@ -211,15 +209,13 @@ export default function AccueilPage() {
                         <div className="fld">
                           <label>Votre e-mail</label>
                           <div className="in">julie.m@gmail.com</div>
-                          <small>Vos photos vous sont envoyées à cette adresse dès le paiement.</small>
                         </div>
                         <div className="apay" id="apay"><span className="lbl"><svg width={13} height={15} viewBox="0 0 17 20" fill="currentColor"><path d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM11.6 3c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z" /></svg>Pay</span><span className="spin" /></div>
-                        <p className="or">ou par carte</p>
+                        <div className="cardPay"><svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x={3} y={5.5} width={18} height={13} rx={2.2} /><path d="M3 10h18M7 15h3" /></svg>Payer par carte</div>
                       </div>
                       <div className="ok" id="ok">
                         <span className="ci"><svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span>
                         <b>Vos photos sont à vous</b>
-                        <p>En haute définition, sans filigrane. Une copie part aussi sur julie.m@gmail.com.</p>
                         <div className="thumbs"><img src="/accueil/photo-1.webp" alt="" /><img src="/accueil/photo-2.webp" alt="" /></div>
                         <span className="btn btn-ink">Télécharger</span>
                       </div>

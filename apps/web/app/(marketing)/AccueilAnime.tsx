@@ -124,7 +124,7 @@ export function AccueilAnime() {
       if (n === 0) {
         sc[0].classList.remove("go");
         $("toast").classList.remove("show");
-        $("cnt").textContent = "0 photo déposée";
+        $("cnt").innerHTML = "<b>0</b> photo";
       }
       if (n === 1) {
         $("notif").classList.remove("show");
@@ -179,7 +179,7 @@ export function AccueilAnime() {
         const tick = () => {
           const p = Math.min(1, (performance.now() - t0) / 2400);
           const k = Math.round(p * 48);
-          $("cnt").textContent = k + (k > 1 ? " photos déposées" : " photo déposée");
+          $("cnt").innerHTML = `<b>${k}</b> ${k > 1 ? "photos" : "photo"}`;
           if (p < 1) raf = requestAnimationFrame(tick);
         };
         raf = requestAnimationFrame(tick);
