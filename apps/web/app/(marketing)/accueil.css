@@ -103,21 +103,12 @@
 .accx .acts a{transition:color .15s}
 @media (hover:hover){.accx .acts a:hover{color:var(--ink)}}
 
-/* ── 2. Le constat ── */
+/* ── 2. Le constat (03/10/2026) : la question et le vrai problème, sans
+   photo ni liste ── */
 .accx .moment{padding:0 0 clamp(96px, 10vw, 144px)}
-.accx .moment .wrap{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(40px, 6vw, 104px);align-items:center}
-.accx .collage{position:relative}
-.accx .collage .big{border-radius:var(--r-xl);overflow:hidden;aspect-ratio:4/5}
-.accx .collage .big img{width:100%;height:100%;object-fit:cover}
-.accx .collage .small{position:absolute;right:0;bottom:0;width:44%;aspect-ratio:1;border-radius:var(--r-lg);overflow:hidden;border:6px solid #fff;box-shadow:0 24px 48px -24px rgba(22,19,32,.35);background:#dfe3f6}
-.accx .collage .small img{width:100%;height:100%;object-fit:cover}
-.accx .moment .q{line-height:1.02}
-.accx .moment .q .mk{color:var(--brand)}
-.accx .moment .txt p{margin-top:24px;font-size:clamp(17px, .35vw + 15.5px, 19.5px);line-height:1.6;color:var(--ink-2);max-width:520px}
-.accx .today{margin-top:32px;display:grid;gap:0;border-top:1px solid var(--line);max-width:520px}
-.accx .today div{display:flex;gap:14px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line);font-size:16.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty}
-.accx .today b{flex:0 0 112px;font:700 13px/1.5 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--brand-ink)}
-.accx .moment .txt .after{word-spacing:.05em;margin-top:28px;font:600 21px/1.45 var(--display);letter-spacing:-.006em;color:var(--ink);max-width:520px}
+.accx .moment .wrap{max-width:880px;text-align:center}
+.accx .moment .q{font-size:clamp(40px, 2.6vw + 2vh, 60px);line-height:1.02}
+.accx .moment p{margin:26px auto 0;max-width:600px;font-size:clamp(18px, .4vw + 15.5px, 21px);line-height:1.55;color:var(--ink-2)}
 
 /* ── 3. Fonctionnement ── */
 .accx .how{background:var(--paper);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:clamp(96px, 10vw, 144px) 0}
@@ -191,41 +182,15 @@
 .accx .apay{margin-top:14px;height:42px;border-radius:11px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;gap:5px;font:600 14.5px -apple-system,var(--font-inter),sans-serif}
 .accx .or{margin-top:10px;text-align:center;font-size:11.5px;color:var(--ink-3)}
 
-/* ── 4. Tarif : une seule règle ── */
+/* ── 4. Prix (03/10/2026) : une seule information, ce que le pro reçoit ── */
 .accx .price{padding:clamp(80px, 8vw, 120px) 0}
-.accx .slab{background:var(--ink);color:#fff;border-radius:30px;padding:clamp(36px, 4.5vw, 64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px, 5vw, 80px);align-items:center;position:relative;overflow:hidden}
-.accx .slab > *{position:relative}
-.accx .slab .kick{color:rgba(255,255,255,.62)}
-.accx .slab .h2{margin-top:0;color:#fff;max-width:460px}
-.accx .slab .tl{margin-top:18px;color:rgba(255,255,255,.78)}
-.accx .facts{margin-top:26px;display:grid;gap:12px;list-style:none}
-.accx .facts li{display:flex;gap:12px;align-items:flex-start;font-size:16px;line-height:1.5;color:rgba(255,255,255,.84)}
-.accx .facts svg{flex:0 0 auto;margin-top:2px;color:var(--amber)}
-.accx .rate{display:flex;align-items:baseline;gap:14px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.14)}
-.accx .rate b{font:800 clamp(64px, 5vw + 1vh, 96px)/.9 var(--display);letter-spacing:-.03em;color:var(--brand)}
-.accx .rate span{font-size:17px;line-height:1.35;color:rgba(255,255,255,.84);max-width:170px}
-.accx .ex{margin-top:22px}
-.accx .ex .case{font-size:15px;color:rgba(255,255,255,.66)}
-.accx .split{margin-top:16px;display:grid;grid-template-columns:auto auto auto auto auto;align-items:center;gap:10px 12px;font-variant-numeric:tabular-nums}
-.accx .split .v{display:block;font:700 22px/1 var(--display);color:#fff;letter-spacing:-.01em}
-.accx .split .l{display:block;margin-top:6px;font-size:12.5px;line-height:1.3;color:rgba(255,255,255,.6)}
-.accx .split .ar{color:rgba(255,255,255,.35)}
-.accx .split .cut .v{color:var(--brand)}
-.accx .split .mine{background:#fff;color:var(--ink);border-radius:16px;padding:14px 16px}
-.accx .split .mine .v{font-size:30px;color:var(--ink)}
-.accx .split .mine .l{color:var(--ink-3)}
-.accx .sbar8{margin-top:18px;height:8px;border-radius:4px;display:flex;overflow:hidden;gap:3px}
-.accx .sbar8 i{display:block;height:100%;border-radius:4px}
-.accx .sbar8 i{flex-basis:0}
-.accx .sbar8 i:first-child{background:#fff}
-.accx .sbar8 i:last-child{background:var(--brand)}
-.accx .ex .fine{margin-top:14px;font-size:13px;line-height:1.5;color:rgba(255,255,255,.5)}
-.accx .season{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px 32px;padding-top:30px;border-top:1px solid rgba(255,255,255,.14)}
-.accx .season p{max-width:640px;font-size:17px;line-height:1.55;color:rgba(255,255,255,.8)}
-.accx .season p b{display:block;margin-bottom:6px;font:700 12.5px var(--display);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5)}
-.accx .season p strong{font-weight:700;color:#fff}
-.accx .season a{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.28);font:700 15px var(--display);color:#fff;white-space:nowrap;transition:background .15s,border-color .15s}
-@media (hover:hover){.accx .season a:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5)}}
+.accx .slab{background:var(--ink);color:#fff;border-radius:30px;padding:clamp(36px, 4.5vw, 64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px, 5vw, 80px);align-items:center}
+.accx .slab .h2{color:#fff;max-width:460px}
+.accx .slab .lbl{font-size:17px;color:rgba(255,255,255,.72)}
+.accx .slab .net{margin-top:10px;font:800 clamp(64px, 5vw + 1vh, 96px)/.9 var(--display);letter-spacing:-.03em;color:#fff}
+.accx .slab .det{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14);font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.56);max-width:440px}
+.accx .slab .calc{display:inline-flex;align-items:center;gap:8px;margin-top:24px;font:700 15.5px var(--display);color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:4px}
+@media (hover:hover){.accx .slab .calc:hover{text-decoration-color:#fff}}
 /* ── 5. FAQ : reprise à l'identique de Faq.module.css ── */
 .accx .fq{background:#fff;padding:clamp(40px, 5vw, 72px) 0 clamp(80px, 8vw, 120px)}
 .accx .fqWrap{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:clamp(30px, 5vw, 90px);align-items:start}
@@ -511,8 +476,6 @@
 }
 
 @media (max-width:1060px){
-  .accx .moment .wrap{grid-template-columns:minmax(0,1fr)}
-  .accx .collage{max-width:520px}
   .accx .steps{grid-template-columns:minmax(0,1fr);max-width:560px}
   .accx .slab{grid-template-columns:minmax(0,1fr)}
 }
@@ -522,21 +485,12 @@
   .accx .hd .btn{margin-left:auto}
   .accx .hd .btn{padding:0 15px}
   .accx .ph{flex-basis:142px;height:194px}
-  .accx .collage{padding:0}
-  .accx .today b{flex-basis:96px}
   .accx .stage{height:400px;padding:26px 18px 0}
   .accx .meta{padding:20px 2px 0}
   .accx .slab{border-radius:26px;padding:34px 20px}
-  .accx .split{gap:8px 8px}
-  .accx .split .v{font-size:19px}
-  .accx .split .mine{padding:12px 12px}
-  .accx .split .mine .v{font-size:24px}
   .accx .endCard{min-height:0;border-radius:26px;flex-direction:column;align-items:stretch;background:var(--ink)}
   .accx .endCard > img{position:static;width:100%;height:230px}
   .accx .endCard::after{display:none}
-  .accx .season{padding-top:24px}
-  .accx .season p{font-size:16px}
-  .accx .season a{width:100%;justify-content:center}
   .accx .ftr{border-radius:26px}
   .accx .endIn{padding:30px 22px 32px}
   .accx .endIn .btn{width:100%}
@@ -565,11 +519,8 @@
   .accx .lt{margin-top:40px}.accx .lt b{font-size:54px}
   .accx .sA .gr{grid-template-columns:repeat(4,1fr)}
   .accx .hxCta small{font-size:13.5px}
-  /* collage : la vignette ne mange plus la photo */
-  .accx .collage{max-width:none}
-  .accx .moment .q{font-size:29px}
-  .accx .today div{flex-direction:column;gap:2px;font-size:15.5px;padding:14px 0}
-  .accx .today b{flex-basis:auto}
+  .accx .moment .q{font-size:34px}
+  .accx .moment p{font-size:17px}
   /* fonctionnement : carrousel horizontal au lieu de trois cartes empilées */
   .accx .steps{display:flex;gap:12px;margin:32px calc(-1 * var(--gutter)) 0;padding:0 var(--gutter) 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--gutter);scrollbar-width:none;max-width:none}
   .accx .steps::-webkit-scrollbar{display:none}
@@ -581,22 +532,11 @@
   .accx .meta h3{font-size:20px;margin-top:12px}
   .accx .meta p{font-size:15px}
   .accx .stepsHint{display:flex}
-  /* tarif : l'exemple se lit de haut en bas */
-  .accx .rate b{font-size:64px}
-  .accx .rate span{max-width:none}
   .accx .sA .row2 span{font-size:12px}
   .accx .sA .row2 .btn{padding:0 13px;height:34px;font-size:12.5px}
   .accx .sA .ft2{padding:10px 12px 14px}
   .accx .toast{bottom:80px}
   .accx .stage .pro .top em{display:none}
-  .accx .split{grid-template-columns:1fr auto;gap:0}
-  .accx .split > div{display:flex;justify-content:space-between;align-items:baseline;grid-column:1/-1;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1)}
-  .accx .split > div .l br{display:none}
-  .accx .split > div .l{margin:0;order:-1;font-size:14px}
-  .accx .split .ar{display:none}
-  .accx .split .mine{margin-top:10px;border:0;padding:14px 16px}
-  .accx .split .mine .v{font-size:26px}
-  .accx .split .v{font-size:20px}
   /* FAQ */
   .accx .fqAns{padding-right:0}
   /* pied : deux colonnes, cibles tactiles de 40 px */
@@ -661,8 +601,6 @@
   .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{margin:36px auto 0}
   .accx .acts{padding:28px 0 64px}
   .accx .acts .wrap{gap:6px 16px;font-size:14.5px}
-  /* le constat : photo carrée, plus de colonne de 400px avant le titre */
-  .accx .collage .big{aspect-ratio:1}
 }
 @media (min-width:641px) and (max-width:860px){
   .accx .hxCta .btn{flex:0 0 auto;padding:0 28px}

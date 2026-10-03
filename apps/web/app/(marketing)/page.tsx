@@ -103,11 +103,8 @@ const PACK_CENTS = 2500;
 const COMMISSION_CENTS = Math.round(PACK_CENTS * 0.2);
 const STRIPE_CENTS = Math.round(PACK_CENTS * 0.015 + 25);
 const NET_CENTS = PACK_CENTS - COMMISSION_CENTS - STRIPE_CENTS;
-const SAISON = { sorties: 80, groupe: 8, packs: 2 };
-const SAISON_CENTS = SAISON.sorties * SAISON.packs * NET_CENTS;
 const eur = (cents: number, decimals = cents % 100 !== 0) =>
   `${(cents / 100).toLocaleString("fr-FR", { minimumFractionDigits: decimals ? 2 : 0, maximumFractionDigits: decimals ? 2 : 0 })}\u00a0€`;
-const arrondiCent = (cents: number) => Math.round(cents / 10000) * 10000;
 
 export default function AccueilPage() {
   return (
@@ -247,18 +244,8 @@ export default function AccueilPage() {
           {/* 2. Pourquoi c'est utile */}
           <section className="moment">
             <div className="wrap">
-              <div className="collage" aria-hidden="true">
-                <div className="big"><img src="/accueil/escalade-duo.webp" alt="" /></div>
-              </div>
-              <div className="txt">
-                <h2 className="h2 q">«&nbsp;Vous avez les photos&nbsp;?&nbsp;»</h2>
-                <p>C’est la question de chaque fin de sortie. Avec Linktrip, vos clients reçoivent leurs photos le soir même, et ceux qui veulent les garder les paient.</p>
-                <div className="today">
-                  <div><b>En plus</b><span>Chaque photo payée s’ajoute au prix de la sortie.</span></div>
-                  <div><b>En retour</b><span>Une adresse e-mail à chaque achat, et une demande d’avis Google si vous l’activez.</span></div>
-                  <div><b>En moins</b><span>Les envois un par un et les WeTransfer du dimanche soir.</span></div>
-                </div>
-              </div>
+              <h2 className="h2 q">«&nbsp;Vous avez les photos&nbsp;?&nbsp;»</h2>
+              <p>Tous vos groupes vous la posent. Aujourd’hui, les photos finissent dans un groupe WhatsApp, un WeTransfer du dimanche soir, ou sur la carte SD.</p>
             </div>
           </section>
           {/* 3. Fonctionnement */}
@@ -344,28 +331,12 @@ export default function AccueilPage() {
           <section className="price" id="tarif">
             <div className="wrap">
               <div className="slab">
+                <h2 className="h2">Vous payez uniquement quand vous vendez.</h2>
                 <div>
-                  <h2 className="h2">Vous payez uniquement quand vous vendez.</h2>
-                  <p className="lede tl">Ni abonnement, ni frais d’inscription, ni engagement.</p>
-                </div>
-                <div>
-                  <p className="rate"><b>20&nbsp;%</b><span>de commission sur chaque vente</span></p>
-                  <div className="ex">
-                    <p className="case">Exemple : un client prend le pack à {eur(PACK_CENTS)}.</p>
-                    <div className="split">
-                      <div><span className="v num">{eur(PACK_CENTS)}</span><span className="l">payés par <br />le client</span></div>
-                      <span className="ar" aria-hidden="true">→</span>
-                      <div className="cut"><span className="v num">{eur(COMMISSION_CENTS + STRIPE_CENTS)}</span><span className="l">Linktrip {eur(COMMISSION_CENTS)}, <br />Stripe {eur(STRIPE_CENTS)}</span></div>
-                      <span className="ar" aria-hidden="true">→</span>
-                      <div className="mine"><span className="v num">{eur(NET_CENTS)}</span><span className="l">sur votre compte</span></div>
-                    </div>
-                    <div className="sbar8" aria-hidden="true"><i style={{ flexGrow: NET_CENTS }} /><i style={{ flexGrow: COMMISSION_CENTS + STRIPE_CENTS }} /></div>
-                    <p className="fine">Frais Stripe d’une carte européenne standard : 1,5&nbsp;% + 0,25&nbsp;€, prélevés par Stripe comme pour vos réservations.</p>
-                  </div>
-                </div>
-                <div className="season">
-                  <p><b>Sur un été</b>{SAISON.sorties} sorties de {SAISON.groupe} personnes, {SAISON.packs} packs vendus par sortie&nbsp;: environ <strong className="num">{eur(arrondiCent(SAISON_CENTS), false)}</strong> pour vous.</p>
-                  <Link href="/produit#simulateur">Faire le calcul avec vos chiffres<svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
+                  <p className="lbl">Sur un pack à {eur(PACK_CENTS)}, vous recevez</p>
+                  <p className="net num">{eur(NET_CENTS)}</p>
+                  <p className="det">{eur(COMMISSION_CENTS)} de commission pour Linktrip (20&nbsp;%) et {eur(STRIPE_CENTS)} de frais Stripe, pour une carte européenne. Pas d’abonnement.</p>
+                  <Link href="/produit#simulateur" className="calc">Calculer avec vos chiffres<svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
                 </div>
               </div>
             </div>
