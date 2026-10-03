@@ -233,7 +233,7 @@ export default function AccueilPage() {
           <section className="moment">
             <div className="wrap">
               <h2 className="h2 q"><span className="gm">«&nbsp;</span>Vous avez les photos&nbsp;?<span className="gm">&nbsp;»</span></h2>
-              <p>Vos clients la posent à chaque fin de sortie. Le plus souvent, les photos restent sur la carte ou partent une à une sur WhatsApp.</p>
+              <p>La question revient à chaque fin de sortie. Le plus souvent, les photos ne quittent jamais la carte.</p>
             </div>
           </section>
           {/* 3. Fonctionnement */}
