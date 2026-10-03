@@ -39,19 +39,6 @@ export function AccueilAnime() {
     document.querySelectorAll(".accx .rv").forEach((el) => io.observe(el));
     cleanups.push(() => io.disconnect());
 
-    /* ── Flèches du bandeau d'activités ── */
-    const track = document.getElementById("track");
-    document.querySelectorAll<HTMLButtonElement>(".accx .actsCtl button").forEach((b) => {
-      const onClick = () => {
-        const card = track?.querySelector(".card");
-        if (!track || !card) return;
-        const step = (card.getBoundingClientRect().width + 14) * 2;
-        track.scrollBy({ left: step * Number(b.dataset.dir), behavior: reduce ? "auto" : "smooth" });
-      };
-      b.addEventListener("click", onClick);
-      cleanups.push(() => b.removeEventListener("click", onClick));
-    });
-
     /* ── Démo du héros ── */
     const $ = (id: string) => document.getElementById(id) as HTMLElement;
     const hx = $("hx");

@@ -4,8 +4,7 @@ import Link from "next/link";
 import { Header } from "@/components/marketing/Header";
 import { Logo } from "@/components/brand/Logo";
 import { ManageCookiesLink } from "@/components/analytics/ManageCookiesLink";
-import type { ActivitySlug } from "@/components/marketing/ActivityIcons";
-import { NOM_ACTIVITE } from "@/components/marketing/activitesNav";
+import { parMilieu } from "@/components/marketing/activitesNav";
 import landing from "./landing.module.css";
 import { AccueilAnime } from "./AccueilAnime";
 import "./accueil.css";
@@ -29,10 +28,18 @@ import "./accueil.css";
    L'en-tête est le <Header> commun ; le pied de page est propre à l'accueil
    (bandeau contact au lieu du champ de liste d'attente). */
 
+const TITLE = "Linktrip · Vendez à vos clients les photos de leur sortie";
+const DESCRIPTION =
+  "Le soir, vous déposez les photos. Chaque client reçoit les siennes à votre nom et paie celles qu’il garde.";
+
+/* Les balises de partage sont redonnées ici : sans elles, l'accueil hérite
+   de celles du layout racine, et c'est ce qu'affichent WhatsApp, LinkedIn ou
+   un mail de prospection quand on colle le lien. */
 export const metadata: Metadata = {
-  title: "Linktrip · Vendez à vos clients les photos de leur sortie",
-  description:
-    "Vous déposez les photos le soir, chaque client reçoit sa galerie privée et paie celles qu'il garde. 20 % par vente, sans abonnement.",
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/", siteName: "Linktrip", locale: "fr_FR", type: "website" },
+  twitter: { card: "summary", title: TITLE, description: DESCRIPTION },
 };
 
 /* Les questions de la FAQ, écrites une seule fois : le balisage et le JSON-LD
@@ -46,15 +53,19 @@ export const metadata: Metadata = {
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Je donne déjà mes photos à mes clients. Pourquoi changer ?",
-    a: "Vous n’envoyez plus rien vous-même : chaque client reçoit son lien et récupère ses photos seul. Ceux qui veulent les garder en haute définition les paient, les autres repartent sans rien vous coûter.",
+    a: "Vous n’envoyez plus rien vous-même : chaque client reçoit son lien et récupère ses photos seul. Ceux qui veulent les photos en haute définition les paient. Vous ne faites plus rien à la main.",
   },
   {
     q: "Qu’est-ce qu’il me reste à faire après une sortie ?",
-    a: "Déposer les photos et coller les adresses e-mail du groupe, depuis votre téléphone ou un ordinateur. L’envoi des liens, les rappels, le paiement et la livraison se font sans vous. Pas d’appli à installer : votre appareil habituel et un navigateur suffisent.",
+    a: "Déposer les photos et coller la liste du groupe, créneau par créneau si vous en avez plusieurs. L’envoi des liens, les rappels, le paiement et la livraison se font sans vous. Pas d’appli à installer : votre appareil habituel et un navigateur suffisent.",
+  },
+  {
+    q: "Je n’ai pas les e-mails de mes clients ?",
+    a: "Collez la liste de votre réservation telle quelle : Linktrip y retrouve les e-mails et les numéros de téléphone. Un client sans e-mail reçoit son lien par SMS. Un client absent de la liste ne reçoit rien.",
   },
   {
     q: "Quand est-ce que je touche l’argent ?",
-    a: "Le client paie directement sur votre compte Stripe, comme pour vos réservations en ligne, et Stripe vire l’argent sur votre compte bancaire. Linktrip ne touche jamais vos fonds : seule sa commission est prélevée au passage.",
+    a: "Le client paie sur votre compte Stripe, qui vous vire l’argent sur votre compte bancaire. Linktrip ne touche jamais vos fonds : seule sa commission est prélevée au passage.",
   },
   {
     q: "Qui fixe les prix ?",
@@ -66,11 +77,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Et le droit à l’image ?",
-    a: "Les photos ne sont jamais publiques : il faut le lien personnel envoyé au client pour les voir, et elles ne sont pas référencées. Le client peut retirer une photo de sa galerie sans se justifier. Tout est hébergé en Europe et effacé 90 jours après la mise en ligne.",
-  },
-  {
-    q: "Ça marche pour les sorties en groupe ?",
-    a: "Oui. Vous collez les adresses du groupe, créneau par créneau si vous en avez plusieurs. Chaque client reçoit son propre lien et ne voit que les photos de son créneau.",
+    a: "Les photos ne sont jamais publiques : il faut le lien personnel envoyé au client pour les voir, et elles n’apparaissent pas sur Google. Le client peut retirer une photo de sa galerie sans se justifier. Tout est hébergé en Europe et effacé 90 jours après la mise en ligne.",
   },
 ];
 
@@ -84,21 +91,9 @@ const FAQ_JSON_LD = {
   })),
 };
 
-/* Le bandeau d'activités ne montre que des activités qui ont leur page et
-   figurent au menu : les noms viennent de activitesNav.ts, chaque carte mène à
-   /activites/<slug>. Une seule liste sur tout le site (03/10/2026). Kayak et
-   paddle n'ont pas de carte tant qu'il manque une photo prise pendant une
-   sortie encadrée (les deux d'avant : un canal en ville, un coucher de soleil). */
-const CARTES_ACTIVITES: { slug: ActivitySlug; image: string }[] = [
-  { slug: "rafting", image: "activite-rafting" },
-  { slug: "canyoning", image: "activite-canyoning" },
-  { slug: "parapente", image: "activite-parapente" },
-  { slug: "surf", image: "activite-surf" },
-  { slug: "bouee", image: "activite-bouee-tractee" },
-  { slug: "jet-ski", image: "activite-jet-ski" },
-  { slug: "tyrolienne", image: "activite-tyrolienne" },
-  { slug: "parc-aventure", image: "activite-parcours-aventure" },
-];
+/* La ligne d'activités sous le héros reprend exactement le menu du header
+   (activitesNav.ts) : un seul ordre, une seule orthographe sur tout le site. */
+const ACTIVITES_ACCUEIL = parMilieu("eau").concat(parMilieu("air"), parMilieu("terre"));
 
 /* Exemple de prix, une seule source pour le bloc #tarif. Frais Stripe d'une
    carte européenne standard (1,5 % + 0,25 €, grille publique de Stripe France,
@@ -240,24 +235,15 @@ export default function AccueilPage() {
               </div>
             </div>
           </section>
-          {/* Pour quelles activités */}
-          <section className="acts" aria-labelledby="acts-titre">
-            <div className="wrap actsHead">
-              <h2 id="acts-titre" className="actsTitle">Pour toutes les sorties où vous sortez l’appareil.</h2>
-              <div className="actsCtl">
-                <button type="button" aria-label="Activités précédentes" data-dir={-1}><svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
-                <button type="button" aria-label="Activités suivantes" data-dir={1}><svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
-              </div>
-            </div>
-            <div className="track" id="track">
-              {CARTES_ACTIVITES.map(({ slug, image }) => (
-                <Link key={slug} href={`/activites/${slug}`} className="card">
-                  <img src={`/accueil/${image}.webp`} alt="" loading="lazy" />
-                  <span>{NOM_ACTIVITE[slug]}</span>
-                </Link>
+          {/* Pour quelles activités : une ligne de noms sous le héros, à la place
+              du carrousel de photos (03/10/2026). Mêmes noms que le menu. */}
+          <nav className="acts" aria-label="Activités">
+            <div className="wrap">
+              {ACTIVITES_ACCUEIL.map(({ slug, nom }) => (
+                <Link key={slug} href={`/activites/${slug}`}>{nom}</Link>
               ))}
             </div>
-          </section>
+          </nav>
           {/* 2. Pourquoi c'est utile */}
           <section className="moment">
             <div className="wrap">
@@ -300,7 +286,7 @@ export default function AccueilPage() {
                   <div className="meta">
                     <span className="n">1</span>
                     <h3>Vous déposez toute la carte</h3>
-                    <p>Pas besoin de trier ni de renommer. Vous pouvez publier pendant que le transfert continue.</p>
+                    <p>Sans trier ni renommer. Vous publiez pendant que l’envoi continue.</p>
                   </div>
                 </article>
                 <article className="step rv d1">
@@ -321,7 +307,7 @@ export default function AccueilPage() {
                   <div className="meta">
                     <span className="n">2</span>
                     <h3>Le lien part à votre nom</h3>
-                    <p>L’e-mail porte le nom de votre structure, pas celui de Linktrip. Sans achat, un rappel part deux jours après, puis un dernier la semaine suivante.</p>
+                    <p>L’e-mail porte le nom de votre structure, pas celui de Linktrip. S’il n’achète pas, il reçoit un rappel deux jours après, puis un dernier.</p>
                   </div>
                 </article>
                 <article className="step rv d2">
@@ -346,7 +332,7 @@ export default function AccueilPage() {
                   </div>
                   <div className="meta">
                     <span className="n">3</span>
-                    <h3>Il paie celles qu’il garde</h3>
+                    <h3>Il paie depuis son téléphone</h3>
                     <p>Par carte, Apple Pay ou Google Pay, sans créer de compte. Les fichiers en haute définition arrivent aussitôt dans sa boîte mail.</p>
                   </div>
                 </article>
@@ -388,7 +374,7 @@ export default function AccueilPage() {
           <section className="fq" id="questions" aria-labelledby="faq">
             <div className="wrap fqWrap">
               <div className="fqAside">
-                <h2 id="faq" className="h2">Vos questions, avant de vous lancer.</h2>
+                <h2 id="faq" className="h2">Questions fréquentes</h2>
               </div>
               <div>
                 {FAQ.map(({ q, a }, i) => (
@@ -407,7 +393,7 @@ export default function AccueilPage() {
                 <img src="/accueil/fin-parapente.webp" alt="Un moniteur de parapente prend la photo de son passager en plein vol" />
                 <div className="endIn">
                   <h2 className="h2">Essayez Linktrip sur votre prochaine sortie.</h2>
-                  <p>L’inscription est gratuite. Pas encore de compte Stripe&nbsp;? Il se crée pendant l’inscription, en quelques minutes.</p>
+                  <p>Pas de compte Stripe&nbsp;? Il se crée pendant l’inscription.</p>
                   <Link href="/signup" className="btn btn-white">Créer mon espace<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
                   <p className="who">Une question avant de vous lancer&nbsp;? François, qui a créé Linktrip, vous répond&nbsp;: <a href="mailto:hello@linktrip.co">hello@linktrip.co</a></p>
                 </div>
@@ -419,9 +405,9 @@ export default function AccueilPage() {
         <footer className="ftr">
           <div className="ftrIn">
             <div className="ftrGrid">
-              <div><Link href="/" className="ftrLogo" aria-label="Linktrip, accueil"><Logo variant="lockup" tone="white" height={26} title={null} /></Link><div className="trust" style={{marginTop: 16}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2.8 4.8 5.6v6.1c0 4.4 3 8 7.2 9.5 4.2-1.5 7.2-5.1 7.2-9.5V5.6L12 2.8Z" /><path d="m8.9 12.1 2.1 2.1 4.1-4.2" /></svg>Hébergé en Europe, conforme RGPD</div></div>
+              <div><Link href="/" className="ftrLogo" aria-label="Linktrip, accueil"><Logo variant="lockup" tone="white" height={26} title={null} /></Link></div>
               <div><h4>Produit</h4><div className="ftrCol"><Link href="/produit">Comment ça marche</Link><Link href="/produit#demo">Voir la démo</Link><Link href="/produit#simulateur">Simuler mes revenus</Link><Link href="/#tarif">Prix</Link><Link href="/connexion">Se connecter</Link></div></div>
-              <div><h4>Activités</h4><div className="ftrCol"><Link href="/activites/surf" className="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2.6c4.6 3.4 6.6 8.6 4.4 13-1.4 2.8-3.2 4.4-4.4 5.4-1.2-1-3-2.6-4.4-5.4-2.2-4.4-.2-9.6 4.4-13Z" /> <path d="M12 6.6v11" /></svg>Surf</Link><Link href="/activites/parapente" className="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.2 10.4a8.8 8.8 0 0 1 17.6 0" /> <path d="M3.2 10.4c2.9 0 4.4 1.6 4.4 1.6M20.8 10.4c-2.9 0-4.4 1.6-4.4 1.6M12 10.4v1.6" /> <path d="m4.6 11.2 6.6 4.6M19.4 11.2l-6.6 4.6" /> <circle cx={12} cy={17} r="1.4" /> <path d="M2.5 21c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0" /></svg>Parapente</Link><Link href="/activites/canyoning" className="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 3v10.5" /> <path d="M20 3v10.5" /> <path d="M12 3.5v7" /> <path d="M12 10.5c0 2.2 1.4 2.6 1.4 4.4" /> <path d="M10.4 3.5a1.6 1.6 0 1 1 3.2 0" /> <path d="M4 13.5h3M17 13.5h3" /> <path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0" /></svg>Canyoning</Link><Link href="/activites/rafting" className="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.4 12.6h19.2l-2.3 4.6H4.7L2.4 12.6Z" /> <path d="M8.6 12.6 15 4.4" /> <path d="m13.6 3.1 2.9 2.2-1.7 2.3-2.9-2.2 1.7-2.3Z" /> <path d="M2.5 20.4c1.3-1.1 2.6-1.1 3.9 0s2.6 1.1 3.9 0 2.6-1.1 3.9 0 2.6 1.1 3.9 0" /></svg>Rafting</Link><Link href="/activites/plongee" className="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8.6 8.2a3.2 3.2 0 0 1 6.4 0v1.4H8.6V8.2Z" /> <path d="M8.6 9.6c-1.4.8-2.2 2.2-2.2 3.8v5.8h11.2v-5.8c0-1.6-.8-3-2.2-3.8" /> <path d="M11.8 4.6V3M15.6 5.4l1-1.2M8 5.4 7 4.2" /> <path d="M9.8 13.4h4.4" /></svg>Plongée</Link><Link href="/activites/parc-aventure" className="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4.4 4.6v15" /> <path d="M19.6 4.6v15" /> <path d="M4.4 8.6c3.6 2.4 7.6 2.4 11.2 0" /> <path d="M8.8 12.6c3.6 2.4 7.2 2.4 10.8 0" /> <path d="M2.6 19.6h18.8" /> <path d="M13.2 8.6v1.6M9.6 12.6v1.6" /></svg>Parc aventure</Link></div></div>
+              <div><h4>Activités</h4><div className="ftrCol"><Link href="/activites/surf">Surf</Link><Link href="/activites/parapente">Parapente</Link><Link href="/activites/canyoning">Canyoning</Link><Link href="/activites/rafting">Rafting</Link><Link href="/activites/plongee">Plongée</Link><Link href="/activites/parc-aventure">Parc aventure</Link></div></div>
               <div><h4>Ressources</h4><div className="ftrCol"><a href="#questions">Questions fréquentes</a><a href="mailto:hello@linktrip.co">Nous écrire</a><Link href="/mentions-legales">Mentions légales</Link><Link href="/cgu">CGU</Link><Link href="/cgv">CGV</Link><Link href="/confidentialite">Confidentialité</Link><ManageCookiesLink /></div></div>
             </div>
             <div className="ftrBot">

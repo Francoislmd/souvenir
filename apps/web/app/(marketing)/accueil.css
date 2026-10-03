@@ -98,19 +98,10 @@
 .accx .pbar .btn{width:100%;height:42px;font-size:13.5px}
 
 /* ── Bandeau d'activités ── */
-.accx .acts{padding:clamp(56px, 6vw, 88px) 0 clamp(88px, 9vw, 128px)}
-.accx .actsHead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}
-.accx .actsTitle{max-width:560px;font:700 clamp(22px, .6vw + 16px, 28px)/1.2 var(--display);letter-spacing:-.012em;color:var(--ink)}
-.accx .actsCtl{display:flex;gap:8px}
-.accx .actsCtl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
-.accx .actsCtl button:hover{border-color:var(--ink-4)}
-.accx .track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:0 max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter)));scroll-padding:0 max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter)))}
-.accx .track::-webkit-scrollbar{display:none}
-.accx .card{display:block;flex:0 0 clamp(190px, 17vw, 236px);aspect-ratio:3/4;border-radius:var(--r-lg);overflow:hidden;position:relative;scroll-snap-align:start;background:var(--line-2)}
-.accx .card img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
-.accx .card:hover img{transform:scale(1.04)}
-.accx .card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,19,32,0) 55%,rgba(22,19,32,.62));border-radius:inherit}
-.accx .card span{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;font:600 16px/1.25 var(--display);letter-spacing:0}
+.accx .acts{padding:28px 0 clamp(80px, 8vw, 120px)}
+.accx .acts .wrap{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:15px;color:var(--ink-3)}
+.accx .acts a{transition:color .15s}
+@media (hover:hover){.accx .acts a:hover{color:var(--ink)}}
 
 /* ── 2. Le constat ── */
 .accx .moment{padding:0 0 clamp(96px, 10vw, 144px)}
@@ -134,9 +125,11 @@
 .accx .head .h2{margin-top:18px}
 .accx .head .lede{margin-top:16px}
 .accx .steps{margin-top:60px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-.accx .step{background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column}
-.accx .stage{height:424px;background:linear-gradient(180deg,var(--line-2),#fff 140%);display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding:32px 24px 0;border-bottom:1px solid var(--line)}
-.accx .meta{padding:26px 28px 30px}
+/* Étapes allégées (03/10/2026) : ni carte ni fond dégradé, la maquette est
+   posée sur la page et le filet du bas lui sert de sol. */
+.accx .step{display:flex;flex-direction:column}
+.accx .stage{height:424px;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding:32px 24px 0;border-bottom:1px solid var(--line)}
+.accx .meta{padding:26px 4px 0}
 .accx .meta .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font:700 13px var(--display)}
 .accx .meta h3{margin-top:16px;font-size:22px;line-height:1.22;letter-spacing:-.012em}
 .accx .meta p{margin-top:10px;color:var(--ink-3);font-size:15.5px;line-height:1.55}
@@ -249,7 +242,7 @@
 .accx .fqSign{flex:none;margin-left:auto;position:relative;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);transition:.22s ease}
 .accx .fqSign::before,.accx .fqSign::after{content:"";position:absolute;top:50%;left:50%;background:var(--ink-3);transform:translate(-50%,-50%);transition:.22s ease}
 .accx .fqSign::before{width:9px;height:1.5px}.accx .fqSign::after{width:1.5px;height:9px}
-.accx .fqQa[open] .fqSign{border-color:transparent;background:var(--brand)}
+.accx .fqQa[open] .fqSign{border-color:transparent;background:var(--ink)}
 .accx .fqQa[open] .fqSign::before,.accx .fqQa[open] .fqSign::after{background:#fff}
 .accx .fqQa[open] .fqSign::after{transform:translate(-50%,-50%) rotate(90deg)}
 .accx .fqAns{margin:0;padding:0 44px clamp(20px, 2.6vh, 26px) 0;max-width:62ch;font-size:clamp(14.5px, .42vw + .5vh, 16px);line-height:1.62;color:var(--ink-2);animation:acc-faqFade .28s ease both}
@@ -511,7 +504,6 @@
   .accx .hxIn{padding-left:22px!important}
   .accx .hxCta small{width:100%;text-align:center}
   .accx .hero{padding:0 var(--hg) 0}
-  .accx .acts{padding-top:104px}
 }
 @media (prefers-reduced-motion:reduce){
   .accx .flow li i{display:none}
@@ -530,13 +522,10 @@
   .accx .hd .btn{margin-left:auto}
   .accx .hd .btn{padding:0 15px}
   .accx .ph{flex-basis:142px;height:194px}
-  .accx .actsHead{margin-bottom:20px}
-  .accx .actsCtl{display:none}
-  .accx .card{flex-basis:168px;border-radius:20px}
   .accx .collage{padding:0}
   .accx .today b{flex-basis:96px}
   .accx .stage{height:400px;padding:26px 18px 0}
-  .accx .meta{padding:22px 22px 26px}
+  .accx .meta{padding:20px 2px 0}
   .accx .slab{border-radius:26px;padding:34px 20px}
   .accx .split{gap:8px 8px}
   .accx .split .v{font-size:19px}
@@ -562,7 +551,6 @@
 /* ── Mobile : passe d'optimisation ── */
 @media (max-width:640px){
   /* rythme vertical resserré */
-  .accx .acts{padding:48px 0 64px}
   .accx .moment{padding:0 0 72px}
   .accx .how{padding:64px 0}
   .accx .price{padding:56px 0}
@@ -577,10 +565,6 @@
   .accx .lt{margin-top:40px}.accx .lt b{font-size:54px}
   .accx .sA .gr{grid-template-columns:repeat(4,1fr)}
   .accx .hxCta small{font-size:13.5px}
-  /* bandeau d'activités : cartes plus petites, on en voit deux et demie */
-  .accx .card{flex-basis:142px;border-radius:18px}
-  .accx .card span{font-size:14px;left:12px;bottom:11px}
-  .accx .actsHead p{font-size:15px}
   /* collage : la vignette ne mange plus la photo */
   .accx .collage{max-width:none}
   .accx .moment .q{font-size:29px}
@@ -593,7 +577,7 @@
   .accx .step.rv{opacity:1;transform:none}
   .accx .stage{height:300px;padding:22px 14px 0}
   .accx .stage .pro,.accx .stage .mini{transform:scale(.86);transform-origin:top center;margin-bottom:-60px}
-  .accx .meta{padding:20px 20px 24px}
+  .accx .meta{padding:18px 2px 0}
   .accx .meta h3{font-size:20px;margin-top:12px}
   .accx .meta p{font-size:15px}
   .accx .stepsHint{display:flex}
@@ -614,7 +598,6 @@
   .accx .split .mine .v{font-size:26px}
   .accx .split .v{font-size:20px}
   /* FAQ */
-  .accx .actsTitle{font-size:21px}
   .accx .fqAns{padding-right:0}
   /* pied : deux colonnes, cibles tactiles de 40 px */
   .accx .ftrBand .btn{width:100%}
@@ -627,7 +610,6 @@
 }
 @media (max-width:370px){
   .accx .step{flex-basis:88%}
-  .accx .card{flex-basis:132px}
 }
 
 .accx .ftrCol button{font:inherit;font-size:14.5px;color:rgba(255,255,255,.7);background:none;border:0;padding:0;cursor:pointer;text-align:left;transition:color .15s}
@@ -673,12 +655,12 @@
   .accx .flow .dt > em{color:var(--ink-3);font-size:14.5px}
   .accx .flow li.on{animation:acc-cap .4s var(--ease)}
 
-  .accx .acts{padding-top:64px}
 }
 @keyframes acc-cap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (max-width:640px){
   .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{margin:36px auto 0}
-  .accx .acts{padding-top:56px}
+  .accx .acts{padding:28px 0 64px}
+  .accx .acts .wrap{gap:6px 16px;font-size:14.5px}
   /* le constat : photo carrée, plus de colonne de 400px avant le titre */
   .accx .collage .big{aspect-ratio:1}
 }

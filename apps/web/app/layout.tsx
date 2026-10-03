@@ -28,9 +28,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const title = "Linktrip — Vos photos de sortie deviennent un revenu";
+// Titre et description par défaut, repris par les balises de partage des
+// pages qui ne donnent pas les leurs (03/10/2026 : l'ancienne description
+// disait « vous touchez une commission », alors que la commission est celle
+// de Linktrip).
+const title = "Linktrip · Vendez à vos clients les photos de leur sortie";
 const description =
-  "SaaS pour prestataires d'activités outdoor : vos guides prennent des photos, vos clients les achètent, vous touchez une commission automatiquement.";
+  "Le soir, vous déposez les photos. Chaque client reçoit les siennes à votre nom et paie celles qu’il garde.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
