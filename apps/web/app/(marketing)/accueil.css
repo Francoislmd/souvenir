@@ -8,7 +8,12 @@
   --r-xl:32px;--r-lg:24px;--r-md:16px;--r-sm:10px;
   --display:var(--font-inter-tight),var(--font-inter),system-ui,sans-serif;
   --ease:cubic-bezier(.2,.7,.2,1);
+  /* Gouttière des grandes cartes (héros, pied de page) : un seul système de
+     cadrage sur toute la page (03/10/2026). */
+  --hg:46px;
 }
+@media (max-width:1280px){.accx{--hg:34px}}
+@media (max-width:700px){.accx{--hg:20px}}
 
 
 
@@ -24,7 +29,10 @@
 .accx .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
 .accx .kick{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 .accx .kick::before{content:"";width:18px;height:2px;border-radius:2px;background:var(--brand)}
-.accx .h2{font-size:clamp(34px, 2.1vw + 1.4vh, 52px);line-height:1.06;letter-spacing:-.016em;font-weight:800}
+/* Hiérarchie (03/10/2026) : le H1 reste toujours le plus grand titre de la
+   page, chaque H2 de section a la même taille, la même graisse, la même
+   approche. Rapport constant H2 / H1 ≈ 0,75 à toutes les largeurs. */
+.accx .h2{font-size:clamp(32px, 1.8vw + 1.8vh, 50px);line-height:1.06;letter-spacing:-.018em;font-weight:800}
 .accx .lede{font-size:clamp(17px, .3vw + 15.5px, 19px);line-height:1.55;color:var(--ink-3)}
 .accx .num{font-variant-numeric:tabular-nums}
 
@@ -42,10 +50,16 @@
 .accx .btn-white:hover{background:var(--soft)}
 .accx .btn-sm{height:40px;padding:0 18px;font-size:14.5px}
 
-/* Apparition au défilement */
-.accx .rv{opacity:0;transform:translateY(14px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
-.accx .rv.in{opacity:1;transform:none}
-.accx .rv.d1{transition-delay:.08s}.accx .rv.d2{transition-delay:.16s}.accx .rv.d3{transition-delay:.24s}
+/* Apparition : réservée au premier écran (03/10/2026). Plus aucun bloc n'est
+   masqué en attendant le défilement : un visiteur qui descend vite, un aperçu
+   de lien ou un robot voyaient des sections vides. Le héros entre une fois,
+   en CSS seul, sans dépendre du JavaScript. La classe .in que pose encore
+   AccueilAnime ne sert plus qu'à lancer la barre de progression de l'étape 1. */
+.accx .hero .rv{animation:acc-in .7s var(--ease) both}
+.accx .hero .rv.d1{animation-delay:.08s}.accx .hero .rv.d2{animation-delay:.16s}.accx .hero .rv.d3{animation-delay:.24s}
+@keyframes acc-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.accx .hero .hxDemo.rv{animation-name:acc-fade}
+@keyframes acc-fade{from{opacity:0}to{opacity:1}}
 
 /* ── En-tête ── */
 .accx .hd{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.86);backdrop-filter:saturate(1.6) blur(14px);-webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid transparent;transition:border-color .25s}
@@ -86,14 +100,13 @@
 /* ── Bandeau d'activités ── */
 .accx .acts{padding:clamp(56px, 6vw, 88px) 0 clamp(88px, 9vw, 128px)}
 .accx .actsHead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}
-.accx .actsHead p{font-size:16px;color:var(--ink-3);max-width:420px}
-.accx .actsHead p b{color:var(--ink);font-weight:600}
+.accx .actsTitle{max-width:560px;font:700 clamp(22px, .6vw + 16px, 28px)/1.2 var(--display);letter-spacing:-.012em;color:var(--ink)}
 .accx .actsCtl{display:flex;gap:8px}
 .accx .actsCtl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
 .accx .actsCtl button:hover{border-color:var(--ink-4)}
 .accx .track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:0 max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter)));scroll-padding:0 max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter)))}
 .accx .track::-webkit-scrollbar{display:none}
-.accx .card{flex:0 0 clamp(190px, 17vw, 236px);aspect-ratio:3/4;border-radius:var(--r-lg);overflow:hidden;position:relative;scroll-snap-align:start;background:var(--line-2)}
+.accx .card{display:block;flex:0 0 clamp(190px, 17vw, 236px);aspect-ratio:3/4;border-radius:var(--r-lg);overflow:hidden;position:relative;scroll-snap-align:start;background:var(--line-2)}
 .accx .card img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
 .accx .card:hover img{transform:scale(1.04)}
 .accx .card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,19,32,0) 55%,rgba(22,19,32,.62));border-radius:inherit}
@@ -102,17 +115,17 @@
 /* ── 2. Le constat ── */
 .accx .moment{padding:0 0 clamp(96px, 10vw, 144px)}
 .accx .moment .wrap{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(40px, 6vw, 104px);align-items:center}
-.accx .collage{position:relative;padding:0 64px 56px 0}
+.accx .collage{position:relative}
 .accx .collage .big{border-radius:var(--r-xl);overflow:hidden;aspect-ratio:4/5}
 .accx .collage .big img{width:100%;height:100%;object-fit:cover}
 .accx .collage .small{position:absolute;right:0;bottom:0;width:44%;aspect-ratio:1;border-radius:var(--r-lg);overflow:hidden;border:6px solid #fff;box-shadow:0 24px 48px -24px rgba(22,19,32,.35);background:#dfe3f6}
 .accx .collage .small img{width:100%;height:100%;object-fit:cover}
-.accx .moment .q{font:800 clamp(40px, 3vw + 1.4vh, 66px)/1.02 var(--display);letter-spacing:-.02em}
+.accx .moment .q{line-height:1.02}
 .accx .moment .q .mk{color:var(--brand)}
 .accx .moment .txt p{margin-top:24px;font-size:clamp(17px, .35vw + 15.5px, 19.5px);line-height:1.6;color:var(--ink-2);max-width:520px}
 .accx .today{margin-top:32px;display:grid;gap:0;border-top:1px solid var(--line);max-width:520px}
-.accx .today div{display:flex;gap:14px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);font-size:15.5px;color:var(--ink-3);text-wrap:pretty}
-.accx .today b{flex:0 0 132px;font-weight:600;color:var(--ink)}
+.accx .today div{display:flex;gap:14px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line);font-size:16.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty}
+.accx .today b{flex:0 0 112px;font:700 13px/1.5 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--brand-ink)}
 .accx .moment .txt .after{word-spacing:.05em;margin-top:28px;font:600 21px/1.45 var(--display);letter-spacing:-.006em;color:var(--ink);max-width:520px}
 
 /* ── 3. Fonctionnement ── */
@@ -188,7 +201,6 @@
 /* ── 4. Tarif : une seule règle ── */
 .accx .price{padding:clamp(80px, 8vw, 120px) 0}
 .accx .slab{background:var(--ink);color:#fff;border-radius:30px;padding:clamp(36px, 4.5vw, 64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px, 5vw, 80px);align-items:center;position:relative;overflow:hidden}
-.accx .slab::before{content:"";position:absolute;width:520px;height:520px;right:-200px;top:-280px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,90,31,.2),rgba(255,90,31,0));pointer-events:none}
 .accx .slab > *{position:relative}
 .accx .slab .kick{color:rgba(255,255,255,.62)}
 .accx .slab .h2{margin-top:0;color:#fff;max-width:460px}
@@ -197,7 +209,7 @@
 .accx .facts li{display:flex;gap:12px;align-items:flex-start;font-size:16px;line-height:1.5;color:rgba(255,255,255,.84)}
 .accx .facts svg{flex:0 0 auto;margin-top:2px;color:var(--amber)}
 .accx .rate{display:flex;align-items:baseline;gap:14px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.14)}
-.accx .rate b{font:800 clamp(64px, 5vw + 1vh, 96px)/.9 var(--display);letter-spacing:-.03em;background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.04em}
+.accx .rate b{font:800 clamp(64px, 5vw + 1vh, 96px)/.9 var(--display);letter-spacing:-.03em;color:var(--brand)}
 .accx .rate span{font-size:17px;line-height:1.35;color:rgba(255,255,255,.84);max-width:170px}
 .accx .ex{margin-top:22px}
 .accx .ex .case{font-size:15px;color:rgba(255,255,255,.66)}
@@ -211,11 +223,19 @@
 .accx .split .mine .l{color:var(--ink-3)}
 .accx .sbar8{margin-top:18px;height:8px;border-radius:4px;display:flex;overflow:hidden;gap:3px}
 .accx .sbar8 i{display:block;height:100%;border-radius:4px}
-.accx .sbar8 i:first-child{flex:80;background:#fff}
-.accx .sbar8 i:last-child{flex:20;background:var(--brand)}
+.accx .sbar8 i{flex-basis:0}
+.accx .sbar8 i:first-child{background:#fff}
+.accx .sbar8 i:last-child{background:var(--brand)}
+.accx .ex .fine{margin-top:14px;font-size:13px;line-height:1.5;color:rgba(255,255,255,.5)}
+.accx .season{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px 32px;padding-top:30px;border-top:1px solid rgba(255,255,255,.14)}
+.accx .season p{max-width:640px;font-size:17px;line-height:1.55;color:rgba(255,255,255,.8)}
+.accx .season p b{display:block;margin-bottom:6px;font:700 12.5px var(--display);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.accx .season p strong{font-weight:700;color:#fff}
+.accx .season a{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.28);font:700 15px var(--display);color:#fff;white-space:nowrap;transition:background .15s,border-color .15s}
+@media (hover:hover){.accx .season a:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5)}}
 /* ── 5. FAQ : reprise à l'identique de Faq.module.css ── */
-.accx .fq{background:#fff;padding:clamp(46px, 6vh, 90px) var(--lg, 46px) clamp(48px, 7vh, 96px)}
-.accx .fqWrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:clamp(30px, 5vw, 90px);align-items:start}
+.accx .fq{background:#fff;padding:clamp(40px, 5vw, 72px) 0 clamp(80px, 8vw, 120px)}
+.accx .fqWrap{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:clamp(30px, 5vw, 90px);align-items:start}
 .accx .fqAside{position:sticky;top:clamp(88px, 5vh + 72px, 128px)}
 .accx .fqEye{display:inline-block;padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--brand-ink);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
 .accx .fqH2{margin:0;font-size:clamp(29px, 2.1vw + 1vh, 44px);line-height:1.06;letter-spacing:-.038em;text-wrap:balance;color:var(--ink);font-weight:700;word-spacing:normal}
@@ -229,7 +249,7 @@
 .accx .fqSign{flex:none;margin-left:auto;position:relative;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);transition:.22s ease}
 .accx .fqSign::before,.accx .fqSign::after{content:"";position:absolute;top:50%;left:50%;background:var(--ink-3);transform:translate(-50%,-50%);transition:.22s ease}
 .accx .fqSign::before{width:9px;height:1.5px}.accx .fqSign::after{width:1.5px;height:9px}
-.accx .fqQa[open] .fqSign{border-color:transparent;background:var(--sunset)}
+.accx .fqQa[open] .fqSign{border-color:transparent;background:var(--brand)}
 .accx .fqQa[open] .fqSign::before,.accx .fqQa[open] .fqSign::after{background:#fff}
 .accx .fqQa[open] .fqSign::after{transform:translate(-50%,-50%) rotate(90deg)}
 .accx .fqAns{margin:0;padding:0 44px clamp(20px, 2.6vh, 26px) 0;max-width:62ch;font-size:clamp(14.5px, .42vw + .5vh, 16px);line-height:1.62;color:var(--ink-2);animation:acc-faqFade .28s ease both}
@@ -246,16 +266,19 @@
 
 /* ── 6. Dernier appel ── */
 .accx .end{padding:0 0 clamp(72px, 8vw, 104px)}
-.accx .endCard{position:relative;border-radius:var(--r-xl);overflow:hidden;min-height:440px;display:flex;align-items:flex-end;color:#fff}
-.accx .endCard > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.accx .endCard::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(22,19,32,.8),rgba(22,19,32,.45) 50%,rgba(22,19,32,0) 80%)}
+.accx .endCard{position:relative;border-radius:var(--r-xl);overflow:hidden;min-height:440px;display:flex;align-items:center;color:#fff;background:var(--ink)}
+.accx .endCard > img{position:absolute;top:0;right:0;width:50%;height:100%;object-fit:cover;object-position:50% 40%}
+.accx .endCard::after{content:"";position:absolute;inset:0 0 0 auto;width:50%;background:linear-gradient(90deg,var(--ink),rgba(22,19,32,0) 38%)}
 .accx .endIn{position:relative;z-index:1;padding:clamp(32px, 5vw, 72px);max-width:640px}
 .accx .endIn .h2{color:#fff}
 .accx .endIn p{margin-top:16px;font-size:18px;line-height:1.55;color:rgba(255,255,255,.84)}
 .accx .endIn .btn{margin-top:30px}
+.accx .endIn .who{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12);font-size:15px;line-height:1.55;color:rgba(255,255,255,.62)}
+.accx .endIn .who a{color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:3px}
+@media (hover:hover){.accx .endIn .who a:hover{text-decoration-color:#fff}}
 
 /* ── Pied : reprise à l'identique de Footer.tsx + Footer.module.css ── */
-.accx .ftr{position:relative;z-index:3;margin-top:clamp(40px, 6vh, 80px);overflow:hidden;border-radius:clamp(20px, 2vw, 30px) clamp(20px, 2vw, 30px) 0 0;background:var(--ink);color:#fff}
+.accx .ftr{position:relative;z-index:3;margin:0 var(--hg) var(--hg);overflow:hidden;border-radius:30px;background:var(--ink);color:#fff}
 .accx .ftrMark{position:absolute;right:calc(var(--lg, 46px) * -2.2);bottom:calc(var(--lg, 46px) * -1.8);width:clamp(170px, 22vw, 290px);opacity:.05;pointer-events:none}
 .accx .ftrMark svg{width:100%;height:auto;display:block}
 .accx .ftrIn{position:relative;max-width:1320px;margin:0 auto;padding:clamp(40px, 6vh, 66px) var(--lg, 46px) clamp(20px, 3vh, 28px)}
@@ -271,7 +294,7 @@
 @media (hover:hover){.accx .ftrSubmit:hover{transform:translateY(-1px);filter:brightness(1.05)}}
 .accx .trust{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.45)}
 .accx .trust svg{width:15px;height:15px;flex:none}
-.accx .ftrGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding:clamp(30px, 4.4vh, 46px) 0}
+.accx .ftrGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding:0 0 clamp(30px, 4.4vh, 46px)}
 @media (min-width:561px){.accx .ftrGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:34px 30px}}
 @media (min-width:1000px){.accx .ftrGrid{grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr));gap:clamp(24px, 3vw, 48px)}}
 .accx .ftrGrid h4{margin-bottom:15px;font:700 12px var(--display);text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.4);word-spacing:normal}
@@ -296,9 +319,7 @@
 @media (max-width:780px){.accx .ftrMark{display:none}}
 
 /* ── 1. Héros : ce que c'est → comment ça marche (démo) → CTA ── */
-.accx .hero{--hg:46px;padding:0 var(--hg) var(--hg)}
-@media (max-width:1280px){.accx .hero{--hg:34px}}
-@media (max-width:700px){.accx .hero{--hg:20px}}
+.accx .hero{padding:0 var(--hg) var(--hg)}
 .accx .hx{position:relative;max-width:calc(1920px - 2 * var(--hg));margin:0 auto;height:calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - var(--hg));min-height:640px;--side:max(28px, calc((100vw - var(--max)) / 2 + var(--gutter) - var(--hg)));border-radius:30px;isolation:isolate;display:flex;align-items:center}
 .accx .hxBg{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:#0f1a1e;z-index:-1}
 .accx .hxBg img{width:100%;height:100%;object-fit:cover;object-position:62% 50%;animation:acc-settle 1.8s var(--ease) both}
@@ -309,7 +330,11 @@
 .accx .hxIn{width:100%;max-width:calc(var(--side) + 700px);padding:48px 32px 48px var(--side);color:#fff}
 .accx .hxFor{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:rgba(255,255,255,.8)}
 .accx .hxFor svg{flex:0 0 auto;color:#fff;opacity:.9}
-.accx .hero h1{margin-top:18px;max-width:640px;font-size:clamp(40px, 2.2vw + 1.5vh, 58px);line-height:1.02;letter-spacing:-.022em;font-weight:800;color:#fff}
+.accx .hero h1{margin-top:18px;max-width:680px;font-size:clamp(40px, 2.4vw + 2.4vh, 68px);line-height:1.02;letter-spacing:-.024em;font-weight:800;color:#fff}
+.accx .hxLede{margin-top:22px;max-width:520px;font-size:clamp(17px, .3vw + 15.5px, 19.5px);line-height:1.55;color:rgba(255,255,255,.86)}
+/* Sur desktop, le chapeau remplace les trois étapes : la liste ne sert plus
+   que de légende au téléphone, en mobile (cf. « Héros mobile allégé »). */
+@media (min-width:861px){.accx .hxIn .flow{display:none}}
 
 /* Le parcours, synchronisé avec le téléphone */
 .accx .flow{margin-top:30px;list-style:none;display:grid;gap:4px;max-width:470px}
@@ -325,13 +350,15 @@
 .accx .flow li > i{display:none}
 @keyframes acc-prog{to{width:calc(100% - 46px)}}
 
-.accx .hxCta{margin-top:32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
-.accx .hxCta small{font-size:14px;color:rgba(255,255,255,.66);line-height:1.4}
+.accx .hxCta{margin-top:34px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px}
+.accx .hxCta small{flex-basis:100%;font-size:14px;color:rgba(255,255,255,.66);line-height:1.4}
+.accx .hxDemoLink{display:inline-flex;align-items:center;gap:10px;height:50px;font:700 15.5px/1 var(--display);color:#fff}
+.accx .hxDemoLink .pl{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);transition:background .18s var(--ease),border-color .18s var(--ease)}
+.accx .hxDemoLink .pl svg{margin-left:2px}
+@media (hover:hover){.accx .hxDemoLink:hover .pl{background:rgba(255,255,255,.14);border-color:#fff}}
 
 /* ── Démo du téléphone ── */
 .accx .hxDemo{position:absolute;right:var(--side);top:50%;transform:translateY(-50%);width:278px}
-.accx .hxDemo.rv{transform:translateY(calc(-50% + 14px))}
-.accx .hxDemo.rv.in{transform:translateY(-50%)}
 .accx .hxPhone{position:relative;width:100%;box-shadow:0 44px 90px -34px rgba(12,10,18,.6),0 0 0 1px rgba(12,10,18,.04)}
 .accx .hxPhone .scr{height:560px;background:#fff}
 .accx .pp{position:absolute;right:-52px;bottom:8px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(12,10,18,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s}
@@ -506,7 +533,7 @@
   .accx .actsHead{margin-bottom:20px}
   .accx .actsCtl{display:none}
   .accx .card{flex-basis:168px;border-radius:20px}
-  .accx .collage{padding:0 36px 40px 0}
+  .accx .collage{padding:0}
   .accx .today b{flex-basis:96px}
   .accx .stage{height:400px;padding:26px 18px 0}
   .accx .meta{padding:22px 22px 26px}
@@ -516,8 +543,12 @@
   .accx .split .mine{padding:12px 12px}
   .accx .split .mine .v{font-size:24px}
   .accx .endCard{min-height:0;border-radius:26px;flex-direction:column;align-items:stretch;background:var(--ink)}
-  .accx .endCard > img{position:static;height:210px}
+  .accx .endCard > img{position:static;width:100%;height:230px}
   .accx .endCard::after{display:none}
+  .accx .season{padding-top:24px}
+  .accx .season p{font-size:16px}
+  .accx .season a{width:100%;justify-content:center}
+  .accx .ftr{border-radius:26px}
   .accx .endIn{padding:30px 22px 32px}
   .accx .endIn .btn{width:100%}
 }
@@ -537,7 +568,7 @@
   .accx .price{padding:56px 0}
   .accx .fq{padding-top:40px;padding-bottom:48px}
   .accx .end{padding-bottom:56px}
-  .accx .h2{font-size:32px}
+  .accx .h2{font-size:29px}
   /* héros : démo plus compacte, sans vide dans les écrans */
   .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{width:236px;margin-top:84px}
   .accx .hxPhone .scr{height:470px}
@@ -551,11 +582,10 @@
   .accx .card span{font-size:14px;left:12px;bottom:11px}
   .accx .actsHead p{font-size:15px}
   /* collage : la vignette ne mange plus la photo */
-  .accx .collage{padding:0 28px 32px 0;max-width:340px}
-  .accx .collage .small{width:40%;border-width:4px}
-  .accx .moment .q{font-size:38px}
-  .accx .today b{flex-basis:104px}
-  .accx .today div{font-size:14.5px;padding:12px 0}
+  .accx .collage{max-width:none}
+  .accx .moment .q{font-size:29px}
+  .accx .today div{flex-direction:column;gap:2px;font-size:15.5px;padding:14px 0}
+  .accx .today b{flex-basis:auto}
   /* fonctionnement : carrousel horizontal au lieu de trois cartes empilées */
   .accx .steps{display:flex;gap:12px;margin:32px calc(-1 * var(--gutter)) 0;padding:0 var(--gutter) 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--gutter);scrollbar-width:none;max-width:none}
   .accx .steps::-webkit-scrollbar{display:none}
@@ -584,7 +614,7 @@
   .accx .split .mine .v{font-size:26px}
   .accx .split .v{font-size:20px}
   /* FAQ */
-  .accx .fqH2{font-size:30px}
+  .accx .actsTitle{font-size:21px}
   .accx .fqAns{padding-right:0}
   /* pied : deux colonnes, cibles tactiles de 40 px */
   .accx .ftrBand .btn{width:100%}
@@ -612,27 +642,29 @@
    .hxIn passe en display:contents pour que ses enfants deviennent des cellules
    de la grille de .hx : aucun balisage ni identifiant de la démo ne bouge. */
 @media (max-width:860px){
-  .accx .hx{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto auto auto;height:auto;min-height:0;border-radius:0}
+  .accx .hx{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto auto auto auto;height:auto;min-height:0;border-radius:0}
   .accx .hxIn{display:contents}
-  .accx .hxBg{position:relative;inset:auto;grid-row:1/5;grid-column:1;border-radius:26px;min-height:max(500px, min(760px, calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - 64px)))}
+  .accx .hxBg{position:relative;inset:auto;grid-row:1/6;grid-column:1;border-radius:26px;min-height:max(500px, min(760px, calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - 64px)))}
   .accx .hxBg img{position:absolute;inset:0;height:100%;object-position:58% 28%}
   .accx .hxBg::after{background:linear-gradient(180deg,rgba(12,10,18,.18) 0%,rgba(12,10,18,0) 22%,rgba(12,10,18,.5) 50%,rgba(12,10,18,.9) 100%)}
-  .accx .hxFor,.accx .hero h1,.accx .hxCta{grid-column:1;position:relative;z-index:1;margin-left:22px;margin-right:22px;color:#fff}
+  .accx .hxFor,.accx .hero h1,.accx .hxLede,.accx .hxCta{grid-column:1;position:relative;z-index:1;margin-left:22px;margin-right:22px;color:#fff}
+  .accx .hxLede{grid-row:4;margin-top:14px;font-size:16.5px;color:rgba(255,255,255,.86)}
   .accx .hxFor{grid-row:2;font-size:14px;align-items:center;color:rgba(255,255,255,.82)}
   .accx .hxFor svg{display:none}
   .accx .hero h1{grid-row:3;margin-top:10px;font-size:clamp(34px, 9vw, 46px);line-height:1.04}
-  .accx .hxCta{grid-row:4;margin-top:24px;margin-bottom:24px}
+  .accx .hxCta{grid-row:5;margin-top:24px;margin-bottom:24px;gap:6px 24px}
+  .accx .hxDemoLink{flex:1 1 100%;justify-content:center;height:44px}
   .accx .hxCta small{color:rgba(255,255,255,.7)}
 
   /* La démo, sur fond blanc sous la carte */
-  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{grid-row:5;grid-column:1;margin:40px auto 0}
+  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{grid-row:6;grid-column:1;margin:40px auto 0}
   .accx .pp{left:auto;top:auto;right:-50px;bottom:8px}
   .accx .hxPhone{box-shadow:0 30px 60px -32px rgba(22,19,32,.4)}
   .accx .pp{border-color:var(--line);background:#fff;color:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none}
   .accx .pp:hover{background:var(--line-2);border-color:var(--ink-4)}
 
   /* Le parcours devient la légende du téléphone */
-  .accx .flow{grid-row:6;grid-column:1;width:100%;max-width:300px;margin:22px auto 0;min-height:104px;color:var(--ink);display:block}
+  .accx .flow{grid-row:7;grid-column:1;width:100%;max-width:300px;margin:22px auto 0;min-height:104px;color:var(--ink);display:block}
   .accx .flow li{display:none;opacity:1;padding:0;cursor:default}
   .accx .flow li.on{display:grid}
   .accx .flow .nb{border-color:var(--ink)}

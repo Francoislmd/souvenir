@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "accent" | "secondary" | "outline-light" | "ghost" | "sunset" | "dark";
+export type ButtonVariant = "primary" | "accent" | "secondary" | "outline-light" | "ghost" | "sunset" | "dark" | "brand";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
@@ -20,6 +20,9 @@ const VARIANTS: Record<ButtonVariant, string> = {
   sunset:
     "bg-[image:var(--sunset)] text-white shadow-[0_10px_26px_-9px_rgba(255,90,31,0.6)] [@media(hover:hover)]:hover:brightness-105 [@media(hover:hover)]:hover:-translate-y-px",
   dark: "bg-ink text-white [@media(hover:hover)]:hover:bg-[#2A2438] [@media(hover:hover)]:hover:-translate-y-px",
+  // Orange uni, à plat : le bouton d'action du header marketing (03/10/2026).
+  // Ni dégradé ni halo, pour un seul style de bouton d'action sur tout le site.
+  brand: "bg-brand text-white [@media(hover:hover)]:hover:bg-brand-hover",
 };
 
 const SIZES: Record<ButtonSize, string> = {

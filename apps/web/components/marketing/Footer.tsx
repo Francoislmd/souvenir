@@ -13,12 +13,11 @@ import styles from "@/components/marketing/Footer.module.css";
 const PRODUIT = [
   // /produit a absorbé /fonctionnement (la démo) et /simulation (le
   // simulateur) : deux entrées de moins, ancres directes vers les sections.
-  { href: "/produit", label: "Le produit" },
+  { href: "/produit", label: "Comment ça marche" },
   { href: "/produit#demo", label: "Voir la démo" },
   { href: "/produit#simulateur", label: "Simuler mes revenus" },
-  { href: "/#tarif", label: "Tarif" },
-  { href: "/liste-attente", label: "Liste d'attente" },
-  { href: "/connexion", label: "Connexion opérateur" },
+  { href: "/#tarif", label: "Prix" },
+  { href: "/connexion", label: "Se connecter" },
 ];
 
 const RESSOURCES = [

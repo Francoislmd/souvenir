@@ -24,11 +24,11 @@ export const NAV_ACTIVITES = [
   { slug: "ski-nautique", nom: "Ski nautique", milieu: "eau" },
   { slug: "bouee", nom: "Bouée tractée", milieu: "eau" },
   { slug: "parapente", nom: "Parapente", milieu: "air" },
-  { slug: "helicoptere", nom: "Hélicoptère", milieu: "air" },
+  { slug: "helicoptere", nom: "Hélicoptère", milieu: "air", horsMenu: true },
   { slug: "tyrolienne", nom: "Tyrolienne", milieu: "air" },
-  { slug: "quad", nom: "Quad", milieu: "terre" },
+  { slug: "quad", nom: "Quad", milieu: "terre", horsMenu: true },
   { slug: "parc-aventure", nom: "Parc aventure", milieu: "terre" },
-] as const satisfies readonly { slug: ActivitySlug; nom: string; milieu: Milieu }[];
+] as const satisfies readonly { slug: ActivitySlug; nom: string; milieu: Milieu; horsMenu?: true }[];
 
 /* Garde-fou de compilation : une activité présente dans ActivityIcons mais
    absente du menu fait échouer le build ici, pas en production. */
@@ -41,7 +41,7 @@ export const NOM_ACTIVITE = Object.fromEntries(
 ) as Record<ActivitySlug, string>;
 
 /* Les trois milieux du menu, dans l'ordre des colonnes. "Sur l'eau" en porte
-   neuf sur quatorze : il occupe deux colonnes, les deux autres se partagent la
+   neuf sur douze : il occupe deux colonnes, les deux autres se partagent la
    troisième (cf. .panelGroups dans landing.module.css). */
 export const MILIEUX: { cle: Milieu; titre: string }[] = [
   { cle: "eau", titre: "Sur l’eau" },
@@ -49,4 +49,9 @@ export const MILIEUX: { cle: Milieu; titre: string }[] = [
   { cle: "terre", titre: "Sur terre" },
 ];
 
-export const parMilieu = (m: Milieu) => NAV_ACTIVITES.filter((a) => a.milieu === m);
+/* Hélicoptère et Quad sortent du menu le 03/10/2026 : ce ne sont pas des
+   sorties encadrées par un moniteur, elles brouillaient la cible. Leurs pages
+   restent en ligne (référencement), simplement plus listées dans la barre. */
+const dansLeMenu = (a: (typeof NAV_ACTIVITES)[number]) => !("horsMenu" in a);
+
+export const parMilieu = (m: Milieu) => NAV_ACTIVITES.filter((a) => a.milieu === m && dansLeMenu(a));

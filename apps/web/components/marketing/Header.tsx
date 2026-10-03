@@ -18,16 +18,21 @@ interface HeaderProps {
   current?: MarketingRoute;
 }
 
-/* Deux entrées : /produit a absorbé /fonctionnement (la démo) et /simulation
+/* Deux entrées (« Comment ça marche » et « Prix » depuis le 03/10/2026, ex
+   « Produit » et « Tarif ») : /produit a absorbé /fonctionnement (la démo) et /simulation
    (le simulateur), tous deux redirigés en 301 vers ses ancres dans
    next.config.mjs. « Tarif » renvoie au bloc #tarif de l'accueil depuis le
    26/09/2026 (la page /tarifs est supprimée, redirigée en 301). Les quatorze
    pages /activites/<slug> passent par le volet ci-dessous : elles n'ont pas de
    page d'index qui pourrait tenir en un lien. */
 const NAV_LINKS: { href: string; label: string; route?: MarketingRoute }[] = [
-  { href: "/produit", label: "Produit", route: "produit" },
-  { href: "/#tarif", label: "Tarif" },
+  { href: "/produit", label: "Comment ça marche", route: "produit" },
+  { href: "/#tarif", label: "Prix" },
 ];
+
+/* « Connexion » vit dans la barre (03/10/2026) : un pro qui revient ne doit
+   pas descendre jusqu'au pied de page pour retrouver son espace. */
+const LOGIN = { href: "/connexion", label: "Connexion" };
 
 function Chevron() {
   return (
@@ -105,16 +110,6 @@ export function Header({ current }: HeaderProps) {
         <Logo variant="lockup" height={30} />
       </Link>
       <nav className={styles.headerLinks}>
-        <button
-          type="button"
-          className={cx(styles.navBtn, current === "activites" && styles.navBtnCurrent)}
-          aria-expanded={panelOpen}
-          aria-controls={panelId}
-          onClick={() => setPanelOpen((open) => !open)}
-        >
-          Activités
-          <Chevron />
-        </button>
         {NAV_LINKS.map(({ href, label, route }) => (
           <Link
             key={href}
@@ -129,6 +124,22 @@ export function Header({ current }: HeaderProps) {
         ))}
         <button
           type="button"
+          className={cx(styles.navBtn, current === "activites" && styles.navBtnCurrent)}
+          aria-expanded={panelOpen}
+          aria-controls={panelId}
+          onClick={() => setPanelOpen((open) => !open)}
+        >
+          Activités
+          <Chevron />
+        </button>
+        <Link
+          href={LOGIN.href}
+          className="text-[15.5px] text-ink-2 transition [@media(hover:hover)]:hover:text-ink"
+        >
+          {LOGIN.label}
+        </Link>
+        <button
+          type="button"
           aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={menuOpen}
           aria-controls="mobile-nav-menu"
@@ -139,7 +150,7 @@ export function Header({ current }: HeaderProps) {
             {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
           </svg>
         </button>
-        <ButtonLink href="/signup" variant="sunset" size="md" className={styles.headerCta}>
+        <ButtonLink href="/signup" variant="brand" size="md" className={styles.headerCta}>
           Créer mon espace <span aria-hidden="true">→</span>
         </ButtonLink>
       </nav>
@@ -162,9 +173,9 @@ export function Header({ current }: HeaderProps) {
         </div>
         <p className={styles.panelNote}>
           Vous ne trouvez pas votre activité ?{" "}
-          <Link href="/liste-attente" onClick={fermerVolet}>
-            Parlons-en.
-          </Link>
+          <a href="mailto:hello@linktrip.co" onClick={fermerVolet}>
+            Écrivez-nous.
+          </a>
         </p>
       </div>
 
@@ -207,11 +218,14 @@ export function Header({ current }: HeaderProps) {
                 {label}
               </Link>
             ))}
+            <Link href={LOGIN.href} onClick={fermerMenu}>
+              {LOGIN.label}
+            </Link>
             {/* CTA repris ici : masqué dans la barre sous 1000px (cf. .headerCta),
                 il reste accessible depuis le menu déroulant. */}
             <ButtonLink
               href="/signup"
-              variant="sunset"
+              variant="brand"
               size="md"
               className={styles.menuCta}
               onClick={fermerMenu}

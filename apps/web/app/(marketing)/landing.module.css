@@ -87,7 +87,7 @@
 .headerLinks {
   display: flex;
   align-items: center;
-  gap: 38px;
+  gap: 32px;
   margin-left: auto;
 }
 .headerCta { flex-shrink: 0; }
