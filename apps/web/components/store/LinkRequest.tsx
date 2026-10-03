@@ -42,6 +42,8 @@ export interface RecentSortie {
   month: string;
   /** « Samedi » */
   weekday: string;
+  /** « 10 h », ou « 9 h, 11 h, 14 h » pour plusieurs départs */
+  hours: string;
   photoCount: number;
 }
 
@@ -358,7 +360,7 @@ export function LinkRequest({
                         <span className={styles.what}>
                           <b>{s.activity}</b>
                           <span>
-                            {s.weekday} · {s.photoCount} photo{s.photoCount > 1 ? "s" : ""}
+                            {s.weekday} · {s.hours} · {s.photoCount} photo{s.photoCount > 1 ? "s" : ""}
                           </span>
                         </span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
