@@ -24,7 +24,12 @@
 .accx [id]{scroll-margin-top:88px}
 .accx a{color:inherit;text-decoration:none}
 .accx img{display:block;max-width:100%}
-.accx h1,.accx h2,.accx h3{font-family:var(--display);font-weight:700;text-wrap:balance;word-spacing:.06em}
+/* Échelle typographique (03/10/2026). Titres en Inter Tight 700, plus en 800 :
+   la graisse maximale écrasait les titres et faisait « affiche ». Corps en
+   Inter. Quatre tailles de texte seulement : chapeau 18, corps 16, petit 14,5,
+   libellé 13,5. Les titres de section ont tous la même taille, le H1 reste
+   le plus grand texte de la page, montant du prix compris. */
+.accx h1,.accx h2,.accx h3{font-family:var(--display);font-weight:700;text-wrap:balance}
 .accx p{text-wrap:pretty}
 .accx .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
 .accx .kick{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
@@ -32,11 +37,11 @@
 /* Hiérarchie (03/10/2026) : le H1 reste toujours le plus grand titre de la
    page, chaque H2 de section a la même taille, la même graisse, la même
    approche. Rapport constant H2 / H1 ≈ 0,75 à toutes les largeurs. */
-.accx .h2{font-size:clamp(32px, 1.8vw + 1.8vh, 50px);line-height:1.06;letter-spacing:-.018em;font-weight:800}
-.accx .lede{font-size:clamp(17px, .3vw + 15.5px, 19px);line-height:1.55;color:var(--ink-3)}
+.accx .h2{font-size:clamp(30px, 1.6vw + 1.6vh, 44px);line-height:1.1;letter-spacing:-.02em;font-weight:700}
+.accx .lede{font-size:18px;line-height:1.55;color:var(--ink-3)}
 .accx .num{font-variant-numeric:tabular-nums}
 
-.accx .btn{word-spacing:.05em;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 24px;border-radius:999px;border:1px solid transparent;font:700 15.5px/1 var(--display);letter-spacing:0;cursor:pointer;white-space:nowrap;transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease)}
+.accx .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 24px;border-radius:999px;border:1px solid transparent;font:600 15px/1 var(--display);letter-spacing:0;cursor:pointer;white-space:nowrap;transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease)}
 .accx .btn:active{transform:scale(.98)}
 .accx .btn svg{transition:transform .18s var(--ease)}
 .accx .btn:hover svg{transform:translateX(3px)}
@@ -99,7 +104,7 @@
 
 /* ── Bandeau d'activités ── */
 .accx .acts{padding:28px 0 clamp(80px, 8vw, 120px)}
-.accx .acts .wrap{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:15px;color:var(--ink-3)}
+.accx .acts .wrap{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14.5px;color:var(--ink-3)}
 .accx .acts a{transition:color .15s}
 @media (hover:hover){.accx .acts a:hover{color:var(--ink)}}
 
@@ -107,8 +112,8 @@
    photo ni liste ── */
 .accx .moment{padding:0 0 clamp(96px, 10vw, 144px)}
 .accx .moment .wrap{max-width:880px;text-align:center}
-.accx .moment .q{font-size:clamp(40px, 2.6vw + 2vh, 60px);line-height:1.02}
-.accx .moment p{margin:26px auto 0;max-width:600px;font-size:clamp(18px, .4vw + 15.5px, 21px);line-height:1.55;color:var(--ink-2)}
+.accx .moment .q{line-height:1.08}
+.accx .moment p{margin:22px auto 0;max-width:580px;font-size:18px;line-height:1.55;color:var(--ink-2)}
 
 /* ── 3. Fonctionnement ── */
 .accx .how{background:var(--paper);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:clamp(96px, 10vw, 144px) 0}
@@ -133,8 +138,8 @@
 /* Numéro d'étape en simple libellé : la pastille noire faisait un troisième
    accent par carte, en plus de la maquette et du titre (03/10/2026). */
 .accx .meta .n{display:block;font:600 13.5px var(--display);letter-spacing:.01em;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.accx .meta h3{margin-top:8px;font-size:22px;line-height:1.22;letter-spacing:-.012em}
-.accx .meta p{margin-top:10px;color:var(--ink-3);font-size:15.5px;line-height:1.55}
+.accx .meta h3{margin-top:8px;font-size:20px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
+.accx .meta p{margin-top:8px;color:var(--ink-3);font-size:16px;line-height:1.6}
 
 .accx .meta .plus{margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2);display:flex;gap:10px;font-size:14.5px;color:var(--ink-2)}
 .accx .meta .plus svg{flex:0 0 auto;margin-top:2px;color:var(--brand)}
@@ -204,10 +209,10 @@
 .accx .price{padding:clamp(80px, 8vw, 120px) 0}
 .accx .slab{background:var(--ink);color:#fff;border-radius:30px;padding:clamp(36px, 4.5vw, 64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px, 5vw, 80px);align-items:center}
 .accx .slab .h2{color:#fff;max-width:460px}
-.accx .slab .lbl{font-size:17px;color:rgba(255,255,255,.72)}
-.accx .slab .net{margin-top:10px;font:800 clamp(64px, 5vw + 1vh, 96px)/.9 var(--display);letter-spacing:-.03em;color:#fff}
+.accx .slab .lbl{font-size:16px;color:rgba(255,255,255,.72)}
+.accx .slab .net{margin-top:10px;font:700 clamp(44px, 2.6vw + 1vh, 60px)/1 var(--display);letter-spacing:-.03em;color:#fff}
 .accx .slab .det{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14);font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.56);max-width:440px}
-.accx .slab .calc{display:inline-flex;align-items:center;gap:8px;margin-top:24px;font:700 15.5px var(--display);color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:4px}
+.accx .slab .calc{display:inline-flex;align-items:center;gap:8px;margin-top:24px;font:600 15px var(--display);color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:4px}
 @media (hover:hover){.accx .slab .calc:hover{text-decoration-color:#fff}}
 /* ── 5. FAQ : reprise à l'identique de Faq.module.css ── */
 .accx .fq{background:#fff;padding:clamp(40px, 5vw, 72px) 0 clamp(80px, 8vw, 120px)}
@@ -218,7 +223,7 @@
 .accx .fqSub{margin:14px 0 0;max-width:42ch;font-size:clamp(15px, .5vw + .6vh, 17px);line-height:1.55;color:var(--ink-2)}
 .accx .fqQa{border-top:1px solid var(--line)}
 .accx .fqQa:last-of-type{border-bottom:1px solid var(--line)}
-.accx .fqSum{list-style:none;cursor:pointer;display:flex;align-items:flex-start;gap:16px;padding:clamp(17px, 2.2vh, 23px) 0;font-family:var(--display);font-weight:700;letter-spacing:-.018em;font-size:clamp(16.5px, .5vw + .5vh, 19px);line-height:1.35;color:var(--ink);transition:color .15s}
+.accx .fqSum{list-style:none;cursor:pointer;display:flex;align-items:flex-start;gap:16px;padding:clamp(17px, 2.2vh, 23px) 0;font-family:var(--display);font-weight:600;letter-spacing:-.01em;font-size:17px;line-height:1.35;color:var(--ink);transition:color .15s}
 .accx .fqSum::-webkit-details-marker{display:none}
 @media (hover:hover){.accx .fqSum:hover{color:var(--brand-ink)}}
 .accx .fqSum:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:6px}
@@ -228,7 +233,7 @@
 .accx .fqQa[open] .fqSign{border-color:transparent;background:var(--ink)}
 .accx .fqQa[open] .fqSign::before,.accx .fqQa[open] .fqSign::after{background:#fff}
 .accx .fqQa[open] .fqSign::after{transform:translate(-50%,-50%) rotate(90deg)}
-.accx .fqAns{margin:0;padding:0 44px clamp(20px, 2.6vh, 26px) 0;max-width:62ch;font-size:clamp(14.5px, .42vw + .5vh, 16px);line-height:1.62;color:var(--ink-2);animation:acc-faqFade .28s ease both}
+.accx .fqAns{margin:0;padding:0 44px clamp(20px, 2.6vh, 26px) 0;max-width:62ch;font-size:16px;line-height:1.6;color:var(--ink-2);animation:acc-faqFade .28s ease both}
 .accx .fqAns a{color:var(--brand-ink);text-decoration:underline;text-underline-offset:3px}
 @keyframes acc-faqFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .accx .fqTail{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:clamp(28px, 4vh, 44px)}
@@ -249,7 +254,7 @@
 .accx .endIn .h2{color:#fff}
 .accx .endIn p{margin-top:16px;font-size:18px;line-height:1.55;color:rgba(255,255,255,.84)}
 .accx .endIn .btn{margin-top:30px}
-.accx .endIn .who{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12);font-size:15px;line-height:1.55;color:rgba(255,255,255,.62)}
+.accx .endIn .who{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12);font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.62)}
 .accx .endIn .who a{color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:3px}
 @media (hover:hover){.accx .endIn .who a:hover{text-decoration-color:#fff}}
 
@@ -273,7 +278,7 @@
 .accx .ftrGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding:0 0 clamp(30px, 4.4vh, 46px)}
 @media (min-width:561px){.accx .ftrGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:34px 30px}}
 @media (min-width:1000px){.accx .ftrGrid{grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr));gap:clamp(24px, 3vw, 48px)}}
-.accx .ftrGrid h4{margin-bottom:15px;font:700 12px var(--display);text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.4);word-spacing:normal}
+.accx .ftrGrid h4{margin-bottom:15px;font:600 13.5px var(--display);color:rgba(255,255,255,.4);word-spacing:normal}
 .accx .ftrCol{display:flex;flex-direction:column;align-items:flex-start;gap:11px}
 .accx .ftrCol a{font-size:14.5px;color:rgba(255,255,255,.7);transition:color .15s}
 @media (hover:hover){.accx .ftrCol a:hover{color:#fff}}
@@ -304,10 +309,10 @@
   linear-gradient(90deg,rgba(12,10,18,.86) 0%,rgba(12,10,18,.74) 36%,rgba(12,10,18,.3) 58%,rgba(12,10,18,.05) 74%),
   linear-gradient(0deg,rgba(12,10,18,.4) 0%,rgba(12,10,18,0) 30%)}
 .accx .hxIn{width:100%;max-width:calc(var(--side) + 700px);padding:48px 32px 48px var(--side);color:#fff}
-.accx .hxFor{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:rgba(255,255,255,.8)}
+.accx .hxFor{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:500;color:rgba(255,255,255,.8)}
 .accx .hxFor svg{flex:0 0 auto;color:#fff;opacity:.9}
-.accx .hero h1{margin-top:18px;max-width:680px;font-size:clamp(40px, 2.4vw + 2.4vh, 68px);line-height:1.02;letter-spacing:-.024em;font-weight:800;color:#fff}
-.accx .hxLede{margin-top:22px;max-width:520px;font-size:clamp(17px, .3vw + 15.5px, 19.5px);line-height:1.55;color:rgba(255,255,255,.86)}
+.accx .hero h1{margin-top:18px;max-width:680px;font-size:clamp(40px, 2.3vw + 2.2vh, 64px);line-height:1.04;letter-spacing:-.025em;font-weight:700;color:#fff}
+.accx .hxLede{margin-top:22px;max-width:520px;font-size:18px;line-height:1.55;color:rgba(255,255,255,.86)}
 /* Sur desktop, le chapeau remplace les trois étapes : la liste ne sert plus
    que de légende au téléphone, en mobile (cf. « Héros mobile allégé »). */
 @media (min-width:861px){.accx .hxIn .flow{display:none}}
@@ -318,7 +323,7 @@
 .accx .flow li.on{opacity:1}
 .accx .flow .nb{grid-row:span 2;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.45);display:grid;place-items:center;font:700 13px var(--display);transition:background .35s,color .35s,border-color .35s}
 .accx .flow li.on .nb{background:#fff;color:var(--ink);border-color:#fff}
-.accx .flow b{min-height:32px;display:flex;align-items:center;font:600 17.5px/1.3 var(--display);word-spacing:.04em}
+.accx .flow b{min-height:32px;display:flex;align-items:center;font:600 17px/1.3 var(--display)}
 .accx .flow .dt{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease)}
 .accx .flow .dt > em{overflow:hidden;display:block;font-style:normal;font-size:15px;line-height:1.5;color:rgba(255,255,255,.72)}
 .accx .flow li.on .dt{grid-template-rows:1fr}
@@ -328,7 +333,7 @@
 
 .accx .hxCta{margin-top:34px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px}
 .accx .hxCta small{flex-basis:100%;font-size:14px;color:rgba(255,255,255,.66);line-height:1.4}
-.accx .hxDemoLink{display:inline-flex;align-items:center;gap:10px;height:50px;font:700 15.5px/1 var(--display);color:#fff}
+.accx .hxDemoLink{display:inline-flex;align-items:center;gap:10px;height:50px;font:600 15px/1 var(--display);color:#fff}
 .accx .hxDemoLink .pl{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);transition:background .18s var(--ease),border-color .18s var(--ease)}
 .accx .hxDemoLink .pl svg{margin-left:2px}
 @media (hover:hover){.accx .hxDemoLink:hover .pl{background:rgba(255,255,255,.14);border-color:#fff}}
@@ -529,7 +534,7 @@
   .accx .price{padding:56px 0}
   .accx .fq{padding-top:40px;padding-bottom:48px}
   .accx .end{padding-bottom:56px}
-  .accx .h2{font-size:29px}
+  .accx .h2{font-size:28px}
   /* héros : démo plus compacte, sans vide dans les écrans */
   .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{width:236px;margin-top:84px}
   .accx .hxPhone .scr{height:470px}
@@ -538,7 +543,6 @@
   .accx .lt{margin-top:40px}.accx .lt b{font-size:54px}
   .accx .sA .gr{grid-template-columns:repeat(4,1fr)}
   .accx .hxCta small{font-size:13.5px}
-  .accx .moment .q{font-size:34px}
   .accx .moment p{font-size:17px}
   /* fonctionnement : carrousel horizontal au lieu de trois cartes empilées */
   .accx .steps{display:flex;gap:12px;margin:32px calc(-1 * var(--gutter)) 0;padding:0 var(--gutter) 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--gutter);scrollbar-width:none;max-width:none}
