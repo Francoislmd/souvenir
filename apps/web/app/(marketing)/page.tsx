@@ -277,7 +277,7 @@ export default function AccueilPage() {
                     </div>
                   </div>
                   <div className="meta">
-                    <span className="n">1</span>
+                    <span className="n">Étape 1</span>
                     <h3>Vous déposez toute la carte</h3>
                     <p>Sans trier ni renommer. Vous publiez pendant que l’envoi continue.</p>
                   </div>
@@ -301,7 +301,7 @@ export default function AccueilPage() {
                     </div>
                   </div>
                   <div className="meta">
-                    <span className="n">2</span>
+                    <span className="n">Étape 2</span>
                     <h3>Le lien part à votre nom</h3>
                     <p>L’e-mail porte le nom de votre structure, pas celui de Linktrip. S’il n’achète pas, il reçoit un rappel deux jours après, puis un dernier.</p>
                   </div>
@@ -325,12 +325,13 @@ export default function AccueilPage() {
                             </div>
                             <div className="apay"><svg width={13} height={15} viewBox="0 0 17 20" fill="currentColor"><path d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM11.6 3c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z" /></svg>Pay</div>
                             <p className="or">ou par carte</p>
+                            <p className="sec"><svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x={5} y={11} width={14} height={10} rx={2} /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>Paiement sécurisé par Stripe</p>
                           </div>
                         </div></div></div>
                     </div>
                   </div>
                   <div className="meta">
-                    <span className="n">3</span>
+                    <span className="n">Étape 3</span>
                     <h3>Il paie depuis son téléphone</h3>
                     <p>Par carte, Apple Pay ou Google Pay, sans créer de compte. Les fichiers en haute définition arrivent aussitôt dans sa boîte mail.</p>
                   </div>

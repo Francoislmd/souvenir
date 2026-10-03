@@ -124,10 +124,16 @@
    dans un cadre arrondi. La maquette affleure le bas du cadre. */
 .accx .stage{position:relative;height:424px;border-radius:var(--r-xl);overflow:hidden;isolation:isolate;background:var(--line-2)}
 .accx .stageBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;transform:scale(1.04)}
+/* Voile uniforme : les trois photos n'ont pas la même teinte, il les accorde
+   et détache le téléphone blanc du fond. */
+.accx .stage::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(22,19,32,.1);pointer-events:none}
+.accx .stage .phone{border-color:rgba(255,255,255,.6)}
 .accx .stageIn{height:100%;display:flex;align-items:flex-start;justify-content:center;padding:36px 24px 0}
 .accx .meta{padding:26px 4px 0}
-.accx .meta .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font:700 13px var(--display)}
-.accx .meta h3{margin-top:16px;font-size:22px;line-height:1.22;letter-spacing:-.012em}
+/* Numéro d'étape en simple libellé : la pastille noire faisait un troisième
+   accent par carte, en plus de la maquette et du titre (03/10/2026). */
+.accx .meta .n{display:block;font:600 13.5px var(--display);letter-spacing:.01em;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.accx .meta h3{margin-top:8px;font-size:22px;line-height:1.22;letter-spacing:-.012em}
 .accx .meta p{margin-top:10px;color:var(--ink-3);font-size:15.5px;line-height:1.55}
 
 .accx .meta .plus{margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2);display:flex;gap:10px;font-size:14.5px;color:var(--ink-2)}
@@ -189,6 +195,7 @@
 .accx .fld small{display:block;margin-top:6px;font-size:10.5px;line-height:1.4;color:var(--ink-3)}
 .accx .apay{margin-top:14px;height:42px;border-radius:11px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;gap:5px;font:600 14.5px -apple-system,var(--font-inter),sans-serif}
 .accx .or{margin-top:10px;text-align:center;font-size:11.5px;color:var(--ink-3)}
+.accx .sheet .sec{margin-top:26px;padding-top:14px;border-top:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--ink-3)}
 
 /* ── 4. Prix (03/10/2026) : une seule information, ce que le pro reçoit ── */
 .accx .price{padding:clamp(80px, 8vw, 120px) 0}
@@ -540,7 +547,7 @@
   .accx .stage .mini{transform:scale(.86);transform-origin:top center;margin-bottom:-60px}
   .accx .stage .pro .drop{display:none}
   .accx .meta{padding:18px 2px 0}
-  .accx .meta h3{font-size:20px;margin-top:12px}
+  .accx .meta h3{font-size:20px;margin-top:6px}
   .accx .meta p{font-size:15px}
   .accx .stepsHint{display:flex}
   .accx .sA .row2 span{font-size:12px}
