@@ -33,6 +33,18 @@ function suggestFix(mail: string): string | null {
   return fixed ? `${user}@${fixed}` : null;
 }
 
+export interface RecentSortie {
+  href: string;
+  activity: string;
+  /** « 26 » */
+  dayNumber: string;
+  /** « sept » */
+  month: string;
+  /** « Samedi » */
+  weekday: string;
+  photoCount: number;
+}
+
 export interface Teaser {
   count: number;
   /** Vignettes très floutées (Photo.blurEmailKey) : on devine une sortie, on ne reconnaît personne. */
@@ -59,6 +71,7 @@ export function LinkRequest({
   teaser,
   guide,
   mailSubject,
+  recent,
 }: {
   slug: string;
   /** Le code de la sortie, quand on arrive par son QR code. */
@@ -73,6 +86,8 @@ export function LinkRequest({
   guide?: string | null;
   /** L'objet exact du mail qui part, pour que le client le trouve. */
   mailSubject?: string | null;
+  /** Page de la boutique : les dernières sorties en ligne, pour reconnaître la sienne. */
+  recent?: RecentSortie[];
 }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -179,6 +194,7 @@ export function LinkRequest({
             )}
             {eyebrow ? <div className={styles.eyebrow}>{eyebrow}</div> : null}
             <h1 className={`${styles.h1} ${styles.display}`}>{heading}</h1>
+            {recent ? <p className={styles.intro}>Le lien de chacune de vos sorties vous arrive par e-mail.</p> : null}
 
             {teaser && teaser.count > 0 && teaser.urls.length > 0 ? (
               <div className={styles.teaser}>
@@ -294,7 +310,7 @@ export function LinkRequest({
                     {errorText}
                   </p>
                 ) : null}
-                <button type="submit" className={styles.cta} disabled={busy || !email.trim()}>
+                <button type="submit" className={styles.cta} disabled={busy}>
                   {busy ? <Spinner size={17} tone="light" /> : null}
                   Recevoir mon lien
                 </button>
@@ -324,6 +340,32 @@ export function LinkRequest({
                 Téléchargement immédiat
               </span>
             </div>
+            {recent && recent.length > 0 ? (
+              <nav className={styles.recent} aria-label="Sorties récentes">
+                <h2>Sorties récentes</h2>
+                <ul>
+                  {recent.map((s) => (
+                    <li key={s.href}>
+                      <a href={s.href}>
+                        <span className={styles.date}>
+                          <b>{s.dayNumber}</b>
+                          {s.month}
+                        </span>
+                        <span className={styles.what}>
+                          <b>{s.activity}</b>
+                          <span>
+                            {s.weekday} · {s.photoCount} photo{s.photoCount > 1 ? "s" : ""}
+                          </span>
+                        </span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="m9 6 6 6-6 6" />
+                        </svg>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
             <div className={styles.foot}>
               <span className={styles.powered}>
                 Propulsé par <Logo variant="wordmark" tone="mono" height={12} title="Linktrip" />

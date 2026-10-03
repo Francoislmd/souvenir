@@ -827,3 +827,103 @@
     transition: none;
   }
 }
+
+/* ── Page de la boutique, sans sortie dans l'adresse ──────────────────────
+   Les dernières sorties en ligne, pour que le client reconnaisse la sienne.
+   Sur ordinateur, elles occupent la colonne de droite. */
+.intro {
+  margin: 8px 0 0;
+  max-width: 440px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+.recent {
+  margin-top: 28px;
+}
+.recent h2 {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.recent ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent li + li {
+  border-top: 1px solid var(--line);
+}
+.recent a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  color: var(--ink);
+  text-decoration: none;
+}
+.recent a:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.recent a > svg {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink-4);
+}
+.date {
+  width: 48px;
+  flex: none;
+  padding: 6px 0 7px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--op) 9%, #fff);
+  color: color-mix(in srgb, var(--op) 82%, #000);
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.date b {
+  display: block;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.what {
+  min-width: 0;
+}
+.what b {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.what span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+@media (hover: hover) and (pointer: fine) {
+  .recent a:hover b {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+@media (min-width: 900px) {
+  .recent {
+    grid-column: 2;
+    grid-row: 1 / span 8;
+    align-self: start;
+    margin-top: 0;
+    padding: 18px 20px 6px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+}
