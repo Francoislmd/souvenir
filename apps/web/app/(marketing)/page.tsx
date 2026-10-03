@@ -151,7 +151,7 @@ export default function AccueilPage() {
                     {/* A · le pro dépose et publie */}
                     <div className="sc sA on">
                       <div className="hd2"><b>Rafting, 10 h</b><span>Samedi 19 septembre</span></div>
-                      <div className="gr"><img src="/accueil/depot-1.webp" alt="" /><img src="/accueil/depot-2.webp" alt="" /><img src="/accueil/depot-3.webp" alt="" /><img src="/accueil/depot-4.webp" alt="" /><img src="/accueil/depot-5.webp" alt="" /><img src="/accueil/depot-6.webp" alt="" /><img src="/accueil/depot-7.webp" alt="" /><img src="/accueil/depot-8.webp" alt="" /><img src="/accueil/depot-9.webp" alt="" /><img src="/accueil/depot-10.webp" alt="" /><img src="/accueil/depot-11.webp" alt="" /><img src="/accueil/depot-12.webp" alt="" /><img src="/accueil/depot-13.webp" alt="" /><img src="/accueil/depot-14.webp" alt="" /><img src="/accueil/depot-15.webp" alt="" /><img src="/accueil/depot-16.webp" alt="" /></div>
+                      <div className="gr"><img src="/accueil/depot-1.webp" alt="" /><img src="/accueil/depot-2.webp" alt="" /><img src="/accueil/depot-3.webp" alt="" /><img src="/accueil/depot-4.webp" alt="" /><img src="/accueil/depot-5.webp" alt="" /><img src="/accueil/depot-6.webp" alt="" /><img src="/accueil/depot-7.webp" alt="" /><img src="/accueil/depot-8.webp" alt="" /><img src="/accueil/depot-9.webp" alt="" /></div>
                       <div className="ft2">
                         <div className="row2"><span id="cnt"><b>0</b> photo</span><span className="btn btn-ink" id="pub">Publier</span></div>
                       </div>
@@ -164,17 +164,16 @@ export default function AccueilPage() {
                         <div className="lt"><span>samedi 19 septembre</span><b className="num">19:10</b></div>
                         <div className="notif" id="notif">
                           <span className="ic"><svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x={3} y={5} width={18} height={14} rx="2.5" /><path d="M3.5 6.5 12 13l8.5-6.5" /></svg></span>
-                          <div><p className="t"><b>Bleu Torrent</b><time>maintenant</time></p><p className="s">Julie, vos photos du 19 septembre</p><p className="p">14 photos de votre sortie rafting vous attendent.</p></div>
+                          <div><p className="t"><b>Bleu Torrent</b><time>maintenant</time></p><p className="s">Vos photos du 19 septembre</p><p className="p">14 photos de votre sortie rafting vous attendent.</p></div>
                         </div>
                       </div>
                       <div className="mail" id="mail">
                         <div className="mh">
                           <div className="fr"><span className="av"><svg viewBox="0 0 32 32" width="100%" height="100%" aria-hidden="true"><circle cx={16} cy={16} r={16} fill="#0e4a7b" /><path d="M7.5 18.5 12.6 11.5l3.1 4.1 2.3-2.9 6.5 5.8" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" /><path d="M8 22.6c1.4-1.1 2.9-1.1 4.3 0s2.9 1.1 4.3 0 2.9-1.1 4.3 0 2.2.9 2.9.6" fill="none" stroke="#7fd0ff" strokeWidth={1.9} strokeLinecap="round" /></svg></span><div><b>Bleu Torrent</b></div></div>
-                          <p className="sj">Julie, vos photos du 19 septembre</p>
+                          <p className="sj">Vos photos du 19 septembre</p>
                         </div>
                         <div className="bd">
                           <img src="/accueil/email-couverture.webp" alt="" />
-                          <p>14 photos de votre sortie rafting vous attendent.</p>
                           <span className="btn btn-brand" id="open">Voir mes photos</span>
                         </div>
                       </div>
@@ -190,7 +189,6 @@ export default function AccueilPage() {
                           <div className="ph"><img src="/accueil/apercu-3.webp" alt="" /><span className="ck"><svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span></div>
                         </div></div>
                       <div className="pos">
-                        <div className="dots" id="dots"><i className="on" /><i /><i /><i /><i /><i /></div>
                         <span className="take" id="take"><svg className="ip" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg><svg className="ic2" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg><em>Prendre</em></span>
                       </div>
                       <div className="pbar"><span className="btn btn-brand" id="buy">Tout prendre · 25&nbsp;€</span></div>
@@ -205,10 +203,6 @@ export default function AccueilPage() {
                           <span className="stack"><img src="/accueil/apercu-1.webp" alt="" /><img src="/accueil/apercu-2.webp" alt="" /></span>
                           <div><b>2 photos</b><span>Rafting, 10 h</span></div>
                           <em className="num">8&nbsp;€</em>
-                        </div>
-                        <div className="fld">
-                          <label>Votre e-mail</label>
-                          <div className="in">julie.m@gmail.com</div>
                         </div>
                         <div className="apay" id="apay"><span className="lbl"><svg width={13} height={15} viewBox="0 0 17 20" fill="currentColor"><path d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM11.6 3c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z" /></svg>Pay</span><span className="spin" /></div>
                         <div className="cardPay"><svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x={3} y={5.5} width={18} height={13} rx={2.2} /><path d="M3 10h18M7 15h3" /></svg>Payer par carte</div>
@@ -282,11 +276,10 @@ export default function AccueilPage() {
                           <div className="sbar"><span className="num">19:12</span><i /><span className="sig"><b /></span></div>
                           <div className="mhead">
                             <div className="from"><span className="av"><svg viewBox="0 0 32 32" width="100%" height="100%" aria-hidden="true"><circle cx={16} cy={16} r={16} fill="#0e4a7b" /><path d="M7.5 18.5 12.6 11.5l3.1 4.1 2.3-2.9 6.5 5.8" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" /><path d="M8 22.6c1.4-1.1 2.9-1.1 4.3 0s2.9 1.1 4.3 0 2.9-1.1 4.3 0 2.2.9 2.9.6" fill="none" stroke="#7fd0ff" strokeWidth={1.9} strokeLinecap="round" /></svg></span><div className="who"><b>Bleu Torrent</b></div></div>
-                            <p className="subj">Julie, vos photos du 19 septembre</p>
+                            <p className="subj">Vos photos du 19 septembre</p>
                           </div>
                           <div className="mbody">
                             <div className="cov"><img src="/accueil/canyoning-3.webp" alt="" /><img src="/accueil/canyoning-2.webp" alt="" /><img src="/accueil/canyoning-1.webp" alt="" /></div>
-                            <p>12 photos de votre sortie canyoning vous attendent.</p>
                             <span className="btn btn-brand">Voir mes photos</span>
                           </div>
                         </div></div></div>
@@ -304,15 +297,13 @@ export default function AccueilPage() {
                     <div className="stageIn">
                     <div className="mini"><div className="phone"><div className="scr">
                           <div className="sbar"><span className="num">19:15</span><i /><span className="sig"><b /></span></div>
+                          <div className="payBg"><img src="/accueil/paiement-fond.webp" alt="" loading="lazy" /></div>
                           <div className="sheet">
+                            <span className="grab" />
                             <div className="sum">
                               <span className="stack"><img src="/accueil/canyoning-2.webp" alt="" /><img src="/accueil/canyoning-3.webp" alt="" /></span>
-                              <div><b>Le pack, 12 photos</b><span>Canyoning, 14 h</span></div>
+                              <div><b>Les 12 photos</b><span>Canyoning, 14 h</span></div>
                               <em className="num">25&nbsp;€</em>
-                            </div>
-                            <div className="fld">
-                              <label>Votre e-mail</label>
-                              <div className="in">julie.m@gmail.com</div>
                             </div>
                             <div className="apay"><svg width={13} height={15} viewBox="0 0 17 20" fill="currentColor"><path d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM11.6 3c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z" /></svg>Pay</div>
                             <div className="cardPay"><svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x={3} y={5.5} width={18} height={13} rx={2.2} /><path d="M3 10h18M7 15h3" /></svg>Payer par carte</div>
