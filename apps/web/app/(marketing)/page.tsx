@@ -170,7 +170,7 @@ export default function AccueilPage() {
                       </div>
                       <div className="mail" id="mail">
                         <div className="mh">
-                          <div className="fr"><span className="av">BT</span><div><b>Bleu Torrent</b><span>à Julie · 19:10</span></div></div>
+                          <div className="fr"><span className="av"><svg viewBox="0 0 32 32" width="100%" height="100%" aria-hidden="true"><circle cx={16} cy={16} r={16} fill="#0e4a7b" /><path d="M7.5 18.5 12.6 11.5l3.1 4.1 2.3-2.9 6.5 5.8" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" /><path d="M8 22.6c1.4-1.1 2.9-1.1 4.3 0s2.9 1.1 4.3 0 2.9-1.1 4.3 0 2.2.9 2.9.6" fill="none" stroke="#7fd0ff" strokeWidth={1.9} strokeLinecap="round" /></svg></span><div><b>Bleu Torrent</b><span>à Julie · 19:10</span></div></div>
                           <p className="sj">Julie, vos photos du 19 septembre</p>
                         </div>
                         <div className="bd">
@@ -285,7 +285,7 @@ export default function AccueilPage() {
                     <div className="mini"><div className="phone"><div className="scr">
                           <div className="sbar"><span className="num">19:12</span><i /><span className="sig"><b /></span></div>
                           <div className="mhead">
-                            <div className="from"><span className="av">BT</span><div className="who"><b>Bleu Torrent</b></div></div>
+                            <div className="from"><span className="av"><svg viewBox="0 0 32 32" width="100%" height="100%" aria-hidden="true"><circle cx={16} cy={16} r={16} fill="#0e4a7b" /><path d="M7.5 18.5 12.6 11.5l3.1 4.1 2.3-2.9 6.5 5.8" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" /><path d="M8 22.6c1.4-1.1 2.9-1.1 4.3 0s2.9 1.1 4.3 0 2.9-1.1 4.3 0 2.2.9 2.9.6" fill="none" stroke="#7fd0ff" strokeWidth={1.9} strokeLinecap="round" /></svg></span><div className="who"><b>Bleu Torrent</b></div></div>
                             <p className="subj">Julie, vos photos du 19 septembre</p>
                           </div>
                           <div className="mbody">
