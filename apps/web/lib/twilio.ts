@@ -20,3 +20,16 @@ export async function sendWhatsAppMessage(to: string, body: string): Promise<voi
   });
 }
 
+
+/**
+ * Un lien envoyé à un numéro de téléphone : par SMS quand un expéditeur SMS
+ * est configuré (TWILIO_SMS_FROM), sinon par WhatsApp. Le SMS arrive chez
+ * tout le monde ; WhatsApp exige un modèle validé pour écrire en premier.
+ */
+export async function sendTextMessage(to: string, body: string): Promise<void> {
+  if (env.TWILIO_SMS_FROM) {
+    await twilioClient.messages.create({ from: env.TWILIO_SMS_FROM, to: toE164(to), body });
+    return;
+  }
+  await sendWhatsAppMessage(to, body);
+}

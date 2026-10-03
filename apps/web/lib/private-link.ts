@@ -5,7 +5,8 @@ import { sendGroupInviteEmail } from "./email";
 import { buildEmailCover } from "./email-cover";
 import { getPreviewUrl } from "./storage";
 import { visiblePhotoWhere } from "./access";
-import { formatHourFr } from "./format";
+import { formatHourFr, photosOf } from "./format";
+import { sendTextMessage } from "./twilio";
 
 /**
  * Les départs d'une sortie de groupe qui ont des photos. À partir de deux,
@@ -66,23 +67,31 @@ export async function sendPrivateInvite(
 ): Promise<void> {
   const row = await prisma.participant.findUnique({ where: { id: participant.id }, select: { slotId: true } });
   const teaser = await galleryTeaser({ id: participant.id, sortieId: sortie.id, slotId: row?.slotId ?? null });
-  await sendGroupInviteEmail({
-    to: participant.contact,
-    operatorId: sortie.operatorId,
-    operatorName: sortie.operator.name,
-    operatorLogoUrl: sortie.operator.logoUrl,
-    brandColor: sortie.operator.brandColor,
-    activity: sortie.activity,
-    sortieDate: formatDateFr(sortie.startsAt),
-    sortiePlace: sortie.place,
-    galleryUrl: privateGalleryUrl(participant.token),
-    coverUrl,
-    purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
-    heroUrl: sortie.operator.coverUrl,
-    detail: teaser.detail,
-    thumbs: teaser.thumbs,
-    photoCount: teaser.photoCount,
-  });
+  if (!participant.contact.includes("@")) {
+    // Un numéro de téléphone : le lien part par SMS (lib/twilio.ts).
+    await sendTextMessage(
+      participant.contact,
+      `${sortie.operator.name} : vos photos ${photosOf(sortie.activity)} du ${formatDateFr(sortie.startsAt)} sont prêtes. Votre galerie privée, personnelle : ${privateGalleryUrl(participant.token)}`,
+    );
+  } else {
+    await sendGroupInviteEmail({
+      to: participant.contact,
+      operatorId: sortie.operatorId,
+      operatorName: sortie.operator.name,
+      operatorLogoUrl: sortie.operator.logoUrl,
+      brandColor: sortie.operator.brandColor,
+      activity: sortie.activity,
+      sortieDate: formatDateFr(sortie.startsAt),
+      sortiePlace: sortie.place,
+      galleryUrl: privateGalleryUrl(participant.token),
+      coverUrl,
+      purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
+      heroUrl: sortie.operator.coverUrl,
+      detail: teaser.detail,
+      thumbs: teaser.thumbs,
+      photoCount: teaser.photoCount,
+    });
+  }
   await prisma.participant.update({ where: { id: participant.id }, data: { sentAt: new Date() } }).catch((error) => {
     console.error("[private-link] sentAt not recorded for", participant.id, error);
   });
@@ -96,7 +105,7 @@ export async function sendPrivateInvite(
 export async function sendPendingInvites(sortieId: string): Promise<number> {
   const sortie = await prisma.sortie.findUnique({
     where: { id: sortieId },
-    include: { operator: true, participants: { where: { sentAt: null, deletedAt: null, channel: "EMAIL" }, orderBy: { createdAt: "asc" } } },
+    include: { operator: true, participants: { where: { sentAt: null, deletedAt: null }, orderBy: { createdAt: "asc" } } },
   });
   if (!sortie || sortie.status !== "SENT" || sortie.participants.length === 0) return 0;
 

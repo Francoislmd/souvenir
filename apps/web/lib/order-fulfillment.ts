@@ -4,7 +4,7 @@ import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { env } from "./env";
 import { readAutomations } from "./automations";
-import { sendWhatsAppMessage } from "./twilio";
+import { sendTextMessage } from "./twilio";
 import { sendOrderConfirmedEmail } from "./email";
 import { cardLabelOf } from "./receipt";
 import { CGV_DATE_LABEL, sellerFromOperator, sellerLine } from "./seller-format";
@@ -64,7 +64,7 @@ async function sendPostPurchaseMessages(
         `Vendeur : ${sellerLine(seller)}. Livraison immédiate demandée : droit de rétractation non applicable.`,
         `${admin ? `Une photo défectueuse ? Écrivez au vendeur : ${admin.email}. ` : ""}Conditions de vente : ${cgvUrl}`,
       ].join("\n\n");
-      await sendWhatsAppMessage(participant.contact, receipt);
+      await sendTextMessage(participant.contact, receipt);
       await track("order_confirmed_sent", { operatorId: operator.id, participantId: participant.id });
     } catch (error) {
       console.error("[order-fulfillment] receipt WhatsApp failed:", error);
@@ -73,7 +73,7 @@ async function sendPostPurchaseMessages(
     if (!includeReview) return;
     const message = `Merci d'avoir choisi ${operator.name}. Un avis Google prend trente secondes et change beaucoup pour une petite structure : ${operator.googleReviewUrl}`;
     try {
-      await sendWhatsAppMessage(participant.contact, message);
+      await sendTextMessage(participant.contact, message);
       await track("automation_review_sent", { operatorId: operator.id, participantId: participant.id });
     } catch (error) {
       console.error("[order-fulfillment] review WhatsApp failed:", error);

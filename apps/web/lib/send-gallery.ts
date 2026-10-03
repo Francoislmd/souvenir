@@ -1,7 +1,7 @@
 import type { Operator, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
-import { sendWhatsAppMessage } from "./twilio";
+import { sendTextMessage } from "./twilio";
 import { sendPhotosReadyEmail } from "./email";
 import { getPreviewUrl } from "./storage";
 import { env } from "./env";
@@ -74,7 +74,7 @@ export async function sendParticipantGallery(
         unsubUrl: `${galleryUrl}/desinscription`,
       });
     } else {
-      await sendWhatsAppMessage(participant.contact, `${message}\n${galleryUrl}`);
+      await sendTextMessage(participant.contact, `${message}\n${galleryUrl}`);
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : "unknown error";

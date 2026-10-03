@@ -1,3 +1,4 @@
+import { parsePhone, formatPhone } from "./phone";
 /**
  * Lire une liste d'adresses dans ce que l'opérateur a sous la main.
  *
@@ -52,6 +53,37 @@ export function parseEmails(text: string, known: readonly string[] = []): Parsed
   return { emails, duplicates, ignored };
 }
 
+// Les numéros : français (06 12 34 56 78, +33 6…, 0033 6…) ou
+// internationaux écrits avec leur indicatif (+41 …).
+const PHONE_SOURCE = "(?:(?:\\+|00)33[\\s.-]?[1-9]|0[1-9])(?:[\\s.-]?\\d{2}){4}|\\+(?!33)\\d{1,3}(?:[\\s.-]?\\d){6,13}";
+const ALL_CONTACTS = new RegExp(`${EMAIL_SOURCE}|${PHONE_SOURCE}`, "gi");
+const ANY_CONTACT = new RegExp(`${EMAIL_SOURCE}|${PHONE_SOURCE}`, "i");
+
+/**
+ * Comme parseEmails, mais garde aussi les numéros de téléphone, ramenés à
+ * l'E.164 (+33612345678). Un client sans e-mail reçoit son lien par SMS.
+ */
+export function parseContacts(text: string, known: readonly string[] = []): ParsedEmails {
+  const seen = new Set(known.map((e) => e.trim().toLowerCase()));
+  const emails: string[] = [];
+  let duplicates = 0;
+
+  ALL_CONTACTS.lastIndex = 0;
+  for (const raw of text.match(ALL_CONTACTS) ?? []) {
+    const contact = raw.includes("@") ? raw.toLowerCase().replace(/\.+$/, "") : parsePhone(raw);
+    if (!contact) continue;
+    if (seen.has(contact)) {
+      duplicates += 1;
+      continue;
+    }
+    seen.add(contact);
+    emails.push(contact);
+  }
+
+  const ignored = text.split(/[\r\n]+/).filter((line) => line.trim().length > 0 && !ANY_CONTACT.test(line)).length;
+  return { emails, duplicates, ignored };
+}
+
 /** « 12 clients », « 1 client » — la même règle partout dans l'écran. */
 export function clientCount(n: number): string {
   return `${n} client${n > 1 ? "s" : ""}`;
@@ -66,7 +98,7 @@ export function pasteSummary(parsed: ParsedEmails): string {
   }
   if (parsed.ignored > 0) {
     const s = parsed.ignored > 1 ? "s" : "";
-    bits.push(`${parsed.ignored} ligne${s} sans adresse écartée${s}`);
+    bits.push(`${parsed.ignored} ligne${s} sans adresse ni numéro écartée${s}`);
   }
   return bits.length === 0 ? "" : `${bits.join(" et ")}.`;
 }
@@ -77,6 +109,7 @@ export function pasteSummary(parsed: ParsedEmails): string {
  * la liste jusqu'à ce que le client paie et donne le sien.
  */
 export function nameFromEmail(email: string): string {
+  if (!email.includes("@")) return formatPhone(email);
   const local = email.split("@")[0] ?? "";
   const name = local
     .split(/[._\-+]+/)

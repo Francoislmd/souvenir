@@ -2,7 +2,7 @@ import { galleryTeaser } from "./private-link";
 import type { Operator, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
-import { sendWhatsAppMessage } from "./twilio";
+import { sendTextMessage } from "./twilio";
 import { sendPhotosReminderEmail, sendPhotosOfferEmail, sendGroupReminderEmail } from "./email";
 import { buildEmailCover } from "./email-cover";
 import { getPreviewUrl } from "./storage";
@@ -64,7 +64,7 @@ async function sendReminder(participant: Participant, sortie: Sortie, operator: 
 
   if (participant.channel === "WHATSAPP") {
     try {
-      await sendWhatsAppMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, vos photos vous attendent : ${galleryUrl}`);
+      await sendTextMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, vos photos vous attendent : ${galleryUrl}`);
       return { sent: true };
     } catch (error) {
       console.error("[automations] reminder WhatsApp failed:", error);
@@ -111,7 +111,7 @@ async function sendReducedOffer(participant: Participant, sortie: Sortie, operat
   const galleryUrl = `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`;
 
   if (participant.channel === "WHATSAPP") {
-    await sendWhatsAppMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, vos photos sont à prix réduit pendant 48h : ${galleryUrl}`);
+    await sendTextMessage(participant.contact, `${participant.name.split(/\s+/)[0]}, vos photos sont à prix réduit pendant 48h : ${galleryUrl}`);
     return;
   }
 

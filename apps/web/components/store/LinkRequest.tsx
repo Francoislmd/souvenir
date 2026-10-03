@@ -26,6 +26,11 @@ const DOMAIN_FIX: Record<string, string> = {
   "icloud.fr": "icloud.com",
 };
 
+/** Un numéro plausible : des chiffres, avec espaces, points ou tirets, et un + éventuel. */
+function looksLikePhone(value: string): boolean {
+  return !value.includes("@") && /^[+\d][\d\s.()-]{7,20}$/.test(value.trim());
+}
+
 function suggestFix(mail: string): string | null {
   const [user, domain] = mail.split("@");
   if (!user || !domain) return null;
@@ -99,10 +104,16 @@ export function LinkRequest({
   // L'objet exact du mail parti, quand le serveur le connaît mieux que la page
   // (boutique : une galerie ou un mail qui les regroupe toutes).
   const [sentSubject, setSentSubject] = useState<string | null>(null);
+  const [sentBy, setSentBy] = useState<"email" | "sms">("email");
 
   async function send(raw: string, skipTypo = false): Promise<void> {
     const to = raw.trim().toLowerCase();
     if (!to || busy) return;
+    if (!to.includes("@") && !looksLikePhone(to)) {
+      setState("error");
+      setErrorText("Entrez une adresse e-mail ou un numéro de téléphone.");
+      return;
+    }
     if (!skipTypo && suggestFix(to)) {
       setEmail(to);
       setState("typo");
@@ -114,7 +125,7 @@ export function LinkRequest({
       const res = await fetch(`/api/store/${slug}/link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: to, ...(code ? { code } : {}) }),
+        body: JSON.stringify({ contact: to, ...(code ? { code } : {}) }),
       });
       if (!res.ok) {
         setState("error");
@@ -122,13 +133,14 @@ export function LinkRequest({
           res.status === 429
             ? "Trop de demandes. Réessayez dans quelques minutes."
             : res.status === 400
-              ? "Cette adresse ne semble pas valide."
+              ? "Cette adresse ou ce numéro ne semble pas valide."
               : "L'envoi n'a pas abouti. Réessayez.",
         );
         return;
       }
-      const { outcome, subject } = (await res.json()) as { outcome: "sent" | "pending" | "no_match"; subject?: string };
-      if (subject) setSentSubject(subject);
+      const { outcome, subject, via } = (await res.json()) as { outcome: "sent" | "pending" | "no_match"; subject?: string; via?: "email" | "sms" };
+      setSentSubject(subject ?? null);
+      setSentBy(via === "sms" ? "sms" : "email");
       if (outcome === "no_match") {
         setEmail(to);
         setState("unknown");
@@ -232,7 +244,7 @@ export function LinkRequest({
                 <p>
                   {state === "sent" ? (
                     <>
-                      Envoyé à <b>{sentTo}</b>. Il ouvre vos photos sur ce téléphone ou un autre, pendant 90 jours.
+                      {sentBy === "sms" ? "Envoyé par SMS au" : "Envoyé à"} <b>{sentTo}</b>. Il ouvre vos photos sur ce téléphone ou un autre, pendant 90 jours.
                     </>
                   ) : (
                     <>
@@ -241,11 +253,11 @@ export function LinkRequest({
                   )}
                 </p>
                 <div className={styles.mail}>
-                  <span>Cherchez ce mail</span>
+                  <span>{sentBy === "sms" ? "Cherchez ce SMS" : "Cherchez ce mail"}</span>
                   <b>{operator.name}</b>
-                  {sentSubject ?? mailSubject ? <span>{sentSubject ?? mailSubject}</span> : null}
+                  {sentBy === "email" && (sentSubject ?? mailSubject) ? <span>{sentSubject ?? mailSubject}</span> : null}
                 </div>
-                {state === "sent" ? <div className={styles.doneRow}>Rien après une minute ? Regardez dans les spams.</div> : null}
+                {state === "sent" && sentBy === "email" ? <div className={styles.doneRow}>Rien après une minute ? Regardez dans les spams.</div> : null}
                 <div className={styles.doneRow}>
                   <button
                     type="button"
@@ -269,23 +281,25 @@ export function LinkRequest({
               >
                 {state === "unknown" ? (
                   <div className={styles.msgErr} role="alert">
-                    <b>Cette adresse n&rsquo;est pas sur la liste {code ? "de la sortie" : "de nos sorties"}.</b>
-                    <p>La réservation est peut-être au nom d&rsquo;une autre personne de votre groupe : essayez son adresse. Sinon, {askWho}.</p>
+                    <b>{email.includes("@") ? "Cette adresse n\u2019est pas" : "Ce numéro n\u2019est pas"} sur la liste {code ? "de la sortie" : "de nos sorties"}.</b>
+                    <p>
+                      {email.includes("@") ? "Essayez votre numéro de téléphone, ou l\u2019adresse" : "Essayez votre adresse e-mail, ou le numéro"} d&rsquo;une autre personne de votre groupe qui a pu réserver. Sinon, {askWho}.
+                    </p>
                   </div>
                 ) : null}
                 <label className={styles.label} htmlFor="link-email">
-                  L&rsquo;adresse e-mail donnée à la réservation
+                  L&rsquo;e-mail ou le téléphone donné à la réservation
                 </label>
                 <input
                   id="link-email"
                   className={`${styles.input} ${state === "unknown" ? styles.inputBad : ""}`}
-                  type="email"
+                  type="text"
                   inputMode="email"
                   autoComplete="email"
                   autoCapitalize="none"
                   spellCheck={false}
                   required
-                  placeholder="prenom.nom@gmail.com"
+                  placeholder="prenom.nom@gmail.com ou 06 12 34 56 78"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);

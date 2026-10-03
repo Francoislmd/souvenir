@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
-import { parseEmails, pasteSummary } from "@/lib/emails";
+import { parseContacts, pasteSummary } from "@/lib/emails";
+import { formatPhone } from "@/lib/phone";
 
 /**
  * Le champ des adresses de la sortie : un cadre unique où les adresses déjà
@@ -22,7 +23,7 @@ export function EmailsField({
   emails,
   onChange,
   hint,
-  placeholder = "Collez vos adresses, ou saisissez-en une",
+  placeholder = "Collez vos adresses ou numéros, ou saisissez-en un",
 }: {
   emails: string[];
   onChange: (emails: string[]) => void;
@@ -36,9 +37,9 @@ export function EmailsField({
   /** Retient ce qui est une adresse. Faux si le texte n'en contenait aucune. */
   function keep(raw: string): boolean {
     if (!raw.trim()) return false;
-    const parsed = parseEmails(raw, emails);
+    const parsed = parseContacts(raw, emails);
     if (parsed.emails.length === 0) {
-      setNote("Ce texte ne contient aucune adresse.");
+      setNote("Ce texte ne contient ni adresse ni numéro.");
       return false;
     }
     onChange([...emails, ...parsed.emails]);
@@ -65,7 +66,7 @@ export function EmailsField({
       >
         {emails.map((email) => (
           <span key={email} className={styles.sdPill}>
-            {email}
+            {email.includes("@") ? email : formatPhone(email)}
             <button
               type="button"
               className={styles.sdPillX}
@@ -89,7 +90,7 @@ export function EmailsField({
           inputMode="email"
           autoComplete="off"
           spellCheck={false}
-          aria-label="Adresses de vos clients"
+          aria-label="Adresses ou numéros de vos clients"
           placeholder={emails.length > 0 ? "" : placeholder}
           value={text}
           onChange={(e) => {
@@ -108,6 +109,8 @@ export function EmailsField({
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === "," || e.key === ";" || e.key === " ") {
               if (!text.trim()) return;
+              // Un numéro se tape avec des espaces : l'espace ne valide qu'une adresse.
+              if (e.key === " " && !text.includes("@")) return;
               e.preventDefault();
               commit();
               return;

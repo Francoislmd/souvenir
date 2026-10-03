@@ -4,6 +4,7 @@ import { track } from "@/lib/analytics";
 import { getOperatorUser } from "@/lib/current-user";
 import { deriveChannel } from "@/lib/channel";
 import { nameFromEmail } from "@/lib/emails";
+import { parsePhone, phoneVariants } from "@/lib/phone";
 import { departureKnown, departuresWithPhotos, sendPrivateInvite } from "@/lib/private-link";
 import { buildEmailCover } from "@/lib/email-cover";
 
@@ -13,7 +14,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const maxDuration = 60;
 
 const schema = z.object({
-  emails: z.array(z.string().email()).min(1).max(200),
+  // Adresses e-mail ou numéros de téléphone (le lien part alors par SMS).
+  emails: z.array(z.string().trim().min(1).max(254)).min(1).max(200),
   /** Le départ de ces adresses : la liste collée sous « Départ de 10 h ». */
   slotId: z.string().min(1).optional(),
 });
@@ -68,7 +70,11 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const emails = Array.from(new Set(parsed.data.emails.map((e) => e.trim().toLowerCase())));
+    const normalized = parsed.data.emails.map((e) => (e.includes("@") ? (z.string().email().safeParse(e.toLowerCase()).success ? e.toLowerCase() : null) : parsePhone(e)));
+    if (normalized.some((c) => c === null)) {
+      return Response.json({ error: "Adresse ou numéro invalide" }, { status: 400 });
+    }
+    const emails = Array.from(new Set(normalized as string[]));
 
     // Un bandeau par envoi, partagé par tous les destinataires.
     const coverUrl = await buildEmailCover(sortie.id);
@@ -89,7 +95,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
         // Une ligne par adresse, réutilisée si elle existe déjà : l'opérateur
         // qui renvoie à toute sa liste ne doit pas la voir doubler.
         const existing = await prisma.participant.findFirst({
-          where: { sortieId: sortie.id, contact: { equals: to, mode: "insensitive" }, deletedAt: null },
+          where: { sortieId: sortie.id, deletedAt: null, ...(to.includes("@") ? { contact: { equals: to, mode: "insensitive" as const } } : { contact: { in: phoneVariants(to) } }) },
           select: { id: true, token: true, contact: true, slotId: true, orders: { where: { status: "succeeded" }, select: { id: true } } },
         });
         const participant =

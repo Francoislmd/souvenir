@@ -4,12 +4,16 @@ import { track } from "@/lib/analytics";
 import { departureKnown, departuresWithPhotos, galleryTeaser, privateGalleryUrl, sendPrivateInvite } from "@/lib/private-link";
 import { GALLERIES_SUBJECT, sendYourGalleriesEmail } from "@/lib/email";
 import { photosOf } from "@/lib/format";
+import { parsePhone, phoneVariants } from "@/lib/phone";
+import { sendTextMessage } from "@/lib/twilio";
 import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 const MAX_LINKS = 5;
 
 const schema = z.object({
-  email: z.string().trim().toLowerCase().email().max(254),
+  /** Une adresse e-mail ou un numéro de téléphone. `email` reste accepté. */
+  contact: z.string().trim().min(1).max(254).optional(),
+  email: z.string().trim().min(1).max(254).optional(),
   code: z.string().trim().toLowerCase().max(16).optional(),
 });
 
@@ -25,7 +29,7 @@ type LinkOutcome =
 
 /**
  * Recevoir le lien de sa galerie privée, comme sur la page d'une course chez
- * Finisher Memories : l'adresse e-mail joue le rôle du dossard. Elle doit
+ * Finisher Memories : l'adresse e-mail (ou le téléphone) joue le rôle du dossard. Elle doit
  * figurer sur la liste de la sortie donnée par le prestataire ; rien ne
  * s'inscrit ici. Comme chez eux, l'écran dit clairement si l'adresse ne
  * correspond à rien, pour que le client essaie celle de sa réservation.
@@ -40,13 +44,19 @@ export async function POST(request: Request, { params }: { params: { slug: strin
 
     const parsed = schema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return Response.json({ error: "invalid" }, { status: 400 });
-    const { email, code } = parsed.data;
+    const { code } = parsed.data;
+    const raw = parsed.data.contact ?? parsed.data.email ?? "";
+    // L'identifiant de la réservation : l'e-mail, ou à défaut le téléphone.
+    const isEmail = raw.includes("@");
+    const email = isEmail ? (z.string().email().safeParse(raw.toLowerCase()).success ? raw.toLowerCase() : null) : parsePhone(raw);
+    if (!email) return Response.json({ error: "invalid" }, { status: 400 });
+    const matchContact = isEmail ? { contact: { equals: email, mode: "insensitive" as const } } : { contact: { in: phoneVariants(email) } };
 
     // Une même adresse ne reçoit pas plus de dix liens par heure.
     const perEmail = await checkRateLimit(`link:email:${email}`, { max: 10, windowMs: 60 * 60 * 1000 });
     if (!perEmail.allowed) return Response.json({ error: "rate_limited" }, { status: 429 });
 
-    const reply = (outcome: LinkOutcome, subject?: string) => Response.json({ outcome, ...(subject ? { subject } : {}) });
+    const reply = (outcome: LinkOutcome, subject?: string) => Response.json({ outcome, via: isEmail ? "email" : "sms", ...(subject && isEmail ? { subject } : {}) });
 
     const operator = await prisma.operator.findUnique({ where: { slug: params.slug.trim().toLowerCase() }, select: { id: true } });
     if (!operator) return reply("no_match");
@@ -59,7 +69,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
       if (!sortie) return reply("no_match");
 
       const participant = await prisma.participant.findFirst({
-        where: { sortieId: sortie.id, contact: { equals: email, mode: "insensitive" }, deletedAt: null },
+        where: { sortieId: sortie.id, ...matchContact, deletedAt: null },
         select: { id: true, token: true, contact: true, slotId: true },
       });
       if (!participant) {
@@ -76,7 +86,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
 
     const participants = await prisma.participant.findMany({
       where: {
-        contact: { equals: email, mode: "insensitive" },
+        ...matchContact,
         deletedAt: null,
         sortie: { operatorId: operator.id },
       },
@@ -101,6 +111,13 @@ export async function POST(request: Request, { params }: { params: { slug: strin
         await sendPrivateInvite(only, only.sortie);
         sent = 1;
         subject = `Vos photos ${photosOf(only.sortie.activity)} du ${only.sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" })}`;
+      } else if (ready.length > 1 && !isEmail) {
+        // Par SMS : un message, un lien par sortie.
+        const op = ready[0]!.sortie.operator;
+        const lines = ready.map((p) => `${p.sortie.activity} du ${p.sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" })} : ${privateGalleryUrl(p.token)}`);
+        await sendTextMessage(email, `${op.name} : vos galeries photos privées.\n${lines.join("\n")}`);
+        sent = ready.length;
+        await prisma.participant.updateMany({ where: { id: { in: ready.filter((p) => !p.sentAt).map((p) => p.id) } }, data: { sentAt: new Date() } });
       } else if (ready.length > 1) {
         const op = ready[0]!.sortie.operator;
         await sendYourGalleriesEmail({

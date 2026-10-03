@@ -13,7 +13,7 @@ vi.mock("./prisma", () => ({ prisma: prismaMock }));
 vi.mock("./analytics", () => ({ track: trackMock }));
 vi.mock("./env", () => ({ env: { NEXT_PUBLIC_APP_URL: "https://linktrip.test" } }));
 vi.mock("./automations", () => ({ readAutomations: vi.fn(() => ({ resendUnopened: false, reducedPriceOffer: false, reviewRequest: false, referral: false })) }));
-vi.mock("./twilio", () => ({ sendWhatsAppMessage: vi.fn() }));
+vi.mock("./twilio", () => ({ sendWhatsAppMessage: vi.fn(), sendTextMessage: vi.fn() }));
 vi.mock("./email", () => ({ sendOrderConfirmedEmail: vi.fn() }));
 vi.mock("./receipt", () => ({ cardLabelOf: vi.fn(async () => null) }));
 
