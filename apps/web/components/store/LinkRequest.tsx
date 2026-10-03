@@ -94,6 +94,9 @@ export function LinkRequest({
   const [state, setState] = useState<"idle" | "typo" | "unknown" | "error" | "sent" | "pending">("idle");
   const [errorText, setErrorText] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState("");
+  // L'objet exact du mail parti, quand le serveur le connaît mieux que la page
+  // (boutique : une galerie ou un mail qui les regroupe toutes).
+  const [sentSubject, setSentSubject] = useState<string | null>(null);
 
   async function send(raw: string, skipTypo = false): Promise<void> {
     const to = raw.trim().toLowerCase();
@@ -122,7 +125,8 @@ export function LinkRequest({
         );
         return;
       }
-      const { outcome } = (await res.json()) as { outcome: "sent" | "pending" | "no_match" };
+      const { outcome, subject } = (await res.json()) as { outcome: "sent" | "pending" | "no_match"; subject?: string };
+      if (subject) setSentSubject(subject);
       if (outcome === "no_match") {
         setEmail(to);
         setState("unknown");
@@ -237,7 +241,7 @@ export function LinkRequest({
                 <div className={styles.mail}>
                   <span>Cherchez ce mail</span>
                   <b>{operator.name}</b>
-                  {mailSubject ? <span>{mailSubject}</span> : null}
+                  {sentSubject ?? mailSubject ? <span>{sentSubject ?? mailSubject}</span> : null}
                 </div>
                 {state === "sent" ? <div className={styles.doneRow}>Rien après une minute ? Regardez dans les spams.</div> : null}
                 <div className={styles.doneRow}>

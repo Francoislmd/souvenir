@@ -10,6 +10,7 @@ import PhotosOffer, { type PhotosOfferProps } from "@/emails/PhotosOffer";
 import OrderConfirmed, { type OrderConfirmedProps } from "@/emails/OrderConfirmed";
 import PhotoWithdrawn, { type PhotoWithdrawnProps } from "@/emails/PhotoWithdrawn";
 import GroupInvite, { type GroupInviteProps } from "@/emails/GroupInvite";
+import YourGalleries from "@/emails/YourGalleries";
 
 let resendClient: Resend | null = null;
 
@@ -326,6 +327,38 @@ export async function sendGroupInviteEmail(params: {
     to: params.to,
     subject: `Vos photos ${photosOf(params.activity)} du ${params.sortieDate}`,
     element: <GroupInvite {...props} />,
+    fromName: params.operatorName,
+    replyTo,
+  });
+}
+
+/**
+ * Toutes les galeries d'une adresse chez un prestataire, en un seul mail :
+ * la réponse à « Retrouvez vos photos » quand le client a fait plusieurs
+ * sorties. Un seul mail plutôt qu'un par sortie.
+ */
+export const GALLERIES_SUBJECT = "Vos galeries photos";
+export async function sendYourGalleriesEmail(params: {
+  to: string;
+  operatorId: string;
+  operatorName: string;
+  operatorLogoUrl: string | null;
+  brandColor: string;
+  galleries: { activity: string; date: string; detail?: string; url: string }[];
+}): Promise<void> {
+  const replyTo = await getReplyTo(params.operatorId);
+  await dispatch({
+    to: params.to,
+    subject: `${GALLERIES_SUBJECT} chez ${params.operatorName}`,
+    element: (
+      <YourGalleries
+        operatorName={params.operatorName}
+        operatorInitials={params.operatorName.slice(0, 2).toUpperCase()}
+        operatorColor={params.brandColor}
+        operatorLogoUrl={params.operatorLogoUrl ?? undefined}
+        galleries={params.galleries}
+      />
+    ),
     fromName: params.operatorName,
     replyTo,
   });

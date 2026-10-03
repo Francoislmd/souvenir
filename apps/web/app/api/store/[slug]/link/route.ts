@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { departureKnown, departuresWithPhotos, sendPrivateInvite } from "@/lib/private-link";
+import { departureKnown, departuresWithPhotos, privateGalleryUrl, sendPrivateInvite } from "@/lib/private-link";
+import { GALLERIES_SUBJECT, sendYourGalleriesEmail } from "@/lib/email";
+import { formatHourFr, photosOf } from "@/lib/format";
 import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 const MAX_LINKS = 5;
@@ -44,7 +46,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
     const perEmail = await checkRateLimit(`link:email:${email}`, { max: 10, windowMs: 60 * 60 * 1000 });
     if (!perEmail.allowed) return Response.json({ error: "rate_limited" }, { status: 429 });
 
-    const reply = (outcome: LinkOutcome) => Response.json({ outcome });
+    const reply = (outcome: LinkOutcome, subject?: string) => Response.json({ outcome, ...(subject ? { subject } : {}) });
 
     const operator = await prisma.operator.findUnique({ where: { slug: params.slug.trim().toLowerCase() }, select: { id: true } });
     if (!operator) return reply("no_match");
@@ -78,24 +80,54 @@ export async function POST(request: Request, { params }: { params: { slug: strin
         deletedAt: null,
         sortie: { operatorId: operator.id },
       },
-      include: { sortie: { include: { operator: true } } },
-      orderBy: { createdAt: "desc" },
+      include: { sortie: { include: { operator: true } }, slot: { select: { startsAt: true } } },
+      orderBy: { sortie: { startsAt: "desc" } },
       take: MAX_LINKS,
     });
-    let sent = 0;
+    const ready: typeof participants = [];
     for (const participant of participants) {
       if (participant.sortie.status !== "SENT") continue;
       if (participant.sortie.mode === "GROUPE" && !departureKnown(participant, (await departuresWithPhotos(participant.sortieId)).length)) continue;
-      try {
-        await sendPrivateInvite(participant, participant.sortie);
-        sent += 1;
-      } catch (error) {
-        console.error("[API /api/store/[slug]/link] send failed for", participant.id, error);
+      ready.push(participant);
+    }
+
+    // Une seule galerie : le mail habituel. Plusieurs : un seul mail qui les
+    // liste toutes, plutôt qu'un mail par sortie.
+    let sent = 0;
+    let subject: string | undefined;
+    try {
+      if (ready.length === 1) {
+        const only = ready[0]!;
+        await sendPrivateInvite(only, only.sortie);
+        sent = 1;
+        subject = `Vos photos ${photosOf(only.sortie.activity)} du ${only.sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" })}`;
+      } else if (ready.length > 1) {
+        const op = ready[0]!.sortie.operator;
+        await sendYourGalleriesEmail({
+          to: email,
+          operatorId: op.id,
+          operatorName: op.name,
+          operatorLogoUrl: op.logoUrl,
+          brandColor: op.brandColor,
+          galleries: ready.map((p) => ({
+            activity: p.sortie.activity,
+            date: p.sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" }),
+            detail: p.slot ? `départ ${formatHourFr(p.slot.startsAt)}` : undefined,
+            url: privateGalleryUrl(p.token),
+          })),
+        });
+        sent = ready.length;
+        subject = `${GALLERIES_SUBJECT} chez ${op.name}`;
+        const now = new Date();
+        await prisma.participant.updateMany({ where: { id: { in: ready.filter((p) => !p.sentAt).map((p) => p.id) } }, data: { sentAt: now } });
       }
+    } catch (error) {
+      console.error("[API /api/store/[slug]/link] send failed for", email, error);
+      return Response.json({ error: "send_failed" }, { status: 502 });
     }
     const outcome: LinkOutcome = sent > 0 ? "sent" : participants.length > 0 ? "pending" : "no_match";
     await track("gallery_link_requested", { operatorId: operator.id, meta: { via: "store", outcome, found: participants.length } });
-    return reply(outcome);
+    return reply(outcome, subject);
   } catch (error) {
     console.error("[API /api/store/[slug]/link]", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
