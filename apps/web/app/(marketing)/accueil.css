@@ -160,9 +160,7 @@
 .accx .pro .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .accx .pro .row > span:first-child{font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap}
 .accx .pro .row > span:first-child b{font-weight:700;color:var(--ink)}
-/* Le retour « Sorties » / « Boîte de réception » des vrais écrans, dans les
-   maquettes des étapes comme dans celle du héros. */
-.accx .stage .nav2{padding:2px 12px 6px}
+
 .accx .pro .row .btn{height:34px;font-size:12.5px;padding:0 16px}
 
 /* Écran 2 : e-mail */
@@ -550,7 +548,6 @@
   .accx .stage{height:300px;border-radius:24px}
   .accx .stageIn{padding:22px 14px 0}
   .accx .stage .mini{transform:scale(.86);transform-origin:top center;margin-bottom:-60px}
-  .accx .stage .pro .drop{display:none}
   .accx .meta{padding:18px 2px 0}
   .accx .meta h3{font-size:20px;margin-top:6px}
   .accx .meta p{font-size:15px}
