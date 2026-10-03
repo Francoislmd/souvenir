@@ -161,7 +161,7 @@ export function LinkRequest({
   );
 
   return (
-    <>
+    <div className={styles.accessPage}>
       {operator.coverUrl ? (
         <div className={styles.cover} style={{ backgroundImage: `url(${operator.coverUrl})` }}>
           <div className={styles.coverIn}>
@@ -366,15 +366,15 @@ export function LinkRequest({
                 </ul>
               </nav>
             ) : null}
-            <div className={styles.foot}>
-              <span className={styles.powered}>
-                Propulsé par <Logo variant="wordmark" tone="mono" height={12} title="Linktrip" />
-              </span>
-              <a href="/cgv">Conditions de vente</a>
-            </div>
+          </div>
+          <div className={styles.foot}>
+            <span className={styles.powered}>
+              Propulsé par <Logo variant="wordmark" tone="mono" height={12} title="Linktrip" />
+            </span>
+            <a href="/cgv">Conditions de vente</a>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
