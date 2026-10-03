@@ -3,6 +3,9 @@ import { prisma } from "./prisma";
 import { env } from "./env";
 import { sendGroupInviteEmail } from "./email";
 import { buildEmailCover } from "./email-cover";
+import { getPreviewUrl } from "./storage";
+import { visiblePhotoWhere } from "./access";
+import { formatHourFr } from "./format";
 
 /**
  * Les départs d'une sortie de groupe qui ont des photos. À partir de deux,
@@ -24,6 +27,24 @@ export function departureKnown(participant: { slotId: string | null }, departure
   return departureCount <= 1 || !!participant.slotId;
 }
 
+/**
+ * Ce que le mail montre de la galerie d'un client : le nombre de photos de
+ * son départ, quatre vignettes très floutées, et l'heure du départ.
+ */
+export async function galleryTeaser(participant: { id: string; sortieId: string; slotId: string | null }): Promise<{ photoCount: number; thumbs: string[]; detail: string | null }> {
+  const where = visiblePhotoWhere(participant);
+  const [photoCount, blurred, slot] = await Promise.all([
+    prisma.photo.count({ where }),
+    prisma.photo.findMany({ where: { ...where, blurEmailKey: { not: null } }, select: { blurEmailKey: true }, orderBy: [{ takenAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }], take: 4 }),
+    participant.slotId ? prisma.slot.findUnique({ where: { id: participant.slotId }, select: { startsAt: true } }) : null,
+  ]);
+  return {
+    photoCount,
+    thumbs: blurred.map((p) => getPreviewUrl(p.blurEmailKey!)),
+    detail: slot ? `départ ${formatHourFr(slot.startsAt)}` : null,
+  };
+}
+
 /** La galerie privée d'un client : la seule adresse qui montre des photos. */
 export function privateGalleryUrl(token: string): string {
   return `${env.NEXT_PUBLIC_APP_URL}/g/${token}`;
@@ -43,6 +64,8 @@ export async function sendPrivateInvite(
   sortie: Sortie & { operator: Operator },
   coverUrl?: string | null,
 ): Promise<void> {
+  const row = await prisma.participant.findUnique({ where: { id: participant.id }, select: { slotId: true } });
+  const teaser = await galleryTeaser({ id: participant.id, sortieId: sortie.id, slotId: row?.slotId ?? null });
   await sendGroupInviteEmail({
     to: participant.contact,
     operatorId: sortie.operatorId,
@@ -55,6 +78,10 @@ export async function sendPrivateInvite(
     galleryUrl: privateGalleryUrl(participant.token),
     coverUrl,
     purgeDate: sortie.purgeAt ? formatDateFr(sortie.purgeAt) : null,
+    heroUrl: sortie.operator.coverUrl,
+    detail: teaser.detail,
+    thumbs: teaser.thumbs,
+    photoCount: teaser.photoCount,
   });
   await prisma.participant.update({ where: { id: participant.id }, data: { sentAt: new Date() } }).catch((error) => {
     console.error("[private-link] sentAt not recorded for", participant.id, error);

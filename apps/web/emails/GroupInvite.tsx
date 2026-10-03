@@ -1,5 +1,6 @@
-import { Body, Column, Container, Head, Hr, Html, Img, Link, Preview, Row, Section, Text } from "@react-email/components";
+import { Body, Container, Head, Hr, Html, Link, Preview, Section, Text } from "@react-email/components";
 import { brand, s } from "./brand";
+import { Cta, Hero, Thumbs, buttonColor } from "./parts";
 
 /**
  * Invitation à la boutique d'une sortie GROUPE, et ses deux relances.
@@ -15,7 +16,7 @@ import { brand, s } from "./brand";
 export type GroupEmailVariant = "invite" | "reminder" | "last";
 
 const COPY: Record<GroupEmailVariant, { title: string; lead: string }> = {
-  invite: { title: "Vos photos vous attendent", lead: "Voici votre galerie privée. Seuls les participants de votre départ y ont accès." },
+  invite: { title: "Vos photos sont prêtes", lead: "Revivez la sortie et gardez vos meilleurs moments. Votre galerie est privée : seuls les participants de votre départ y ont accès." },
   reminder: { title: "Vos photos sont toujours là", lead: "Votre galerie privée vous attend, avec les photos de votre départ." },
   last: { title: "Dernier rappel", lead: "Votre galerie privée sera bientôt supprimée, avec les photos de votre départ." },
 };
@@ -29,13 +30,20 @@ export interface GroupInviteProps {
   sortieDate: string;
   sortiePlace?: string;
   galleryUrl: string;
-  /** Bandeau très flouté tiré d'une photo de la sortie (lib/email-cover.ts). */
+  /** Ancien bandeau flouté (lib/email-cover.ts) : plus affiché, la couverture du prestataire le remplace. */
   coverUrl?: string;
   variant?: GroupEmailVariant;
   /** « 20 décembre » : dernier jour en ligne (Sortie.purgeAt), affiché sur la dernière relance seulement. */
   purgeDate?: string;
   /** Relances uniquement : page de désinscription. */
   unsubUrl?: string;
+  /** La photo de couverture du prestataire (Réglages), en tête du mail. */
+  heroUrl?: string;
+  /** « départ 10 h » */
+  detail?: string;
+  /** Vignettes très floutées des photos du départ, et leur nombre. */
+  thumbs?: string[];
+  photoCount?: number;
 }
 
 export default function GroupInvite({
@@ -47,10 +55,13 @@ export default function GroupInvite({
   sortieDate,
   sortiePlace,
   galleryUrl,
-  coverUrl,
   variant = "invite",
   purgeDate,
   unsubUrl,
+  heroUrl,
+  detail,
+  thumbs = [],
+  photoCount = 0,
 }: GroupInviteProps) {
   const copy = COPY[variant];
   return (
@@ -59,66 +70,28 @@ export default function GroupInvite({
       <Preview>{`${activity}, le ${sortieDate}. ${copy.lead}`}</Preview>
       <Body style={{ ...s.body, padding: "16px 8px" }}>
         <Container style={s.card}>
-          <Section style={{ padding: "20px 24px", borderBottom: `1px solid ${brand.line}` }}>
-            <Row>
-              <Column style={{ width: 40, paddingRight: 12, verticalAlign: "middle" }}>
-                {operatorLogoUrl ? (
-                  <Img src={operatorLogoUrl} width={40} height={40} alt="" style={{ display: "block", width: 40, height: 40, objectFit: "contain", borderRadius: 10, border: `1px solid ${brand.line}` }} />
-                ) : (
-                  <table cellPadding={0} cellSpacing={0} border={0} width={40} style={{ backgroundColor: operatorColor, borderRadius: 10 }}>
-                    <tbody>
-                      <tr>
-                        <td height={40} align="center" style={{ color: brand.white, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 14 }}>
-                          {operatorInitials}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                )}
-              </Column>
-              <Column style={{ verticalAlign: "middle" }}>
-                <Text style={{ ...s.h1, fontSize: "16px", letterSpacing: "-0.2px", margin: 0 }}>{operatorName}</Text>
-                <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", marginTop: 1 }}>
-                  {activity} · {sortieDate}
-                  {sortiePlace ? ` · ${sortiePlace}` : ""}
-                </Text>
-              </Column>
-            </Row>
-          </Section>
+          <Hero
+            operatorName={operatorName}
+            operatorInitials={operatorInitials}
+            operatorColor={operatorColor}
+            operatorLogoUrl={operatorLogoUrl}
+            heroUrl={heroUrl}
+            subtitle={sortiePlace ? `Galerie privée officielle · ${sortiePlace}` : "Galerie privée officielle"}
+          />
 
-          {coverUrl && (
-            <Section style={{ padding: "20px 24px 0" }}>
-              <Link href={galleryUrl}>
-                <Img
-                  src={coverUrl}
-                  width={512}
-                  height={170}
-                  alt=""
-                  style={{ display: "block", width: "100%", maxWidth: 512, height: "auto", borderRadius: 14 }}
-                />
-              </Link>
-            </Section>
-          )}
-
-          <Section style={{ padding: `${coverUrl ? 22 : 26}px 24px 0` }}>
-            <Text style={{ ...s.h1, fontSize: "24px", lineHeight: "1.2" }}>{copy.title}</Text>
-            <Text style={{ ...s.lead, color: brand.ink2, fontSize: "16px", lineHeight: "1.6", margin: "10px 0 0" }}>
-              {copy.lead}
+          <Section style={{ padding: "26px 24px 0" }}>
+            <Text style={{ fontFamily: brand.fontBody, fontSize: "13px", fontWeight: 600, color: buttonColor(operatorColor), margin: 0 }}>
+              {activity} · {sortieDate}
+              {detail ? ` · ${detail}` : ""}
             </Text>
+            <Text style={{ ...s.h1, fontSize: "26px", lineHeight: "1.15", letterSpacing: "-0.6px", marginTop: 6 }}>{copy.title}</Text>
+            <Text style={{ ...s.lead, color: brand.ink2, fontSize: "16px", lineHeight: "1.6", margin: "10px 0 0" }}>{copy.lead}</Text>
           </Section>
+
+          <Thumbs urls={thumbs} count={photoCount} href={galleryUrl} />
 
           <Section style={{ padding: "24px 24px 26px" }}>
-            <table width="100%" cellPadding={0} cellSpacing={0} border={0}>
-              <tbody>
-                <tr>
-                  <td align="center" style={s.buttonCell(brand.ink)}>
-                    <Link href={galleryUrl} style={s.buttonLink}>
-                      Voir mes photos
-                    </Link>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <Cta href={galleryUrl} label="Voir mes photos" color={operatorColor} />
             <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", textAlign: "center", marginTop: 12 }}>
               Ce lien est personnel · aucun compte à créer{variant === "last" && purgeDate ? ` · en ligne jusqu\u2019au ${purgeDate}` : ""}
             </Text>

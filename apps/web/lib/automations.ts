@@ -1,3 +1,4 @@
+import { galleryTeaser } from "./private-link";
 import type { Operator, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
@@ -227,6 +228,8 @@ async function runGroupReminderScan(now: Date): Promise<number> {
         galleryUrl: `${env.NEXT_PUBLIC_APP_URL}/g/${participant.token}`,
         coverUrl: shared.coverUrl,
         purgeDate: sortie.purgeAt ? formatDayFr(sortie.purgeAt) : null,
+        heroUrl: operator.coverUrl,
+        ...(await galleryTeaser({ id: participant.id, sortieId: sortie.id, slotId: participant.slotId })),
       });
       await prisma.participant.update({
         where: { id: participant.id },

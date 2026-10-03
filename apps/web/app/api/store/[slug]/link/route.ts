@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { departureKnown, departuresWithPhotos, privateGalleryUrl, sendPrivateInvite } from "@/lib/private-link";
+import { departureKnown, departuresWithPhotos, galleryTeaser, privateGalleryUrl, sendPrivateInvite } from "@/lib/private-link";
 import { GALLERIES_SUBJECT, sendYourGalleriesEmail } from "@/lib/email";
-import { formatHourFr, photosOf } from "@/lib/format";
+import { photosOf } from "@/lib/format";
 import { checkRateLimit, requestIp } from "@/lib/rate-limit";
 
 const MAX_LINKS = 5;
@@ -80,7 +80,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
         deletedAt: null,
         sortie: { operatorId: operator.id },
       },
-      include: { sortie: { include: { operator: true } }, slot: { select: { startsAt: true } } },
+      include: { sortie: { include: { operator: true } } },
       orderBy: { sortie: { startsAt: "desc" } },
       take: MAX_LINKS,
     });
@@ -109,12 +109,20 @@ export async function POST(request: Request, { params }: { params: { slug: strin
           operatorName: op.name,
           operatorLogoUrl: op.logoUrl,
           brandColor: op.brandColor,
-          galleries: ready.map((p) => ({
-            activity: p.sortie.activity,
-            date: p.sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" }),
-            detail: p.slot ? `départ ${formatHourFr(p.slot.startsAt)}` : undefined,
-            url: privateGalleryUrl(p.token),
-          })),
+          heroUrl: op.coverUrl,
+          galleries: await Promise.all(
+            ready.map(async (p) => {
+              const teaser = await galleryTeaser({ id: p.id, sortieId: p.sortieId, slotId: p.slotId });
+              return {
+                activity: p.sortie.activity,
+                date: p.sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" }),
+                detail: teaser.detail ?? undefined,
+                photoCount: teaser.photoCount,
+                thumb: teaser.thumbs[0],
+                url: privateGalleryUrl(p.token),
+              };
+            }),
+          ),
         });
         sent = ready.length;
         subject = `${GALLERIES_SUBJECT} chez ${op.name}`;

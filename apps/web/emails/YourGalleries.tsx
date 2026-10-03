@@ -1,5 +1,6 @@
 import { Body, Column, Container, Head, Hr, Html, Img, Link, Preview, Row, Section, Text } from "@react-email/components";
 import { brand, s } from "./brand";
+import { Hero, buttonColor } from "./parts";
 
 /**
  * Plusieurs galeries pour une même adresse, en un seul mail : la réponse à
@@ -11,66 +12,80 @@ export interface YourGalleriesProps {
   operatorInitials: string;
   operatorColor: string;
   operatorLogoUrl?: string;
-  galleries: { activity: string; date: string; detail?: string; url: string }[];
+  /** La photo de couverture du prestataire (Réglages), en tête du mail. */
+  heroUrl?: string;
+  galleries: {
+    activity: string;
+    date: string;
+    /** « départ 10 h » */
+    detail?: string;
+    photoCount?: number;
+    /** Une vignette très floutée de la sortie. */
+    thumb?: string;
+    url: string;
+  }[];
 }
 
-export default function YourGalleries({ operatorName, operatorInitials, operatorColor, operatorLogoUrl, galleries }: YourGalleriesProps) {
+export default function YourGalleries({ operatorName, operatorInitials, operatorColor, operatorLogoUrl, heroUrl, galleries }: YourGalleriesProps) {
+  const color = buttonColor(operatorColor);
   return (
     <Html lang="fr">
       <Head />
-      <Preview>{`${galleries.length} galeries privées chez ${operatorName}. Un lien par sortie.`}</Preview>
+      <Preview>{`${galleries.length} galeries privées chez ${operatorName}, une par sortie.`}</Preview>
       <Body style={{ ...s.body, padding: "16px 8px" }}>
         <Container style={s.card}>
-          <Section style={{ padding: "20px 24px", borderBottom: `1px solid ${brand.line}` }}>
-            <Row>
-              <Column style={{ width: 40, paddingRight: 12, verticalAlign: "middle" }}>
-                {operatorLogoUrl ? (
-                  <Img src={operatorLogoUrl} width={40} height={40} alt="" style={{ display: "block", width: 40, height: 40, objectFit: "contain", borderRadius: 10, border: `1px solid ${brand.line}` }} />
-                ) : (
-                  <table cellPadding={0} cellSpacing={0} border={0} width={40} style={{ backgroundColor: operatorColor, borderRadius: 10 }}>
-                    <tbody>
-                      <tr>
-                        <td height={40} align="center" style={{ color: brand.white, fontFamily: brand.fontHead, fontWeight: 700, fontSize: 14 }}>
-                          {operatorInitials}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                )}
-              </Column>
-              <Column style={{ verticalAlign: "middle" }}>
-                <Text style={{ ...s.h1, fontSize: "16px", letterSpacing: "-0.2px", margin: 0 }}>{operatorName}</Text>
-              </Column>
-            </Row>
-          </Section>
+          <Hero
+            operatorName={operatorName}
+            operatorInitials={operatorInitials}
+            operatorColor={operatorColor}
+            operatorLogoUrl={operatorLogoUrl}
+            heroUrl={heroUrl}
+            subtitle="Galerie privée officielle"
+          />
 
           <Section style={{ padding: "26px 24px 0" }}>
-            <Text style={{ ...s.h1, fontSize: "24px", lineHeight: "1.2" }}>Vos {galleries.length} galeries</Text>
+            <Text style={{ ...s.h1, fontSize: "26px", lineHeight: "1.15", letterSpacing: "-0.6px" }}>Vos {galleries.length} galeries photos</Text>
             <Text style={{ ...s.lead, color: brand.ink2, fontSize: "16px", lineHeight: "1.6", margin: "10px 0 0" }}>
               Une par sortie. Chaque lien est personnel et n&rsquo;ouvre que les photos de votre départ.
             </Text>
           </Section>
 
-          <Section style={{ padding: "16px 24px 8px" }}>
+          <Section style={{ padding: "14px 24px 18px" }}>
             {galleries.map((g, i) => (
-              <table key={g.url} width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ borderTop: i === 0 ? "none" : `1px solid ${brand.line}` }}>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: "14px 0", verticalAlign: "middle" }}>
-                      <Text style={{ ...s.h1, fontSize: "16px", margin: 0 }}>{g.activity}</Text>
-                      <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", marginTop: 2 }}>
-                        {g.date}
-                        {g.detail ? ` · ${g.detail}` : ""}
-                      </Text>
-                    </td>
-                    <td align="right" style={{ padding: "14px 0 14px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                      <Link href={g.url} style={{ ...s.buttonLink, display: "inline-block", backgroundColor: brand.ink, borderRadius: 999, padding: "10px 16px", fontSize: "14px" }}>
-                        Voir mes photos
-                      </Link>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <Row key={g.url} style={{ borderTop: i === 0 ? "none" : `1px solid ${brand.line}` }}>
+                {g.thumb ? (
+                  <Column style={{ width: 64, padding: "14px 14px 14px 0", verticalAlign: "middle" }}>
+                    <Link href={g.url}>
+                      <Img src={g.thumb} width={64} height={64} alt="" style={{ display: "block", width: 64, height: 64, borderRadius: 12 }} />
+                    </Link>
+                  </Column>
+                ) : null}
+                <Column style={{ padding: "14px 0", verticalAlign: "middle" }}>
+                  <Text style={{ ...s.h1, fontSize: "16px", margin: 0 }}>{g.activity}</Text>
+                  <Text style={{ ...s.small, color: brand.ink3, fontSize: "13px", lineHeight: "1.5", marginTop: 2 }}>
+                    {[g.date, g.detail].filter(Boolean).join(" · ")}
+                    {g.photoCount ? (
+                      <>
+                        <br />
+                        {g.photoCount} photo{g.photoCount > 1 ? "s" : ""}
+                      </>
+                    ) : null}
+                  </Text>
+                </Column>
+                <Column align="right" style={{ width: 96, padding: "14px 0 14px 12px", verticalAlign: "middle" }}>
+                  <table cellPadding={0} cellSpacing={0} border={0} role="presentation">
+                    <tbody>
+                      <tr>
+                        <td align="center" style={{ backgroundColor: color, borderRadius: 11 }}>
+                          <Link href={g.url} style={{ ...s.buttonLink, padding: "10px 16px", fontSize: "14px", whiteSpace: "nowrap" }}>
+                            Voir
+                          </Link>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </Column>
+              </Row>
             ))}
           </Section>
 
@@ -92,7 +107,7 @@ YourGalleries.PreviewProps = {
   operatorInitials: "CA",
   operatorColor: "#0FBEB6",
   galleries: [
-    { activity: "Canyoning", date: "26 septembre", detail: "départ 10 h", url: "https://linktrip.co/g/a" },
-    { activity: "Rafting", date: "2 octobre", detail: "départ 14 h", url: "https://linktrip.co/g/b" },
+    { activity: "Canyoning", date: "26 septembre", detail: "départ 10 h", photoCount: 42, url: "https://linktrip.co/g/a" },
+    { activity: "Rafting", date: "2 octobre", detail: "départ 14 h", photoCount: 38, url: "https://linktrip.co/g/b" },
   ],
 } satisfies YourGalleriesProps;

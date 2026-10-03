@@ -307,6 +307,10 @@ export async function sendGroupInviteEmail(params: {
   galleryUrl: string;
   coverUrl?: string | null;
   purgeDate?: string | null;
+  heroUrl?: string | null;
+  detail?: string | null;
+  thumbs?: string[];
+  photoCount?: number;
 }): Promise<void> {
   const replyTo = await getReplyTo(params.operatorId);
   const props: GroupInviteProps = {
@@ -320,6 +324,10 @@ export async function sendGroupInviteEmail(params: {
     galleryUrl: params.galleryUrl,
     coverUrl: params.coverUrl ?? undefined,
     purgeDate: params.purgeDate ?? undefined,
+    heroUrl: params.heroUrl ?? undefined,
+    detail: params.detail ?? undefined,
+    thumbs: params.thumbs,
+    photoCount: params.photoCount,
   };
   // Objet propre à la sortie : avec un objet fixe, Gmail empile toutes les
   // sorties de la saison dans une seule conversation.
@@ -344,7 +352,8 @@ export async function sendYourGalleriesEmail(params: {
   operatorName: string;
   operatorLogoUrl: string | null;
   brandColor: string;
-  galleries: { activity: string; date: string; detail?: string; url: string }[];
+  heroUrl?: string | null;
+  galleries: { activity: string; date: string; detail?: string; photoCount?: number; thumb?: string; url: string }[];
 }): Promise<void> {
   const replyTo = await getReplyTo(params.operatorId);
   await dispatch({
@@ -356,6 +365,7 @@ export async function sendYourGalleriesEmail(params: {
         operatorInitials={params.operatorName.slice(0, 2).toUpperCase()}
         operatorColor={params.brandColor}
         operatorLogoUrl={params.operatorLogoUrl ?? undefined}
+        heroUrl={params.heroUrl ?? undefined}
         galleries={params.galleries}
       />
     ),
@@ -383,6 +393,10 @@ export async function sendGroupReminderEmail(params: {
   galleryUrl: string;
   coverUrl: string | null;
   purgeDate: string | null;
+  heroUrl?: string | null;
+  detail?: string | null;
+  thumbs?: string[];
+  photoCount?: number;
 }): Promise<void> {
   const replyTo = await getReplyTo(params.operatorId);
   const props: GroupInviteProps = {
@@ -398,6 +412,10 @@ export async function sendGroupReminderEmail(params: {
     variant: params.step === 1 ? "reminder" : "last",
     purgeDate: params.purgeDate ?? undefined,
     unsubUrl: `${env.NEXT_PUBLIC_APP_URL}/g/${params.token}/desinscription`,
+    heroUrl: params.heroUrl ?? undefined,
+    detail: params.detail ?? undefined,
+    thumbs: params.thumbs,
+    photoCount: params.photoCount,
   };
   const of = photosOf(params.activity);
   await dispatch({
