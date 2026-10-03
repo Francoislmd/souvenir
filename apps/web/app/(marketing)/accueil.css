@@ -119,7 +119,12 @@
 /* Étapes allégées (03/10/2026) : ni carte ni fond dégradé, la maquette est
    posée sur la page et le filet du bas lui sert de sol. */
 .accx .step{display:flex;flex-direction:column}
-.accx .stage{height:424px;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding:32px 24px 0;border-bottom:1px solid var(--line)}
+/* Le cadre (03/10/2026) : chaque maquette est posée sur une photo de la
+   sortie, floutée d'avance (public/accueil/fond-etape-*.webp, 2 à 3 Ko),
+   dans un cadre arrondi. La maquette affleure le bas du cadre. */
+.accx .stage{position:relative;height:424px;border-radius:var(--r-xl);overflow:hidden;isolation:isolate;background:var(--line-2)}
+.accx .stageBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;transform:scale(1.04)}
+.accx .stageIn{height:100%;display:flex;align-items:flex-start;justify-content:center;padding:36px 24px 0}
 .accx .meta{padding:26px 4px 0}
 .accx .meta .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font:700 13px var(--display)}
 .accx .meta h3{margin-top:16px;font-size:22px;line-height:1.22;letter-spacing:-.012em}
@@ -485,7 +490,8 @@
   .accx .hd .btn{margin-left:auto}
   .accx .hd .btn{padding:0 15px}
   .accx .ph{flex-basis:142px;height:194px}
-  .accx .stage{height:400px;padding:26px 18px 0}
+  .accx .stage{height:400px}
+  .accx .stageIn{padding:26px 18px 0}
   .accx .meta{padding:20px 2px 0}
   .accx .slab{border-radius:26px;padding:34px 20px}
   .accx .endCard{min-height:0;border-radius:26px;flex-direction:column;align-items:stretch;background:var(--ink)}
@@ -526,8 +532,10 @@
   .accx .steps::-webkit-scrollbar{display:none}
   .accx .step{flex:0 0 84%;scroll-snap-align:start}
   .accx .step.rv{opacity:1;transform:none}
-  .accx .stage{height:300px;padding:22px 14px 0}
+  .accx .stage{height:300px;border-radius:24px}
+  .accx .stageIn{padding:22px 14px 0}
   .accx .stage .pro,.accx .stage .mini{transform:scale(.86);transform-origin:top center;margin-bottom:-60px}
+  .accx .stage .pro{height:calc(100% / .86)}
   .accx .meta{padding:18px 2px 0}
   .accx .meta h3{font-size:20px;margin-top:12px}
   .accx .meta p{font-size:15px}

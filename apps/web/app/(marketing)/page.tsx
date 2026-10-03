@@ -257,6 +257,8 @@ export default function AccueilPage() {
               <div className="steps">
                 <article className="step rv">
                   <div className="stage" aria-hidden="true">
+                    <img className="stageBg" src="/accueil/fond-etape-1.webp" alt="" />
+                    <div className="stageIn">
                     <div className="pro">
                       <div className="top"><div><b>Canyoning</b><span>Samedi 19 septembre, 14 h</span></div><em>8 participants</em></div>
                       <div className="grid">
@@ -269,6 +271,7 @@ export default function AccueilPage() {
                         <div className="row"><span>48 photos déposées</span><span className="btn btn-ink">Publier</span></div>
                       </div>
                     </div>
+                    </div>
                   </div>
                   <div className="meta">
                     <span className="n">1</span>
@@ -278,6 +281,8 @@ export default function AccueilPage() {
                 </article>
                 <article className="step rv d1">
                   <div className="stage" aria-hidden="true">
+                    <img className="stageBg" src="/accueil/fond-etape-2.webp" alt="" />
+                    <div className="stageIn">
                     <div className="mini"><div className="phone"><div className="scr">
                           <div className="sbar"><span className="num">19:12</span><i /><span className="sig"><b /></span></div>
                           <div className="mhead">
@@ -290,6 +295,7 @@ export default function AccueilPage() {
                             <span className="btn btn-brand">Voir mes photos</span>
                           </div>
                         </div></div></div>
+                    </div>
                   </div>
                   <div className="meta">
                     <span className="n">2</span>
@@ -299,6 +305,8 @@ export default function AccueilPage() {
                 </article>
                 <article className="step rv d2">
                   <div className="stage" aria-hidden="true">
+                    <img className="stageBg" src="/accueil/fond-etape-3.webp" alt="" />
+                    <div className="stageIn">
                     <div className="mini"><div className="phone"><div className="scr">
                           <div className="sbar"><span className="num">19:15</span><i /><span className="sig"><b /></span></div>
                           <div className="sheet">
@@ -316,6 +324,7 @@ export default function AccueilPage() {
                             <p className="or">ou par carte</p>
                           </div>
                         </div></div></div>
+                    </div>
                   </div>
                   <div className="meta">
                     <span className="n">3</span>
