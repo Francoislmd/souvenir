@@ -968,43 +968,92 @@
    Deux modes, un seul champ : le téléphone ouvre le clavier numérique et
    se lit en paires derrière +33. Sans ombre : le filet et le contour de
    focus suffisent. */
-.fieldHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-}
-.fieldHead .label {
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+/* Deux onglets de même largeur ; la pastille blanche glisse de l'un à
+   l'autre. */
 .switch {
-  flex: none;
-  display: inline-grid;
+  position: relative;
+  display: grid;
   grid-template-columns: 1fr 1fr;
+  height: 42px;
   padding: 3px;
-  border-radius: 11px;
+  border-radius: 13px;
   background: var(--line-2);
 }
+.switch::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  transition: transform 0.22s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.switch[data-mode="phone"]::before {
+  transform: translateX(100%);
+}
 .switch button {
-  padding: 5px 10px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
   background: none;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 500;
   color: var(--ink-3);
   cursor: pointer;
+  transition: color 0.15s;
 }
-.switch button[aria-pressed="true"] {
-  background: #fff;
-  border-color: var(--line);
+.switch button[aria-selected="true"] {
   color: var(--ink);
 }
 .switch button:focus-visible {
   outline: 2px solid var(--op);
   outline-offset: 1px;
+}
+/* Une ligne dans les deux modes : rien ne saute quand on change d'onglet. */
+.fieldHint {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: -2px 0 2px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--line-2);
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.clear:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 2px;
 }
 .field {
   display: flex;
@@ -1058,7 +1107,9 @@
   color: var(--ink-4);
 }
 @media (prefers-reduced-motion: reduce) {
-  .field {
+  .field,
+  .switch::before,
+  .switch button {
     transition: none;
   }
 }

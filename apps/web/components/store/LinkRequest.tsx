@@ -317,30 +317,31 @@ export function LinkRequest({
                     </p>
                   </div>
                 ) : null}
-                <div className={styles.fieldHead}>
-                  <label className={styles.label} htmlFor="link-contact">
-                    Donné à la réservation
-                  </label>
-                  <div className={styles.switch} role="group" aria-label="Retrouver avec">
-                    <button type="button" aria-pressed={mode === "email"} onClick={() => switchMode("email")}>
-                      E-mail
-                    </button>
-                    <button type="button" aria-pressed={mode === "phone"} onClick={() => switchMode("phone")}>
-                      Téléphone
-                    </button>
-                  </div>
-                </div>
-                <div className={`${styles.field} ${state === "unknown" ? styles.inputBad : ""}`}>
-                  {mode === "email" ? (
-                    <svg className={styles.fieldIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <div className={styles.switch} data-mode={mode} role="tablist" aria-label="Retrouver mes photos avec">
+                  <button type="button" role="tab" aria-selected={mode === "email"} onClick={() => switchMode("email")}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <rect x="3" y="5" width="18" height="14" rx="2.5" />
                       <path d="m3.8 7 7.1 5.2a2 2 0 0 0 2.2 0L20.2 7" />
                     </svg>
-                  ) : /^\s*(\+|00)/.test(email) ? null : (
+                    E-mail
+                  </button>
+                  <button type="button" role="tab" aria-selected={mode === "phone"} onClick={() => switchMode("phone")}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+                      <path d="M11 18.5h2" />
+                    </svg>
+                    Téléphone
+                  </button>
+                </div>
+                <div className={`${styles.field} ${state === "unknown" ? styles.inputBad : ""}`}>
+                  {mode === "email" || /^\s*(\+|00)/.test(email) ? null : (
                     <span className={styles.prefix} aria-hidden="true">
                       +33
                     </span>
                   )}
+                  <label className={styles.srOnly} htmlFor="link-contact">
+                    {mode === "email" ? "Adresse e-mail donnée à la réservation" : "Numéro de téléphone donné à la réservation"}
+                  </label>
                   <input
                     key={mode}
                     id="link-contact"
@@ -359,7 +360,26 @@ export function LinkRequest({
                       if (state !== "idle") setState("idle");
                     }}
                   />
+                  {email ? (
+                    <button
+                      type="button"
+                      className={styles.clear}
+                      aria-label="Effacer"
+                      onClick={() => {
+                        setEmail("");
+                        setState("idle");
+                        inputRef.current?.focus();
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  ) : null}
                 </div>
+                <p className={styles.fieldHint}>
+                  {mode === "email" ? "L\u2019adresse donnée à la réservation." : "Le numéro de la réservation. Le lien part par SMS."}
+                </p>
                 {fixed ? (
                   <div className={styles.suggest}>
                     Vous vouliez dire{" "}
