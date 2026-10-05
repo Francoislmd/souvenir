@@ -637,6 +637,17 @@
 .on .check svg {
   opacity: 1;
 }
+/* Le cadenas de l'aperçu, même taille sur toutes les vignettes. */
+.tileLock {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  pointer-events: none;
+}
 /* Voir en grand : en bas à droite, loin de la coche. */
 .zoom {
   position: absolute;
