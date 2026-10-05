@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import styles from "@/components/gallery/sale.module.css";
 import { Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
+import { COUNTRIES, Flag, type Country } from "@/components/store/flags";
 
 /** Les fautes de frappe les plus courantes sur les domaines d'e-mail français. */
 const DOMAIN_FIX: Record<string, string> = {
@@ -32,16 +33,26 @@ function looksLikePhone(value: string): boolean {
 }
 
 /**
- * Le numéro s'écrit pendant la frappe comme on le lit : « 6 12 34 56 78 »
- * derrière le +33 affiché (le 0 initial est retiré). Un numéro qui commence
- * par + ou 00 est étranger : il reste tel quel.
+ * Le numéro s'écrit pendant la frappe comme on le lit, derrière l'indicatif
+ * choisi : « 6 12 34 56 78 » pour la France (le 0 initial est retiré quand
+ * le pays le retire), des paires ailleurs.
  */
-function formatTyped(value: string): string {
-  const v = value.trimStart();
-  if (v.startsWith("+") || v.startsWith("00")) return value;
-  const d = v.replace(/\D/g, "").replace(/^0/, "").slice(0, 9);
+function formatTyped(value: string, country: Country): string {
+  let d = value.replace(/\D/g, "");
+  if (country.dropTrunkZero) d = d.replace(/^0/, "");
+  d = d.slice(0, 13);
   if (!d) return "";
-  return d.length === 1 ? d : `${d[0]} ${d.slice(1).replace(/(\d{2})(?=\d)/g, "$1 ")}`;
+  if (country.code === "FR") return d.length === 1 ? d : `${d[0]} ${d.slice(1, 9).replace(/(\d{2})(?=\d)/g, "$1 ")}`;
+  return d.replace(/(\d{2})(?=\d)/g, "$1 ");
+}
+
+/** « +41 79 123 45 67 » collé dans le champ : le pays se déduit de l'indicatif. */
+function splitInternational(value: string): { country: Country; rest: string } | null {
+  const v = value.trim().replace(/^00/, "+");
+  if (!v.startsWith("+")) return null;
+  const digits = v.replace(/\D/g, "");
+  const match = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length).find((c) => digits.startsWith(c.dial));
+  return match ? { country: match, rest: digits.slice(match.dial.length) } : null;
 }
 
 function suggestFix(mail: string): string | null {
@@ -113,6 +124,8 @@ export function LinkRequest({
   // E-mail ou téléphone : deux champs distincts, pour que le téléphone ouvre
   // le bon clavier et que le numéro se lise en paires.
   const [mode, setMode] = useState<"email" | "phone">("email");
+  const [country, setCountry] = useState<Country>(COUNTRIES[0]!);
+  const [picking, setPicking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState<"idle" | "typo" | "unknown" | "error" | "sent" | "pending">("idle");
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -125,8 +138,12 @@ export function LinkRequest({
   async function send(raw: string, skipTypo = false): Promise<void> {
     let to = raw.trim().toLowerCase();
     if (!to || busy) return;
-    // Le champ téléphone affiche +33 : « 6 12 34 56 78 » se lit comme un numéro français.
-    if (mode === "phone" && !to.startsWith("+") && !to.startsWith("0")) to = `+33${to.replace(/\D/g, "")}`;
+    // Le champ téléphone porte l'indicatif choisi : le numéro part en E.164.
+    if (mode === "phone") {
+      let d = to.replace(/\D/g, "");
+      if (country.dropTrunkZero) d = d.replace(/^0/, "");
+      to = `+${country.dial}${d}`;
+    }
     if (!to.includes("@") && !looksLikePhone(to)) {
       setState("error");
       setErrorText("Entrez une adresse e-mail ou un numéro de téléphone.");
@@ -179,6 +196,7 @@ export function LinkRequest({
 
   function switchMode(next: "email" | "phone"): void {
     setMode(next);
+    setPicking(false);
     setEmail("");
     setState("idle");
     // Le champ change de clavier : on y remet le curseur.
@@ -334,11 +352,22 @@ export function LinkRequest({
                   </button>
                 </div>
                 <div className={`${styles.field} ${state === "unknown" ? styles.inputBad : ""}`}>
-                  {mode === "email" || /^\s*(\+|00)/.test(email) ? null : (
-                    <span className={styles.prefix} aria-hidden="true">
-                      +33
-                    </span>
-                  )}
+                  {mode === "phone" ? (
+                    <button
+                      type="button"
+                      className={styles.country}
+                      aria-haspopup="listbox"
+                      aria-expanded={picking}
+                      aria-label={`Indicatif : ${country.name}, +${country.dial}`}
+                      onClick={() => setPicking((v) => !v)}
+                    >
+                      <Flag code={country.code} />
+                      <span>+{country.dial}</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                  ) : null}
                   <label className={styles.srOnly} htmlFor="link-contact">
                     {mode === "email" ? "Adresse e-mail donnée à la réservation" : "Numéro de téléphone donné à la réservation"}
                   </label>
@@ -353,10 +382,15 @@ export function LinkRequest({
                     autoCapitalize="none"
                     spellCheck={false}
                     required
-                    placeholder={mode === "email" ? "prenom.nom@gmail.com" : "6 12 34 56 78"}
+                    placeholder={mode === "email" ? "prenom.nom@gmail.com" : country.code === "FR" ? "6 12 34 56 78" : "Numéro"}
                     value={email}
+                    onFocus={() => setPicking(false)}
                     onChange={(e) => {
-                      setEmail(mode === "phone" ? formatTyped(e.target.value) : e.target.value);
+                      if (mode === "phone") {
+                        const intl = splitInternational(e.target.value);
+                        if (intl) setCountry(intl.country);
+                        setEmail(formatTyped(intl ? intl.rest : e.target.value, intl ? intl.country : country));
+                      } else setEmail(e.target.value);
                       if (state !== "idle") setState("idle");
                     }}
                   />
@@ -377,8 +411,32 @@ export function LinkRequest({
                     </button>
                   ) : null}
                 </div>
+                {mode === "phone" && picking ? (
+                  <ul className={styles.countries} role="listbox" aria-label="Indicatif du pays">
+                    {COUNTRIES.map((c) => (
+                      <li key={c.code} role="option" aria-selected={c.code === country.code}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCountry(c);
+                            setPicking(false);
+                            setEmail((v) => formatTyped(v, c));
+                            window.setTimeout(() => inputRef.current?.focus(), 0);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") setPicking(false);
+                          }}
+                        >
+                          <Flag code={c.code} />
+                          <span className={styles.countryName}>{c.name}</span>
+                          <span className={styles.countryDial}>+{c.dial}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <p className={styles.fieldHint}>
-                  {mode === "email" ? "L\u2019adresse donnée à la réservation." : "Le numéro de la réservation. Le lien part par SMS."}
+                  {mode === "email" ? "L\u2019adresse donnée à la réservation." : "Le numéro donné à la réservation."}
                 </p>
                 {fixed ? (
                   <div className={styles.suggest}>

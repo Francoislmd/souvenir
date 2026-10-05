@@ -1113,3 +1113,72 @@
     transition: none;
   }
 }
+
+/* L'indicatif : drapeau, +33 et chevron, séparés du numéro par un filet. */
+.country {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  margin-left: -8px;
+  padding: 0 10px 0 8px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 9px 0 0 9px;
+  background: none;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.country svg:last-child {
+  color: var(--ink-4);
+}
+.country:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 0;
+}
+/* La liste des pays, sous le champ : un panneau à filet, sans ombre. */
+.countries {
+  margin: -4px 0 0;
+  padding: 6px;
+  list-style: none;
+  max-height: 248px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.countries button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.countries button:hover,
+.countries button:focus-visible {
+  background: var(--line-2);
+  outline: 0;
+}
+.countries [aria-selected="true"] button {
+  font-weight: 600;
+}
+.countryName {
+  flex: 1;
+}
+.countryDial {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
