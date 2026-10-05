@@ -963,3 +963,102 @@
     margin-bottom: 44px;
   }
 }
+
+/* ── Le champ e-mail / téléphone ─────────────────────────────────────────
+   Deux modes, un seul champ : le téléphone ouvre le clavier numérique et
+   se lit en paires derrière +33. Sans ombre : le filet et le contour de
+   focus suffisent. */
+.fieldHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.fieldHead .label {
+  white-space: nowrap;
+}
+.switch {
+  flex: none;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 11px;
+  background: var(--line-2);
+}
+.switch button {
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.switch button[aria-pressed="true"] {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.switch button:focus-visible {
+  outline: 2px solid var(--op);
+  outline-offset: 1px;
+}
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid #dcd8e1;
+  border-radius: 14px;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.field:focus-within {
+  border-color: transparent;
+  outline: 2px solid var(--op);
+  outline-offset: -1px;
+}
+.field.inputBad {
+  border-color: #b42318;
+}
+.fieldIcon {
+  flex: none;
+  color: var(--ink-4);
+}
+.field:focus-within .fieldIcon {
+  color: var(--op);
+}
+.prefix {
+  flex: none;
+  padding-right: 10px;
+  border-right: 1px solid var(--line);
+  font-size: 1.02rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.fieldInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.02rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.fieldInput::placeholder {
+  color: var(--ink-4);
+}
+@media (prefers-reduced-motion: reduce) {
+  .field {
+    transition: none;
+  }
+}

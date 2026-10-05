@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import styles from "@/components/gallery/sale.module.css";
 import { Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
@@ -29,6 +29,19 @@ const DOMAIN_FIX: Record<string, string> = {
 /** Un numéro plausible : des chiffres, avec espaces, points ou tirets, et un + éventuel. */
 function looksLikePhone(value: string): boolean {
   return !value.includes("@") && /^[+\d][\d\s.()-]{7,20}$/.test(value.trim());
+}
+
+/**
+ * Le numéro s'écrit pendant la frappe comme on le lit : « 6 12 34 56 78 »
+ * derrière le +33 affiché (le 0 initial est retiré). Un numéro qui commence
+ * par + ou 00 est étranger : il reste tel quel.
+ */
+function formatTyped(value: string): string {
+  const v = value.trimStart();
+  if (v.startsWith("+") || v.startsWith("00")) return value;
+  const d = v.replace(/\D/g, "").replace(/^0/, "").slice(0, 9);
+  if (!d) return "";
+  return d.length === 1 ? d : `${d[0]} ${d.slice(1).replace(/(\d{2})(?=\d)/g, "$1 ")}`;
 }
 
 function suggestFix(mail: string): string | null {
@@ -97,6 +110,9 @@ export function LinkRequest({
   recent?: RecentSortie[];
 }) {
   const [email, setEmail] = useState("");
+  // E-mail ou téléphone : deux champs distincts, pour que le téléphone ouvre
+  // le bon clavier et que le numéro se lise en paires.
+  const [mode, setMode] = useState<"email" | "phone">("email");
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState<"idle" | "typo" | "unknown" | "error" | "sent" | "pending">("idle");
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -107,8 +123,10 @@ export function LinkRequest({
   const [sentBy, setSentBy] = useState<"email" | "sms">("email");
 
   async function send(raw: string, skipTypo = false): Promise<void> {
-    const to = raw.trim().toLowerCase();
+    let to = raw.trim().toLowerCase();
     if (!to || busy) return;
+    // Le champ téléphone affiche +33 : « 6 12 34 56 78 » se lit comme un numéro français.
+    if (mode === "phone" && !to.startsWith("+") && !to.startsWith("0")) to = `+33${to.replace(/\D/g, "")}`;
     if (!to.includes("@") && !looksLikePhone(to)) {
       setState("error");
       setErrorText("Entrez une adresse e-mail ou un numéro de téléphone.");
@@ -157,6 +175,15 @@ export function LinkRequest({
   }
 
   const fixed = state === "typo" ? suggestFix(email) : null;
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  function switchMode(next: "email" | "phone"): void {
+    setMode(next);
+    setEmail("");
+    setState("idle");
+    // Le champ change de clavier : on y remet le curseur.
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }
   const done = state === "sent" || state === "pending";
   const askWho = guide ? `demandez à ${guide}, votre guide` : `demandez à ${operator.name}`;
   const wall = teaser && teaser.urls.length >= 3 ? Array.from({ length: 9 }, (_, i) => teaser.urls[i % teaser.urls.length]!) : null;
@@ -212,7 +239,7 @@ export function LinkRequest({
             )}
             {eyebrow ? <div className={styles.eyebrow}>{eyebrow}</div> : null}
             <h1 className={`${styles.h1} ${styles.display}`}>{heading}</h1>
-            {recent ? <p className={styles.intro}>Le lien de chacune de vos sorties vous arrive par e-mail.</p> : null}
+            {recent ? <p className={styles.intro}>Le lien de chacune de vos sorties vous arrive par e-mail ou par SMS.</p> : null}
 
             {teaser && teaser.count > 0 && teaser.urls.length > 0 ? (
               <div className={styles.teaser}>
@@ -281,31 +308,58 @@ export function LinkRequest({
               >
                 {state === "unknown" ? (
                   <div className={styles.msgErr} role="alert">
-                    <b>{email.includes("@") ? "Cette adresse n\u2019est pas" : "Ce numéro n\u2019est pas"} sur la liste {code ? "de la sortie" : "de nos sorties"}.</b>
+                    <b>{mode === "email" ? "Cette adresse n\u2019est pas" : "Ce numéro n\u2019est pas"} sur la liste {code ? "de la sortie" : "de nos sorties"}.</b>
                     <p>
-                      {email.includes("@") ? "Essayez votre numéro de téléphone, ou l\u2019adresse" : "Essayez votre adresse e-mail, ou le numéro"} d&rsquo;une autre personne de votre groupe qui a pu réserver. Sinon, {askWho}.
+                      <button type="button" className={styles.lnk} onClick={() => switchMode(mode === "email" ? "phone" : "email")}>
+                        {mode === "email" ? "Essayez votre téléphone" : "Essayez votre e-mail"}
+                      </button>
+                      , ou celui d&rsquo;une autre personne de votre groupe qui a pu réserver. Sinon, {askWho}.
                     </p>
                   </div>
                 ) : null}
-                <label className={styles.label} htmlFor="link-email">
-                  L&rsquo;e-mail ou le téléphone donné à la réservation
-                </label>
-                <input
-                  id="link-email"
-                  className={`${styles.input} ${state === "unknown" ? styles.inputBad : ""}`}
-                  type="text"
-                  inputMode="email"
-                  autoComplete="email"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  required
-                  placeholder="prenom.nom@gmail.com ou 06 12 34 56 78"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (state !== "idle") setState("idle");
-                  }}
-                />
+                <div className={styles.fieldHead}>
+                  <label className={styles.label} htmlFor="link-contact">
+                    Donné à la réservation
+                  </label>
+                  <div className={styles.switch} role="group" aria-label="Retrouver avec">
+                    <button type="button" aria-pressed={mode === "email"} onClick={() => switchMode("email")}>
+                      E-mail
+                    </button>
+                    <button type="button" aria-pressed={mode === "phone"} onClick={() => switchMode("phone")}>
+                      Téléphone
+                    </button>
+                  </div>
+                </div>
+                <div className={`${styles.field} ${state === "unknown" ? styles.inputBad : ""}`}>
+                  {mode === "email" ? (
+                    <svg className={styles.fieldIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+                      <path d="m3.8 7 7.1 5.2a2 2 0 0 0 2.2 0L20.2 7" />
+                    </svg>
+                  ) : /^\s*(\+|00)/.test(email) ? null : (
+                    <span className={styles.prefix} aria-hidden="true">
+                      +33
+                    </span>
+                  )}
+                  <input
+                    key={mode}
+                    id="link-contact"
+                    ref={inputRef}
+                    className={styles.fieldInput}
+                    type={mode === "email" ? "email" : "tel"}
+                    inputMode={mode === "email" ? "email" : "tel"}
+                    autoComplete={mode === "email" ? "email" : "tel-national"}
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    required
+                    placeholder={mode === "email" ? "prenom.nom@gmail.com" : "6 12 34 56 78"}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(mode === "phone" ? formatTyped(e.target.value) : e.target.value);
+                      if (state !== "idle") setState("idle");
+                    }}
+                  />
+                </div>
                 {fixed ? (
                   <div className={styles.suggest}>
                     Vous vouliez dire{" "}
