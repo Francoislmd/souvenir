@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
-import { ActivityGlyph } from "@/components/sorties/ActivityGlyph";
 
 export type SortieMode = "INDIVIDUEL" | "GROUPE";
 
@@ -93,12 +92,7 @@ export function NewSortieSheet({
     }
   }
 
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const short = (d: Date): string => d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
-  // « Autre date » montre le jour choisi une fois sélectionnée.
-  const otherShort = otherDate ? short(new Date(`${otherDate}T12:00:00`)) : "Choisir";
+  const segmented = activities.length <= 3;
 
   return (
     <div className={styles.shOverlay} onClick={onClose} role="presentation">
@@ -113,14 +107,11 @@ export function NewSortieSheet({
       >
         <span className={styles.shGrip} aria-hidden="true" />
         <header className={styles.nsHead}>
-          <div>
-            <h2 id="nsTitle" className={styles.nsTitle}>
-              Nouvelle sortie
-            </h2>
-            <p className={styles.nsSub}>Le lieu, le guide et les places se règlent ensuite.</p>
-          </div>
+          <h2 id="nsTitle" className={styles.nsTitle}>
+            Nouvelle sortie
+          </h2>
           <button type="button" className={styles.nsClose} onClick={onClose} aria-label="Fermer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
           </button>
@@ -132,92 +123,98 @@ export function NewSortieSheet({
             void create();
           }}
         >
-        <div className={styles.nsBody}>
-          <fieldset className={styles.nsGroup}>
-            <legend className={styles.nsLbl}>Activité</legend>
-            <div className={styles.nsOpts}>
-              {activities.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  className={styles.nsOpt}
-                  aria-pressed={a === activity}
-                  onClick={() => setActivity(a)}
-                >
-                  <ActivityGlyph activity={a} width={18} height={18} aria-hidden="true" />
-                  {a}
-                </button>
-              ))}
+          <div className={styles.nsBody}>
+            <div className={styles.nsRow}>
+              <span className={styles.nsLbl} id="nsActLbl">
+                Activité
+              </span>
+              {segmented ? (
+                <div className={styles.nsSeg} role="radiogroup" aria-labelledby="nsActLbl">
+                  {activities.map((a) => (
+                    <button key={a} type="button" role="radio" aria-checked={a === activity} onClick={() => setActivity(a)}>
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <select aria-labelledby="nsActLbl" className={styles.nsInp} value={activity} onChange={(e) => setActivity(e.target.value)}>
+                  {activities.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-          </fieldset>
 
-          <fieldset className={styles.nsGroup}>
-            <legend className={styles.nsLbl}>Date</legend>
-            <div className={styles.nsDays}>
-              {([
-                ["today", "Aujourd'hui", short(today)],
-                ["tomorrow", "Demain", short(tomorrow)],
-                ["other", "Autre date", day === "other" ? otherShort : "Choisir"],
-              ] as [DayChoice, string, string][]).map(([key, label, sub]) => (
-                <button key={key} type="button" className={styles.nsDay} aria-pressed={day === key} onClick={() => setDay(key)}>
-                  <b>{label}</b>
-                  <span>{sub}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className={styles.nsFields}>
-            {day === "other" ? (
-              <div className={styles.nsField}>
-                <label htmlFor="shDate" className={styles.nsLbl}>
-                  Jour
-                </label>
-                <input id="shDate" type="date" className={styles.nsInp} value={otherDate} onChange={(e) => setOtherDate(e.target.value)} />
+            <div className={styles.nsRow}>
+              <span className={styles.nsLbl} id="nsDayLbl">
+                Date
+              </span>
+              <div className={styles.nsCtl}>
+                <div className={styles.nsSeg} role="radiogroup" aria-labelledby="nsDayLbl">
+                  {([
+                    ["today", "Aujourd'hui"],
+                    ["tomorrow", "Demain"],
+                    ["other", "Autre"],
+                  ] as [DayChoice, string][]).map(([key, label]) => (
+                    <button key={key} type="button" role="radio" aria-checked={day === key} onClick={() => setDay(key)}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {day === "other" ? (
+                  <input id="shDate" type="date" aria-label="Jour" className={styles.nsInp} value={otherDate} onChange={(e) => setOtherDate(e.target.value)} />
+                ) : null}
               </div>
-            ) : null}
-            <div className={styles.nsField}>
-              <label htmlFor="shTime" className={styles.nsLbl}>
-                Heure de départ
-              </label>
-              <input id="shTime" type="time" className={styles.nsInp} value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
+
+            <div className={styles.nsRow}>
+              <label htmlFor="shTime" className={styles.nsLbl}>
+                Départ
+              </label>
+              <input id="shTime" type="time" className={`${styles.nsInp} ${styles.nsTime}`} value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
+
+            {mode === null ? (
+              <fieldset className={styles.nsMode}>
+                <legend className={styles.nsLbl}>Comment vos clients reçoivent leurs photos</legend>
+                <p className={styles.shHint}>On ne vous le redemandera plus : vos prochaines sorties reprendront ce choix.</p>
+                <button
+                  type="button"
+                  className={`${styles.shPick} ${chosenMode === "GROUPE" ? styles.shPickOn : ""}`}
+                  aria-pressed={chosenMode === "GROUPE"}
+                  onClick={() => setChosenMode("GROUPE")}
+                >
+                  <b>Un lien pour tout le monde</b>
+                  <span>Vous affichez le lien au retour. Chacun retrouve son créneau. Rien à saisir.</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.shPick} ${chosenMode === "INDIVIDUEL" ? styles.shPickOn : ""}`}
+                  aria-pressed={chosenMode === "INDIVIDUEL"}
+                  onClick={() => setChosenMode("INDIVIDUEL")}
+                >
+                  <b>Chacun sa galerie</b>
+                  <span>Vous notez le prénom et le contact de chaque client. Plus long, mais nominatif.</span>
+                </button>
+              </fieldset>
+            ) : null}
           </div>
 
-          {mode === null ? (
-            <fieldset className={styles.nsGroup}>
-              <legend className={styles.nsLbl}>Comment vos clients reçoivent leurs photos</legend>
-              <p className={styles.shHint}>On ne vous le redemandera plus : vos prochaines sorties reprendront ce choix.</p>
-              <button
-                type="button"
-                className={`${styles.shPick} ${chosenMode === "GROUPE" ? styles.shPickOn : ""}`}
-                aria-pressed={chosenMode === "GROUPE"}
-                onClick={() => setChosenMode("GROUPE")}
-              >
-                <b>Un lien pour tout le monde</b>
-                <span>Vous affichez le lien au retour. Chacun retrouve son créneau. Rien à saisir.</span>
-              </button>
-              <button
-                type="button"
-                className={`${styles.shPick} ${chosenMode === "INDIVIDUEL" ? styles.shPickOn : ""}`}
-                aria-pressed={chosenMode === "INDIVIDUEL"}
-                onClick={() => setChosenMode("INDIVIDUEL")}
-              >
-                <b>Chacun sa galerie</b>
-                <span>Vous notez le prénom et le contact de chaque client. Plus long, mais nominatif.</span>
-              </button>
-            </fieldset>
-          ) : null}
-        </div>
-
-        <footer className={styles.nsFoot}>
-          <button type="button" className={`${styles.sBtn} ${styles.sBtnGhost} ${styles.nsCancel}`} onClick={onClose}>
-            Annuler
-          </button>
-          <button type="submit" className={`${styles.sBtn} ${styles.sBtnPri} ${styles.nsGo}`} disabled={saving || !activity} aria-busy={saving || undefined}>
-            {saving ? <Spinner size={16} tone="light" label="Création en cours" /> : "Créer la sortie"}
-          </button>
-        </footer>
+          <footer className={styles.nsFoot}>
+            <button type="button" className={styles.nsCancel} onClick={onClose}>
+              Annuler
+            </button>
+            <button type="submit" className={styles.nsGo} disabled={saving || !activity} aria-busy={saving || undefined}>
+              <span>Créer</span>
+              {saving ? (
+                <span className={styles.nsBusy}>
+                  <Spinner size={14} tone="light" label="Création en cours" />
+                </span>
+              ) : null}
+            </button>
+          </footer>
         </form>
       </div>
     </div>

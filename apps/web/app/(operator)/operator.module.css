@@ -1078,13 +1078,14 @@ a.sRow:hover .sTh {
 .shFull {
   width: 100%;
 }
-/* La feuille « Nouvelle sortie » (05/10/2026) : un en-tête avec sa
-   croix, des choix à filet plutôt que des pavés noirs qui concurrençaient
-   l'orange du bouton, la date réelle sous « Aujourd'hui » et « Demain »,
-   et un pied Annuler / Créer. À plat : aucune ombre portée. */
+/* La feuille « Nouvelle sortie » (05/10/2026, v2) : un formulaire d'outil,
+   pas une carte. Une ligne par question, le libellé à gauche, des contrôles
+   compacts (segmenté, champs de 36 px), des filets plutôt que des pavés,
+   et un pied à droite. Une seule couleur : l'orange du bouton. */
 .shPanel.nsPanel {
-  max-width: 500px;
+  max-width: 460px;
   padding: 0;
+  border-radius: 14px;
 }
 .nsPanel:focus,
 .nsPanel:focus-visible {
@@ -1092,222 +1093,206 @@ a.sRow:hover .sTh {
 }
 .nsHead {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 24px 24px 0;
+  padding: 16px 16px 12px 20px;
 }
 .nsTitle {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
-}
-.nsSub {
-  margin: 4px 0 0;
-  text-wrap: pretty;
-  font-size: 0.9rem;
-  color: var(--ink-3);
-  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 .nsClose {
-  flex: none;
-  width: 36px;
-  height: 36px;
-  margin: -6px -8px 0 0;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: grid;
   place-items: center;
-  color: var(--ink-3);
-  transition: background 0.14s, color 0.14s;
+  color: var(--ink-4);
+  transition: background 0.12s, color 0.12s;
 }
 .nsClose:hover {
   background: var(--fill);
   color: var(--ink);
 }
 .nsBody {
-  padding: 22px 24px 4px;
+  padding: 0 20px;
 }
-.nsGroup {
-  margin: 0 0 22px;
-  padding: 0;
-  border: 0;
-  min-width: 0;
+.nsRow {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
 }
 .nsLbl {
   display: block;
   padding: 0;
-  margin: 0 0 8px;
+  line-height: 36px;
   font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--ink-2, #413c4e);
+  font-weight: 500;
+  color: var(--ink-3);
 }
-.nsOpts {
+.nsCtl {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-.nsOpt,
-.nsDay {
-  border: 1px solid #e2dfe7;
-  background: #fff;
-  color: var(--ink-2, #413c4e);
-  border-radius: 12px;
-  transition:
-    border-color 0.14s,
-    background 0.14s,
-    color 0.14s;
-}
-.nsOpt {
-  height: 42px;
-  padding: 0 16px 0 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-.nsOpt svg {
-  flex: none;
-  color: var(--ink-4);
-  transition: color 0.14s;
-}
-.nsOpt[aria-pressed="true"] svg {
-  color: var(--brand-ic, #ea4d10);
-}
-.nsOpt:focus-visible,
-.nsDay:focus-visible {
-  border-radius: 12px;
-  outline-offset: 2px;
-}
-.nsOpt:hover,
-.nsDay:hover {
-  border-color: #cbc6d3;
-}
-.nsOpt[aria-pressed="true"],
-.nsDay[aria-pressed="true"] {
-  border-color: var(--ink);
-  background: #faf9fb;
-  color: var(--ink);
-  box-shadow: inset 0 0 0 0.5px var(--ink);
-}
-.nsDays {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-.nsDay {
-  min-height: 58px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2px;
-  text-align: left;
-}
-.nsDay b {
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.nsDay span {
-  font-size: 0.8rem;
-  color: var(--ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.nsFields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: -6px 0 22px;
-}
-.nsField {
   min-width: 0;
 }
+/* Contrôle segmenté : un rail gris, la valeur choisie en blanc filetée. */
+.nsSeg {
+  justify-self: start;
+  display: inline-flex;
+  max-width: 100%;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--fill);
+}
+.nsSeg button {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  white-space: nowrap;
+  transition: color 0.12s, background 0.12s;
+}
+.nsSeg button:hover {
+  color: var(--ink);
+}
+.nsSeg button[aria-checked="true"] {
+  background: #fff;
+  border-color: #e2dfe7;
+  color: var(--ink);
+}
+.nsSeg button:focus-visible {
+  border-radius: 7px;
+  outline-offset: 0;
+}
 .nsInp {
-  width: 100%;
-  height: 46px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 10px;
   border: 1px solid #e2dfe7;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  transition: border-color 0.14s;
+  transition: border-color 0.12s;
+}
+select.nsInp {
+  width: 100%;
+  max-width: 260px;
 }
 .nsInp:hover {
   border-color: #cbc6d3;
-}
-.nsInp::-webkit-calendar-picker-indicator {
-  opacity: 0.4;
-  cursor: pointer;
-  transition: opacity 0.14s;
-}
-.nsInp:hover::-webkit-calendar-picker-indicator {
-  opacity: 0.75;
 }
 .nsInp:focus {
   outline: 2px solid var(--brand);
   outline-offset: -1px;
   border-color: transparent;
 }
+.nsInp::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+}
+.nsTime {
+  width: 112px;
+}
+.nsMode {
+  margin: 0;
+  padding: 14px 0 6px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.nsMode .nsLbl {
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
 .nsFoot {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 24px 20px;
+  gap: 8px;
+  padding: 12px 16px 12px 20px;
   border-top: 1px solid var(--line);
+  background: #fbfafc;
+  border-radius: 0 0 14px 14px;
+}
+.nsCancel,
+.nsGo {
+  position: relative;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.12s, border-color 0.12s;
 }
 .nsCancel {
-  height: 44px;
-  font-size: 0.97rem;
+  border: 1px solid #e2dfe7;
+  background: #fff;
+  color: var(--ink-2, #413c4e);
+}
+.nsCancel:hover {
+  border-color: #cbc6d3;
 }
 .nsGo {
-  height: 44px;
-  min-width: 160px;
-  font-size: 0.97rem;
-  font-weight: 600;
+  min-width: 76px;
+  background: var(--brand);
+  color: #fff;
 }
-.nsGo:disabled {
-  cursor: progress;
+.nsGo:hover:not(:disabled) {
+  background: var(--brand-ink);
+}
+.nsGo:disabled:not([aria-busy="true"]) {
+  opacity: 0.5;
+  cursor: default;
+}
+.nsGo[aria-busy="true"] > :not(.nsBusy) {
+  visibility: hidden;
+}
+.nsBusy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
 }
 @media (max-width: 760px) {
   .shPanel.nsPanel {
     max-width: none;
-    padding: 12px 0 0;
+    padding: 10px 0 0;
+    border-radius: 16px 16px 0 0;
   }
   .nsHead {
-    padding: 0 18px;
+    padding: 4px 12px 10px 16px;
   }
   .nsBody {
-    padding: 20px 18px 4px;
+    padding: 0 16px;
+  }
+  .nsRow {
+    grid-template-columns: 64px minmax(0, 1fr);
   }
   .nsFoot {
-    padding: 14px 18px calc(18px + env(safe-area-inset-bottom));
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-radius: 0;
   }
   .nsCancel {
-    display: none;
-  }
-  .nsDay {
-    padding: 8px 10px;
-  }
-  .nsDay b {
-    font-size: 0.9rem;
-  }
-  .nsDay span {
-    font-size: 0.76rem;
+    flex: 1;
+    height: 42px;
   }
   .nsGo {
-    flex: 1;
-    height: 50px;
+    flex: 2;
+    height: 42px;
+    font-size: 0.95rem;
   }
 }
 @keyframes shFade {
