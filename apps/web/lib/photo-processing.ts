@@ -120,8 +120,8 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // plupart des clients mail) supprime des styles inline. La galerie web,
     // elle, n'a plus de flou global : aperçu verrouillé = même filigrane
     // diagonal qu'en mode GROUPE (Photo.groupPreviewKey,
-    // lib/group-watermark.ts), qui porte déjà son propre cadenas incrusté —
-    // jamais de photo qui se dévoile en un clic devtools.
+    // lib/group-watermark.ts, sans cadenas depuis le 05/10/2026) — jamais de
+    // photo qui se dévoile en un clic devtools.
     const lockBadge = await sharp(Buffer.from(LOCK_BADGE_SVG)).resize(112, 112).png().toBuffer();
     const blurEmailBuffer = await base()
       .resize({ width: 960 })

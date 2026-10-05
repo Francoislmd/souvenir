@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { createCanvas, type SKRSContext2D } from "@napi-rs/canvas";
+import { createCanvas } from "@napi-rs/canvas";
 import { layoutRun, ensureWatermarkFont, FONT_FAMILY, WORD_WEIGHT } from "./watermark-typography";
 
 /**
@@ -7,12 +7,14 @@ import { layoutRun, ensureWatermarkFont, FONT_FAMILY, WORD_WEIGHT } from "./wate
  * "optimiser" : chaque valeur a été arbitrée sur des rendus comparés côte à
  * côte, colonne par colonne, un seul paramètre changeant à la fois.
  *
- * La composition, en quatre couches :
+ * La composition, en trois couches :
  *   1. la photo, à peine floutée, jusqu'au bord ;
  *   2. un voile sombre uniforme ;
  *   3. le nom du professionnel, précédé d'un ©, écrit EN DIAGONALE et répété
- *      en rangées décalées d'une demi-période ;
- *   4. un cadenas au centre, dans une pastille encre.
+ *      en rangées décalées d'une demi-période.
+ *
+ * Le cadenas central (une pastille encre) a été retiré le 05/10/2026 : il
+ * faisait bon marché, et la trame suffit à dire « aperçu payant ».
  *
  * Le traitement est le MÊME sur toutes les photos, sans exception : c'est ce
  * qui le fait lire comme une signature de marque et pas comme un accident de
@@ -85,11 +87,6 @@ const PARAMS = {
   shadowBlurRatio: 0.18,
   shadowOffsetRatio: 0.03,
 
-  // --- Le cadenas --------------------------------------------------------
-  // Diamètre de la pastille, en fraction du côté court.
-  lockRatio: 0.16,
-  lockVeil: 0.55,
-
   // --- Sortie ------------------------------------------------------------
   // La vraie garantie n'est pas le filigrane, c'est cette valeur : à 1000 px
   // de large, ce qu'on peut tirer d'un aperçu ne dépasse pas une story. Ne
@@ -99,53 +96,8 @@ const PARAMS = {
 } as const;
 
 /**
- * Le cadenas central. Même dessin que le badge incrusté dans l'aperçu email
- * (lib/photo-processing.ts), à la grille 112 près, remis à l'échelle du côté
- * court : les deux images se retrouvent côte à côte dans le parcours d'achat.
- */
-function drawLock(ctx: SKRSContext2D, cx: number, cy: number, size: number): void {
-  const scale = size / 112;
-  ctx.save();
-  ctx.globalAlpha = 1;
-  ctx.beginPath();
-  ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(20, 19, 32, ${PARAMS.lockVeil})`;
-  ctx.fill();
-  ctx.lineWidth = Math.max(1, size * 0.008);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-  ctx.stroke();
-
-  ctx.translate(cx, cy + 2 * scale);
-  ctx.scale(scale, scale);
-  ctx.strokeStyle = PARAMS.ink;
-  ctx.lineWidth = 5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  const x = -17;
-  const y = -4;
-  const width = 34;
-  const height = 24;
-  const radius = 5;
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + width, y, x + width, y + height, radius);
-  ctx.arcTo(x + width, y + height, x, y + height, radius);
-  ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-10, -4);
-  ctx.lineTo(-10, -14);
-  ctx.arc(0, -14, 10, Math.PI, 0);
-  ctx.lineTo(10, -4);
-  ctx.stroke();
-  ctx.restore();
-}
-
-/**
  * Le calque posé sur la photo : le voile sombre, puis le nom en rangées
- * inclinées, puis le cadenas.
+ * inclinées.
  *
  * Il n'y a plus d'atténuation autour des visages (elle existait du 07 au
  * 09/09/2026) : blazeface prenait un kayak sur du sable pour un visage et
@@ -198,11 +150,6 @@ function buildLayer(width: number, height: number, basis: number, operatorName: 
   }
   ctx.restore();
 
-  ctx.shadowColor = "transparent";
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
-  drawLock(ctx, width / 2, height / 2, PARAMS.lockRatio * basis);
-
   return canvas.toBuffer("image/png");
 }
 
@@ -223,8 +170,8 @@ export async function generateGroupPreview(original: Buffer, operatorName: strin
 
   const { width, height, channels } = info;
 
-  // La référence de taille, celle qui décide du corps du texte, de la maille
-  // et du cadenas. Elle est calculée pour que le filigrane paraisse de la MÊME
+  // La référence de taille, celle qui décide du corps du texte et de la
+  // maille. Elle est calculée pour que le filigrane paraisse de la MÊME
   // taille sur toutes les vignettes de la galerie, quel que soit le cadrage de
   // la photo — c'est le seul critère qui compte, les aperçus se regardent
   // côte à côte dans une grille.
