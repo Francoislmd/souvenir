@@ -1351,8 +1351,11 @@ select.nsInp {
   color: var(--ink-3);
 }
 .sdDropBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   height: 32px;
-  padding: 0 14px;
+  padding: 0 14px 0 11px;
   border-radius: 7px;
   background: var(--ink);
   font-size: 0.86rem;

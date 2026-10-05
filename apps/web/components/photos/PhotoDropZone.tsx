@@ -108,6 +108,10 @@ export function PhotoDropZone({
         <p className={styles.sdDropT}>{dragging ? "Lâchez pour importer" : (label ?? "Aucune photo")}</p>
         <p className={styles.sdDropH}>Importez les fichiers de la sortie, ou glissez-les ici.</p>
         <button type="button" className={styles.sdDropBtn} onClick={() => inputRef.current?.click()}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 15V4M7.5 8.5 12 4l4.5 4.5" />
+            <path d="M4.5 14v4.2c0 .99.81 1.8 1.8 1.8h11.4c.99 0 1.8-.81 1.8-1.8V14" />
+          </svg>
           Importer
         </button>
       </div>
