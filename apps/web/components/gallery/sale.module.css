@@ -192,7 +192,7 @@
 }
 .h1 {
   margin: 6px 0 0;
-  font-size: 1.75rem;
+  font-size: 1.55rem;
   font-weight: 650;
   letter-spacing: -0.035em;
   line-height: 1.1;
@@ -417,7 +417,7 @@
     margin-top: 44px;
   }
   .h1 {
-    font-size: 2.3rem;
+    font-size: 2rem;
   }
   .hasWall .teaser {
     display: none;
