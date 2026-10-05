@@ -1078,6 +1078,204 @@ a.sRow:hover .sTh {
 .shFull {
   width: 100%;
 }
+/* La feuille « Nouvelle sortie » (05/10/2026) : un en-tête avec sa
+   croix, des choix à filet plutôt que des pavés noirs qui concurrençaient
+   l'orange du bouton, la date réelle sous « Aujourd'hui » et « Demain »,
+   et un pied Annuler / Créer. À plat : aucune ombre portée. */
+.shPanel.nsPanel {
+  max-width: 500px;
+  padding: 0;
+}
+.nsPanel:focus,
+.nsPanel:focus-visible {
+  outline: 0;
+}
+.nsHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 0;
+}
+.nsTitle {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+.nsSub {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+.nsClose {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px 0 0;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  transition: background 0.14s, color 0.14s;
+}
+.nsClose:hover {
+  background: var(--fill);
+  color: var(--ink);
+}
+.nsBody {
+  padding: 22px 24px 4px;
+}
+.nsGroup {
+  margin: 0 0 22px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.nsLbl {
+  display: block;
+  padding: 0;
+  margin: 0 0 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink-2, #413c4e);
+}
+.nsOpts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.nsOpt,
+.nsDay {
+  border: 1px solid #e2dfe7;
+  background: #fff;
+  color: var(--ink-2, #413c4e);
+  border-radius: 12px;
+  transition:
+    border-color 0.14s,
+    background 0.14s,
+    color 0.14s;
+}
+.nsOpt {
+  height: 42px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.nsOpt:hover,
+.nsDay:hover {
+  border-color: #cbc6d3;
+}
+.nsOpt[aria-pressed="true"],
+.nsDay[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--fill);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.nsDays {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.nsDay {
+  min-height: 58px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  text-align: left;
+}
+.nsDay b {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.nsDay span {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.nsFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: -6px 0 22px;
+}
+.nsField {
+  min-width: 0;
+}
+.nsInp {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #e2dfe7;
+  border-radius: 12px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.14s;
+}
+.nsInp:hover {
+  border-color: #cbc6d3;
+}
+.nsInp:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+.nsFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--line);
+}
+.nsCancel {
+  height: 44px;
+  font-size: 0.97rem;
+}
+.nsGo {
+  height: 44px;
+  min-width: 160px;
+  font-size: 0.97rem;
+  font-weight: 600;
+}
+.nsGo:disabled {
+  cursor: progress;
+}
+@media (max-width: 760px) {
+  .shPanel.nsPanel {
+    max-width: none;
+    padding: 12px 0 0;
+  }
+  .nsHead {
+    padding: 0 18px;
+  }
+  .nsBody {
+    padding: 20px 18px 4px;
+  }
+  .nsFoot {
+    padding: 14px 18px calc(18px + env(safe-area-inset-bottom));
+  }
+  .nsCancel {
+    display: none;
+  }
+  .nsGo {
+    flex: 1;
+    height: 50px;
+  }
+}
 @keyframes shFade {
   from {
     opacity: 0;
