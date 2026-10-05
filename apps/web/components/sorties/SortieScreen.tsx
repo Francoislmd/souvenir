@@ -1081,9 +1081,6 @@ export function SortieScreen({
 
             <PhotoDropZone sortieId={sortieId} controlRef={dropZone} variant={empty ? "zone" : "silent"} />
 
-            {empty ? (
-              <p className={styles.sdNote}>Rien n&rsquo;est visible par vos clients tant que vous n&rsquo;avez pas publié.</p>
-            ) : null}
           </>
         )}
 
