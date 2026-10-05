@@ -31,8 +31,10 @@ type LinkOutcome =
  * Recevoir le lien de sa galerie privée, comme sur la page d'une course chez
  * Finisher Memories : l'adresse e-mail (ou le téléphone) joue le rôle du dossard. Elle doit
  * figurer sur la liste de la sortie donnée par le prestataire ; rien ne
- * s'inscrit ici. Comme chez eux, l'écran dit clairement si l'adresse ne
- * correspond à rien, pour que le client essaie celle de sa réservation.
+ * s'inscrit ici. Un numéro ne reçoit un SMS que s'il est lui-même sur la
+ * liste, une adresse un mail que si elle y est. Comme chez eux, l'écran dit
+ * clairement si le contact ne correspond à rien (200 no_match) ou si l'envoi
+ * a échoué (502) : la page passe alors à l'autre moyen, e-mail ou téléphone.
  *  - avec le code du QR de fin de sortie : le lien de CETTE sortie ;
  *  - sans code (l'adresse de la boutique) : les liens des sorties publiées
  *    de ce prestataire où cette adresse figure.
@@ -78,7 +80,15 @@ export async function POST(request: Request, { params }: { params: { slug: strin
       }
 
       const ready = sortie.status === "SENT" && departureKnown(participant, (await departuresWithPhotos(sortie.id)).length);
-      if (ready) await sendPrivateInvite(participant, sortie);
+      if (ready) {
+        try {
+          await sendPrivateInvite(participant, sortie);
+        } catch (error) {
+          // Un numéro ou une adresse qui ne reçoit pas : la page propose l'autre moyen.
+          console.error("[API /api/store/[slug]/link] send failed for", email, error);
+          return Response.json({ error: "send_failed" }, { status: 502 });
+        }
+      }
       const outcome: LinkOutcome = ready ? "sent" : "pending";
       await track("gallery_link_requested", { operatorId: operator.id, participantId: participant.id, meta: { via: "qr", outcome } });
       return reply(outcome);

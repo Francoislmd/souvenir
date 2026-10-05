@@ -134,6 +134,17 @@ export function LinkRequest({
   // (boutique : une galerie ou un mail qui les regroupe toutes).
   const [sentSubject, setSentSubject] = useState<string | null>(null);
   const [sentBy, setSentBy] = useState<"email" | "sms">("email");
+  // Le contact qui n'a pas marché : pas sur la liste, ou l'envoi a échoué.
+  // La page passe alors seule à l'autre moyen (le téléphone après l'e-mail,
+  // et inversement), en gardant de quoi revenir au premier.
+  const [missed, setMissed] = useState<{
+    mode: "email" | "phone";
+    value: string;
+    shown: string;
+    why: "no_match" | "send_failed";
+    /** Les deux moyens ont été essayés : plus rien à proposer que le guide. */
+    both: boolean;
+  } | null>(null);
 
   async function send(raw: string, skipTypo = false): Promise<void> {
     let to = raw.trim().toLowerCase();
@@ -162,6 +173,10 @@ export function LinkRequest({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contact: to, ...(code ? { code } : {}) }),
       });
+      if (res.status === 502) {
+        miss(raw, "send_failed");
+        return;
+      }
       if (!res.ok) {
         setState("error");
         setErrorText(
@@ -177,10 +192,10 @@ export function LinkRequest({
       setSentSubject(subject ?? null);
       setSentBy(via === "sms" ? "sms" : "email");
       if (outcome === "no_match") {
-        setEmail(to);
-        setState("unknown");
+        miss(raw, "no_match");
         return;
       }
+      setMissed(null);
       setSentTo(to);
       setState(outcome);
     } catch {
@@ -194,11 +209,36 @@ export function LinkRequest({
   const fixed = state === "typo" ? suggestFix(email) : null;
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  /** Ce contact n'a rien donné : on passe à l'autre moyen, sauf s'il a déjà été essayé. */
+  function miss(raw: string, why: "no_match" | "send_failed"): void {
+    const shown = mode === "phone" ? `+${country.dial} ${raw.trim()}` : raw.trim().toLowerCase();
+    const both = missed !== null && missed.mode !== mode;
+    // Après deux essais, « pas sur la liste » seulement si aucun des deux n'y était.
+    setMissed({ mode, value: raw, shown, why: both && missed.why !== why ? "send_failed" : why, both });
+    setState("unknown");
+    if (both) return;
+    setMode(mode === "email" ? "phone" : "email");
+    setPicking(false);
+    setEmail("");
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  /** Revenir au contact qui n'a pas marché, pour le corriger. */
+  function backToMissed(): void {
+    if (!missed) return;
+    setMode(missed.mode);
+    setEmail(missed.value);
+    setMissed(null);
+    setState("idle");
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
   function switchMode(next: "email" | "phone"): void {
     setMode(next);
     setPicking(false);
     setEmail("");
     setState("idle");
+    setMissed(null);
     // Le champ change de clavier : on y remet le curseur.
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }
@@ -324,15 +364,39 @@ export function LinkRequest({
                   void send(email);
                 }}
               >
-                {state === "unknown" ? (
+                {state === "unknown" && missed ? (
                   <div className={styles.msgErr} role="alert">
-                    <b>{mode === "email" ? "Cette adresse n\u2019est pas" : "Ce numéro n\u2019est pas"} sur la liste {code ? "de la sortie" : "de nos sorties"}.</b>
-                    <p>
-                      <button type="button" className={styles.lnk} onClick={() => switchMode(mode === "email" ? "phone" : "email")}>
-                        {mode === "email" ? "Essayez votre téléphone" : "Essayez votre e-mail"}
-                      </button>
-                      , ou celui d&rsquo;une autre personne de votre groupe qui a pu réserver. Sinon, {askWho}.
-                    </p>
+                    {missed.both ? (
+                      <>
+                        <b>
+                          {missed.why === "no_match"
+                            ? `Ni ce numéro ni cette adresse ne sont sur la liste ${code ? "de la sortie" : "de nos sorties"}.`
+                            : "Le lien n\u2019a pu partir ni par SMS ni par e-mail."}
+                        </b>
+                        <p>
+                          Essayez le contact d&rsquo;une autre personne de votre groupe qui a pu réserver. Sinon, {askWho}.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <b>
+                          {missed.why === "send_failed"
+                            ? missed.mode === "phone"
+                              ? `Le SMS n\u2019a pas pu partir vers le ${missed.shown}.`
+                              : `Le mail n\u2019a pas pu partir vers ${missed.shown}.`
+                            : missed.mode === "phone"
+                              ? `Le ${missed.shown} n\u2019est pas sur la liste ${code ? "de la sortie" : "de nos sorties"}.`
+                              : `${missed.shown} n\u2019est pas sur la liste ${code ? "de la sortie" : "de nos sorties"}.`}
+                        </b>
+                        <p>
+                          {missed.mode === "phone" ? "Essayez avec l\u2019e-mail de votre réservation" : "Essayez avec le numéro de votre réservation"}, ou{" "}
+                          <button type="button" className={styles.lnk} onClick={backToMissed}>
+                            {missed.mode === "phone" ? "corrigez le numéro" : "corrigez l\u2019adresse"}
+                          </button>
+                          .
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : null}
                 <div className={styles.switch} data-mode={mode} role="tablist" aria-label="Retrouver mes photos avec">
@@ -351,7 +415,7 @@ export function LinkRequest({
                     Téléphone
                   </button>
                 </div>
-                <div className={`${styles.field} ${state === "unknown" ? styles.inputBad : ""}`}>
+                <div className={`${styles.field} ${state === "unknown" && missed?.mode === mode ? styles.inputBad : ""}`}>
                   {mode === "phone" ? (
                     <button
                       type="button"
@@ -391,7 +455,8 @@ export function LinkRequest({
                         if (intl) setCountry(intl.country);
                         setEmail(formatTyped(intl ? intl.rest : e.target.value, intl ? intl.country : country));
                       } else setEmail(e.target.value);
-                      if (state !== "idle") setState("idle");
+                      // Le message reste tant qu'on saisit l'autre moyen qu'il propose.
+                      if (state !== "idle" && !(state === "unknown" && missed && missed.mode !== mode)) setState("idle");
                     }}
                   />
                   {email ? (
