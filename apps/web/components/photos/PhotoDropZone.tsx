@@ -105,14 +105,9 @@ export function PhotoDropZone({
         }}
         onDrop={onDrop}
       >
-        <svg className={styles.sdDropIc} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 15V4.5M7.5 9 12 4.5 16.5 9" />
-          <path d="M4.5 14.5v3.3a1.7 1.7 0 0 0 1.7 1.7h11.6a1.7 1.7 0 0 0 1.7-1.7v-3.3" />
-        </svg>
-        <p className={styles.sdDropT}>{dragging ? "Lâchez pour envoyer" : (label ?? "Glissez ici les photos et vidéos de la sortie")}</p>
-        <p className={styles.sdDropH}>Toute la carte mémoire d&rsquo;un coup, photos et vidéos mêlées.</p>
+        <p className={styles.sdDropT}>{dragging ? "Lâchez pour importer" : (label ?? "Glissez les photos et vidéos ici")}</p>
         <button type="button" className={styles.sdDropBtn} onClick={() => inputRef.current?.click()}>
-          Parcourir les fichiers
+          Choisir des fichiers
         </button>
       </div>
     </>
