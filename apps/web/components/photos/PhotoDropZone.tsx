@@ -105,9 +105,10 @@ export function PhotoDropZone({
         }}
         onDrop={onDrop}
       >
-        <p className={styles.sdDropT}>{dragging ? "Lâchez pour importer" : (label ?? "Glissez les photos et vidéos ici")}</p>
+        <p className={styles.sdDropT}>{dragging ? "Lâchez pour importer" : (label ?? "Aucune photo")}</p>
+        <p className={styles.sdDropH}>Importez les fichiers de la sortie, ou glissez-les ici.</p>
         <button type="button" className={styles.sdDropBtn} onClick={() => inputRef.current?.click()}>
-          Choisir des fichiers
+          Importer
         </button>
       </div>
     </>

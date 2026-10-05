@@ -1323,19 +1323,14 @@ select.nsInp {
   color: var(--ink-4);
 }
 
-/* Zone de dépôt (05/10/2026) : une phrase et un bouton, rien d'autre.
-   Le filet passe à l'orange quand on y glisse des fichiers. */
+/* Zone de dépôt (05/10/2026) : un état vide sobre, aligné à gauche.
+   Un titre, une ligne, un bouton. Le cadre passe à l'orange quand on y
+   glisse des fichiers. */
 .sdDrop {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 180px;
-  padding: 24px;
-  border: 1px dashed #d4d0db;
-  border-radius: 10px;
   width: 100%;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   transition:
     border-color 0.14s,
     background 0.14s;
@@ -1346,22 +1341,27 @@ select.nsInp {
 }
 .sdDropT {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.sdDropH {
+  margin: 3px 0 14px;
+  font-size: 0.87rem;
   color: var(--ink-3);
 }
 .sdDropBtn {
   height: 32px;
-  padding: 0 12px;
-  border: 1px solid #e2dfe7;
+  padding: 0 14px;
   border-radius: 7px;
-  background: #fff;
+  background: var(--ink);
   font-size: 0.86rem;
   font-weight: 500;
-  color: var(--ink);
-  transition: border-color 0.12s;
+  color: #fff;
+  transition: background 0.12s;
 }
 .sdDropBtn:hover {
-  border-color: #cbc6d3;
+  background: #2c2836;
 }
 .sdDrop[data-dragging] .sdDropBtn {
   visibility: hidden;
