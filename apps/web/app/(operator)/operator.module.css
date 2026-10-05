@@ -1106,6 +1106,7 @@ a.sRow:hover .sTh {
 }
 .nsSub {
   margin: 4px 0 0;
+  text-wrap: pretty;
   font-size: 0.9rem;
   color: var(--ink-3);
   line-height: 1.4;
@@ -1160,9 +1161,25 @@ a.sRow:hover .sTh {
 }
 .nsOpt {
   height: 42px;
-  padding: 0 16px;
+  padding: 0 16px 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.95rem;
   font-weight: 500;
+}
+.nsOpt svg {
+  flex: none;
+  color: var(--ink-4);
+  transition: color 0.14s;
+}
+.nsOpt[aria-pressed="true"] svg {
+  color: var(--brand-ic, #ea4d10);
+}
+.nsOpt:focus-visible,
+.nsDay:focus-visible {
+  border-radius: 12px;
+  outline-offset: 2px;
 }
 .nsOpt:hover,
 .nsDay:hover {
@@ -1171,9 +1188,9 @@ a.sRow:hover .sTh {
 .nsOpt[aria-pressed="true"],
 .nsDay[aria-pressed="true"] {
   border-color: var(--ink);
-  background: var(--fill);
+  background: #faf9fb;
   color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--ink);
+  box-shadow: inset 0 0 0 0.5px var(--ink);
 }
 .nsDays {
   display: grid;
@@ -1229,6 +1246,14 @@ a.sRow:hover .sTh {
 .nsInp:hover {
   border-color: #cbc6d3;
 }
+.nsInp::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+  transition: opacity 0.14s;
+}
+.nsInp:hover::-webkit-calendar-picker-indicator {
+  opacity: 0.75;
+}
 .nsInp:focus {
   outline: 2px solid var(--brand);
   outline-offset: -1px;
@@ -1270,6 +1295,15 @@ a.sRow:hover .sTh {
   }
   .nsCancel {
     display: none;
+  }
+  .nsDay {
+    padding: 8px 10px;
+  }
+  .nsDay b {
+    font-size: 0.9rem;
+  }
+  .nsDay span {
+    font-size: 0.76rem;
   }
   .nsGo {
     flex: 1;

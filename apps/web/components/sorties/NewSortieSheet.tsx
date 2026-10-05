@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
+import { ActivityGlyph } from "@/components/sorties/ActivityGlyph";
 
 export type SortieMode = "INDIVIDUEL" | "GROUPE";
 
@@ -96,6 +97,8 @@ export function NewSortieSheet({
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
   const short = (d: Date): string => d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  // « Autre date » montre le jour choisi une fois sélectionnée.
+  const otherShort = otherDate ? short(new Date(`${otherDate}T12:00:00`)) : "Choisir";
 
   return (
     <div className={styles.shOverlay} onClick={onClose} role="presentation">
@@ -123,6 +126,12 @@ export function NewSortieSheet({
           </button>
         </header>
 
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void create();
+          }}
+        >
         <div className={styles.nsBody}>
           <fieldset className={styles.nsGroup}>
             <legend className={styles.nsLbl}>Activité</legend>
@@ -135,6 +144,7 @@ export function NewSortieSheet({
                   aria-pressed={a === activity}
                   onClick={() => setActivity(a)}
                 >
+                  <ActivityGlyph activity={a} width={18} height={18} aria-hidden="true" />
                   {a}
                 </button>
               ))}
@@ -147,7 +157,7 @@ export function NewSortieSheet({
               {([
                 ["today", "Aujourd'hui", short(today)],
                 ["tomorrow", "Demain", short(tomorrow)],
-                ["other", "Autre date", "Choisir"],
+                ["other", "Autre date", day === "other" ? otherShort : "Choisir"],
               ] as [DayChoice, string, string][]).map(([key, label, sub]) => (
                 <button key={key} type="button" className={styles.nsDay} aria-pressed={day === key} onClick={() => setDay(key)}>
                   <b>{label}</b>
@@ -204,10 +214,11 @@ export function NewSortieSheet({
           <button type="button" className={`${styles.sBtn} ${styles.sBtnGhost} ${styles.nsCancel}`} onClick={onClose}>
             Annuler
           </button>
-          <button type="button" className={`${styles.sBtn} ${styles.sBtnPri} ${styles.nsGo}`} onClick={() => void create()} disabled={saving} aria-busy={saving || undefined}>
+          <button type="submit" className={`${styles.sBtn} ${styles.sBtnPri} ${styles.nsGo}`} disabled={saving || !activity} aria-busy={saving || undefined}>
             {saving ? <Spinner size={16} tone="light" label="Création en cours" /> : "Créer la sortie"}
           </button>
         </footer>
+        </form>
       </div>
     </div>
   );
