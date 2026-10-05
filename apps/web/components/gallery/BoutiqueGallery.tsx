@@ -87,7 +87,8 @@ export function BoutiqueGallery({
   /** « Samedi 5 septembre, 9 h 30 ». */
   when: string;
   /** La ligne au-dessus du titre : « Canyoning · 26 sept. » puis, en gras, « départ 10 h avec Léa ». */
-  context: { line: string; strong?: string | null };
+  /** Le titre (l'activité), puis la ligne au-dessus : la date et, en gras, le départ. */
+  context: { title: string; line: string; strong?: string | null };
   photos: BoutiquePhoto[];
   pricing: PricingConfig;
   packOnly: boolean;
@@ -363,13 +364,10 @@ export function BoutiqueGallery({
   }
 
   const videoCount = pickable.filter((p) => p.isVideo).length;
-  const heading = bought
-    ? "Le reste de vos photos"
-    : videoCount === pickable.length
-      ? `Vos ${pickable.length > 1 ? `${pickable.length} vidéos` : "vidéo"}`
-      : pickable.length > 1
-        ? `Vos ${pickable.length} photos`
-        : "Votre photo";
+  // Le titre est l'activité ; le nombre de photos passe sur la ligne de date.
+  const unit = videoCount === pickable.length ? "vidéo" : "photo";
+  const count = `${pickable.length} ${unit}${pickable.length > 1 ? "s" : ""}`;
+  const countLabel = bought ? `encore ${count}` : count;
 
   return (
     <>
@@ -391,8 +389,9 @@ export function BoutiqueGallery({
                   <b>{context.strong}</b>
                 </>
               ) : null}
+              {` · ${countLabel}`}
             </div>
-            <h1 className={`${sale.title} ${sale.display}`}>{heading}</h1>
+            <h1 className={`${sale.title} ${sale.display}`}>{context.title}</h1>
           </>
         }
         after={
