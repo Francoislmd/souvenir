@@ -1339,6 +1339,15 @@ select.nsInp {
   border-color: var(--brand);
   background: var(--soft);
 }
+.sdDropIc {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--ink-4);
+  transition: color 0.14s;
+}
+.sdDrop[data-dragging] .sdDropIc {
+  color: var(--brand-ic);
+}
 .sdDropT {
   margin: 0;
   font-size: 1.1rem;

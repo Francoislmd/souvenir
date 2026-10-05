@@ -105,6 +105,13 @@ export function PhotoDropZone({
         }}
         onDrop={onDrop}
       >
+        <svg className={styles.sdDropIc} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="15" height="13" rx="2" />
+          <path d="M6 5V4.5A1.5 1.5 0 0 1 7.5 3H19.5A1.5 1.5 0 0 1 21 4.5V14.5a1.5 1.5 0 0 1-1.5 1.5H18" />
+          <circle cx="8" cy="9.5" r="1.4" />
+          <path d="m3.5 16 4.2-3.8a1.2 1.2 0 0 1 1.6 0L14 16.5" />
+          <path d="m12 14.5 1.6-1.4a1.2 1.2 0 0 1 1.6 0L18 15.5" />
+        </svg>
         <p className={styles.sdDropT}>{dragging ? "Lâchez pour importer" : (label ?? "Aucune photo")}</p>
         <p className={styles.sdDropH}>Importez les fichiers de la sortie, ou glissez-les ici.</p>
         <button type="button" className={styles.sdDropBtn} onClick={() => inputRef.current?.click()}>
