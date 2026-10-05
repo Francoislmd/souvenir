@@ -1323,50 +1323,73 @@ select.nsInp {
   color: var(--ink-4);
 }
 
+/* Zone de dépôt (05/10/2026) : sobre, à la manière d'un outil. Filet
+   pointillé fin, pictogramme nu, une phrase, un bouton secondaire. L'orange
+   n'apparaît qu'au survol d'un fichier glissé. */
 .sdDrop {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-height: 340px;
-  padding: 40px 24px;
-  border: 1.5px dashed var(--line-3);
-  border-radius: 20px;
-  background: #fff;
+  min-height: 240px;
+  padding: 32px 24px;
+  border: 1px dashed #d4d0db;
+  border-radius: 12px;
+  background: #fcfbfd;
   width: 100%;
-  transition: border-color 0.16s, background 0.16s;
+  transition:
+    border-color 0.14s,
+    background 0.14s;
 }
-.sdDrop:hover {
+.sdDrop[data-dragging] {
   border-color: var(--brand);
+  border-style: solid;
   background: var(--soft);
 }
 .sdDropIc {
-  width: 56px;
-  height: 56px;
-  border-radius: 17px;
-  background: var(--soft);
+  color: var(--ink-4);
+  transition: color 0.14s;
+}
+.sdDrop[data-dragging] .sdDropIc {
   color: var(--brand-ic);
-  display: grid;
-  place-items: center;
 }
 .sdDropT {
-  margin: 20px 0 0;
-  font-family: inherit;
-  font-size: 1.32rem;
-  font-weight: 500;
-  letter-spacing: -0.028em;
+  margin: 14px 0 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 .sdDropH {
-  margin: 8px 0 22px;
-  font-size: 0.97rem;
-  color: var(--ink-4);
-  max-width: 44ch;
-  line-height: 1.5;
+  margin: 4px 0 18px;
+  font-size: 0.86rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  max-width: 46ch;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+.sdDropBtn {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #e2dfe7;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: border-color 0.12s;
+}
+.sdDropBtn:hover {
+  border-color: #cbc6d3;
+}
+.sdDrop[data-dragging] .sdDropBtn {
+  visibility: hidden;
 }
 .sdNote {
-  margin: 22px 0 0;
-  font-size: 0.9rem;
+  margin: 12px 0 0;
+  font-size: 0.84rem;
   color: var(--ink-4);
 }
 

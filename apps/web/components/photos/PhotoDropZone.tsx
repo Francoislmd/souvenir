@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import styles from "@/app/(operator)/operator.module.css";
 import { useUploadQueue } from "@/components/photos/UploadQueueProvider";
 
@@ -30,6 +30,10 @@ export function PhotoDropZone({
 }) {
   const queue = useUploadQueue();
   const inputRef = useRef<HTMLInputElement>(null);
+  // Le glisser-déposer : la zone l'annonçait sans le gérer, le navigateur
+  // ouvrait alors le fichier lâché à la place de la page.
+  const [dragging, setDragging] = useState(false);
+  const depth = useRef(0);
 
   useEffect(() => {
     if (!controlRef) return;
@@ -45,6 +49,19 @@ export function PhotoDropZone({
     const chosen = Array.from(files);
     event.target.value = "";
     void queue.enqueue(sortieId, chosen);
+  }
+
+  function hasFiles(e: DragEvent): boolean {
+    return Array.from(e.dataTransfer.types).includes("Files");
+  }
+
+  function onDrop(e: DragEvent<HTMLElement>): void {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    depth.current = 0;
+    setDragging(false);
+    const chosen = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/") || /\.(heic|heif)$/i.test(f.name));
+    if (chosen.length > 0) void queue.enqueue(sortieId, chosen);
   }
 
   const input = <input ref={inputRef} type="file" multiple accept="image/*,video/*" onChange={handleFilesSelected} className="hidden" />;
@@ -68,18 +85,36 @@ export function PhotoDropZone({
   return (
     <>
       {input}
-      <button type="button" className={styles.sdDrop} onClick={() => inputRef.current?.click()}>
-        <span className={styles.sdDropIc}>
-          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 17V4.5" />
-            <path d="M6.5 10 12 4.5 17.5 10" />
-            <path d="M4 15.5v2.8A2.2 2.2 0 0 0 6.2 20.5h11.6a2.2 2.2 0 0 0 2.2-2.2v-2.8" />
-          </svg>
-        </span>
-        <span className={styles.sdDropT}>{label ?? "Déposez les photos et vidéos de la sortie"}</span>
-        <span className={styles.sdDropH}>Videz la carte mémoire d&rsquo;un coup. Glissez-les ici, ou choisissez-les sur l&rsquo;appareil.</span>
-        <span className={`${styles.sBtn} ${styles.sBtnPri}`}>Choisir les fichiers</span>
-      </button>
+      <div
+        className={styles.sdDrop}
+        data-dragging={dragging || undefined}
+        onDragEnter={(e) => {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          depth.current += 1;
+          setDragging(true);
+        }}
+        onDragOver={(e) => {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={() => {
+          depth.current = Math.max(0, depth.current - 1);
+          if (depth.current === 0) setDragging(false);
+        }}
+        onDrop={onDrop}
+      >
+        <svg className={styles.sdDropIc} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 15V4.5M7.5 9 12 4.5 16.5 9" />
+          <path d="M4.5 14.5v3.3a1.7 1.7 0 0 0 1.7 1.7h11.6a1.7 1.7 0 0 0 1.7-1.7v-3.3" />
+        </svg>
+        <p className={styles.sdDropT}>{dragging ? "Lâchez pour envoyer" : (label ?? "Glissez ici les photos et vidéos de la sortie")}</p>
+        <p className={styles.sdDropH}>Toute la carte mémoire d&rsquo;un coup, photos et vidéos mêlées.</p>
+        <button type="button" className={styles.sdDropBtn} onClick={() => inputRef.current?.click()}>
+          Parcourir les fichiers
+        </button>
+      </div>
     </>
   );
 }
