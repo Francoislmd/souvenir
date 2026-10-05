@@ -102,7 +102,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8, 6, 12, 0) 45%, rgba(8, 6, 12, 0.5) 100%);
+  background: linear-gradient(180deg, rgba(8, 6, 12, 0) 35%, rgba(8, 6, 12, 0.58) 100%);
 }
 .coverIn {
   position: absolute;
@@ -115,7 +115,7 @@
   padding: 0 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   color: #fff;
 }
 .org {
@@ -123,22 +123,25 @@
 }
 .org b {
   display: block;
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-size: 1.14rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 .org span {
   display: block;
-  font-size: 0.82rem;
-  opacity: 0.86;
+  margin-top: 2px;
+  font-size: 0.9rem;
+  opacity: 0.88;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .orgLogo {
-  width: 46px;
-  height: 46px;
+  width: 56px;
+  height: 56px;
   flex: none;
-  border-radius: 13px;
+  border-radius: 15px;
   overflow: hidden;
   background: #fff;
   color: var(--op);
@@ -374,8 +377,22 @@
     height: 380px;
   }
   .coverIn {
-    bottom: 52px;
+    bottom: 58px;
     padding: 0 48px;
+    gap: 20px;
+  }
+  .coverIn .orgLogo {
+    width: 76px;
+    height: 76px;
+    border-radius: 20px;
+    font-size: 1.3rem;
+  }
+  .coverIn .org b {
+    font-size: 1.6rem;
+  }
+  .coverIn .org span {
+    margin-top: 4px;
+    font-size: 1.05rem;
   }
   .sheet {
     max-width: 1120px;
