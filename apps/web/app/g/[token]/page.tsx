@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { operatorVars } from "@/lib/color";
 import { track } from "@/lib/analytics";
 import { getBoutiquePhotos } from "@/lib/gallery";
 import { accessFromOrders, remainingCapCents } from "@/lib/access";
@@ -41,7 +42,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const operator = sortie.operator;
   const title = formatSortieTitle(sortie.activity, sortie.place);
   const page = (children: React.ReactNode) => (
-    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+    <div className={styles.page} style={operatorVars(operator.brandColor)}>
       <SaleHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
       {children}
     </div>

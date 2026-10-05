@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { operatorVars } from "@/lib/color";
 import { resolveOperator } from "@/lib/store";
 import { getPreviewUrl } from "@/lib/storage";
 import { formatDayFr, photosOf } from "@/lib/format";
@@ -45,7 +46,7 @@ export default async function StoreSortiePage({ params }: { params: { slug: stri
   const mailDate = sortie.startsAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" });
 
   return (
-    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+    <div className={styles.page} style={operatorVars(operator.brandColor)}>
       <LinkRequest
         slug={operator.slug}
         code={code}

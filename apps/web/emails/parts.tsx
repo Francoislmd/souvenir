@@ -1,5 +1,6 @@
 import { Column, Img, Link, Row, Section, Text } from "@react-email/components";
 import { brand, s } from "./brand";
+import { buttonColor as readableButton } from "../lib/color";
 
 /**
  * Les pièces communes aux mails de galerie privée (invitation, relances,
@@ -9,16 +10,7 @@ import { brand, s } from "./brand";
 
 /** La couleur du prestataire pour le bouton, sauf si elle est trop claire pour du texte blanc. */
 export function buttonColor(hex: string): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return brand.ink;
-  const n = parseInt(m[1]!, 16);
-  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => {
-    const v = c / 255;
-    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-  });
-  const luminance = 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
-  // Contraste du blanc au moins 3:1 (texte gras de 16 px).
-  return 1.05 / (luminance + 0.05) >= 3 ? `#${m[1]}` : brand.ink;
+  return readableButton(hex, brand.ink);
 }
 
 /**

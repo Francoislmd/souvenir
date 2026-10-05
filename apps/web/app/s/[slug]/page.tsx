@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { operatorVars } from "@/lib/color";
 import { resolveOperator, publicStorePath } from "@/lib/store";
 import { formatHourFr } from "@/lib/format";
 import { LinkRequest, type RecentSortie } from "@/components/store/LinkRequest";
@@ -52,7 +53,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
     }));
 
   return (
-    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+    <div className={styles.page} style={operatorVars(operator.brandColor)}>
       <LinkRequest slug={operator.slug} operator={operator} place={operator.tagline} heading="Retrouvez vos photos" recent={recent} />
     </div>
   );

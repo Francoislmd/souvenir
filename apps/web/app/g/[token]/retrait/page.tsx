@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { operatorVars } from "@/lib/color";
 import { getBoutiquePhotos } from "@/lib/gallery";
 import { PrivateWithdraw } from "@/components/gallery/PrivateWithdraw";
 import styles from "@/components/gallery/collective.module.css";
@@ -24,7 +25,7 @@ export default async function PrivateWithdrawPage({ params }: { params: { token:
   );
 
   return (
-    <div className={styles.page} style={{ "--op": operator.brandColor } as React.CSSProperties}>
+    <div className={styles.page} style={operatorVars(operator.brandColor)}>
       <PrivateWithdraw
         token={participant.token}
         operatorName={operator.name}

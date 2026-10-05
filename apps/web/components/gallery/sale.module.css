@@ -9,28 +9,64 @@
 
 /* ── Bouton principal et lien ─────────────────────────────────────────── */
 .cta {
+  position: relative;
   width: 100%;
-  height: 52px;
+  height: 54px;
+  padding: 0 22px;
   border: 0;
   border-radius: 14px;
-  background: var(--op);
+  background: var(--op-btn, var(--op));
   color: #fff;
   font-family: inherit;
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.18s ease,
+    transform 0.12s ease;
 }
-.cta:active {
-  filter: brightness(0.94);
+@media (hover: hover) {
+  .cta:not(:disabled):hover {
+    background: color-mix(in srgb, var(--op-btn, var(--op)) 88%, #000);
+  }
+  .cta:not(:disabled):hover .ctaArrow {
+    transform: translateX(3px);
+  }
 }
-.cta:disabled {
-  opacity: 0.45;
+.cta:not(:disabled):active {
+  transform: scale(0.985);
+  background: color-mix(in srgb, var(--op-btn, var(--op)) 82%, #000);
+}
+/* Rien à envoyer : un bouton éteint, pas la couleur du prestataire délavée. */
+.cta:disabled:not([aria-busy="true"]) {
+  background: var(--line-2, #f4f2f6);
+  color: var(--ink-4, #a6a0b2);
   cursor: default;
+}
+/* En cours : le bouton garde sa couleur et sa largeur, la moulinette
+   prend la place du texte. */
+.cta[aria-busy="true"] {
+  cursor: progress;
+}
+.cta[aria-busy="true"] > :not(.ctaBusy) {
+  visibility: hidden;
+}
+.ctaBusy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.ctaArrow {
+  flex: 0 0 auto;
+  margin-right: -4px;
+  transition: transform 0.18s ease;
 }
 .lnk {
   padding: 0;
@@ -44,12 +80,15 @@
   text-underline-offset: 3px;
   cursor: pointer;
 }
-.cta:focus-visible,
 .lnk:focus-visible,
 .tile:focus-visible,
 .input:focus-visible,
 .faq summary:focus-visible {
   outline: 2px solid var(--op);
+  outline-offset: 3px;
+}
+.cta:focus-visible {
+  outline: 2px solid var(--op-btn, var(--op));
   outline-offset: 3px;
 }
 
@@ -825,6 +864,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cta,
+  .ctaArrow,
   .gauge i,
   .tile::after,
   .check {

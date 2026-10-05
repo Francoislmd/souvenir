@@ -135,17 +135,15 @@ export function PhotoPicker({
     onCheckout(takesAll ? allIds : Array.from(selected));
   }
 
-  const payLabel = busy ? null : n === 0 ? "Choisissez vos photos" : `Payer ${formatEuros(selCents)}`;
+  const payLabel = n === 0 ? "Choisissez vos photos" : `Payer ${formatEuros(selCents)}`;
   const payButton = (
-    <button type="button" className={styles.cta} onClick={checkout} disabled={busy || n === 0}>
+    <button type="button" className={styles.cta} onClick={checkout} disabled={busy || n === 0} aria-busy={busy || undefined}>
+      <span>{payLabel}</span>
       {busy ? (
-        <>
-          <Spinner size={17} tone="light" />
-          Un instant…
-        </>
-      ) : (
-        payLabel
-      )}
+        <span className={styles.ctaBusy}>
+          <Spinner size={18} tone="light" label="Un instant" />
+        </span>
+      ) : null}
     </button>
   );
   const totalNode = (

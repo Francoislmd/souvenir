@@ -462,9 +462,14 @@ export function LinkRequest({
                     {errorText}
                   </p>
                 ) : null}
-                <button type="submit" className={styles.cta} disabled={busy}>
-                  {busy ? <Spinner size={17} tone="light" /> : null}
-                  Recevoir mon lien
+                <button type="submit" className={styles.cta} disabled={busy} aria-busy={busy || undefined}>
+                  <span>Recevoir mon lien</span>
+                  <CtaArrow />
+                  {busy ? (
+                    <span className={styles.ctaBusy}>
+                      <Spinner size={18} tone="light" label="Envoi en cours" />
+                    </span>
+                  ) : null}
                 </button>
               </form>
             )}
@@ -528,5 +533,13 @@ export function LinkRequest({
         </div>
       </div>
     </div>
+  );
+}
+
+function CtaArrow() {
+  return (
+    <svg className={styles.ctaArrow} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
