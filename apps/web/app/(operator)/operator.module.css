@@ -2939,7 +2939,7 @@ a.sdClient:hover {
   color: var(--ink-4);
 }
 
-/* Bulle d'explication d'un bouton grisé, au-dessus : la barre est collée en bas. */
+/* Bulle d'explication d'un bouton grisé, montrée au clic, au-dessus : la barre est collée en bas. */
 .sdTipWrap {
   position: relative;
   display: inline-flex;
@@ -2963,8 +2963,7 @@ a.sdClient:hover {
   transform: translateY(3px);
   transition: opacity 0.12s ease, transform 0.12s ease;
 }
-.sdTipWrap:hover .sdTip,
-.sdTipWrap:focus-within .sdTip {
+.sdTipOn {
   opacity: 1;
   transform: none;
 }
