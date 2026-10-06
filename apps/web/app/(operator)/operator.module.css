@@ -1142,10 +1142,6 @@ a.sRow:hover .sTh {
   gap: 8px;
   min-width: 0;
 }
-/* Le champ des clients prend toute la colonne : les pastilles s'y enroulent. */
-.nsField {
-  min-width: 0;
-}
 /* Contrôle segmenté : un rail gris, la valeur choisie en blanc filetée. */
 .nsSeg {
   justify-self: start;

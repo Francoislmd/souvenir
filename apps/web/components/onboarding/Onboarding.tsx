@@ -8,7 +8,6 @@ import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { operatorTagline } from "@/lib/tagline";
 import { Spinner } from "@/components/ui/Spinner";
 import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
-import { EmailsField } from "@/components/sorties/EmailsField";
 import { AccountForm } from "./AccountForm";
 import styles from "./onboarding.module.css";
 
@@ -832,8 +831,6 @@ function StepSortie({ activities, imageRightsAcked }: { activities: string[]; im
   const [time, setTime] = useState("09:00");
   const [mode, setMode] = useState<"GROUPE" | "INDIVIDUEL">("GROUPE");
   const [showMode, setShowMode] = useState(false);
-  // Au moins un client joignable : c'est son e-mail ou son numéro qui ouvre sa galerie.
-  const [contacts, setContacts] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // L'engagement sur le droit à l'image : coché une fois, il ne se redemande pas.
@@ -863,10 +860,6 @@ function StepSortie({ activities, imageRightsAcked }: { activities: string[]; im
       setError("Il manque la date.");
       return;
     }
-    if (contacts.length === 0) {
-      setError("Ajoutez au moins un e-mail ou un numéro de client.");
-      return;
-    }
     setBusy(true);
     setError(null);
     try {
@@ -874,13 +867,8 @@ function StepSortie({ activities, imageRightsAcked }: { activities: string[]; im
       const res = await fetch("/api/sorties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activity, startsAt: new Date(`${date}T${time || "09:00"}:00`).toISOString(), mode, contacts }),
+        body: JSON.stringify({ activity, startsAt: new Date(`${date}T${time || "09:00"}:00`).toISOString(), mode }),
       });
-      if (res.status === 400) {
-        setError("Une adresse ou un numéro est invalide.");
-        setBusy(false);
-        return;
-      }
       if (!res.ok) throw new Error("failed");
       const { sortieId } = (await res.json()) as { sortieId: string };
       gtmEvent("sortie_created", { source: "onboarding", mode });
@@ -934,17 +922,6 @@ function StepSortie({ activities, imageRightsAcked }: { activities: string[]; im
         <label htmlFor="obTime">Heure de départ</label>
         <input id="obTime" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
       </div>
-
-      <p className={styles.lbl}>Vos clients</p>
-      <EmailsField
-        emails={contacts}
-        onChange={(next) => {
-          setContacts(next);
-          setError(null);
-        }}
-        placeholder="E-mails ou numéros"
-        hint="Au moins un. Chacun recevra le lien de sa galerie."
-      />
 
       <div className={styles.mode}>
         <LinkIcon />

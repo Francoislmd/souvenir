@@ -317,6 +317,13 @@ export function SortieScreen({
   // l'avancement prend le dessus jusqu'à ce que `published` arrive. Si le
   // transfert n'est pas fini, elle est programmée et part toute seule.
   function confirmPublish(): void {
+    // Au moins un client joignable : sans e-mail ni numéro, personne ne
+    // pourrait ouvrir la galerie privée, la sortie ne vendrait rien.
+    if (emails.length === 0 && clients.length === 0) {
+      setConfirmPublishOpen(false);
+      toast("Ajoutez au moins un e-mail ou un numéro");
+      return;
+    }
     setConfirmPublishOpen(false);
     upload.dismissPublication(sortieId);
     upload.publish({ sortieId, isGroup, clients: clients.length, requestedAt: Date.now(), emails });
@@ -703,7 +710,6 @@ export function SortieScreen({
           ? `${photoCount} photo${photoCount > 1 ? "s" : ""} seront visibles dans la galerie privée de chaque client de la liste.`
           : `${photoCount} photo${photoCount > 1 ? "s" : ""} seront envoyées à vos ${clients.length} client${clients.length > 1 ? "s" : ""}.`}
         {isGroup && emails.length > 0 ? ` Le lien partira à ${clientCount(emails.length)}.` : ""}
-        {isGroup && emails.length === 0 && clients.length === 0 ? " Aucune adresse pour l'instant : seuls les clients de la liste peuvent recevoir un lien." : ""}
         {state.working ? " Le transfert n'est pas fini : l'envoi partira automatiquement dès qu'il le sera." : ""}
       </p>
       <div className={styles.sdConfirmActions}>
@@ -962,7 +968,8 @@ export function SortieScreen({
       </div>
     );
   } else if (!published && photoCount > 0) {
-    const needsClients = !isGroup && clients.length === 0;
+    // Les deux modes : pas de publication sans au moins un e-mail ou un numéro.
+    const needsClients = clients.length === 0 && (!isGroup || emails.length === 0);
     const pasted = isGroup && emails.length > 0;
     const head = `${photoCount} photo${photoCount > 1 ? "s" : ""} déposée${photoCount > 1 ? "s" : ""}.`;
     const tail = pasted
@@ -974,11 +981,11 @@ export function SortieScreen({
           ? "La galerie sera publiée dès la fin de l'envoi."
           : "Vos clients les recevront dès la fin de l'envoi."
         : needsClients
-          ? "Ajoutez au moins un client pour les envoyer."
+          ? isGroup
+            ? "Ajoutez au moins un e-mail ou un numéro pour publier."
+            : "Ajoutez au moins un client pour les envoyer."
           : isGroup
-            ? clients.length > 0
-              ? "Vos clients les retrouveront dans leur galerie privée."
-              : "Ajoutez les adresses de vos clients : seules elles recevront un lien."
+            ? "Vos clients les retrouveront dans leur galerie privée."
             : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`;
     bar = (
       <div className={styles.sdBar}>
