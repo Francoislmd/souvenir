@@ -115,17 +115,6 @@ export function SortieScreen({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
-  // Clic sur « Publier » grisé : la bulle qui dit ce qui manque, quelques secondes.
-  const [publishTip, setPublishTip] = useState(false);
-  const publishTipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (publishTipTimer.current) clearTimeout(publishTipTimer.current);
-  }, []);
-  function showPublishTip(): void {
-    setPublishTip(true);
-    if (publishTipTimer.current) clearTimeout(publishTipTimer.current);
-    publishTipTimer.current = setTimeout(() => setPublishTip(false), 3500);
-  }
   // La galerie vient d'être mise en ligne sous les yeux de l'opérateur : la
   // carte du lien arrive avec un mouvement, pas d'un coup.
   const [justPublished, setJustPublished] = useState(false);
@@ -1016,17 +1005,17 @@ export function SortieScreen({
                 Annuler l&rsquo;envoi programmé
               </button>
             ) : needsClients ? (
-              // Grisé mais présent : le pro voit où il va, et le clic dit ce qui manque.
-              // `aria-disabled` plutôt que `disabled` : un bouton désactivé ne
-              // reçoit pas le clic, la bulle n'apparaîtrait jamais.
-              <span className={styles.sdTipWrap}>
-                <button type="button" className={`${styles.sBtn} ${styles.sBtnOff}`} aria-disabled="true" onClick={showPublishTip}>
-                  {isGroup ? "Publier les photos" : "Envoyer les photos"}
-                </button>
-                <span role="status" aria-live="polite" className={`${styles.sdTip} ${publishTip ? styles.sdTipOn : ""}`}>
-                  {isGroup ? "Ajoutez au moins un e-mail ou un numéro pour publier" : "Ajoutez au moins un client pour envoyer"}
-                </span>
-              </span>
+              // Grisé mais présent : le pro voit où il va, et le clic dit ce qui
+              // manque, par le message habituel de l'écran. `aria-disabled`
+              // plutôt que `disabled` : un bouton désactivé ne reçoit pas le clic.
+              <button
+                type="button"
+                className={`${styles.sBtn} ${styles.sBtnOff}`}
+                aria-disabled="true"
+                onClick={() => toast(isGroup ? "Ajoutez au moins un e-mail ou un numéro pour publier" : "Ajoutez au moins un client pour envoyer")}
+              >
+                {isGroup ? "Publier les photos" : "Envoyer les photos"}
+              </button>
             ) : (
               <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setConfirmPublishOpen(true)}>
                 {isGroup ? (

@@ -641,7 +641,7 @@
   background: #d23f08;
   transform: translateY(1px);
 }
-/* Action présente mais pas encore possible : grisée, la raison au survol (.sdTip). */
+/* Action présente mais pas encore possible : grisée, la raison au clic. */
 .sBtnOff,
 .sBtnOff:hover,
 .sBtnOff:active {
@@ -2937,33 +2937,4 @@ a.sdClient:hover {
   font-size: 0.86rem;
   font-weight: 400;
   color: var(--ink-4);
-}
-
-/* Bulle d'explication d'un bouton grisé, montrée au clic, au-dessus : la barre est collée en bas. */
-.sdTipWrap {
-  position: relative;
-  display: inline-flex;
-}
-.sdTip {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 8px);
-  z-index: 5;
-  width: max-content;
-  max-width: 240px;
-  padding: 8px 11px;
-  border-radius: 10px;
-  background: var(--ink);
-  color: #fff;
-  font-size: 0.84rem;
-  line-height: 1.35;
-  white-space: normal;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(3px);
-  transition: opacity 0.12s ease, transform 0.12s ease;
-}
-.sdTipOn {
-  opacity: 1;
-  transform: none;
 }
