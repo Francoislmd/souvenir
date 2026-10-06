@@ -1004,7 +1004,19 @@ export function SortieScreen({
               <button type="button" className={`${styles.sdChip} ${styles.sdChipGhost}`} onClick={() => upload.cancelPublish(sortieId)}>
                 Annuler l&rsquo;envoi programmé
               </button>
-            ) : needsClients ? null : (
+            ) : needsClients ? (
+              // Grisé mais présent : le pro voit où il va, et le survol dit ce qui manque.
+              // `aria-disabled` plutôt que `disabled` : un bouton désactivé ne reçoit
+              // ni survol ni focus, la bulle n'apparaîtrait jamais.
+              <span className={styles.sdTipWrap}>
+                <button type="button" className={`${styles.sBtn} ${styles.sBtnOff}`} aria-disabled="true" aria-describedby="sdPublishTip" onClick={(e) => e.preventDefault()}>
+                  {isGroup ? "Publier les photos" : "Envoyer les photos"}
+                </button>
+                <span id="sdPublishTip" role="tooltip" className={styles.sdTip}>
+                  {isGroup ? "Ajoutez au moins un e-mail ou un numéro pour publier" : "Ajoutez au moins un client pour envoyer"}
+                </span>
+              </span>
+            ) : (
               <button type="button" className={`${styles.sBtn} ${styles.sBtnPri}`} onClick={() => setConfirmPublishOpen(true)}>
                 {isGroup ? (
                   pasted ? (
