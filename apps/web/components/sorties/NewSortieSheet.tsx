@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
+import { EmailsField } from "@/components/sorties/EmailsField";
 
 export type SortieMode = "INDIVIDUEL" | "GROUPE";
 
@@ -23,9 +24,13 @@ function dateFor(choice: DayChoice, other: string): string {
 }
 
 /**
- * Deux questions, pas quatre : l'activité et le moment. Le lieu, le guide et
+ * Trois questions : l'activité, le moment et les clients. Le lieu, le guide et
  * le nombre de places se renseignent sur la fiche sortie, quand ils servent —
  * les demander à la création faisait payer d'avance une saisie facultative.
+ *
+ * Les clients, eux, sont obligatoires (au moins un e-mail ou un numéro) :
+ * en galerie privée, c'est l'adresse qui ouvre la galerie. Une sortie sans
+ * aucun contact ne pourrait rien vendre.
  *
  * Le mode de réception n'est demandé qu'à la toute première sortie
  * (`mode === null`) : c'est une habitude de métier, pas une décision à
@@ -49,6 +54,8 @@ export function NewSortieSheet({
   const [otherDate, setOtherDate] = useState(localDate(new Date()));
   const [time, setTime] = useState("09:00");
   const [chosenMode, setChosenMode] = useState<SortieMode>(mode ?? "GROUPE");
+  const [contacts, setContacts] = useState<string[]>([]);
+  const [missingContact, setMissingContact] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -70,6 +77,11 @@ export function NewSortieSheet({
       toast("Il manque la date");
       return;
     }
+    if (contacts.length === 0) {
+      setMissingContact(true);
+      toast("Ajoutez au moins un e-mail ou un numéro");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/sorties", {
@@ -79,8 +91,15 @@ export function NewSortieSheet({
           activity,
           startsAt: new Date(`${date}T${time || "09:00"}:00`).toISOString(),
           mode: chosenMode,
+          contacts,
         }),
       });
+      if (res.status === 400) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        toast(data.error === "Adresse ou numéro invalide" ? "Une adresse ou un numéro est invalide" : "Ajoutez au moins un e-mail ou un numéro");
+        setSaving(false);
+        return;
+      }
       if (!res.ok) throw new Error("failed");
       const { sortieId } = (await res.json()) as { sortieId: string };
       onClose();
@@ -176,6 +195,21 @@ export function NewSortieSheet({
               <input id="shTime" type="time" className={`${styles.nsInp} ${styles.nsTime}`} value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
 
+            <div className={styles.nsRow}>
+              <span className={styles.nsLbl}>Clients</span>
+              <div className={styles.nsField}>
+                <EmailsField
+                  emails={contacts}
+                  onChange={(next) => {
+                    setContacts(next);
+                    if (next.length > 0) setMissingContact(false);
+                  }}
+                  placeholder="E-mails ou numéros"
+                  hint={missingContact ? "Au moins un e-mail ou un numéro." : undefined}
+                />
+              </div>
+            </div>
+
             {mode === null ? (
               <fieldset className={styles.nsMode}>
                 <legend className={styles.nsLbl}>Comment vos clients reçoivent leurs photos</legend>
@@ -187,7 +221,7 @@ export function NewSortieSheet({
                   onClick={() => setChosenMode("GROUPE")}
                 >
                   <b>Un lien pour tout le monde</b>
-                  <span>Vous affichez le lien au retour. Chacun retrouve son créneau. Rien à saisir.</span>
+                  <span>Vous affichez le lien au retour. Chacun retrouve son créneau.</span>
                 </button>
                 <button
                   type="button"
