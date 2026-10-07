@@ -9,12 +9,13 @@ import { formatHourFr } from "@/lib/format";
 import { SortieScreen, type ScreenClient } from "@/components/sorties/SortieScreen";
 
 function metaLine(startsAt: Date, bucket: "today" | "upcoming" | "past", guide: string | null, clientCount: number): string {
-  const time = startsAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", " h ");
+  // « 9 h », jamais « 09 h 00 » : la même heure que dans la liste.
+  const time = formatHourFr(startsAt);
   const day =
     bucket === "today"
       ? "Aujourd'hui"
       : startsAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" }).replace(/^./, (c) => c.toUpperCase());
-  const bits = [`${day} ${time}`];
+  const bits = [`${day}, ${time}`];
   if (guide) bits.push(guide);
   if (clientCount > 0) bits.push(`${clientCount} participant${clientCount > 1 ? "s" : ""}`);
   return bits.join(" · ");

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "@/app/(operator)/operator.module.css";
-import { formatEuros } from "@/lib/format";
+import { formatEuros, formatHourFr } from "@/lib/format";
 import { ActivityGlyph } from "@/components/sorties/ActivityGlyph";
 import type { PublicationStatus } from "@/lib/sorties";
 
@@ -46,8 +46,9 @@ function dayLabel(d: Date, now: Date): { title: string; detail: string } {
   return { title: full.charAt(0).toUpperCase() + full.slice(1), detail: "" };
 }
 
+// « 9 h 30 », comme partout ailleurs dans le produit (lib/format.ts).
 function timeLabel(d: Date): string {
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return formatHourFr(d);
 }
 
 function meta(row: SortieRow, d: Date): string {
@@ -132,9 +133,8 @@ export function SortiesList({ rows, now }: { rows: SortieRow[]; now: string }) {
           <h2 className={styles.sDayH}>
             {group.title}
             {group.detail ? <em>{group.detail}</em> : null}
-            <small>
-              {group.items.length} sortie{group.items.length > 1 ? "s" : ""}
-            </small>
+            {/* Le compte n'apprend quelque chose qu'à partir de deux. */}
+            {group.items.length > 1 ? <small>{group.items.length} sorties</small> : null}
           </h2>
           <div className={styles.sGroup}>
             {group.items.map((row) => {

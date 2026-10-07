@@ -113,13 +113,17 @@ export function PhotoDropZone({
           <path d="m12 14.5 1.6-1.4a1.2 1.2 0 0 1 1.6 0L18 15.5" />
         </svg>
         <p className={styles.sdDropT}>{dragging ? "Lâchez pour importer" : (label ?? "Aucune photo")}</p>
-        <p className={styles.sdDropH}>Importez les fichiers de la sortie, ou glissez-les ici.</p>
+        <p className={styles.sdDropH}>
+          <span className={styles.sdDropDesk}>Importez les fichiers de la sortie, ou glissez-les ici.</span>
+          <span className={styles.sdDropTouch}>Les photos et vidéos de la sortie, depuis votre galerie ou vos fichiers.</span>
+        </p>
         <button type="button" className={styles.sdDropBtn} onClick={() => inputRef.current?.click()}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 15V4M7.5 8.5 12 4l4.5 4.5" />
             <path d="M4.5 14v4.2c0 .99.81 1.8 1.8 1.8h11.4c.99 0 1.8-.81 1.8-1.8V14" />
           </svg>
-          Importer
+          <span className={styles.sdDropDesk}>Importer</span>
+          <span className={styles.sdDropTouch}>Choisir les photos</span>
         </button>
       </div>
     </>

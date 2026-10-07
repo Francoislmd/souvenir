@@ -10,6 +10,16 @@ import { StripeConnectSection } from "@/components/reglages/StripeConnectSection
 import { ACTIVITIES } from "@/lib/onboarding/activities";
 
 const SWATCHES = ["#FF5A1F", "#0FBEB6", "#FF3D6E", "#7C3AED", "#2563EB", "#16A34A", "#0F0D16"];
+// Ce que le lecteur d'écran annonce : un code hexadécimal ne dit rien.
+const SWATCH_NAMES: Record<string, string> = {
+  "#FF5A1F": "Orange",
+  "#0FBEB6": "Turquoise",
+  "#FF3D6E": "Rose",
+  "#7C3AED": "Violet",
+  "#2563EB": "Bleu",
+  "#16A34A": "Vert",
+  "#0F0D16": "Encre",
+};
 
 interface Automations {
   resendUnopened: boolean;
@@ -234,7 +244,8 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                       type="button"
                       className={`${styles.rgSw} ${brandColor === c ? styles.rgSwOn : ""}`}
                       style={{ background: c }}
-                      aria-label={c}
+                      aria-label={`Couleur ${SWATCH_NAMES[c] ?? c}`}
+                      aria-pressed={brandColor === c}
                       onClick={() => {
                         setBrandColor(c);
                         queue({ brandColor: c });
@@ -297,7 +308,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
             </div>
 
             <div className={styles.rgField}>
-              <label>L&rsquo;adresse de votre boutique</label>
+              <label>L&rsquo;adresse de votre page client</label>
               <div className={styles.rgCopy}>
                 <span className={styles.rgCopyUrl}>{storeUrl.replace(/^https?:\/\//, "")}</span>
                 <button

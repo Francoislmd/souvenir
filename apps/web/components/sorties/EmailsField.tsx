@@ -23,7 +23,7 @@ export function EmailsField({
   emails,
   onChange,
   hint,
-  placeholder = "Collez vos adresses ou numéros, ou saisissez-en un",
+  placeholder = "Collez ou saisissez les adresses",
 }: {
   emails: string[];
   onChange: (emails: string[]) => void;

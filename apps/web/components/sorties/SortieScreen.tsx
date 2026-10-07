@@ -845,7 +845,7 @@ export function SortieScreen({
             ? `${departures.length} départs. Collez les adresses ou numéros de chacun : chaque client reçoit un lien qui n'ouvre que les photos de son départ.`
             : published
               ? "Collez la liste de votre carnet de réservation : adresses e-mail ou numéros de téléphone. Sans e-mail, le lien part par SMS."
-              : "Collez la liste de votre carnet de réservation. Vos clients recevront le lien dès la publication. Plusieurs départs : vous collerez les adresses de chacun une fois la galerie en ligne."}
+              : "Collez la liste de votre carnet de réservation : le lien part à la publication. S'il y a plusieurs départs, vous rangerez ensuite les adresses de chacun."}
         </span>
         {published && needsDeparture ? null : <EmailsField emails={emails} onChange={setEmails} />}
         {published && !needsDeparture && emails.length > 0 ? (
@@ -880,7 +880,7 @@ export function SortieScreen({
                   <EmailsField
                     emails={list}
                     onChange={(next) => setDepEmails((prev) => ({ ...prev, [d.id]: next }))}
-                    placeholder={`Adresses ou numéros du départ de ${d.label}`}
+                    placeholder={`Adresses du départ de ${d.label}`}
                   />
                   {list.length > 0 ? (
                     <span className={styles.sdMailFoot}>

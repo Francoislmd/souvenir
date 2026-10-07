@@ -45,7 +45,7 @@ export default async function RevenusPage() {
             <p className={styles.sdNote}>Aucun achat pour l&rsquo;instant.</p>
           ) : (
             sales.map((s) => (
-              <div key={s.id} className={styles.sdClient}>
+              <div key={s.id} className={`${styles.sdClient} ${styles.rvRow}`}>
                 <span className={styles.sdAv}>{s.participantName.slice(0, 2).toUpperCase()}</span>
                 <span className={styles.sdClientMain}>
                   <b>{s.participantName}</b>
