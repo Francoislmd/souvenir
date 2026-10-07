@@ -771,6 +771,42 @@
   color: var(--ink-4);
 }
 
+/* La recherche par nom : les entreprises trouvées, collées sous le champ
+   comme la fiche, une ligne par entreprise. */
+.hits {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  border: 1.5px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
+  background: #fff;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.hits button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: left;
+}
+.ob .hits button:hover {
+  background: var(--line-2);
+}
+.hits b {
+  font-size: 0.96rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hits button > span {
+  font-size: 0.84rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Ce que touche le pro sur un lot, en euros. */
 .net {
   display: grid;

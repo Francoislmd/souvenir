@@ -1,5 +1,5 @@
 /**
- * Retrouver une entreprise par son SIRET, dans l'annuaire public de l'État
+ * Retrouver une entreprise par son SIRET ou par son nom, dans l'annuaire public de l'État
  * (recherche-entreprises.api.gouv.fr : gratuit, sans clé, données INSEE et
  * RNE). Sert à l'inscription : le pro tape son numéro, on remplit la raison
  * sociale et l'adresse qui figureront sur les reçus de ses clients.
@@ -89,6 +89,49 @@ interface ApiResult {
   matching_etablissements?: ApiEstablishment[];
 }
 
+/** Une fiche de l'annuaire, rapportée à un établissement donné. */
+function toMatch(result: ApiResult, establishment: ApiEstablishment & { siret: string }): SiretMatch {
+  const rawName = result.nom_raison_sociale || result.nom_complet || "";
+  return {
+    siret: establishment.siret,
+    name: titleCase(rawName.replace(/\s*\(.*\)\s*$/, "")),
+    legalForm: FORMS[result.nature_juridique ?? ""] ?? null,
+    address: establishment.adresse ? formatAddress(establishment.adresse) : null,
+    active: establishment.etat_administratif === "A",
+  };
+}
+
+/**
+ * Chercher une entreprise par son nom (ou son SIREN), pour le pro qui ne
+ * connaît pas son SIRET par cœur. Seules les entreprises en activité
+ * remontent, chacune rapportée à son siège : c'est l'établissement qui figure
+ * sur les reçus. Une panne de l'annuaire rend une liste vide.
+ */
+export async function searchCompanies(query: string, limit = 6): Promise<SiretMatch[]> {
+  const q = query.trim().replace(/\s+/g, " ");
+  if (q.length < 3) return [];
+  try {
+    const params = new URLSearchParams({ q, per_page: String(limit), etat_administratif: "A" });
+    const res = await fetch(`https://recherche-entreprises.api.gouv.fr/search?${params}`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { results?: ApiResult[] };
+    const out: SiretMatch[] = [];
+    for (const result of data.results ?? []) {
+      const siege = result.siege;
+      if (!siege?.siret || !/^\d{14}$/.test(siege.siret)) continue;
+      out.push(toMatch(result, siege as ApiEstablishment & { siret: string }));
+    }
+    return out;
+  } catch (error) {
+    console.error("[siret] annuaire injoignable", error);
+    return [];
+  }
+}
+
 export function normalizeSiret(input: string): string {
   return input.replace(/\s+/g, "");
 }
@@ -109,14 +152,7 @@ export async function lookupSiret(input: string): Promise<SiretMatch | null> {
     const establishment =
       result.matching_etablissements?.find((e) => e.siret === siret) ?? (result.siege?.siret === siret ? result.siege : undefined);
     if (!establishment) return null;
-    const rawName = result.nom_raison_sociale || result.nom_complet || "";
-    return {
-      siret,
-      name: titleCase(rawName.replace(/\s*\(.*\)\s*$/, "")),
-      legalForm: FORMS[result.nature_juridique ?? ""] ?? null,
-      address: establishment.adresse ? formatAddress(establishment.adresse) : null,
-      active: establishment.etat_administratif === "A",
-    };
+    return toMatch(result, { ...establishment, siret });
   } catch (error) {
     console.error("[siret] annuaire injoignable", error);
     return null;

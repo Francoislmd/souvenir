@@ -13,7 +13,7 @@ import { AccountForm } from "./AccountForm";
 import styles from "./onboarding.module.css";
 
 /*
- * L'inscription d'un pro, en six écrans : compte, structure, page, prix,
+ * L'inscription d'un pro, en sept écrans : compte, structure, activités, page, prix,
  * paiements, première sortie. Maquette : docs/maquette-onboarding-pro-v1.html.
  *
  * Chaque écran enregistre en partant. L'étape de départ est calculée par le
@@ -23,9 +23,9 @@ import styles from "./onboarding.module.css";
  * se font le dépôt des photos et la publication.
  */
 
-export type OnboardingStep = "compte" | "structure" | "page" | "prix" | "paiements" | "sortie";
+export type OnboardingStep = "compte" | "structure" | "activites" | "page" | "prix" | "paiements" | "sortie";
 
-const ORDER: OnboardingStep[] = ["compte", "structure", "page", "prix", "paiements", "sortie"];
+const ORDER: OnboardingStep[] = ["compte", "structure", "activites", "page", "prix", "paiements", "sortie"];
 
 export interface OnboardingOperator {
   name: string;
@@ -58,6 +58,15 @@ interface SiretMatch {
   legalForm: string | null;
   address: string | null;
   active: boolean;
+}
+
+/** Ce que l'écran « Votre structure » a retenu, en attendant les activités :
+ *  la structure n'est créée qu'à la fin de l'écran suivant. */
+interface StructureDraft {
+  name: string;
+  nameTouched: boolean;
+  query: string;
+  match: SiretMatch | null;
 }
 
 /** « 834 512 907 00018 » : le SIRET s'affiche par groupes pendant la saisie. */
@@ -186,6 +195,8 @@ export function Onboarding({
   const [op, setOp] = useState<OnboardingOperator | null>(initialOperator);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draft, setDraft] = useState<StructureDraft | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
 
   // Une étape = un événement, avec son rang : l'entonnoir d'inscription dans
   // GA4 se lit sur onboarding_step, décomposé par step_name.
@@ -202,10 +213,17 @@ export function Onboarding({
   }
 
   const index = ORDER.indexOf(step);
-  // On ne revient ni sur le compte (il existe), ni sur la structure (elle
-  // est créée) : on les corrige ensuite dans Réglages.
+  // Des activités, on revient à la structure : rien n'est encore créé. Une
+  // fois la structure créée, on ne revient ni sur elle ni sur le compte : on
+  // les corrige ensuite dans Réglages.
   const back: OnboardingStep | null =
-    index <= 2 ? null : step === "sortie" && op?.stripeOnboarded ? "prix" : ORDER[index - 1]!;
+    step === "activites"
+      ? "structure"
+      : index <= 3
+        ? null
+        : step === "sortie" && op?.stripeOnboarded
+          ? "prix"
+          : ORDER[index - 1]!;
 
   return (
     <div className={styles.ob}>
@@ -256,11 +274,25 @@ export function Onboarding({
 
       {step === "structure" ? (
         <StepStructure
+          draft={draft}
           initialName={initialName}
           storeBase={storeBase}
+          onNext={(next) => {
+            setDraft(next);
+            go("activites");
+          }}
+        />
+      ) : null}
+
+      {step === "activites" && draft ? (
+        <StepActivites
+          picked={picked}
+          onPick={setPicked}
           busy={busy}
           error={error}
-          onSubmit={async (name, activities, legal) => {
+          onSubmit={async (activities) => {
+            const name = draft.name.trim();
+            const legal = legalOf(draft);
             setBusy(true);
             setError(null);
             try {
@@ -347,63 +379,119 @@ export function Onboarding({
   );
 }
 
-/* ── 2. Structure : le SIRET, le nom et les activités ──────────────
-   Le SIRET retrouve la raison sociale et l'adresse dans l'annuaire des
-   entreprises : elles figureront sur les reçus des clients (le pro est le
-   vendeur). Il reste facultatif, un pro peut s'inscrire avant d'être
-   immatriculé. Maquette : docs/maquette-onboarding-conformite-v1.html. */
+/** L'identité légale envoyée avec la structure : la fiche choisie, sinon le
+ *  SIRET tel que tapé (l'annuaire a pu être en panne), sinon rien. */
+function legalOf(draft: StructureDraft): Partial<LegalIdentity> {
+  if (draft.match) return { siret: draft.match.siret, legalName: draft.match.name, legalAddress: draft.match.address ?? "" };
+  const digits = draft.query.replace(/\D/g, "");
+  return /^[\d\s]*$/.test(draft.query) && digits.length === 14 ? { siret: digits, legalName: "", legalAddress: "" } : {};
+}
+
+/** « 07150 Vallon-Pont-d'Arc » : la ville d'une adresse, pour la liste. */
+function cityOf(address: string | null): string {
+  return address?.match(/\d{5} .+$/)?.[0] ?? "";
+}
+
+/* ── 2. Structure : l'entreprise et le nom affiché ────────────────
+   Le pro tape son SIRET ou le nom de son entreprise : l'annuaire des
+   entreprises (données Sirene de l'INSEE) retrouve la raison sociale et
+   l'adresse, qui figureront sur les reçus des clients (le pro est le
+   vendeur). Facultatif : un pro peut s'inscrire avant d'être immatriculé.
+   Rien n'est créé ici, la structure part avec les activités. */
 function StepStructure({
+  draft,
   initialName,
   storeBase,
-  busy,
-  error,
-  onSubmit,
+  onNext,
 }: {
+  draft: StructureDraft | null;
   initialName: string;
   storeBase: string;
-  busy: boolean;
-  error: string | null;
-  onSubmit: (name: string, activities: string[], legal: Partial<LegalIdentity>) => Promise<void>;
+  onNext: (draft: StructureDraft) => void;
 }) {
-  const [name, setName] = useState(initialName);
-  const [nameTouched, setNameTouched] = useState(!!initialName);
-  const [siret, setSiret] = useState("");
-  const [match, setMatch] = useState<SiretMatch | null>(null);
+  const [name, setName] = useState(draft?.name ?? initialName);
+  const [nameTouched, setNameTouched] = useState(draft?.nameTouched ?? !!initialName);
+  const [query, setQuery] = useState(draft?.query ?? "");
+  const [match, setMatch] = useState<SiretMatch | null>(draft?.match ?? null);
+  const [hits, setHits] = useState<SiretMatch[]>([]);
   const [lookup, setLookup] = useState<"idle" | "busy" | "none">("idle");
-  const [picked, setPicked] = useState<string[]>([]);
   const [local, setLocal] = useState<string | null>(null);
+  // Lu à l'arrivée d'une réponse de l'annuaire, qui peut suivre une saisie du nom.
+  const nameTouchedRef = useRef(nameTouched);
+  nameTouchedRef.current = nameTouched;
 
-  const digits = siret.replace(/\D/g, "");
+  // Que des chiffres : c'est un numéro (SIRET, ou SIREN à neuf chiffres).
+  // Sinon, c'est un nom.
+  const numeric = /^[\d\s]*$/.test(query);
+  const digits = numeric ? query.replace(/\D/g, "") : "";
 
-  // Quatorze chiffres : on interroge l'annuaire. Le nom affiché aux clients se
-  // pré-remplit avec la raison sociale, tant que le pro ne l'a pas écrit.
   useEffect(() => {
-    if (digits.length !== 14) {
-      setMatch(null);
+    // La fiche choisie est déjà là : rien à chercher.
+    if (match && numeric && digits === match.siret) {
+      setHits([]);
+      setLookup("idle");
+      return;
+    }
+    const text = query.trim();
+    const bySiret = numeric && digits.length === 14;
+    const byName = numeric ? digits.length === 9 : text.length >= 3;
+    if (!bySiret && !byName) {
+      setHits([]);
       setLookup("idle");
       return;
     }
     let cancelled = false;
-    setLookup("busy");
-    fetch(`/api/onboarding/siret?siret=${digits}`)
-      .then((res) => (res.ok ? (res.json() as Promise<{ match: SiretMatch | null }>) : { match: null }))
-      .then(({ match: found }) => {
-        if (cancelled) return;
-        setMatch(found);
-        setLookup(found ? "idle" : "none");
-        if (found && !nameTouched) setName(found.name);
-      })
-      .catch(() => {
-        if (!cancelled) setLookup("none");
-      });
+    // Au fil de la frappe, une pause avant d'interroger l'annuaire ; un SIRET
+    // complet part tout de suite.
+    const timer = setTimeout(
+      () => {
+        setLookup("busy");
+        const url = bySiret
+          ? `/api/onboarding/siret?siret=${digits}`
+          : `/api/onboarding/siret?q=${encodeURIComponent(numeric ? digits : text)}`;
+        fetch(url)
+          .then((res) => (res.ok ? (res.json() as Promise<{ match?: SiretMatch | null; matches?: SiretMatch[] }>) : {}))
+          .then((body: { match?: SiretMatch | null; matches?: SiretMatch[] }) => {
+            if (cancelled) return;
+            if (bySiret) {
+              const found = body.match ?? null;
+              setHits([]);
+              setLookup(found ? "idle" : "none");
+              if (found) pick(found);
+            } else {
+              const list = body.matches ?? [];
+              setHits(list);
+              setLookup(list.length > 0 ? "idle" : "none");
+            }
+          })
+          .catch(() => {
+            if (!cancelled) setLookup("none");
+          });
+      },
+      bySiret ? 0 : 350,
+    );
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [digits, nameTouched]);
+    // pick ne lit que des setters et une ref : stable en pratique.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, match]);
+
+  // Une fiche retenue : le champ montre son SIRET, et le nom affiché aux
+  // clients se pré-remplit avec la raison sociale, tant que le pro ne l'a pas écrit.
+  function pick(found: SiretMatch): void {
+    setMatch(found);
+    setQuery(groupSiret(found.siret));
+    setHits([]);
+    setLookup("idle");
+    setLocal(null);
+    if (!nameTouchedRef.current) setName(found.name);
+  }
 
   function submit(e: React.FormEvent): void {
     e.preventDefault();
-    if (digits.length > 0 && digits.length !== 14) {
+    if (!match && numeric && digits.length > 0 && digits.length !== 14) {
       setLocal("Le SIRET compte 14 chiffres.");
       return;
     }
@@ -411,34 +499,34 @@ function StepStructure({
       setLocal("Il manque le nom de la structure.");
       return;
     }
-    if (picked.length === 0) {
-      setLocal("Choisissez au moins une activité.");
-      return;
-    }
     setLocal(null);
-    void onSubmit(
-      name.trim(),
-      picked,
-      digits.length === 14 ? { siret: digits, legalName: match?.name ?? "", legalAddress: match?.address ?? "" } : {},
-    );
+    onNext({ name: name.trim(), nameTouched, query, match });
   }
+
+  const open = hits.length > 0 && !match;
 
   return (
     <form className={styles.scr} onSubmit={submit} noValidate>
       <h1>Votre structure.</h1>
       <label className={styles.lbl} htmlFor="obSiret">
-        Son SIRET
+        Votre SIRET <small>ou le nom de votre entreprise</small>
       </label>
-      <div className={`${styles.sirIn} ${match ? styles.sirFound : ""}`}>
+      <div className={`${styles.sirIn} ${match || open ? styles.sirFound : ""}`}>
         <input
           id="obSiret"
           className={styles.inp}
-          inputMode="numeric"
           autoComplete="off"
-          placeholder="123 456 789 00012"
-          value={siret}
+          spellCheck={false}
+          placeholder="123 456 789 00012 ou Eaux Vives Ardèche"
+          value={query}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="obSiretHits"
+          aria-autocomplete="list"
           onChange={(e) => {
-            setSiret(groupSiret(e.target.value));
+            const v = e.target.value;
+            setQuery(/^[\d\s]*$/.test(v) ? groupSiret(v) : v);
+            setMatch(null);
             setLocal(null);
           }}
           autoFocus
@@ -458,9 +546,26 @@ function StepStructure({
           </span>
           <small>{match.active ? "Entreprise active" : "Établissement fermé"} · Annuaire des entreprises</small>
         </div>
+      ) : open ? (
+        <ul id="obSiretHits" className={styles.hits} role="listbox" aria-label="Entreprises trouvées">
+          {hits.map((h) => (
+            <li key={h.siret} role="option" aria-selected={false}>
+              <button type="button" onClick={() => pick(h)}>
+                <b>{h.name}</b>
+                <span>
+                  {cityOf(h.address) ? <span className={styles.nw}>{cityOf(h.address)}</span> : null}
+                  {cityOf(h.address) ? " · " : ""}
+                  <span className={styles.nw}>{groupSiret(h.siret)}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       ) : lookup === "none" ? (
         <p className={styles.info} aria-live="polite">
-          Ce numéro n&rsquo;est pas dans l&rsquo;annuaire des entreprises. Vérifiez-le, ou continuez : vous pourrez le corriger dans Réglages.
+          {numeric
+            ? "Ce numéro n\u2019est pas dans l\u2019annuaire des entreprises. Vérifiez-le, ou continuez : vous pourrez le corriger dans Réglages."
+            : "Aucune entreprise active à ce nom. Essayez votre SIRET, ou continuez : vous l\u2019ajouterez dans Réglages."}
         </p>
       ) : null}
 
@@ -485,6 +590,50 @@ function StepStructure({
           {slugify(name)}
         </span>
       </p>
+      {local ? <p className={styles.err}>{local}</p> : null}
+      <div className={styles.foot}>
+        <button type="submit" className={`${styles.btn} ${styles.pri}`}>
+          Continuer
+        </button>
+        {!match && query.trim() === "" ? (
+          <p className={styles.legal}>Pas encore immatriculé ? Continuez sans SIRET, vous l&rsquo;ajouterez dans Réglages. Il figure sur les reçus de vos clients.</p>
+        ) : null}
+      </div>
+    </form>
+  );
+}
+
+/* ── 2 bis. Activités : ce que propose la structure ───────────────
+   Elles servent à la phrase de la page et aux noms de sortie proposés.
+   La structure est créée à la fin de cet écran. */
+function StepActivites({
+  picked,
+  onPick,
+  busy,
+  error,
+  onSubmit,
+}: {
+  picked: string[];
+  onPick: (picked: string[]) => void;
+  busy: boolean;
+  error: string | null;
+  onSubmit: (activities: string[]) => Promise<void>;
+}) {
+  const [local, setLocal] = useState<string | null>(null);
+
+  function submit(e: React.FormEvent): void {
+    e.preventDefault();
+    if (picked.length === 0) {
+      setLocal("Choisissez au moins une activité.");
+      return;
+    }
+    setLocal(null);
+    void onSubmit(picked);
+  }
+
+  return (
+    <form className={styles.scr} onSubmit={submit} noValidate>
+      <h1>Vos activités.</h1>
       <p className={styles.lbl}>
         Ce que vous proposez <small>une ou plusieurs</small>
       </p>
@@ -497,7 +646,10 @@ function StepStructure({
               type="button"
               className={`${styles.chip} ${on ? styles.chipOn : ""}`}
               aria-pressed={on}
-              onClick={() => setPicked(on ? picked.filter((id) => id !== a.id) : [...picked, a.id])}
+              onClick={() => {
+                onPick(on ? picked.filter((id) => id !== a.id) : [...picked, a.id]);
+                setLocal(null);
+              }}
             >
               {a.label}
             </button>
@@ -510,9 +662,6 @@ function StepStructure({
           {busy ? <Spinner size={16} tone="current" label="Création" /> : null}
           {busy ? "Création…" : "Continuer"}
         </button>
-        {digits.length === 0 ? (
-          <p className={styles.legal}>Pas encore immatriculé ? Continuez sans SIRET, vous l&rsquo;ajouterez dans Réglages. Il figure sur les reçus de vos clients.</p>
-        ) : null}
       </div>
     </form>
   );
