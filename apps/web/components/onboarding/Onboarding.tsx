@@ -197,6 +197,8 @@ export function Onboarding({
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<StructureDraft | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  // « Autre » : l'activité en clair, tapée par le pro.
+  const [other, setOther] = useState("");
 
   // Une étape = un événement, avec son rang : l'entonnoir d'inscription dans
   // GA4 se lit sur onboarding_step, décomposé par step_name.
@@ -288,9 +290,12 @@ export function Onboarding({
         <StepActivites
           picked={picked}
           onPick={setPicked}
+          other={other}
+          onOther={setOther}
           busy={busy}
           error={error}
           onSubmit={async (activities) => {
+            const otherActivity = activities.includes("autre") ? other.trim() : "";
             const name = draft.name.trim();
             const legal = legalOf(draft);
             setBusy(true);
@@ -299,7 +304,11 @@ export function Onboarding({
               const res = await fetch("/api/operator", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, qualification: { activities }, ...legal }),
+                body: JSON.stringify({
+                  name,
+                  qualification: { activities, ...(otherActivity ? { otherActivity } : {}) },
+                  ...legal,
+                }),
               });
               if (res.status === 409) {
                 router.refresh();
@@ -374,7 +383,9 @@ export function Onboarding({
         />
       ) : null}
 
-      {step === "sortie" && op ? <StepSortie activities={op.activities} imageRightsAcked={op.imageRightsAcked} /> : null}
+      {step === "sortie" && op ? (
+        <StepSortie activities={op.activities} otherActivity={op.activities.includes("autre") ? other.trim() : ""} imageRightsAcked={op.imageRightsAcked} />
+      ) : null}
     </div>
   );
 }
@@ -609,12 +620,16 @@ function StepStructure({
 function StepActivites({
   picked,
   onPick,
+  other,
+  onOther,
   busy,
   error,
   onSubmit,
 }: {
   picked: string[];
   onPick: (picked: string[]) => void;
+  other: string;
+  onOther: (other: string) => void;
   busy: boolean;
   error: string | null;
   onSubmit: (activities: string[]) => Promise<void>;
@@ -625,6 +640,10 @@ function StepActivites({
     e.preventDefault();
     if (picked.length === 0) {
       setLocal("Choisissez au moins une activité.");
+      return;
+    }
+    if (picked.includes("autre") && other.trim().length < 2) {
+      setLocal("Précisez votre activité.");
       return;
     }
     setLocal(null);
@@ -656,6 +675,26 @@ function StepActivites({
           );
         })}
       </div>
+      {picked.includes("autre") ? (
+        <>
+          <label className={styles.lbl} htmlFor="obOther">
+            Laquelle ?
+          </label>
+          <input
+            id="obOther"
+            className={styles.inp}
+            value={other}
+            maxLength={60}
+            autoComplete="off"
+            placeholder="Spéléologie, char à voile…"
+            onChange={(e) => {
+              onOther(e.target.value);
+              setLocal(null);
+            }}
+            autoFocus
+          />
+        </>
+      ) : null}
       {local || error ? <p className={styles.err}>{local ?? error}</p> : null}
       <div className={styles.foot}>
         <button type="submit" className={`${styles.btn} ${styles.pri}`} disabled={busy}>
@@ -982,10 +1021,20 @@ function StepPayments({ onReady, onLater }: { onReady: () => void; onLater: () =
 }
 
 /* ── 6. Première sortie ─────────────────────────────────────────────── */
-function StepSortie({ activities, imageRightsAcked }: { activities: string[]; imageRightsAcked: boolean }) {
+function StepSortie({
+  activities,
+  otherActivity,
+  imageRightsAcked,
+}: {
+  activities: string[];
+  /** L'activité précisée sous « Autre », proposée comme nom de sortie à la place du mot « Autre ». */
+  otherActivity: string;
+  imageRightsAcked: boolean;
+}) {
   const router = useRouter();
   const labels = (() => {
     const list = ACTIVITIES.filter((a) => a.id !== "autre" && activities.includes(a.id)).map((a) => a.label);
+    if (otherActivity) list.push(otherActivity.charAt(0).toUpperCase() + otherActivity.slice(1));
     return list.length > 0 ? list : ACTIVITIES.filter((a) => activities.includes(a.id)).map((a) => a.label);
   })();
   const [activity, setActivity] = useState(labels[0] ?? "Sortie");

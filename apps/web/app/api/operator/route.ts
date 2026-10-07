@@ -106,7 +106,13 @@ export async function POST(request: Request): Promise<Response> {
   });
 
   if (qualification) {
-    await track("onboarding_qualified", { operatorId: operator.id, meta: qualification });
+    // « Autre » précisé par le pro : pas de colonne pour une activité libre,
+    // elle se lit dans cet événement. Texte libre, donc borné.
+    const other = typeof qualification.otherActivity === "string" ? qualification.otherActivity.trim().slice(0, 60) : "";
+    const meta: Record<string, unknown> = { ...qualification, activities };
+    if (other && activities.includes("autre")) meta.otherActivity = other;
+    else delete meta.otherActivity;
+    await track("onboarding_qualified", { operatorId: operator.id, meta });
   }
 
   return Response.json({ operatorId: operator.id, slug: operator.slug }, { status: 201 });
