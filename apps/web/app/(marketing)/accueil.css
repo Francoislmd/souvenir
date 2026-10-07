@@ -44,15 +44,20 @@
 .accx .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 24px;border-radius:999px;border:1px solid transparent;font:600 15px/1 var(--display);letter-spacing:0;cursor:pointer;white-space:nowrap;transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease)}
 .accx .btn:active{transform:scale(.98)}
 .accx .btn svg{transition:transform .18s var(--ease)}
-.accx .btn:hover svg{transform:translateX(3px)}
 .accx .btn-brand{background:var(--brand);color:#fff}
-.accx .btn-brand:hover{background:var(--brand-ink)}
 .accx .btn-ink{background:var(--ink);color:#fff}
-.accx .btn-ink:hover{background:#2c2739}
 .accx .btn-line{border-color:var(--line);color:var(--ink);background:#fff}
-.accx .btn-line:hover{border-color:var(--ink-4)}
 .accx .btn-white{background:#fff;color:var(--ink)}
-.accx .btn-white:hover{background:var(--soft)}
+/* Survols réservés aux pointeurs (07/10/2026) : sur iPhone, un :hover reste
+   collé après le toucher, et « Créer mon espace » restait pêche en bas de
+   page. */
+@media (hover:hover){
+  .accx .btn:hover svg{transform:translateX(3px)}
+  .accx .btn-brand:hover{background:var(--brand-ink)}
+  .accx .btn-ink:hover{background:#2c2739}
+  .accx .btn-line:hover{border-color:var(--ink-4)}
+  .accx .btn-white:hover{background:var(--soft)}
+}
 .accx .btn-sm{height:40px;padding:0 18px;font-size:14.5px}
 
 /* Apparition : réservée au premier écran (03/10/2026). Plus aucun bloc n'est
@@ -73,7 +78,7 @@
 .accx .hd .logo{display:flex;align-items:center}
 .accx .hd nav{display:flex;gap:4px;margin-left:auto;font-size:15px;font-weight:500;color:var(--ink-2)}
 .accx .hd nav a{padding:8px 12px;border-radius:999px;transition:background .15s,color .15s}
-.accx .hd nav a:hover{background:var(--line-2);color:var(--ink)}
+@media (hover:hover){.accx .hd nav a:hover{background:var(--line-2);color:var(--ink)}}
 
 /* Téléphone */
 .accx .phone{border-radius:42px;background:#fff;padding:8px;border:1px solid var(--line)}
@@ -246,9 +251,11 @@
 .accx .fqSign{flex:none;margin-left:auto;position:relative;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);transition:.22s ease}
 .accx .fqSign::before,.accx .fqSign::after{content:"";position:absolute;top:50%;left:50%;background:var(--ink-3);transform:translate(-50%,-50%);transition:.22s ease}
 .accx .fqSign::before{width:9px;height:1.5px}.accx .fqSign::after{width:1.5px;height:9px}
-.accx .fqQa[open] .fqSign{border-color:transparent;background:var(--ink)}
-.accx .fqQa[open] .fqSign::before,.accx .fqQa[open] .fqSign::after{background:#fff}
-.accx .fqQa[open] .fqSign::after{transform:translate(-50%,-50%) rotate(90deg)}
+/* Ouvert : le même anneau, le trait vertical s'efface (07/10/2026). Un rond
+   plein noir à côté d'anneaux vides pesait plus lourd que la question. */
+.accx .fqQa[open] .fqSign{border-color:var(--ink-4)}
+.accx .fqQa[open] .fqSign::before,.accx .fqQa[open] .fqSign::after{background:var(--ink)}
+.accx .fqQa[open] .fqSign::after{transform:translate(-50%,-50%) rotate(90deg);opacity:0}
 .accx .fqAns{margin:0;padding:0 44px clamp(20px, 2.6vh, 26px) 0;max-width:62ch;font-size:16px;line-height:1.6;color:var(--ink-2);animation:acc-faqFade .28s ease both}
 .accx .fqAns a{color:var(--brand-ink);text-decoration:underline;text-underline-offset:3px}
 @keyframes acc-faqFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
@@ -361,7 +368,7 @@
 .accx .hxPhone{position:relative;width:100%;border-color:rgba(255,255,255,.6)}
 .accx .hxPhone .scr{height:560px;background:#fff}
 .accx .pp{position:absolute;right:-52px;bottom:8px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(12,10,18,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s}
-.accx .pp:hover{background:rgba(12,10,18,.55);border-color:#fff}
+@media (hover:hover){.accx .pp:hover{background:rgba(12,10,18,.55);border-color:#fff}}
 .accx .pp .i-play{display:none}.accx .pp.paused .i-play{display:block}.accx .pp.paused .i-pause{display:none}
 
 .accx .sc{position:absolute;inset:34px 0 0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .4s var(--ease),transform .5s var(--ease),visibility 0s .5s;background:#fff}
@@ -537,6 +544,8 @@
   .accx .ftr{border-radius:26px}
   .accx .endIn{padding:30px 22px 32px}
   .accx .endIn .btn{width:100%}
+  /* Le parapente : cadrer les deux visages, pas la semelle au premier plan. */
+  .accx .endCard > img{width:132%;max-width:none;height:230px;object-position:50% 30%}
 }
 @media (prefers-reduced-motion:reduce){
   .accx *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
@@ -548,14 +557,18 @@
 /* ── Mobile : passe d'optimisation ── */
 @media (max-width:640px){
   /* rythme vertical resserré */
-  .accx .how{padding:64px 0}
-  .accx .price{padding:56px 0}
+  /* Resserré encore (07/10/2026) : entre « Faites glisser… » et la dalle des
+     prix, il restait plus de 130 px de vide. */
+  .accx .how{padding:56px 0 40px}
+  .accx .price{padding:40px 0 48px}
   .accx .fq{padding-top:40px;padding-bottom:48px}
   .accx .end{padding-bottom:56px}
   .accx .h2{font-size:28px}
   /* héros : démo plus compacte, sans vide dans les écrans */
   .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in{width:236px;margin-top:84px}
   .accx .hxPhone .scr{height:470px}
+  /* Le dépôt remplit l'écran du téléphone au lieu d'y laisser un tiers vide. */
+  .accx .sA .gr img{aspect-ratio:4/5}
   .accx .sC .ph{flex-basis:168px;height:226px}
   .accx .sD .bgG img{height:226px}
   .accx .lt{margin-top:40px}.accx .lt b{font-size:54px}
@@ -607,13 +620,15 @@
   .accx .hx{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto auto auto auto;height:auto;min-height:0;border-radius:0}
   .accx .hxIn{display:contents}
   .accx .hxBg{position:relative;inset:auto;grid-row:1/6;grid-column:1;border-radius:26px;min-height:max(500px, min(760px, calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - 64px)))}
-  .accx .hxBg img{position:absolute;inset:0;height:100%;object-position:58% 28%}
+  /* Photo agrandie et calée en bas (07/10/2026) : en portrait, le haut de la
+     carte n'était que feuillage flou ; le radeau remonte au-dessus du titre. */
+  .accx .hxBg img{position:absolute;inset:auto 0 0 0;height:116%;object-position:52% 100%}
   /* Le voile monte plus tôt (07/10/2026) : la ligne « Pour les moniteurs… » tombait
      à mi-hauteur, sur le clair de la photo, et ne se lisait plus. */
   .accx .hxBg::after{background:linear-gradient(180deg,rgba(12,10,18,.18) 0%,rgba(12,10,18,0) 18%,rgba(12,10,18,.62) 44%,rgba(12,10,18,.9) 100%)}
   .accx .hxFor,.accx .hero h1,.accx .hxLede,.accx .hxCta{grid-column:1;position:relative;z-index:1;margin-left:22px;margin-right:22px;color:#fff}
   .accx .hxLede{grid-row:4;margin-top:14px;font-size:16.5px;color:rgba(255,255,255,.86)}
-  .accx .hxFor{grid-row:2;font-size:14px;align-items:center;color:rgba(255,255,255,.82)}
+  .accx .hxFor{grid-row:2;font-size:14px;align-items:center;color:rgba(255,255,255,.94);text-shadow:0 1px 10px rgba(8,6,12,.45)}
   .accx .hxFor svg{display:none}
   .accx .hero h1{grid-row:3;margin-top:10px;font-size:clamp(34px, 9vw, 46px);line-height:1.04}
   .accx .hxCta{grid-row:5;margin-top:24px;margin-bottom:24px;gap:6px 24px}
@@ -625,7 +640,7 @@
   .accx .pp{left:auto;top:auto;right:-50px;bottom:8px}
   .accx .hxPhone{border-color:var(--line)}
   .accx .pp{border-color:var(--line);background:#fff;color:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none}
-  .accx .pp:hover{background:var(--line-2);border-color:var(--ink-4)}
+  @media (hover:hover){.accx .pp:hover{background:var(--line-2);border-color:var(--ink-4)}}
 
   /* Le parcours devient la légende du téléphone */
   .accx .flow{grid-row:7;grid-column:1;width:100%;max-width:300px;margin:22px auto 0;min-height:104px;color:var(--ink);display:block}
