@@ -121,10 +121,13 @@ export function PhotoPicker({
       </button>
     </>
   );
+  // Rien de choisi : la barre ne montre pas « 0 € » devant un bouton grisé.
+  // Elle donne les deux prix, celui d'une photo à gauche, celui de toutes sur
+  // le bouton, qui les coche toutes (le paiement reste un second geste).
   const barLine = packOnly
     ? countLabel
     : n === 0
-      ? `${unit} la photo, ${formatEuros(allCents)} toutes`
+      ? "À l'unité"
       : takesAll
         ? `${countLabel}, prix maximum`
         : `${countLabel} · +${formatEuros(allCents - selCents)} pour tout`;
@@ -135,9 +138,9 @@ export function PhotoPicker({
     onCheckout(takesAll ? allIds : Array.from(selected));
   }
 
-  const payLabel = n === 0 ? "Choisissez vos photos" : `Payer ${formatEuros(selCents)}`;
+  const payLabel = n === 0 ? `Tout prendre · ${formatEuros(allCents)}` : `Payer ${formatEuros(selCents)}`;
   const payButton = (
-    <button type="button" className={styles.cta} onClick={checkout} disabled={busy || n === 0} aria-busy={busy || undefined}>
+    <button type="button" className={styles.cta} onClick={n === 0 ? takeAll : checkout} disabled={busy} aria-busy={busy || undefined}>
       <span>{payLabel}</span>
       {busy ? (
         <span className={styles.ctaBusy}>
@@ -265,7 +268,7 @@ export function PhotoPicker({
         <div className={styles.barIn}>
           <div className={styles.barText}>
             <span>{barLine}</span>
-            <b className={styles.display}>{formatEuros(selCents)}</b>
+            <b className={styles.display}>{n === 0 && !packOnly ? unit : formatEuros(selCents)}</b>
           </div>
           {payButton}
         </div>

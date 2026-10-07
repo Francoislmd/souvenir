@@ -635,13 +635,19 @@ a.topIn:focus-visible {
   position: absolute;
   right: 8px;
   bottom: 8px;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
   display: grid;
   place-items: center;
+}
+/* 48 px sous le doigt pour 34 px dessinés (07/10/2026). */
+.save::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
 }
 .card {
   margin: 24px 0 0;

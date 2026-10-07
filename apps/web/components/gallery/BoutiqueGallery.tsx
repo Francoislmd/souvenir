@@ -338,7 +338,7 @@ export function BoutiqueGallery({
           {googleReviewUrl ? (
             <div className={styles.card}>
               <span className={styles.cardText}>
-                <span className={styles.cardT}>Vous avez aimé votre sortie ?</span>
+                <span className={styles.cardT}>Vous avez aimé votre sortie&nbsp;?</span>
                 <span className={styles.cardD}>Un avis Google prend trente secondes et change beaucoup pour une petite structure.</span>
               </span>
               <a
@@ -400,15 +400,15 @@ export function BoutiqueGallery({
               <h2 className={sale.display}>Avant de payer</h2>
               <div>
                 <details>
-                  <summary>Combien de temps je garde mes photos ?</summary>
+                  <summary>Combien de temps je garde mes photos&nbsp;?</summary>
                   <p>Elles se téléchargent pendant 90 jours, en pleine résolution et sans filigrane.</p>
                 </details>
                 <details>
-                  <summary>D&rsquo;autres photos arrivent après mon achat ?</summary>
+                  <summary>D&rsquo;autres photos arrivent après mon achat&nbsp;?</summary>
                   <p>Si vous avez tout pris, elles sont à vous sans rien payer de plus. Sinon, elles apparaissent ici, au même prix.</p>
                 </details>
                 <details>
-                  <summary>J&rsquo;achète quelques photos, puis je veux tout ?</summary>
+                  <summary>J&rsquo;achète quelques photos, puis je veux tout&nbsp;?</summary>
                   <p>Ce que vous avez déjà payé est déduit. Vous ne payez jamais plus que le prix de toutes les photos.</p>
                 </details>
                 <details>

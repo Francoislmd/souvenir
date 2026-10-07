@@ -95,7 +95,11 @@
 /* ── Page du QR : la couverture, puis une feuille blanche qui monte dessus ── */
 .cover {
   position: relative;
+  /* Sur un petit téléphone (667 px de haut), 300 px de photo poussaient le
+     champ et son bouton sous la ligne de flottaison : la page du QR n'a
+     qu'une action, elle doit être visible sans défiler. */
   height: 300px;
+  height: clamp(184px, 34svh, 300px);
   background: #2a2830 50% 38% / cover no-repeat;
 }
 .cover::after {
@@ -654,8 +658,8 @@
   z-index: 3;
   right: 6px;
   bottom: 6px;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border: 0;
   border-radius: 9px;
   background: rgba(13, 12, 18, 0.42);
@@ -663,6 +667,14 @@
   display: grid;
   place-items: center;
   cursor: pointer;
+}
+
+/* La cible tactile dépasse le pictogramme : 48 px sous le doigt pour
+   32 px dessinés, sans empiéter sur la coche, en haut à droite. */
+.zoom::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 /* La jauge : le total qui monte vers le prix de toutes les photos. */
