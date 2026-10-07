@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { Role } from "@souvenir/db";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
-import { RESERVED_SLUGS } from "@/lib/store";
+import { uniqueOperatorSlug } from "@/lib/operator-slug";
 import { CGV_DATE_LABEL } from "@/lib/seller-format";
 
 const schema = z.object({
@@ -26,15 +26,6 @@ const schema = z.object({
   legalName: z.string().max(120).optional(),
   legalAddress: z.string().max(200).optional(),
 });
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-+|-+$)/g, "");
-}
 
 export async function POST(request: Request): Promise<Response> {
   const supabase = createClient();
@@ -63,16 +54,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const { name, pricePhotoCents, priceAllCents, brandColor, googleReviewUrl, qualification, siret, legalName, legalAddress } = parsed.data;
 
-  // RESERVED_SLUGS existait mais n'était appliqué nulle part : un prestataire
-  // nommé « Api » obtenait le slug `api`, que middleware.ts laisse passer sans
-  // réécriture — sa boutique était inaccessible, sans le moindre message.
-  const base = slugify(name) || "activite";
-  let slug = RESERVED_SLUGS.has(base) ? `${base}-1` : base;
-  let suffix = 1;
-  while (await prisma.operator.findUnique({ where: { slug } })) {
-    suffix += 1;
-    slug = `${base}-${suffix}`;
-  }
+  const slug = await uniqueOperatorSlug(name);
 
   const knownIds = new Set(ACTIVITIES.map((a) => a.id));
   const rawActivities = qualification?.activities;

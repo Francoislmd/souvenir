@@ -301,7 +301,7 @@ export function Onboarding({
           onNext={async (next) => {
             setDraft(next);
             // Structure déjà créée (retour depuis les activités) : on corrige
-            // son nom et son identité légale, l'adresse de la page ne bouge pas.
+            // son nom et son identité légale ; l'adresse de la page suit le nom.
             if (op) {
               const legal = legalOf(next);
               const patch = {
@@ -312,14 +312,25 @@ export function Onboarding({
               };
               setBusy(true);
               setError(null);
-              const ok = await patchSettings(patch);
-              if (!ok) {
+              // Aucune sortie n'existe encore : l'adresse de la page suit le nouveau nom.
+              let slug = op.slug;
+              try {
+                const res = await fetch("/api/operator/settings", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ ...patch, ...(patch.name !== op.name ? { slugFromName: true } : {}) }),
+                });
+                if (!res.ok) throw new Error(String(res.status));
+                const body = (await res.json()) as { operator?: { slug?: string } };
+                slug = body.operator?.slug ?? slug;
+              } catch {
                 setError(NETWORK);
                 setBusy(false);
                 return;
               }
               setOp({
                 ...op,
+                slug,
                 name: patch.name,
                 siret: patch.siret || null,
                 legalName: patch.legalName || null,
@@ -674,8 +685,8 @@ function StepStructure({
         <LinkIcon />
         <span>
           {storeBase}
-          {/* Une fois la structure créée, l'adresse est fixée : renommer ne la change pas. */}
-          {existing ? existing.slug : slugify(name)}
+          {/* Renommer garde l'adresse actuelle si le nom n'a pas bougé. */}
+          {existing && name.trim() === existing.name ? existing.slug : slugify(name)}
         </span>
       </p>
       {local || error ? <p className={styles.err}>{local ?? error}</p> : null}
