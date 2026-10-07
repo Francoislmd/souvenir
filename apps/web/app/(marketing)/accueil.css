@@ -608,7 +608,9 @@
   .accx .hxIn{display:contents}
   .accx .hxBg{position:relative;inset:auto;grid-row:1/6;grid-column:1;border-radius:26px;min-height:max(500px, min(760px, calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - 64px)))}
   .accx .hxBg img{position:absolute;inset:0;height:100%;object-position:58% 28%}
-  .accx .hxBg::after{background:linear-gradient(180deg,rgba(12,10,18,.18) 0%,rgba(12,10,18,0) 22%,rgba(12,10,18,.5) 50%,rgba(12,10,18,.9) 100%)}
+  /* Le voile monte plus tôt (07/10/2026) : la ligne « Pour les moniteurs… » tombait
+     à mi-hauteur, sur le clair de la photo, et ne se lisait plus. */
+  .accx .hxBg::after{background:linear-gradient(180deg,rgba(12,10,18,.18) 0%,rgba(12,10,18,0) 18%,rgba(12,10,18,.62) 44%,rgba(12,10,18,.9) 100%)}
   .accx .hxFor,.accx .hero h1,.accx .hxLede,.accx .hxCta{grid-column:1;position:relative;z-index:1;margin-left:22px;margin-right:22px;color:#fff}
   .accx .hxLede{grid-row:4;margin-top:14px;font-size:16.5px;color:rgba(255,255,255,.86)}
   .accx .hxFor{grid-row:2;font-size:14px;align-items:center;color:rgba(255,255,255,.82)}
