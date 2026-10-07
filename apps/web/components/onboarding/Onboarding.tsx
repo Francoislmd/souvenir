@@ -215,14 +215,19 @@ export function Onboarding({
   }
 
   const index = ORDER.indexOf(step);
-  // Des activités, on revient à la structure : rien n'est encore créé. Une
-  // fois la structure créée, on ne revient ni sur elle ni sur le compte : on
-  // les corrige ensuite dans Réglages.
+  // Des activités, on revient à la structure tant que rien n'est créé. Une
+  // fois la structure créée, le retour s'arrête aux activités (corrigées par
+  // les réglages) : le nom a déjà fixé l'adresse de la page, on le change
+  // ensuite dans Réglages, comme le compte.
   const back: OnboardingStep | null =
     step === "activites"
-      ? "structure"
-      : index <= 3
+      ? op
         ? null
+        : "structure"
+      : step === "page"
+        ? "activites"
+        : index <= 3
+          ? null
         : step === "sortie" && op?.stripeOnboarded
           ? "prix"
           : ORDER[index - 1]!;
@@ -232,7 +237,17 @@ export function Onboarding({
       <header className={styles.head}>
         <div className={styles.headLeft}>
           {back ? (
-            <button type="button" className={styles.back} onClick={() => go(back)} aria-label="Retour">
+            <button
+              type="button"
+              className={styles.back}
+              onClick={() => {
+                // Revenir aux activités d'une structure déjà créée (ou reprise
+                // après un rechargement) : on repart de ce qui est enregistré.
+                if (back === "activites" && op && picked.length === 0) setPicked(op.activities);
+                go(back);
+              }}
+              aria-label="Retour"
+            >
               <BackIcon />
             </button>
           ) : null}
@@ -286,7 +301,7 @@ export function Onboarding({
         />
       ) : null}
 
-      {step === "activites" && draft ? (
+      {step === "activites" && (draft || op) ? (
         <StepActivites
           picked={picked}
           onPick={setPicked}
@@ -296,6 +311,22 @@ export function Onboarding({
           error={error}
           onSubmit={async (activities) => {
             const otherActivity = activities.includes("autre") ? other.trim() : "";
+            // Structure déjà créée (retour depuis « Votre page ») : on corrige
+            // ses activités, on n'en crée pas une seconde.
+            if (op) {
+              setBusy(true);
+              setError(null);
+              const ok = await patchSettings({ activities });
+              if (!ok) {
+                setError(NETWORK);
+                setBusy(false);
+                return;
+              }
+              setOp({ ...op, activities });
+              go("page");
+              return;
+            }
+            if (!draft) return;
             const name = draft.name.trim();
             const legal = legalOf(draft);
             setBusy(true);
