@@ -30,6 +30,10 @@ const ORDER: OnboardingStep[] = ["compte", "structure", "activites", "page", "pr
 export interface OnboardingOperator {
   name: string;
   slug: string;
+  /** L'identité légale enregistrée, pour revenir sur l'écran « Votre structure ». */
+  siret: string | null;
+  legalName: string | null;
+  legalAddress: string | null;
   activities: string[];
   logoUrl: string | null;
   coverUrl: string | null;
@@ -215,28 +219,25 @@ export function Onboarding({
   }
 
   const index = ORDER.indexOf(step);
-  // Des activités, on revient à la structure tant que rien n'est créé. Une
-  // fois la structure créée, le retour s'arrête aux activités (corrigées par
-  // les réglages) : le nom a déjà fixé l'adresse de la page, on le change
-  // ensuite dans Réglages, comme le compte.
-  const back: OnboardingStep | null =
-    step === "activites"
-      ? op
-        ? null
-        : "structure"
-      : step === "page"
-        ? "activites"
-        : index <= 3
-          ? null
-        : step === "sortie" && op?.stripeOnboarded
-          ? "prix"
-          : ORDER[index - 1]!;
+  // Un retour sur chaque écran. Le compte et la structure ramènent à
+  // l'accueil (le compte existe : y revenir n'aurait pas de sens) ; ensuite,
+  // l'écran précédent, et ce qui est déjà créé se corrige sur place.
+  const back: OnboardingStep | "home" =
+    step === "compte" || step === "structure"
+      ? "home"
+      : step === "sortie" && op?.stripeOnboarded
+        ? "prix"
+        : ORDER[index - 1]!;
 
   return (
     <div className={styles.ob}>
       <header className={styles.head}>
         <div className={styles.headLeft}>
-          {back ? (
+          {back === "home" ? (
+            <Link href="/" className={styles.back} aria-label="Retour à l'accueil">
+              <BackIcon />
+            </Link>
+          ) : (
             <button
               type="button"
               className={styles.back}
@@ -250,7 +251,7 @@ export function Onboarding({
             >
               <BackIcon />
             </button>
-          ) : null}
+          )}
           {/* Le logo ne ramène à l'accueil qu'avant la création du compte :
               en cours d'inscription, un clic perdu ferait quitter le parcours. */}
           {step === "compte" ? (
@@ -292,10 +293,39 @@ export function Onboarding({
       {step === "structure" ? (
         <StepStructure
           draft={draft}
+          existing={op}
           initialName={initialName}
           storeBase={storeBase}
-          onNext={(next) => {
+          busy={busy}
+          error={error}
+          onNext={async (next) => {
             setDraft(next);
+            // Structure déjà créée (retour depuis les activités) : on corrige
+            // son nom et son identité légale, l'adresse de la page ne bouge pas.
+            if (op) {
+              const legal = legalOf(next);
+              const patch = {
+                name: next.name,
+                siret: legal.siret ?? "",
+                legalName: legal.legalName ?? "",
+                legalAddress: legal.legalAddress ?? "",
+              };
+              setBusy(true);
+              setError(null);
+              const ok = await patchSettings(patch);
+              if (!ok) {
+                setError(NETWORK);
+                setBusy(false);
+                return;
+              }
+              setOp({
+                ...op,
+                name: patch.name,
+                siret: patch.siret || null,
+                legalName: patch.legalName || null,
+                legalAddress: patch.legalAddress || null,
+              });
+            }
             go("activites");
           }}
         />
@@ -357,6 +387,9 @@ export function Onboarding({
               setOp({
                 name,
                 slug: body.slug,
+                siret: legal.siret ?? null,
+                legalName: legal.legalName || null,
+                legalAddress: legal.legalAddress || null,
                 activities,
                 logoUrl: null,
                 coverUrl: null,
@@ -442,19 +475,31 @@ function cityOf(address: string | null): string {
    Rien n'est créé ici, la structure part avec les activités. */
 function StepStructure({
   draft,
+  existing,
   initialName,
   storeBase,
+  busy,
+  error,
   onNext,
 }: {
   draft: StructureDraft | null;
+  /** La structure déjà créée, quand on revient sur cet écran. */
+  existing: OnboardingOperator | null;
   initialName: string;
   storeBase: string;
-  onNext: (draft: StructureDraft) => void;
+  busy: boolean;
+  error: string | null;
+  onNext: (draft: StructureDraft) => Promise<void>;
 }) {
-  const [name, setName] = useState(draft?.name ?? initialName);
-  const [nameTouched, setNameTouched] = useState(draft?.nameTouched ?? !!initialName);
-  const [query, setQuery] = useState(draft?.query ?? "");
-  const [match, setMatch] = useState<SiretMatch | null>(draft?.match ?? null);
+  // Ce qui est déjà enregistré, faute de brouillon (page rechargée).
+  const saved: SiretMatch | null =
+    !draft && existing?.siret
+      ? { siret: existing.siret, name: existing.legalName ?? existing.name, legalForm: null, address: existing.legalAddress, active: true }
+      : null;
+  const [name, setName] = useState(draft?.name ?? existing?.name ?? initialName);
+  const [nameTouched, setNameTouched] = useState(draft?.nameTouched ?? (!!existing || !!initialName));
+  const [query, setQuery] = useState(draft?.query ?? (saved ? groupSiret(saved.siret) : ""));
+  const [match, setMatch] = useState<SiretMatch | null>(draft?.match ?? saved);
   const [hits, setHits] = useState<SiretMatch[]>([]);
   const [lookup, setLookup] = useState<"idle" | "busy" | "none">("idle");
   const [local, setLocal] = useState<string | null>(null);
@@ -542,7 +587,7 @@ function StepStructure({
       return;
     }
     setLocal(null);
-    onNext({ name: name.trim(), nameTouched, query, match });
+    void onNext({ name: name.trim(), nameTouched, query, match });
   }
 
   const open = hits.length > 0 && !match;
@@ -629,12 +674,14 @@ function StepStructure({
         <LinkIcon />
         <span>
           {storeBase}
-          {slugify(name)}
+          {/* Une fois la structure créée, l'adresse est fixée : renommer ne la change pas. */}
+          {existing ? existing.slug : slugify(name)}
         </span>
       </p>
-      {local ? <p className={styles.err}>{local}</p> : null}
+      {local || error ? <p className={styles.err}>{local ?? error}</p> : null}
       <div className={styles.foot}>
-        <button type="submit" className={`${styles.btn} ${styles.pri}`}>
+        <button type="submit" className={`${styles.btn} ${styles.pri}`} disabled={busy}>
+          {busy ? <Spinner size={16} tone="current" label="Enregistrement" /> : null}
           Continuer
         </button>
         {!match && query.trim() === "" ? (

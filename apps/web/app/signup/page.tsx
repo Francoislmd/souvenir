@@ -52,6 +52,9 @@ export default async function SignupPage({ searchParams }: { searchParams: { nam
       operator = {
         name: o.name,
         slug: o.slug,
+        siret: o.siret,
+        legalName: o.legalName,
+        legalAddress: o.legalAddress,
         activities: o.activities,
         logoUrl: o.logoUrl,
         coverUrl: o.coverUrl,
