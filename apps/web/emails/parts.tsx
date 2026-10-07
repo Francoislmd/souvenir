@@ -85,7 +85,7 @@ export function Hero({
 }
 
 /**
- * Quatre vignettes très floutées (Photo.blurEmailKey) et le nombre de
+ * Quatre vignettes très floutées (Photo.blurEmailKey, 4:3) et le nombre de
  * photos : on devine sa sortie, on ne reconnaît personne.
  */
 export function Thumbs({ urls, count, href }: { urls: string[]; count: number; href: string }) {
@@ -97,7 +97,11 @@ export function Thumbs({ urls, count, href }: { urls: string[]; count: number; h
         <Row>
           {shown.map((url, i) => (
             <Column key={url} style={{ width: "25%", paddingLeft: i === 0 ? 0 : 4, paddingRight: i === shown.length - 1 ? 0 : 4 }}>
-              <Img src={url} width={118} height={118} alt="" style={{ display: "block", width: "100%", height: "auto", borderRadius: 12 }} />
+              {/* Cases 4:3 de hauteur fixe : les vignettes sont recadrées en 4:3 au
+                  dépôt (lib/photo-processing.ts). Une photo plus ancienne, en
+                  hauteur, reste dans sa case : recadrée là où object-fit est lu
+                  (Apple Mail), tassée ailleurs plutôt que de dépasser. */}
+              <Img src={url} width={118} height={88} alt="" style={{ display: "block", width: "100%", height: 88, objectFit: "cover", borderRadius: 12 }} />
             </Column>
           ))}
         </Row>

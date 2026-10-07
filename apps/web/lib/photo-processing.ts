@@ -123,8 +123,12 @@ export async function processPhotoPreview(photoId: string): Promise<void> {
     // lib/group-watermark.ts, sans cadenas depuis le 05/10/2026) — jamais de
     // photo qui se dévoile en un clic devtools.
     const lockBadge = await sharp(Buffer.from(LOCK_BADGE_SVG)).resize(112, 112).png().toBuffer();
+    // Recadrée en 4:3 paysage : une photo prise en hauteur n'a plus sa propre
+    // proportion dans le mail. Gmail ignore object-fit et étirait (ou
+    // allongeait) les vignettes ; une source au même format que la case
+    // s'affiche juste partout.
     const blurEmailBuffer = await base()
-      .resize({ width: 960 })
+      .resize({ width: 960, height: 720, fit: "cover", position: "centre" })
       .blur(10)
       .composite([{ input: lockBadge, gravity: "center" }])
       .jpeg({ quality: 66 })
