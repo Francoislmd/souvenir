@@ -7,6 +7,7 @@ import { gtmEvent } from "@/lib/gtm";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { operatorTagline } from "@/lib/tagline";
 import { Spinner } from "@/components/ui/Spinner";
+import { Logo } from "@/components/brand/Logo";
 import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
 import { AccountForm } from "./AccountForm";
 import styles from "./onboarding.module.css";
@@ -209,13 +210,26 @@ export function Onboarding({
   return (
     <div className={styles.ob}>
       <header className={styles.head}>
-        {back ? (
-          <button type="button" className={styles.back} onClick={() => go(back)} aria-label="Retour">
-            <BackIcon />
-          </button>
-        ) : (
-          <span className={styles.backGhost} aria-hidden="true" />
-        )}
+        <div className={styles.headLeft}>
+          {back ? (
+            <button type="button" className={styles.back} onClick={() => go(back)} aria-label="Retour">
+              <BackIcon />
+            </button>
+          ) : null}
+          {/* Le logo ne ramène à l'accueil qu'avant la création du compte :
+              en cours d'inscription, un clic perdu ferait quitter le parcours. */}
+          {step === "compte" ? (
+            <Link href="/" className={styles.logo} aria-label="Linktrip, accueil">
+              <Logo height={26} title={null} className={styles.logoFull} />
+              <Logo variant="symbol" height={28} title={null} className={styles.logoMark} />
+            </Link>
+          ) : (
+            <span className={styles.logo}>
+              <Logo height={26} className={styles.logoFull} />
+              <Logo variant="symbol" height={28} className={styles.logoMark} />
+            </span>
+          )}
+        </div>
         <div className={styles.prog} aria-hidden="true">
           {ORDER.map((s, i) => (
             <i key={s} className={i <= index ? styles.on : undefined} />
@@ -226,7 +240,7 @@ export function Onboarding({
             Se connecter
           </Link>
         ) : (
-          <span className={styles.loginGhost} aria-hidden="true" />
+          <span aria-hidden="true" />
         )}
       </header>
 
