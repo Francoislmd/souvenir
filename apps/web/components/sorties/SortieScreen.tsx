@@ -987,8 +987,12 @@ export function SortieScreen({
           : isGroup
             ? "Vos clients les retrouveront dans leur galerie privée."
             : `Vos ${clients.length} client${clients.length > 1 ? "s" : ""} les recevront toutes.`;
+    // Publication impossible faute d'adresse : la barre ne flotte plus. Collée
+    // en bas de l'écran, elle cachait justement le champ qu'elle demande de
+    // remplir ; elle prend sa place sous la carte des adresses.
+    const idle = needsClients && !scheduled;
     bar = (
-      <div className={styles.sdBar}>
+      <div className={`${styles.sdBar} ${idle ? styles.sdBarIdle : ""}`}>
         <div className={styles.sdBarIn}>
           <span className={styles.sdBarText}>
             <b>{head}</b> <span>{tail}</span>

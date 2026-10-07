@@ -3034,3 +3034,32 @@ a.sdClient:hover {
     border-radius: 10px;
   }
 }
+
+/* Écran d'une sortie sur téléphone (07/10/2026).
+   - La barre de publication reste dans le flux quand rien ne peut être
+     publié (aucune adresse), et dès qu'un champ a le focus : le clavier
+     ouvert, une barre collée en bas recouvrait le champ en cours de saisie.
+   - En-tête resserré : logo, titre et date prenaient 210 px avant la
+     première photo. */
+@media (max-width: 760px) {
+  .sdBarIdle,
+  .sWrap:has(input:focus, textarea:focus) .sdBar {
+    position: static;
+    box-shadow: none;
+    border: 1px solid var(--line);
+  }
+  .sTop {
+    height: 50px;
+  }
+  .sHdrIn {
+    min-height: 56px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .sWrap {
+    padding-top: 4px;
+  }
+  .sdMeta {
+    margin-bottom: 18px;
+  }
+}
