@@ -60,7 +60,13 @@ a.topIn:focus-visible {
 .logo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+}
+/* Un logo déposé garde son propre fond : la couleur du prestataire ne sert
+   qu'aux initiales. */
+.logo:has(img) {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.08);
 }
 .name {
   font-size: 0.97rem;

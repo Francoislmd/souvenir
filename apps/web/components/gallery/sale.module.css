@@ -182,6 +182,18 @@
   background: var(--op);
   color: #fff;
 }
+/* Un logo déposé garde son propre fond : la couleur du prestataire ne sert
+   qu'aux initiales. Sans ça, un PNG transparent prenait la couleur derrière. */
+.orgLogo:has(img),
+.bareOrg .orgLogo:has(img),
+.topLogo:has(img) {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.08);
+}
+.orgLogo img,
+.topLogo img {
+  object-fit: contain;
+}
 .sheetIn {
   max-width: 1120px;
   margin: 0 auto;
