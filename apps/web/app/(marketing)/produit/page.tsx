@@ -5,7 +5,6 @@ import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
 import { DemoArcade } from "@/components/marketing/DemoArcade";
 import { RevenueSlider } from "@/components/marketing/RevenueSlider";
-import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
 import landing from "../landing.module.css";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Parcours } from "./Parcours";
@@ -81,14 +80,7 @@ export default function ProduitPage() {
                 <li><svg className="ico" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5" /></svg><span><b>Ceux qui veulent les garder paient.</b> L&apos;argent arrive sur votre compte, jamais sur le nôtre.</span></li>
               </ul>
               <div className="hero__cta">
-                <EmailCaptureField
-                  source="produit-hero"
-                  idPrefix="produit-hero"
-                  event="hero_email_submit"
-                  formClassName="field"
-                  buttonClassName="btn"
-                  submitLabel="Rejoindre"
-                />
+                <Link href="/signup" className="btn btn--cta">Créer mon espace<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
                 <p className="micro">Sans abonnement · Sans engagement<span className="onlyWide"> · Sans matériel</span></p>
               </div>
             </div>
@@ -243,11 +235,11 @@ export default function ProduitPage() {
               <h2 className="h2 reveal" style={{ marginTop: "14px" }}>Les questions qui reviennent.</h2>
             </div>
             <div className="faq reveal">
-              <details open><summary>Combien coûte Linktrip ?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Rien à l&apos;inscription, rien par mois. Linktrip prend 20 % sur chaque vente. Pas de vente, pas de facture.</p></details>
-              <details><summary>Quand est-ce que je suis payé ?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Chaque vente arrive sur votre compte Stripe, puis part vers votre banque au rythme que vous y avez réglé. L&apos;argent ne transite jamais par nous.</p></details>
-              <details><summary>Il me faut du matériel ?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>L&apos;appareil ou le téléphone que vous utilisez déjà suffit. Le reste se fait depuis un navigateur, rien à installer.</p></details>
-              <details><summary>On peut récupérer les photos sans payer ?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Non. Avant l&apos;achat, seuls des aperçus floutés et filigranés circulent. Le fichier net n&apos;est délivré qu&apos;une fois le paiement confirmé.</p></details>
-              <details><summary>Et le droit à l&apos;image ?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Chaque participant donne son accord avant de recevoir ses photos, et peut demander leur suppression depuis sa galerie, sans passer par vous. Tout est effacé automatiquement 90 jours après la sortie.</p></details>
+              <details open><summary>Combien coûte Linktrip&nbsp;?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Rien à l&apos;inscription, rien par mois. Linktrip prend 20 % sur chaque vente. Pas de vente, pas de facture.</p></details>
+              <details><summary>Quand est-ce que je suis payé&nbsp;?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Chaque vente arrive sur votre compte Stripe, puis part vers votre banque au rythme que vous y avez réglé. L&apos;argent ne transite jamais par nous.</p></details>
+              <details><summary>Il me faut du matériel&nbsp;?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>L&apos;appareil ou le téléphone que vous utilisez déjà suffit. Le reste se fait depuis un navigateur, rien à installer.</p></details>
+              <details><summary>On peut récupérer les photos sans payer&nbsp;?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Non. Avant l&apos;achat, seuls des aperçus floutés et filigranés circulent. Le fichier net n&apos;est délivré qu&apos;une fois le paiement confirmé.</p></details>
+              <details><summary>Et le droit à l&apos;image&nbsp;?<svg className="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></summary><p>Chaque participant donne son accord avant de recevoir ses photos, et peut demander leur suppression depuis sa galerie, sans passer par vous. Tout est effacé automatiquement 90 jours après la sortie.</p></details>
             </div>
           </div>
         </section>
@@ -256,15 +248,8 @@ export default function ProduitPage() {
         <section className="rail" style={{ paddingBottom: "clamp(56px,6vw,96px)" }}>
           <div className="slab final reveal">
             <h2 className="h2">Commencez par votre prochaine sortie.</h2>
-            <p className="lead" style={{ marginTop: "14px", color: "rgba(255,255,255,.66)" }}>Laissez votre e-mail, nous vous prévenons dès l&apos;ouverture des comptes.</p>
-            <EmailCaptureField
-              source="produit-cta"
-              idPrefix="produit-cta"
-              event="footer_email_submit"
-              formClassName="field field--dark"
-              buttonClassName="btn"
-              submitLabel="Rejoindre"
-            />
+            <p className="lead" style={{ marginTop: "14px", color: "rgba(255,255,255,.66)" }}>Votre compte Stripe se crée pendant l&apos;inscription.</p>
+            <Link href="/signup" className="btn btn--cta">Créer mon espace<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
             <p className="micro" style={{ color: "rgba(255,255,255,.4)" }}>Sans abonnement · Sans engagement</p>
           </div>
         </section>

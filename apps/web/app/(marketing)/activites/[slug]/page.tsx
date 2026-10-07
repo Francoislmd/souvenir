@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import type { ComponentType, SVGProps } from "react";
 import { Header } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
-import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Logo } from "@/components/brand/Logo";
 import { ACTIVITY_ICONS } from "@/components/marketing/ActivityIcons";
@@ -192,13 +191,7 @@ export default function ActivitePage({ params }: { params: { slug: string } }) {
                 </li>
               </ul>
               <div className="hero__cta">
-                <EmailCaptureField
-                  source={`activite-${a.slug}`}
-                  idPrefix={`activite-${a.slug}`}
-                  formClassName="field"
-                  buttonClassName="btn"
-                  submitLabel="Rejoindre"
-                />
+                <Link href="/signup" className="btn btn--cta">Créer mon espace<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
                 <p className="micro">
                   Sans abonnement · Sans engagement<span className="onlyWide"> · Sans matériel</span>
                 </p>
@@ -431,7 +424,7 @@ export default function ActivitePage({ params }: { params: { slug: string } }) {
               {questions.map(([q, r]) => (
                 <details key={q}>
                   <summary>
-                    {q}
+                    {q.replace(" ?", "\u00a0?")}
                     <Plus className="ico" />
                   </summary>
                   <p>{r}</p>
@@ -467,7 +460,7 @@ export default function ActivitePage({ params }: { params: { slug: string } }) {
               })}
             </div>
             <p className="actNote reveal">
-              Vous ne trouvez pas votre activité ? <Link href="/liste-attente">Parlons-en.</Link>
+              Vous ne trouvez pas votre activité ? <a href="mailto:hello@linktrip.co">Parlons-en.</a>
             </p>
           </div>
         </section>
@@ -475,22 +468,14 @@ export default function ActivitePage({ params }: { params: { slug: string } }) {
         {/* ═══ 8 · CTA final ═══ */}
         <section className="rail" style={{ paddingBottom: "clamp(56px,6vw,96px)" }}>
           <div className="slab final reveal">
-            <p className="kicker" style={{ color: "rgba(255,255,255,.5)" }}>Liste d&apos;attente</p>
-            <h2 className="h2" style={{ marginTop: "14px" }}>Essayez sur {acc.uneSeule}.</h2>
+            <h2 className="h2">Essayez sur {acc.uneSeule}.</h2>
             <p
               className="lead"
               style={{ marginTop: "14px", color: "rgba(255,255,255,.66)", maxWidth: "520px", marginLeft: "auto", marginRight: "auto" }}
             >
-              Laissez votre adresse. Nous vous prévenons à l&apos;ouverture des comptes, avant la saison.
+              Votre espace est prêt avant votre prochaine sortie. Le compte Stripe se crée pendant l&apos;inscription.
             </p>
-            <EmailCaptureField
-              source={`activite-${a.slug}-final`}
-              idPrefix={`activite-${a.slug}-final`}
-              event="footer_email_submit"
-              formClassName="field field--dark"
-              buttonClassName="btn"
-              submitLabel="Rejoindre"
-            />
+            <Link href="/signup" className="btn btn--cta">Créer mon espace<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
             <p className="micro" style={{ color: "rgba(255,255,255,.42)" }}>
               Aucune carte bancaire. Aucun engagement.
             </p>

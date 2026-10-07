@@ -286,3 +286,15 @@
 /* ── CTA final ─────────────────────────────────────────────────────────── */
 .pa .final{padding:clamp(38px,4.4vw,72px) clamp(24px,4vw,64px);text-align:center;}
 .pa .final .field{margin:24px auto 0;}
+
+/* ── Appel « Créer mon espace » (07/10/2026) ─────────────────────────────
+   Remplace le champ de liste d'attente : les comptes sont ouverts, la page
+   envoie vers l'inscription comme l'accueil. Couleur de marque à plat, pas
+   de dégradé, même hauteur que les boutons de l'accueil ; pleine largeur
+   sur téléphone, sous le pouce. Blanc sur la dalle encre du bas de page. */
+.pa .btn--cta{justify-content:center;height:52px;padding:0 24px;background:var(--brand);text-decoration:none;}
+.pa .btn--cta svg{transition:transform .18s;}
+@media (hover:hover){ .pa .btn--cta:hover{filter:none;background:var(--brand-ink);} .pa .btn--cta:hover svg{transform:translateX(3px);} }
+.pa .final .btn--cta{margin-top:24px;background:#fff;color:var(--ink);}
+@media (hover:hover){ .pa .final .btn--cta:hover{background:var(--soft);} }
+@media (max-width:600px){ .pa .btn--cta{display:flex;width:100%;} }

@@ -2,7 +2,6 @@ import type { ComponentType, ReactNode, SVGProps } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { ManageCookiesLink } from "@/components/analytics/ManageCookiesLink";
-import { EmailCaptureField } from "@/components/marketing/EmailCaptureField";
 import { ACTIVITY_ICONS } from "@/components/marketing/ActivityIcons";
 import styles from "@/components/marketing/Footer.module.css";
 
@@ -130,30 +129,10 @@ export function Footer() {
       </div>
 
       <div className="relative mx-auto max-w-[1320px] px-[var(--gutter)] pb-[clamp(20px,3vh,28px)] pt-[clamp(40px,6vh,66px)]">
-        {/* Bandeau de conversion : le même champ que le hero, source "footer". */}
-        <div className="flex flex-wrap items-center justify-between gap-[22px] border-b border-white/10 pb-[clamp(30px,4.4vh,46px)]">
-          <div>
-            <h3 className="max-w-[15ch] text-[clamp(23px,2.7vw,36px)] font-bold leading-[1.1] tracking-[-.022em]">
-              La boutique photo des professionnels de l&apos;outdoor.
-            </h3>
-            <p className="mt-[10px] text-[14.5px] text-white/55">
-              Chaque sortie devient une source de revenu.
-            </p>
-          </div>
-          <div className="flex max-w-[560px] flex-[1_1_420px] flex-col items-stretch gap-3">
-            <EmailCaptureField
-              source="footer"
-              idPrefix="footer"
-              event="footer_email_submit"
-              formClassName={styles.field}
-              buttonClassName={styles.submit}
-              submitLabel="Rejoindre"
-            />
-            <Trust>Sans engagement, 2 minutes</Trust>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 py-[clamp(30px,4.4vh,46px)] min-[561px]:grid-cols-2 min-[561px]:gap-[34px_30px] min-[1000px]:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] min-[1000px]:gap-[clamp(24px,3vw,48px)]">
+        {/* Plus de bandeau de conversion ici (07/10/2026) : les trois pages qui
+            utilisent ce pied de page finissent déjà par leur propre appel
+            « Créer mon espace ». Les deux se suivaient à l'écran. */}
+        <div className="grid grid-cols-1 gap-8 pb-[clamp(30px,4.4vh,46px)] min-[561px]:grid-cols-2 min-[561px]:gap-[34px_30px] min-[1000px]:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] min-[1000px]:gap-[clamp(24px,3vw,48px)]">
           <div>
             <Link href="/" aria-label="Linktrip — accueil" className="mb-[15px] inline-flex items-center">
               <Logo variant="lockup" tone="white" height={26} title={null} />
