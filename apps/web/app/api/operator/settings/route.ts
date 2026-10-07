@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getOperatorUser } from "@/lib/current-user";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { uniqueOperatorSlug } from "@/lib/operator-slug";
+import { CGV_DATE_LABEL } from "@/lib/seller-format";
 
 const knownActivityIds = new Set(ACTIVITIES.map((a) => a.id));
 
@@ -32,6 +33,8 @@ const schema = z.object({
   // L'engagement sur le droit à l'image, coché à la première sortie. Il ne se
   // retire pas : seule la valeur true est acceptée, et la première date reste.
   imageRightsAck: z.literal(true).optional(),
+  // Fin d'inscription : les CGU et CGV acceptées, datées, avec la version des CGV.
+  termsAccept: z.literal(true).optional(),
   // Pendant l'inscription : recalculer l'adresse de la page depuis le nom.
   // Refusé dès qu'une sortie existe (un QR imprimé, un lien envoyé en dépendent).
   slugFromName: z.literal(true).optional(),
@@ -59,13 +62,20 @@ export async function PATCH(request: Request): Promise<Response> {
     return Response.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
   }
 
-  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, legalName, legalAddress, siret, imageRightsAck, slugFromName, ...rest } = parsed.data;
+  const { logoUrl, coverUrl, tagline, googleReviewUrl, whatsappNumber, automations, legalName, legalAddress, siret, imageRightsAck, termsAccept, slugFromName, ...rest } = parsed.data;
 
   let slug: string | undefined;
   if (slugFromName && rest.name) {
     const hasSortie = await prisma.sortie.findFirst({ where: { operatorId: dbUser.operatorId }, select: { id: true } });
     if (hasSortie) return Response.json({ error: "slug_locked" }, { status: 409 });
     slug = await uniqueOperatorSlug(rest.name, dbUser.operatorId);
+  }
+
+  if (termsAccept) {
+    await prisma.operator.update({
+      where: { id: dbUser.operatorId },
+      data: { termsAcceptedAt: new Date(), termsVersion: CGV_DATE_LABEL },
+    });
   }
 
   if (imageRightsAck) {

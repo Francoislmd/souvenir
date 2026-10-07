@@ -13,7 +13,7 @@ import { AccountForm } from "./AccountForm";
 import styles from "./onboarding.module.css";
 
 /*
- * L'inscription d'un pro, en sept écrans : compte, structure, activités, page, prix,
+ * L'inscription d'un pro, en huit écrans : compte, structure, activités, page, prix,
  * paiements, première sortie. Maquette : docs/maquette-onboarding-pro-v1.html.
  *
  * Chaque écran enregistre en partant. L'étape de départ est calculée par le
@@ -23,9 +23,9 @@ import styles from "./onboarding.module.css";
  * se font le dépôt des photos et la publication.
  */
 
-export type OnboardingStep = "compte" | "structure" | "activites" | "page" | "prix" | "paiements" | "sortie";
+export type OnboardingStep = "compte" | "structure" | "activites" | "page" | "prix" | "paiements" | "engagements" | "sortie";
 
-const ORDER: OnboardingStep[] = ["compte", "structure", "activites", "page", "prix", "paiements", "sortie"];
+const ORDER: OnboardingStep[] = ["compte", "structure", "activites", "page", "prix", "paiements", "engagements", "sortie"];
 
 export interface OnboardingOperator {
   name: string;
@@ -47,6 +47,8 @@ export interface OnboardingOperator {
   vatExempt: boolean;
   /** L'engagement sur le droit à l'image a déjà été pris. */
   imageRightsAcked: boolean;
+  /** Les CGU et CGV ont été acceptées (écran « Votre compte est prêt »). */
+  termsAccepted: boolean;
 }
 
 /** L'identité légale retrouvée par le SIRET, envoyée avec la structure. */
@@ -225,7 +227,7 @@ export function Onboarding({
   const back: OnboardingStep | "home" =
     step === "compte" || step === "structure"
       ? "home"
-      : step === "sortie" && op?.stripeOnboarded
+      : step === "engagements" && op?.stripeOnboarded
         ? "prix"
         : ORDER[index - 1]!;
 
@@ -412,6 +414,7 @@ export function Onboarding({
                 feePercent: 20,
                 vatExempt: false,
                 imageRightsAcked: false,
+                termsAccepted: false,
               });
               go("page");
             } catch {
@@ -439,7 +442,7 @@ export function Onboarding({
               return;
             }
             setOp({ ...op, ...patch });
-            go(op.stripeOnboarded ? "sortie" : "paiements");
+            go(op.stripeOnboarded ? "engagements" : "paiements");
           }}
         />
       ) : null}
@@ -449,17 +452,40 @@ export function Onboarding({
           onReady={() => {
             gtmEvent("stripe_onboarding_done", { skipped: false });
             setOp({ ...op, stripeOnboarded: true });
-            go("sortie");
+            go("engagements");
           }}
           onLater={() => {
             gtmEvent("stripe_onboarding_start", { skipped: true });
+            go("engagements");
+          }}
+        />
+      ) : null}
+
+      {step === "engagements" && op ? (
+        <StepEngagements
+          op={op}
+          busy={busy}
+          error={error}
+          onSubmit={async () => {
+            setBusy(true);
+            setError(null);
+            const ok = await patchSettings({
+              ...(op.termsAccepted ? {} : { termsAccept: true }),
+              ...(op.imageRightsAcked ? {} : { imageRightsAck: true }),
+            });
+            if (!ok) {
+              setError(NETWORK);
+              setBusy(false);
+              return;
+            }
+            setOp({ ...op, termsAccepted: true, imageRightsAcked: true });
             go("sortie");
           }}
         />
       ) : null}
 
       {step === "sortie" && op ? (
-        <StepSortie activities={op.activities} otherActivity={op.activities.includes("autre") ? other.trim() : ""} imageRightsAcked={op.imageRightsAcked} />
+        <StepSortie activities={op.activities} otherActivity={op.activities.includes("autre") ? other.trim() : ""} />
       ) : null}
     </div>
   );
@@ -1109,33 +1135,26 @@ function StepPayments({ onReady, onLater }: { onReady: () => void; onLater: () =
   );
 }
 
-/* ── 6. Première sortie ─────────────────────────────────────────────── */
-function StepSortie({
-  activities,
-  otherActivity,
-  imageRightsAcked,
+/* ── 5 bis. Votre compte est prêt : les deux engagements ──────────────
+   L'inscription s'arrête ici. Le pro accepte les CGU et CGV, et s'engage sur
+   le droit à l'image (il prend les photos : à lui de prévenir ses clients et
+   de retirer une photo à la demande). Les deux sont datés
+   (Operator.termsAcceptedAt, Operator.imageRightsAckAt). La première sortie
+   vient après, et se passe. */
+function StepEngagements({
+  op,
+  busy,
+  error,
+  onSubmit,
 }: {
-  activities: string[];
-  /** L'activité précisée sous « Autre », proposée comme nom de sortie à la place du mot « Autre ». */
-  otherActivity: string;
-  imageRightsAcked: boolean;
+  op: OnboardingOperator;
+  busy: boolean;
+  error: string | null;
+  onSubmit: () => Promise<void>;
 }) {
-  const router = useRouter();
-  const labels = (() => {
-    const list = ACTIVITIES.filter((a) => a.id !== "autre" && activities.includes(a.id)).map((a) => a.label);
-    if (otherActivity) list.push(otherActivity.charAt(0).toUpperCase() + otherActivity.slice(1));
-    return list.length > 0 ? list : ACTIVITIES.filter((a) => activities.includes(a.id)).map((a) => a.label);
-  })();
-  const [activity, setActivity] = useState(labels[0] ?? "Sortie");
-  const [day, setDay] = useState<DayChoice>("today");
-  const [other, setOther] = useState(localDate(new Date()));
-  const [time, setTime] = useState("09:00");
-  const [mode, setMode] = useState<"GROUPE" | "INDIVIDUEL">("GROUPE");
-  const [showMode, setShowMode] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // L'engagement sur le droit à l'image : coché une fois, il ne se redemande pas.
-  const [ack, setAck] = useState(imageRightsAcked);
+  const [terms, setTerms] = useState(op.termsAccepted);
+  const [rights, setRights] = useState(op.imageRightsAcked);
+  const [local, setLocal] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function copyNotice(): Promise<void> {
@@ -1148,12 +1167,110 @@ function StepSortie({
     }
   }
 
-  async function create(): Promise<void> {
-    if (busy) return;
-    if (!ack) {
-      setError("Cochez l'engagement sur le droit à l'image pour créer la sortie.");
+  function submit(e: React.FormEvent): void {
+    e.preventDefault();
+    if (!terms || !rights) {
+      setLocal("Cochez les deux engagements pour terminer.");
       return;
     }
+    setLocal(null);
+    void onSubmit();
+  }
+
+  return (
+    <form className={styles.scr} onSubmit={submit} noValidate>
+      <span className={styles.done} aria-hidden="true">
+        <CheckIcon />
+      </span>
+      <h1>Votre compte est prêt.</h1>
+      <p className={styles.lede}>Deux engagements pour terminer l&rsquo;inscription. Ensuite, vous pourrez créer votre première sortie.</p>
+
+      <div className={styles.eng}>
+        <label className={styles.chk}>
+          <input
+            type="checkbox"
+            checked={terms}
+            onChange={(e) => {
+              setTerms(e.target.checked);
+              setLocal(null);
+            }}
+          />
+          <span className={styles.box} aria-hidden="true">
+            <CheckIcon />
+          </span>
+          <span>
+            J&rsquo;accepte les{" "}
+            <Link href="/cgu" target="_blank">
+              CGU
+            </Link>{" "}
+            et les{" "}
+            <Link href="/cgv" target="_blank">
+              CGV
+            </Link>{" "}
+            de Linktrip.
+          </span>
+        </label>
+      </div>
+
+      <div className={styles.eng}>
+        <label className={styles.chk}>
+          <input
+            type="checkbox"
+            checked={rights}
+            onChange={(e) => {
+              setRights(e.target.checked);
+              setLocal(null);
+            }}
+          />
+          <span className={styles.box} aria-hidden="true">
+            <CheckIcon />
+          </span>
+          <span>Je préviens mes clients, avant la sortie, que des photos sont prises et proposées à la vente. Je retire toute photo sur demande.</span>
+        </label>
+        <button type="button" className={styles.cp} onClick={() => void copyNotice()}>
+          <CopyIcon />
+          {copied ? "Texte copié" : "Copier le texte pour vos réservations"}
+        </button>
+      </div>
+
+      {local || error ? <p className={styles.err}>{local ?? error}</p> : null}
+      <div className={styles.foot}>
+        <button type="submit" className={`${styles.btn} ${styles.pri}`} disabled={busy}>
+          {busy ? <Spinner size={16} tone="current" label="Enregistrement" /> : null}
+          Terminer l&rsquo;inscription
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/* ── 6. Première sortie ─────────────────────────────────────────────── */
+function StepSortie({
+  activities,
+  otherActivity,
+}: {
+  activities: string[];
+  /** L'activité précisée sous « Autre », proposée comme nom de sortie à la place du mot « Autre ». */
+  otherActivity: string;
+}) {
+  const router = useRouter();
+  const labels = (() => {
+    const list = ACTIVITIES.filter((a) => a.id !== "autre" && activities.includes(a.id)).map((a) => a.label);
+    if (otherActivity) list.push(otherActivity.charAt(0).toUpperCase() + otherActivity.slice(1));
+    return list.length > 0 ? list : ACTIVITIES.filter((a) => activities.includes(a.id)).map((a) => a.label);
+  })();
+  const [activity, setActivity] = useState(labels[0] ?? "Sortie");
+  const [day, setDay] = useState<DayChoice>("today");
+  const [other, setOther] = useState(localDate(new Date()));
+  const [time, setTime] = useState("09:00");
+  // Galerie privée uniquement : une sortie de groupe, dont chaque client
+  // reçoit son lien personnel par e-mail. Pas de choix de mode ici.
+  const mode = "GROUPE";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function create(): Promise<void> {
+    if (busy) return;
     const d = new Date();
     if (day === "tomorrow") d.setDate(d.getDate() + 1);
     const date = day === "other" ? other : localDate(d);
@@ -1164,7 +1281,6 @@ function StepSortie({
     setBusy(true);
     setError(null);
     try {
-      if (!imageRightsAcked && !(await patchSettings({ imageRightsAck: true }))) throw new Error("ack");
       const res = await fetch("/api/sorties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1184,7 +1300,9 @@ function StepSortie({
   return (
     <div className={styles.scr}>
       <h1>Votre première sortie.</h1>
-      <p className={styles.lede}>Celle d&rsquo;aujourd&rsquo;hui, ou la prochaine. Vous déposerez les photos sur l&rsquo;écran suivant.</p>
+      <p className={styles.lede}>
+        Facultatif. Celle d&rsquo;aujourd&rsquo;hui ou la prochaine : vous déposerez les photos sur l&rsquo;écran suivant. Vous pouvez aussi la créer plus tard.
+      </p>
 
       {labels.length > 1 ? (
         <>
@@ -1224,73 +1342,9 @@ function StepSortie({
         <input id="obTime" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
       </div>
 
-      <div className={styles.mode}>
-        <LinkIcon />
-        <span>
-          {mode === "GROUPE" ? "Un lien pour tout le groupe, affiché au retour." : "Une galerie par client, envoyée par e-mail."}{" "}
-          <button type="button" className={styles.link} onClick={() => setShowMode(!showMode)}>
-            {showMode ? "Fermer" : "Changer"}
-          </button>
-        </span>
-      </div>
-      {showMode ? (
-        <div className={styles.picks}>
-          <button
-            type="button"
-            className={`${styles.pick} ${mode === "GROUPE" ? styles.pickOn : ""}`}
-            aria-pressed={mode === "GROUPE"}
-            onClick={() => {
-              setMode("GROUPE");
-              setShowMode(false);
-            }}
-          >
-            <b>Un lien pour tout le monde</b>
-            <span>Vous montrez le QR code au retour. Chacun retrouve son créneau.</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.pick} ${mode === "INDIVIDUEL" ? styles.pickOn : ""}`}
-            aria-pressed={mode === "INDIVIDUEL"}
-            onClick={() => {
-              setMode("INDIVIDUEL");
-              setShowMode(false);
-            }}
-          >
-            <b>Chacun sa galerie</b>
-            <span>Vous notez l&rsquo;e-mail de chaque client. Plus long, mais nominatif.</span>
-          </button>
-        </div>
-      ) : null}
-
-      {/* Le pro prend les photos : c'est à lui de prévenir ses clients et de
-          retirer une photo à la demande. L'engagement est daté
-          (Operator.imageRightsAckAt), et le texte à transmettre est prêt. */}
-      <div className={styles.eng}>
-        {imageRightsAcked ? null : (
-          <label className={styles.chk}>
-            <input
-              type="checkbox"
-              checked={ack}
-              onChange={(e) => {
-                setAck(e.target.checked);
-                setError(null);
-              }}
-            />
-            <span className={styles.box} aria-hidden="true">
-              <CheckIcon />
-            </span>
-            <span>Je préviens mes clients, avant la sortie, que des photos sont prises et proposées à la vente. Je retire toute photo sur demande.</span>
-          </label>
-        )}
-        <button type="button" className={styles.cp} onClick={() => void copyNotice()}>
-          <CopyIcon />
-          {copied ? "Texte copié" : "Copier le texte pour vos réservations"}
-        </button>
-      </div>
-
       {error ? <p className={styles.err}>{error}</p> : null}
       <div className={styles.foot}>
-        <button type="button" className={`${styles.btn} ${styles.pri}`} onClick={() => void create()} disabled={busy || !ack}>
+        <button type="button" className={`${styles.btn} ${styles.pri}`} onClick={() => void create()} disabled={busy}>
           {busy ? <Spinner size={16} tone="current" label="Création" /> : null}
           {busy ? "Création…" : "Créer la sortie"}
         </button>
@@ -1306,7 +1360,7 @@ function StepSortie({
             router.refresh();
           }}
         >
-          Passer cette étape
+          Plus tard, aller à mon espace
         </button>
       </div>
     </div>

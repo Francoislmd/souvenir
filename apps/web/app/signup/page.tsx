@@ -66,8 +66,11 @@ export default async function SignupPage({ searchParams }: { searchParams: { nam
         feePercent: o.feePercent,
         vatExempt: o.vatExempt,
         imageRightsAcked: !!o.imageRightsAckAt,
+        termsAccepted: !!o.termsAcceptedAt,
       };
-      step = o.stripeAccountId ? "sortie" : "page";
+      // Les engagements avant la première sortie : un pro qui les a laissés
+      // en plan y revient.
+      step = !o.stripeAccountId ? "page" : o.termsAcceptedAt && o.imageRightsAckAt ? "sortie" : "engagements";
     }
   }
 

@@ -205,8 +205,8 @@ export function AccountForm({ initialEmail, onSignedIn }: { initialEmail: string
           {busy ? "Création…" : "Créer mon compte"}
         </button>
         <p className={styles.legal}>
-          Compte réservé aux professionnels. En le créant, vous acceptez les <Link href="/cgu">CGU</Link>, les <Link href="/cgv">CGV</Link>{" "}
-          et la <Link href="/confidentialite">politique de confidentialité</Link>.
+          Compte réservé aux professionnels. Vos données sont traitées selon notre{" "}
+          <Link href="/confidentialite">politique de confidentialité</Link>.
         </p>
       </div>
     </form>

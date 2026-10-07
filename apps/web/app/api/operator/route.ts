@@ -5,7 +5,6 @@ import { track } from "@/lib/analytics";
 import { Role } from "@souvenir/db";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { uniqueOperatorSlug } from "@/lib/operator-slug";
-import { CGV_DATE_LABEL } from "@/lib/seller-format";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -77,12 +76,9 @@ export async function POST(request: Request): Promise<Response> {
       ...(siret && { siret }),
       ...(legalName?.trim() && { legalName: legalName.trim() }),
       ...(legalAddress?.trim() && { legalAddress: legalAddress.trim() }),
-      // Le premier écran dit « Compte réservé aux professionnels. En le
-      // créant, vous acceptez les CGU, les CGV et la politique de
-      // confidentialité » : la structure se crée juste après, dans la même
-      // session. On date l'acceptation et on retient la version des CGV.
-      termsAcceptedAt: new Date(),
-      termsVersion: CGV_DATE_LABEL,
+      // Les CGU et CGV s'acceptent en fin d'inscription, case à cocher
+      // (écran « Votre compte est prêt ») : termsAcceptedAt est posé par
+      // /api/operator/settings (termsAccept).
       users: { create: { email: user.email, role: Role.ADMIN } },
     },
   });
