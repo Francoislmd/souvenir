@@ -27,9 +27,8 @@ function dateFor(choice: DayChoice, other: string): string {
  * le nombre de places se renseignent sur la fiche sortie, quand ils servent —
  * les demander à la création faisait payer d'avance une saisie facultative.
  *
- * Le mode de réception n'est demandé qu'à la toute première sortie
- * (`mode === null`) : c'est une habitude de métier, pas une décision à
- * reprendre chaque fois.
+ * Le mode de réception ne se demande plus (supprimé le 10/10/2026) : sans
+ * mode enregistré (`mode === null`), la sortie part en GROUPE.
  */
 export function NewSortieSheet({
   activities,
@@ -48,7 +47,9 @@ export function NewSortieSheet({
   const [day, setDay] = useState<DayChoice>("today");
   const [otherDate, setOtherDate] = useState(localDate(new Date()));
   const [time, setTime] = useState("09:00");
-  const [chosenMode, setChosenMode] = useState<SortieMode>(mode ?? "GROUPE");
+  // Plus de question à la création : une première sortie part en groupe, les
+  // suivantes reprennent le mode du compte.
+  const chosenMode: SortieMode = mode ?? "GROUPE";
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -176,30 +177,6 @@ export function NewSortieSheet({
               <input id="shTime" type="time" className={`${styles.nsInp} ${styles.nsTime}`} value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
 
-            {mode === null ? (
-              <fieldset className={styles.nsMode}>
-                <legend className={styles.nsLbl}>Comment vos clients reçoivent leurs photos</legend>
-                <p className={styles.shHint}>On ne vous le redemandera plus : vos prochaines sorties reprendront ce choix.</p>
-                <button
-                  type="button"
-                  className={`${styles.shPick} ${chosenMode === "GROUPE" ? styles.shPickOn : ""}`}
-                  aria-pressed={chosenMode === "GROUPE"}
-                  onClick={() => setChosenMode("GROUPE")}
-                >
-                  <b>Un lien pour tout le monde</b>
-                  <span>Vous affichez le lien au retour. Chacun retrouve son créneau.</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.shPick} ${chosenMode === "INDIVIDUEL" ? styles.shPickOn : ""}`}
-                  aria-pressed={chosenMode === "INDIVIDUEL"}
-                  onClick={() => setChosenMode("INDIVIDUEL")}
-                >
-                  <b>Chacun sa galerie</b>
-                  <span>Vous notez le prénom et le contact de chaque client. Plus long, mais nominatif.</span>
-                </button>
-              </fieldset>
-            ) : null}
           </div>
 
           <footer className={styles.nsFoot}>
