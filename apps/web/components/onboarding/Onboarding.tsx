@@ -538,7 +538,10 @@ function StepStructure({
   const [query, setQuery] = useState(draft?.query ?? (saved ? groupSiret(saved.siret) : ""));
   const [match, setMatch] = useState<SiretMatch | null>(draft?.match ?? saved);
   const [hits, setHits] = useState<SiretMatch[]>([]);
-  const [lookup, setLookup] = useState<"idle" | "busy" | "none">("idle");
+  // « none » : l'annuaire a répondu, sans résultat. « down » : la question n'a
+  // pas pu être posée (session expirée, limite atteinte, panne) — ne jamais
+  // dire alors que le numéro n'existe pas. « expired » : session invalide.
+  const [lookup, setLookup] = useState<"idle" | "busy" | "none" | "down" | "expired">("idle");
   const [local, setLocal] = useState<string | null>(null);
   // Lu à l'arrivée d'une réponse de l'annuaire, qui peut suivre une saisie du nom.
   const nameTouchedRef = useRef(nameTouched);
@@ -574,9 +577,17 @@ function StepStructure({
           ? `/api/onboarding/siret?siret=${digits}`
           : `/api/onboarding/siret?q=${encodeURIComponent(numeric ? digits : text)}`;
         fetch(url)
-          .then((res) => (res.ok ? (res.json() as Promise<{ match?: SiretMatch | null; matches?: SiretMatch[] }>) : {}))
-          .then((body: { match?: SiretMatch | null; matches?: SiretMatch[] }) => {
+          .then(async (res) => {
+            if (res.ok) return (await res.json()) as { match?: SiretMatch | null; matches?: SiretMatch[] };
+            return { failed: res.status === 401 ? ("expired" as const) : ("down" as const) };
+          })
+          .then((body: { match?: SiretMatch | null; matches?: SiretMatch[]; failed?: "expired" | "down" }) => {
             if (cancelled) return;
+            if (body.failed) {
+              setHits([]);
+              setLookup(body.failed);
+              return;
+            }
             if (bySiret) {
               const found = body.match ?? null;
               setHits([]);
@@ -589,7 +600,7 @@ function StepStructure({
             }
           })
           .catch(() => {
-            if (!cancelled) setLookup("none");
+            if (!cancelled) setLookup("down");
           });
       },
       bySiret ? 0 : 350,
@@ -685,6 +696,14 @@ function StepStructure({
             </li>
           ))}
         </ul>
+      ) : lookup === "expired" ? (
+        <p className={styles.info} aria-live="polite">
+          Votre session a expiré. <a href="/auth/session-expiree">Reprendre l&rsquo;inscription</a>
+        </p>
+      ) : lookup === "down" ? (
+        <p className={styles.info} aria-live="polite">
+          La recherche ne répond pas pour l&rsquo;instant. Réessayez dans un moment, ou continuez : vous ajouterez votre SIRET dans Réglages.
+        </p>
       ) : lookup === "none" ? (
         <p className={styles.info} aria-live="polite">
           {numeric

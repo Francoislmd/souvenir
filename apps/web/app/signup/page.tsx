@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { verifiedEmail } from "@/lib/current-user";
+import { createClient } from "@/lib/supabase-server";
 import { Onboarding, type OnboardingOperator, type OnboardingStep } from "@/components/onboarding/Onboarding";
 
 export const metadata: Metadata = {
@@ -44,6 +45,12 @@ export default async function SignupPage({ searchParams }: { searchParams: { nam
   if (email) {
     const user = await prisma.user.findUnique({ where: { email }, include: { operator: true } });
     if (!user) {
+      // Un jeton encore valide peut survivre à son compte (supprimé côté
+      // Supabase Auth) : getClaims() l'accepte, mais les routes de
+      // l'inscription, qui appellent getUser(), répondraient 401. On vérifie
+      // une fois, ici seulement, et on repart de la création du compte.
+      const { data, error } = await createClient().auth.getUser();
+      if (!data.user && error?.status && error.status >= 400 && error.status < 500) redirect("/auth/session-expiree");
       step = "structure";
     } else {
       const o = user.operator;

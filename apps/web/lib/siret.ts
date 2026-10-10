@@ -117,7 +117,10 @@ export async function searchCompanies(query: string, limit = 6): Promise<SiretMa
       signal: AbortSignal.timeout(5000),
       next: { revalidate: 3600 },
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[siret] annuaire : HTTP ${res.status} (recherche par nom)`);
+      return [];
+    }
     const data = (await res.json()) as { results?: ApiResult[] };
     const out: SiretMatch[] = [];
     for (const result of data.results ?? []) {
@@ -145,7 +148,10 @@ export async function lookupSiret(input: string): Promise<SiretMatch | null> {
       signal: AbortSignal.timeout(5000),
       next: { revalidate: 86400 },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[siret] annuaire : HTTP ${res.status} (SIRET ${siret})`);
+      return null;
+    }
     const data = (await res.json()) as { results?: ApiResult[] };
     const result = data.results?.[0];
     if (!result) return null;
