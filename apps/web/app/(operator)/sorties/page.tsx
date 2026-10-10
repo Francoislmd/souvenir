@@ -77,7 +77,23 @@ export default async function SortiesPage() {
   });
 
   const selectedIds = new Set(dbUser.operator.activities);
-  const activities = (selectedIds.size > 0 ? ACTIVITIES.filter((a) => selectedIds.has(a.id)) : ACTIVITIES).map((a) => a.label);
+  // « Autre » s'affiche sous le nom que le pro lui a donné à l'inscription.
+  // Pas de colonne pour une activité libre : elle vit dans l'événement
+  // onboarding_qualified (meta.otherActivity, cf. api/operator/route.ts).
+  let otherLabel = "";
+  if (selectedIds.has("autre")) {
+    const qualified = await prisma.event.findFirst({
+      where: { operatorId: dbUser.operator.id, name: "onboarding_qualified" },
+      orderBy: { createdAt: "desc" },
+      select: { meta: true },
+    });
+    const meta = qualified?.meta as { otherActivity?: unknown } | null | undefined;
+    const raw = typeof meta?.otherActivity === "string" ? meta.otherActivity.trim() : "";
+    otherLabel = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "";
+  }
+  const activities = (selectedIds.size > 0 ? ACTIVITIES.filter((a) => selectedIds.has(a.id)) : ACTIVITIES)
+    .filter((a) => a.id !== "autre" || otherLabel || selectedIds.size === 1)
+    .map((a) => (a.id === "autre" && otherLabel ? otherLabel : a.label));
 
   return (
     <>
