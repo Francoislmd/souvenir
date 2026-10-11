@@ -2212,6 +2212,89 @@ a.sdClient:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* Détail d'un achat (revenus/[orderId]) : libellé à gauche, valeur à droite,
+   un filet entre les lignes. Le total « Pour vous » ferme le compte. */
+.rvLines {
+  margin: 0 0 6px;
+}
+.rvLines > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-2);
+}
+.rvLines > div:last-child {
+  border-bottom: 0;
+}
+.rvLines dt {
+  flex: 0 0 auto;
+  max-width: 45%;
+  font-size: 0.94rem;
+  color: var(--ink-3);
+}
+.rvLines dd {
+  margin: 0;
+  min-width: 0;
+  text-align: right;
+  font-size: 0.98rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.rvLines .rvTotal {
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+  margin-top: 4px;
+}
+.rvLines .rvTotal dt,
+.rvLines .rvTotal dd {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 1.06rem;
+}
+.rvMuted {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+dd > .rvMuted:only-child {
+  display: inline;
+  margin: 0;
+}
+.rvLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.rvLink:hover {
+  text-decoration-color: currentColor;
+}
+.rvMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.84rem !important;
+  color: var(--ink-3) !important;
+}
+@media (max-width: 760px) {
+  .rvLines > div {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .rvLines dt {
+    max-width: none;
+  }
+  .rvLines dd {
+    text-align: left;
+  }
+  .rvLines .rvTotal {
+    flex-direction: row;
+  }
+}
+
 /* ---------- réglages ---------- */
 /* Deux colonnes sur grand écran, une sur téléphone. Pas de carte, pas de
    filet : les sections se séparent par leur intitulé et par du vide. Il n'y

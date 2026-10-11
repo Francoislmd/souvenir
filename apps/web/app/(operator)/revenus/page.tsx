@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getGmv, getSales, nextPayoutDate } from "@/lib/metrics";
 import { formatEuros } from "@/lib/format";
@@ -45,7 +46,7 @@ export default async function RevenusPage() {
             <p className={styles.sdNote}>Aucun achat pour l&rsquo;instant.</p>
           ) : (
             sales.map((s) => (
-              <div key={s.id} className={`${styles.sdClient} ${styles.rvRow}`}>
+              <Link key={s.id} href={`/revenus/${s.id}`} className={`${styles.sdClient} ${styles.rvRow}`}>
                 <span className={styles.sdAv}>{s.participantName.slice(0, 2).toUpperCase()}</span>
                 <span className={styles.sdClientMain}>
                   <b>{s.participantName}</b>
@@ -54,7 +55,7 @@ export default async function RevenusPage() {
                   </span>
                 </span>
                 <span className={styles.rvAmount}>{formatEuros(s.amountCents)}</span>
-              </div>
+              </Link>
             ))
           )}
         </div>
