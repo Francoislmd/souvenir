@@ -2326,6 +2326,71 @@ button.sdClient:hover {
 .rvLines + .sDay {
   margin-top: 22px;
 }
+/* Remboursement, sous le compte d'un achat. */
+.rvRefundBar {
+  margin: 0 0 26px;
+}
+.rvRefund {
+  margin: 0 0 26px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.rvRefundLbl {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+.rvRefundRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.rvRefundField {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+}
+.rvRefundField .nsInp {
+  width: 120px;
+  height: 40px;
+  font-size: 1rem;
+  text-align: right;
+}
+.rvRefundMax {
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.rvRefundMax:hover {
+  text-decoration-color: currentColor;
+}
+.rvRefundErr {
+  margin: -12px 0 16px;
+  font-size: 0.84rem;
+  color: #c0392b;
+}
+.rvRefundActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rvRefundActions .sBtn {
+  height: 42px;
+  font-size: 0.96rem;
+}
 @media (max-width: 760px) {
   .rvLines > div {
     flex-direction: column;

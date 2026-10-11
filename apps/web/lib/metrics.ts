@@ -14,11 +14,13 @@ export async function getGmv(operatorId: string, since?: Date, until?: Date): Pr
       status: "succeeded",
       ...(since || until ? { paidAt: { ...(since ? { gte: since } : {}), ...(until ? { lt: until } : {}) } } : {}),
     },
-    _sum: { amountCents: true, feeCents: true },
+    _sum: { amountCents: true, feeCents: true, refundedAmountCents: true },
     _count: true,
   });
 
-  const totalCents = agg._sum.amountCents ?? 0;
+  // Un remboursement partiel laisse la commande « succeeded » : ce qui a été
+  // rendu au client sort du total. La commission, elle, n'est pas rendue.
+  const totalCents = (agg._sum.amountCents ?? 0) - (agg._sum.refundedAmountCents ?? 0);
   const platformCents = agg._sum.feeCents ?? 0;
   return { totalCents, operatorCents: totalCents - platformCents, platformCents, orderCount: agg._count };
 }

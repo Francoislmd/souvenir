@@ -48,10 +48,22 @@ const STATUS: Record<string, string> = {
  * compte (commission, frais Stripe, ce qui revient au pro), l'achat, et les
  * mentions qui figurent sur le reçu du client.
  */
-export function SaleSheet({ orderId, title, onClose }: { orderId: string; title: string; onClose: () => void }) {
+export function SaleSheet({
+  orderId,
+  title,
+  onClose,
+  onChanged,
+}: {
+  orderId: string;
+  title: string;
+  onClose: () => void;
+  /** Un remboursement a eu lieu : la liste et le total de Revenus sont à relire. */
+  onChanged: () => void;
+}) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [sale, setSale] = useState<Sale | null>(null);
   const [failed, setFailed] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent): void {
@@ -80,7 +92,7 @@ export function SaleSheet({ orderId, title, onClose }: { orderId: string; title:
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
+  }, [orderId, reload]);
 
   return (
     <div className={styles.shOverlay} onClick={onClose} role="presentation">
@@ -113,7 +125,13 @@ export function SaleSheet({ orderId, title, onClose }: { orderId: string; title:
               <Spinner size={20} label="Chargement du détail" />
             </div>
           ) : (
-            <SaleBody sale={sale} />
+            <SaleBody
+              sale={sale}
+              onRefunded={() => {
+                setReload((n) => n + 1);
+                onChanged();
+              }}
+            />
           )}
         </div>
       </div>
@@ -121,7 +139,7 @@ export function SaleSheet({ orderId, title, onClose }: { orderId: string; title:
   );
 }
 
-function SaleBody({ sale }: { sale: Sale }) {
+function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) {
   const percent = sale.amountCents > 0 ? Math.round((sale.feeCents / sale.amountCents) * 100) : 0;
   const settled = sale.status === "succeeded" && sale.refundedCents === 0 && !sale.disputeStatus;
   const netCents = sale.stripe ? sale.amountCents - sale.feeCents - sale.stripe.feeCents - sale.refundedCents : null;
@@ -177,6 +195,8 @@ function SaleBody({ sale }: { sale: Sale }) {
           {sale.disputeStatus ? " Ce paiement est contesté : la galerie du client est verrouillée." : null}
         </p>
       ) : null}
+
+      <RefundBlock key={sale.refundedCents} sale={sale} onRefunded={onRefunded} />
 
       <p className={styles.sDay}>L&rsquo;achat</p>
       <dl className={styles.rvLines}>
@@ -255,5 +275,118 @@ function SaleBody({ sale }: { sale: Sale }) {
         ) : null}
       </dl>
     </>
+  );
+}
+
+/** « 12,50 » ou « 12.5 » → 1250 ; null si ce n'est pas un montant. */
+function parseCents(input: string): number | null {
+  const clean = input.replace(/\s|€/g, "").replace(",", ".");
+  if (!/^\d+(\.\d{0,2})?$/.test(clean)) return null;
+  return Math.round(Number(clean) * 100);
+}
+
+/**
+ * Rembourser tout ou partie de l'achat. La commission Linktrip n'est pas
+ * rendue : le remboursement sort en entier du solde Stripe du pro. Un
+ * remboursement total verrouille la galerie du client, un partiel la laisse
+ * ouverte (lib/order-refunds.ts).
+ */
+function RefundBlock({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) {
+  const remaining = sale.amountCents - sale.refundedCents;
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(() => (remaining / 100).toFixed(2).replace(".", ","));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (sale.status !== "succeeded" || sale.disputeStatus || !sale.stripePi || remaining <= 0) return null;
+
+  const cents = parseCents(value);
+  const valid = cents !== null && cents >= 50 && cents <= remaining;
+  const full = valid && cents === remaining && sale.refundedCents === 0;
+
+  async function submit(): Promise<void> {
+    if (!valid || busy || cents === null) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/revenus/${encodeURIComponent(sale.id)}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountCents: cents }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(body.error ?? "Le remboursement n\u2019a pas abouti.");
+      setOpen(false);
+      onRefunded();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Le remboursement n\u2019a pas abouti.");
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <div className={styles.rvRefundBar}>
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnGhost}`} onClick={() => setOpen(true)}>
+          Rembourser
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className={styles.rvRefund}
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit();
+      }}
+    >
+      <label htmlFor="rvRefundAmt" className={styles.rvRefundLbl}>
+        Montant à rembourser
+      </label>
+      <div className={styles.rvRefundRow}>
+        <span className={styles.rvRefundField}>
+          <input
+            id="rvRefundAmt"
+            className={styles.nsInp}
+            inputMode="decimal"
+            autoComplete="off"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setError(null);
+            }}
+            aria-invalid={!valid || undefined}
+            autoFocus
+          />
+          <span aria-hidden="true">€</span>
+        </span>
+        <button
+          type="button"
+          className={styles.rvRefundMax}
+          onClick={() => setValue((remaining / 100).toFixed(2).replace(".", ","))}
+        >
+          Tout ({euros(remaining)})
+        </button>
+      </div>
+      <p className={styles.rvSheetNote}>
+        La commission Linktrip ({euros(sale.feeCents)}) n&rsquo;est pas remboursée : le montant sort en entier de votre solde Stripe.{" "}
+        {full ? "Le client perd l\u2019accès à ses photos." : "Le client garde ses photos."}
+      </p>
+      {!valid && value.trim() !== "" ? (
+        <p className={styles.rvRefundErr}>Entre 0,50 € et {euros(remaining)}.</p>
+      ) : null}
+      {error ? <p className={styles.rvRefundErr}>{error}</p> : null}
+      <div className={styles.rvRefundActions}>
+        <button type="button" className={`${styles.sBtn} ${styles.sBtnGhost}`} onClick={() => setOpen(false)} disabled={busy}>
+          Annuler
+        </button>
+        <button type="submit" className={`${styles.sBtn} ${valid ? styles.sBtnDanger : styles.sBtnOff}`} disabled={!valid || busy}>
+          {busy ? <Spinner size={16} tone="current" label="Remboursement en cours" /> : null}
+          Rembourser {valid && cents !== null ? euros(cents) : ""}
+        </button>
+      </div>
+    </form>
   );
 }

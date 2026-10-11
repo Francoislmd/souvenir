@@ -7,6 +7,7 @@ const { prismaMock, trackMock } = vi.hoisted(() => ({
 }));
 vi.mock("./prisma", () => ({ prisma: prismaMock }));
 vi.mock("./analytics", () => ({ track: trackMock }));
+vi.mock("./stripe", () => ({ stripe: {} }));
 
 function makeOrder(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -37,14 +38,23 @@ describe("handleChargeRefunded", () => {
     expect(trackMock).not.toHaveBeenCalled();
   });
 
-  it("verrouille la galerie sur un remboursement partiel (pas de politique de remboursement partiel)", async () => {
+  it("garde l'accès sur un remboursement partiel (seul le montant est enregistré)", async () => {
     prismaMock.order.findUnique.mockResolvedValue(makeOrder({ refundedAmountCents: 0 }));
     prismaMock.order.update.mockResolvedValue({ refundedAmountCents: 300 });
     await handleChargeRefunded({ payment_intent: "pi_1", amount_refunded: 300, refunded: false } as never);
-    expect(prismaMock.order.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: "refunded", refundedAmountCents: 300 }) }),
-    );
+    const data = prismaMock.order.update.mock.calls[0]![0].data;
+    expect(data).toEqual(expect.objectContaining({ refundedAmountCents: 300 }));
+    expect(data).not.toHaveProperty("status");
     expect(trackMock).toHaveBeenCalledWith("order_refunded", expect.objectContaining({ operatorId: "operator_1" }));
+  });
+
+  it("verrouille la galerie sur un remboursement total", async () => {
+    prismaMock.order.findUnique.mockResolvedValue(makeOrder({ refundedAmountCents: 0 }));
+    prismaMock.order.update.mockResolvedValue({ refundedAmountCents: 1000 });
+    await handleChargeRefunded({ payment_intent: "pi_1", amount_refunded: 1000, refunded: true } as never);
+    expect(prismaMock.order.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "refunded", refundedAmountCents: 1000 }) }),
+    );
   });
 
   it("accepte le payment_intent sous forme d'objet Stripe expansé", async () => {

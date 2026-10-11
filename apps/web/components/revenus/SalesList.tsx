@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { SaleSheet } from "@/components/revenus/SaleSheet";
 
@@ -14,6 +15,7 @@ export interface SaleRow {
 
 /** « Qui a acheté » : chaque ligne ouvre le détail de l'achat en fenêtre. */
 export function SalesList({ rows }: { rows: SaleRow[] }) {
+  const router = useRouter();
   const [open, setOpen] = useState<SaleRow | null>(null);
 
   if (rows.length === 0) return <p className={styles.sdNote}>Aucun achat pour l&rsquo;instant.</p>;
@@ -36,7 +38,7 @@ export function SalesList({ rows }: { rows: SaleRow[] }) {
           <span className={styles.rvAmount}>{s.amount}</span>
         </button>
       ))}
-      {open ? <SaleSheet orderId={open.id} title={open.name} onClose={() => setOpen(null)} /> : null}
+      {open ? <SaleSheet orderId={open.id} title={open.name} onClose={() => setOpen(null)} onChanged={() => router.refresh()} /> : null}
     </>
   );
 }
