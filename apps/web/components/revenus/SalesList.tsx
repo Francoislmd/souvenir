@@ -11,6 +11,10 @@ export interface SaleRow {
   /** « HydroSpeed · hier », composé côté serveur. */
   line: string;
   amount: string;
+  /** « Remboursé », « Remboursé 10 € », « Contesté » ; null pour un achat payé. */
+  tag: string | null;
+  /** Remboursé en entier : le montant se barre. */
+  void: boolean;
 }
 
 /** « Qui a acheté » : chaque ligne ouvre le détail de l'achat en fenêtre. */
@@ -33,9 +37,12 @@ export function SalesList({ rows }: { rows: SaleRow[] }) {
           <span className={styles.sdAv}>{s.name.slice(0, 2).toUpperCase()}</span>
           <span className={styles.sdClientMain}>
             <b>{s.name}</b>
-            <span>{s.line}</span>
+            <span>
+              {s.tag ? <em className={styles.rvTag}>{s.tag}</em> : null}
+              {s.line}
+            </span>
           </span>
-          <span className={styles.rvAmount}>{s.amount}</span>
+          <span className={`${styles.rvAmount} ${s.void ? styles.rvAmountVoid : ""}`}>{s.amount}</span>
         </button>
       ))}
       {open ? <SaleSheet orderId={open.id} title={open.name} onClose={() => setOpen(null)} onChanged={() => router.refresh()} /> : null}

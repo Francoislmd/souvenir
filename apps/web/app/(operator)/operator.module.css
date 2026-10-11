@@ -2326,6 +2326,23 @@ button.sdClient:hover {
 .rvLines + .sDay {
   margin-top: 22px;
 }
+/* Statut d'un achat dans « Qui a acheté » : remboursé, contesté. */
+.rvTag {
+  display: inline-block;
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--fill);
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin-right: 8px;
+}
+.rvAmountVoid {
+  color: var(--ink-4);
+  text-decoration: line-through;
+}
+
 /* Remboursement, sous le compte d'un achat. */
 /* En pied de fenêtre, séparé des mentions par un filet. */
 .rvRefundBar {

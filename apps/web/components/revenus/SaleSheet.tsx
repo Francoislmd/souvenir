@@ -35,13 +35,6 @@ function contentLabel(isPack: boolean, items: number, videos: number): string {
     .join(" et ");
 }
 
-const STATUS: Record<string, string> = {
-  succeeded: "Payé",
-  refunded: "Remboursé",
-  disputed: "Contesté",
-  failed: "Échoué",
-  pending: "En attente",
-};
 
 /**
  * Le détail d'un achat, en fenêtre par-dessus la liste des revenus : le
@@ -160,7 +153,10 @@ function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) 
       <div className={styles.rvSheetLead}>
         <p className={styles.rvSheetBig}>{euros(sale.amountCents)}</p>
         <p className={styles.rvSub}>
-          {STATUS[sale.status] ?? sale.status} le {dayFr(sale.paidAt)} à {formatHourFr(paidAt)}. Commande {sale.ref}.
+          Payé le {dayFr(sale.paidAt)} à {formatHourFr(paidAt)}.
+          {sale.status === "refunded" ? ` Remboursé${sale.refundedAt ? ` le ${dayFr(sale.refundedAt)}` : ""}.` : null}
+          {sale.status === "disputed" ? " Contesté par le client." : null}
+          {sale.status === "succeeded" && sale.refundedCents > 0 ? ` ${euros(sale.refundedCents)} remboursés.` : null} Commande {sale.ref}.
         </p>
       </div>
 

@@ -48,6 +48,15 @@ export default async function RevenusPage() {
               name: s.participantName,
               line: `${s.activity} · ${formatDayFr(s.paidAt, now)}`,
               amount: formatEuros(s.amountCents),
+              tag:
+                s.status === "disputed"
+                  ? "Contesté"
+                  : s.status === "refunded"
+                    ? "Remboursé"
+                    : s.refundedCents > 0
+                      ? `Remboursé ${formatEuros(s.refundedCents)}`
+                      : null,
+              void: s.status === "refunded",
             }))}
           />
         </div>

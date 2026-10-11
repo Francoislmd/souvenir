@@ -11,7 +11,9 @@ export async function getGmv(operatorId: string, since?: Date, until?: Date): Pr
   const agg = await prisma.order.aggregate({
     where: {
       participant: { sortie: { operatorId } },
-      status: "succeeded",
+      // Un achat remboursé reste compté : le client a récupéré son argent,
+      // mais la commission n'est pas rendue, elle reste à la charge du pro.
+      status: { in: ["succeeded", "refunded"] },
       ...(since || until ? { paidAt: { ...(since ? { gte: since } : {}), ...(until ? { lt: until } : {}) } } : {}),
     },
     _sum: { amountCents: true, feeCents: true, refundedAmountCents: true },
@@ -27,6 +29,9 @@ export async function getGmv(operatorId: string, since?: Date, until?: Date): Pr
 
 export interface Sale {
   id: string;
+  /** succeeded | refunded | disputed */
+  status: string;
+  refundedCents: number;
   participantName: string;
   activity: string;
   amountCents: number;
@@ -36,7 +41,8 @@ export interface Sale {
 
 export async function getSales(operatorId: string, limit = 30): Promise<Sale[]> {
   const orders = await prisma.order.findMany({
-    where: { participant: { sortie: { operatorId } }, status: "succeeded" },
+    // Un achat remboursé ou contesté reste dans la liste, avec son statut.
+    where: { participant: { sortie: { operatorId } }, status: { in: ["succeeded", "refunded", "disputed"] } },
     include: { participant: { include: { sortie: { select: { activity: true } } } } },
     orderBy: { paidAt: "desc" },
     take: limit,
@@ -44,6 +50,8 @@ export async function getSales(operatorId: string, limit = 30): Promise<Sale[]> 
 
   return orders.map((o) => ({
     id: o.id,
+    status: o.status,
+    refundedCents: o.refundedAmountCents,
     participantName: o.participant.name,
     activity: o.participant.sortie.activity,
     amountCents: o.amountCents,
