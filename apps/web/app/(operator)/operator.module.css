@@ -2292,7 +2292,7 @@ button.sdClient:hover {
   background: var(--line-2);
 }
 .shPanel.rvPanel {
-  max-width: 540px;
+  max-width: 720px;
 }
 .rvSheetBody {
   padding: 4px 20px 22px;
@@ -2327,11 +2327,16 @@ button.sdClient:hover {
   margin-top: 22px;
 }
 /* Remboursement, sous le compte d'un achat. */
+/* En pied de fenêtre, séparé des mentions par un filet. */
 .rvRefundBar {
-  margin: 0 0 26px;
+  margin: 22px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: flex-end;
 }
 .rvRefund {
-  margin: 0 0 26px;
+  margin: 22px 0 0;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 14px;

@@ -196,8 +196,6 @@ function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) 
         </p>
       ) : null}
 
-      <RefundBlock key={sale.refundedCents} sale={sale} onRefunded={onRefunded} />
-
       <p className={styles.sDay}>L&rsquo;achat</p>
       <dl className={styles.rvLines}>
         <div>
@@ -274,6 +272,8 @@ function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) 
           </div>
         ) : null}
       </dl>
+
+      <RefundBlock key={sale.refundedCents} sale={sale} onRefunded={onRefunded} />
     </>
   );
 }
