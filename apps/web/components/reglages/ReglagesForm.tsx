@@ -8,6 +8,9 @@ import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/operator/ToastProvider";
 import { StripeConnectSection } from "@/components/reglages/StripeConnectSection";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
+import { operatorTagline } from "@/lib/tagline";
+import { buttonColor } from "@/lib/color";
+import { REDUCED_OFFER_DISCOUNT_PERCENT } from "@/lib/pricing";
 
 const SWATCHES = ["#FF5A1F", "#0FBEB6", "#FF3D6E", "#7C3AED", "#2563EB", "#16A34A", "#0F0D16"];
 // Ce que le lecteur d'écran annonce : un code hexadécimal ne dit rien.
@@ -32,6 +35,7 @@ interface OperatorSettings {
   logoUrl: string | null;
   coverUrl: string | null;
   brandColor: string;
+  tagline: string | null;
   pricePhotoCents: number;
   priceAllCents: number;
   packOnly: boolean;
@@ -51,6 +55,60 @@ function toEuros(cents: number): string {
   return (cents / 100).toString();
 }
 
+function CheckIcon({ size = 14, width = 2.6 }: { size?: number; width?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function UploadIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 16V4M8 8l4-4 4 4" />
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+    </svg>
+  );
+}
+
+/** Une ligne à interrupteur, dans un cadre de liste (.rgList). */
+function SwitchRow({
+  title,
+  text,
+  when,
+  checked,
+  label,
+  onToggle,
+}: {
+  title: string;
+  text: string;
+  when?: string;
+  checked: boolean;
+  label: string;
+  onToggle: () => void;
+}) {
+  return (
+    <div className={styles.rgRow}>
+      <span className={styles.rgRowMain}>
+        {when ? <span className={styles.rgWhen}>{when}</span> : null}
+        <b>{title}</b>
+        <span>{text}</span>
+      </span>
+      <button type="button" className={`${styles.tog} ${checked ? styles.on : ""}`} role="switch" aria-checked={checked} aria-label={label} onClick={onToggle}>
+        <i />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Réglages, refonte du 11/10/2026 (maquette docs/maquette-reglages-v1.html).
+ * Une section = un intitulé et une phrase à gauche, ses champs à droite. Les
+ * sections suivent l'ordre d'importance : la page client (avec son aperçu,
+ * seul moyen de voir l'effet d'une couleur), les prix, les relances, les
+ * paiements et reçus, les activités.
+ */
 export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSettings; storeUrl: string }) {
   const router = useRouter();
   const toast = useToast();
@@ -76,6 +134,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
   const [siret, setSiret] = useState(operator.siret);
   const [vatExempt, setVatExempt] = useState(operator.vatExempt);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [copied, setCopied] = useState(false);
 
   // Plus de bouton « Enregistrer » : les interrupteurs avaient l'air immédiats
   // alors qu'ils ne l'étaient pas. Les modifications partent seules, groupées,
@@ -98,7 +157,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
       router.refresh();
     } else {
       setStatus("idle");
-      toast("L'enregistrement a échoué — vérifiez votre connexion.");
+      toast("L'enregistrement a échoué, vérifiez votre connexion.");
     }
   }, [router, toast]);
 
@@ -137,45 +196,46 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
     return ((cents * (100 - operator.feePercent)) / 100 / 100).toFixed(2).replace(".", ",");
   }
 
-  // La couverture de la boutique. Même trajet que le logo : envoi d'abord,
-  // l'adresse obtenue part ensuite dans le même lot que les autres réglages.
-  async function handleCoverFile(file: File): Promise<void> {
-    setUploadingCover(true);
+  async function upload(kind: "logo" | "cover", file: File): Promise<void> {
+    const setBusy = kind === "logo" ? setUploadingLogo : setUploadingCover;
+    setBusy(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const uploadRes = await fetch("/api/operator/cover", { method: "POST", body: formData });
-      if (!uploadRes.ok) {
-        const body = await uploadRes.json().catch(() => ({}));
+      const res = await fetch(`/api/operator/${kind}`, { method: "POST", body: formData });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
         toast((body as { error?: string }).error ?? "L'envoi a échoué, réessayez.");
         return;
       }
-      const { coverUrl: uploadedUrl } = (await uploadRes.json()) as { coverUrl: string };
-      setCoverUrl(uploadedUrl);
-      queue({ coverUrl: uploadedUrl });
+      // Envoi d'abord, l'adresse obtenue part ensuite dans le même lot que
+      // les autres réglages.
+      if (kind === "logo") {
+        const { logoUrl: url } = (await res.json()) as { logoUrl: string };
+        setLogoUrl(url);
+        queue({ logoUrl: url });
+      } else {
+        const { coverUrl: url } = (await res.json()) as { coverUrl: string };
+        setCoverUrl(url);
+        queue({ coverUrl: url });
+      }
     } finally {
-      setUploadingCover(false);
+      setBusy(false);
     }
   }
 
-  async function handleLogoFile(file: File): Promise<void> {
-    setUploadingLogo(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const uploadRes = await fetch("/api/operator/logo", { method: "POST", body: formData });
-      if (!uploadRes.ok) {
-        const body = await uploadRes.json().catch(() => ({}));
-        toast((body as { error?: string }).error ?? "L'envoi a échoué, réessayez.");
-        return;
-      }
-      const { logoUrl: uploadedUrl } = (await uploadRes.json()) as { logoUrl: string };
-      setLogoUrl(uploadedUrl);
-      queue({ logoUrl: uploadedUrl });
-    } finally {
-      setUploadingLogo(false);
-    }
-  }
+  const siretDigits = siret.replace(/\s+/g, "");
+  const siretBad = siretDigits !== "" && !/^\d{14}$/.test(siretDigits);
+  const storeLabel = storeUrl.replace(/^https?:\/\//, "");
+  const tagline = operator.tagline?.trim() || operatorTagline(Array.from(activities));
+  const shownName = name.trim() || operator.name;
+
+  const logoMark = logoUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={logoUrl} alt="" />
+  ) : (
+    shownName.slice(0, 2).toUpperCase()
+  );
 
   return (
     <>
@@ -190,9 +250,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
               </>
             ) : status === "saved" ? (
               <>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
+                <CheckIcon size={15} />
                 Enregistré
               </>
             ) : null}
@@ -201,16 +259,62 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
       />
 
       <div className={styles.sWrap}>
-        <div className={styles.rgCols}>
-          <div>
-            <p className={styles.sDay}>Ce que voient vos clients</p>
+        {/* Sans Stripe, rien ne se vend : c'est la seule chose qui passe
+            avant tout le reste de la page. */}
+        {operator.stripeOnboarded ? null : (
+          <div className={styles.rgAlert}>
+            <StripeConnectSection stripeOnboarded={false} />
+          </div>
+        )}
 
+        {/* 1. La page client */}
+        <section className={styles.rgSec} id="page-client" aria-labelledby="rg-h-page">
+          <div className={styles.rgSecHead}>
+            <h2 id="rg-h-page">Votre page client</h2>
+            <p>Vos clients y arrivent depuis le QR code ou l&rsquo;e-mail de fin de sortie.</p>
+
+            {/* L'aperçu reprend la page de store.linktrip.co/{slug}
+                (components/store/LinkRequest.tsx) : une couleur ne se juge
+                qu'appliquée. */}
+            <div className={styles.rgPrev} aria-hidden="true" style={{ "--op-btn": buttonColor(brandColor) } as React.CSSProperties}>
+              <div className={styles.rgPrevBar}>{storeLabel}</div>
+              {coverUrl ? (
+                <div className={styles.rgPCover} style={{ backgroundImage: `url(${coverUrl})` }}>
+                  <div className={styles.rgPOrg}>
+                    <span className={styles.rgPLogo}>{logoMark}</span>
+                    <span>
+                      <b>{shownName}</b>
+                      {tagline ? <span>{tagline}</span> : null}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+              <div className={`${styles.rgPSheet} ${coverUrl ? "" : styles.rgPSheetFlat}`}>
+                {coverUrl ? null : (
+                  <div className={`${styles.rgPOrg} ${styles.rgPOrgFlat}`}>
+                    <span className={styles.rgPLogo}>{logoMark}</span>
+                    <span>
+                      <b>{shownName}</b>
+                      {tagline ? <span>{tagline}</span> : null}
+                    </span>
+                  </div>
+                )}
+                <p className={styles.rgPH}>Retrouvez vos photos</p>
+                <div className={styles.rgPLbl}>L&rsquo;adresse e-mail donnée à la réservation</div>
+                <div className={styles.rgPIn}>prenom.nom@gmail.com</div>
+                <div className={styles.rgPCta}>Recevoir mon lien</div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.rgSecBody}>
             <div className={styles.rgField}>
-              <label htmlFor="rgName">Nom de la structure</label>
+              <label htmlFor="rgName">Nom affiché</label>
               <input
                 id="rgName"
                 className={styles.sdInp}
                 value={name}
+                autoComplete="organization"
                 onChange={(e) => {
                   const value = e.target.value;
                   setName(value);
@@ -222,29 +326,33 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
             </div>
 
             <div className={styles.rgField}>
-              <label>Logo et couleur</label>
-              <div className={styles.rgLogo}>
-                <button type="button" className={styles.rgLogoBtn} onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} aria-label="Changer le logo">
+              <span className={styles.rgLbl}>Logo et couleur</span>
+              <div className={styles.rgBrandRow}>
+                <button
+                  type="button"
+                  className={styles.rgLogoBtn}
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  aria-label={logoUrl ? "Changer le logo" : "Ajouter un logo"}
+                >
                   {uploadingLogo ? (
                     <Spinner size={18} />
                   ) : logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={logoUrl} alt="" />
                   ) : (
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M12 16V4M8 8l4-4 4 4" />
-                      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-                    </svg>
+                    <UploadIcon size={20} />
                   )}
                 </button>
-                <div className={styles.rgSws}>
+                <span className={styles.rgVsep} aria-hidden="true" />
+                <div className={styles.rgSws} role="group" aria-label="Couleur">
                   {SWATCHES.map((c) => (
                     <button
                       key={c}
                       type="button"
                       className={`${styles.rgSw} ${brandColor === c ? styles.rgSwOn : ""}`}
                       style={{ background: c }}
-                      aria-label={`Couleur ${SWATCH_NAMES[c] ?? c}`}
+                      aria-label={SWATCH_NAMES[c] ?? c}
                       aria-pressed={brandColor === c}
                       onClick={() => {
                         setBrandColor(c);
@@ -254,7 +362,7 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                   ))}
                 </div>
               </div>
-              <span className={styles.rgHint}>Visibles sur la galerie et dans les emails.</span>
+              <span className={styles.rgHint}>Visibles sur vos galeries et dans vos e-mails.</span>
               <input
                 ref={logoInputRef}
                 type="file"
@@ -262,38 +370,42 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                 className={styles.hiddenInput}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) void handleLogoFile(file);
+                  if (file) void upload("logo", file);
                   e.target.value = "";
                 }}
               />
             </div>
 
             <div className={styles.rgField}>
-              <label>Photo de couverture</label>
+              <span className={styles.rgLbl}>Photo de couverture</span>
               <button
                 type="button"
                 className={styles.rgCover}
                 onClick={() => coverInputRef.current?.click()}
                 disabled={uploadingCover}
-                aria-label={coverUrl ? "Changer la photo de couverture" : "Ajouter une photo de couverture"}
+                aria-label={coverUrl ? "Remplacer la photo de couverture" : "Ajouter une photo de couverture"}
               >
                 {uploadingCover ? (
-                  <Spinner size={20} />
+                  <span className={styles.rgCoverEmpty}>
+                    <Spinner size={20} />
+                  </span>
                 ) : coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={coverUrl} alt="" />
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={coverUrl} alt="" />
+                    <span className={styles.rgCoverAct}>
+                      <UploadIcon />
+                      Remplacer
+                    </span>
+                  </>
                 ) : (
                   <span className={styles.rgCoverEmpty}>
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <rect x="3" y="5" width="18" height="14" rx="3" />
-                      <circle cx="8.5" cy="10" r="1.5" />
-                      <path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5" />
-                    </svg>
+                    <UploadIcon size={20} />
                     Ajouter une photo
                   </span>
                 )}
               </button>
-              <span className={styles.rgHint}>En haut de la page où vos clients demandent leur lien. Format paysage.</span>
+              <span className={styles.rgHint}>Format paysage.</span>
               <input
                 ref={coverInputRef}
                 type="file"
@@ -301,162 +413,157 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                 className={styles.hiddenInput}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) void handleCoverFile(file);
+                  if (file) void upload("cover", file);
                   e.target.value = "";
                 }}
               />
             </div>
 
             <div className={styles.rgField}>
-              <label>L&rsquo;adresse de votre page client</label>
+              <span className={styles.rgLbl}>Adresse</span>
               <div className={styles.rgCopy}>
-                <span className={styles.rgCopyUrl}>{storeUrl.replace(/^https?:\/\//, "")}</span>
+                <span className={styles.rgCopyUrl}>{storeLabel}</span>
                 <button
                   type="button"
-                  className={`${styles.sBtn} ${styles.sBtnSm} ${styles.sdChip}`}
+                  className={styles.rgCopyBtn}
                   onClick={() => {
                     void navigator.clipboard.writeText(storeUrl).catch(() => undefined);
-                    toast("Adresse copiée");
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 1600);
                   }}
                 >
-                  Copier
+                  {copied ? (
+                    <CheckIcon size={15} width={2.2} />
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="8.75" y="8.75" width="11.5" height="11.5" rx="2.5" />
+                      <path d="M15.25 8.75v-2.5a2.5 2.5 0 0 0-2.5-2.5h-6.5a2.5 2.5 0 0 0-2.5 2.5v6.5a2.5 2.5 0 0 0 2.5 2.5h2.5" />
+                    </svg>
+                  )}
+                  {copied ? "Copiée" : "Copier"}
                 </button>
               </div>
               <span className={styles.rgHint}>
-                La même pour toutes vos sorties. Vos clients y entrent leur e-mail et reçoivent le lien de leur galerie privée.
+                Une seule adresse pour toutes vos sorties. Seuls les e-mails de votre liste reçoivent un lien.
               </span>
             </div>
+          </div>
+        </section>
 
-            <p className={styles.sDay}>Vos prix</p>
-
-            <div className={styles.rgField}>
+        {/* 2. Les prix */}
+        <section className={styles.rgSec} id="prix" aria-labelledby="rg-h-prix">
+          <div className={styles.rgSecHead}>
+            <h2 id="rg-h-prix">Vos prix</h2>
+            <p>Linktrip prélève {operator.feePercent} % sur chaque vente. Les frais Stripe sont à votre charge.</p>
+          </div>
+          <div className={styles.rgSecBody}>
+            <div className={styles.rgTwo}>
               <div className={styles.rgPrice}>
-                <span>Une photo</span>
-                <input
-                  type="number"
-                  aria-label="Prix d'une photo"
-                  value={pricePhoto}
-                  onChange={(e) => {
-                    setPricePhoto(e.target.value);
-                    queue({ pricePhotoCents: Math.round(Number(e.target.value || 0) * 100) });
-                  }}
-                />
-                <span className={styles.rgUnit}>€</span>
+                <label htmlFor="rgPricePhoto">Une photo</label>
+                <div className={styles.rgPriceIn}>
+                  <input
+                    id="rgPricePhoto"
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="0.5"
+                    value={pricePhoto}
+                    onChange={(e) => {
+                      setPricePhoto(e.target.value);
+                      queue({ pricePhotoCents: Math.round(Number(e.target.value || 0) * 100) });
+                    }}
+                  />
+                  <em>€</em>
+                </div>
+                <span className={styles.rgNet}>
+                  Vous recevez <b>{net(pricePhoto)} €</b>
+                </span>
               </div>
-              <span className={styles.rgHint}>
-                Vous touchez {net(pricePhoto)} € avant les frais Stripe. Linktrip prend {operator.feePercent} %.
-              </span>
-            </div>
-
-            <div className={styles.rgField}>
               <div className={styles.rgPrice}>
-                <span>Toutes les photos de la sortie</span>
-                <input
-                  type="number"
-                  aria-label="Prix de toutes les photos"
-                  value={priceAll}
-                  onChange={(e) => {
-                    setPriceAll(e.target.value);
-                    queue({ priceAllCents: Math.round(Number(e.target.value || 0) * 100) });
-                  }}
-                />
-                <span className={styles.rgUnit}>€</span>
+                <label htmlFor="rgPriceAll">Toutes les photos</label>
+                <div className={styles.rgPriceIn}>
+                  <input
+                    id="rgPriceAll"
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="0.5"
+                    value={priceAll}
+                    onChange={(e) => {
+                      setPriceAll(e.target.value);
+                      queue({ priceAllCents: Math.round(Number(e.target.value || 0) * 100) });
+                    }}
+                  />
+                  <em>€</em>
+                </div>
+                <span className={styles.rgNet}>
+                  Vous recevez <b>{net(priceAll)} €</b>
+                </span>
               </div>
-              <span className={styles.rgHint}>Vous touchez {net(priceAll)} €.</span>
             </div>
-
-            <div className={styles.rgSwitch}>
-              <span className={styles.rgSwitchMain}>
-                <b>Vente à l&rsquo;unité</b>
-                <span>Sans elle, vos clients ne peuvent prendre que le lot complet.</span>
-              </span>
-              <button
-                type="button"
-                className={`${styles.tog} ${!packOnly ? styles.on : ""}`}
-                role="switch"
-                aria-checked={!packOnly}
-                aria-label="Vente à l'unité"
-                onClick={() => {
+            <div className={styles.rgList}>
+              <SwitchRow
+                title="Vente à l'unité"
+                text="Sans elle, vos clients ne prennent que le lot complet."
+                checked={!packOnly}
+                label="Vente à l'unité"
+                onToggle={() => {
                   const next = !packOnly;
                   setPackOnly(next);
                   queue({ packOnly: next });
                 }}
-              >
-                <i />
-              </button>
+              />
             </div>
           </div>
+        </section>
 
-          <div>
-            <p className={styles.sDay}>Vos activités</p>
-            <div className={styles.shChips}>
-              {ACTIVITIES.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  className={`${styles.shChip} ${activities.has(a.id) ? styles.shChipOn : ""}`}
-                  aria-pressed={activities.has(a.id)}
-                  onClick={() => toggleActivity(a.id)}
-                >
-                  {a.label}
-                </button>
-              ))}
+        {/* 3. Les relances */}
+        <section className={styles.rgSec} id="relances" aria-labelledby="rg-h-relances">
+          <div className={styles.rgSecHead}>
+            <h2 id="rg-h-relances">Relances automatiques</h2>
+            <p>Des messages envoyés à vos clients après chaque sortie publiée.</p>
+          </div>
+          <div className={styles.rgSecBody}>
+            <div className={styles.rgList}>
+              <SwitchRow
+                when="2 h après"
+                title="Lien pas encore ouvert"
+                text="Nous renvoyons le lien de la galerie."
+                checked={automations.resendUnopened}
+                label="Renvoyer le lien"
+                onToggle={() => toggleAutomation("resendUnopened")}
+              />
+              <SwitchRow
+                when="Le lendemain"
+                title="Galerie vue, rien acheté"
+                text={`Nous proposons les photos à −${REDUCED_OFFER_DISCOUNT_PERCENT} %.`}
+                checked={automations.reducedPriceOffer}
+                label="Proposer une réduction"
+                onToggle={() => toggleAutomation("reducedPriceOffer")}
+              />
+              <SwitchRow
+                when="Après l'achat"
+                title="Avis Google"
+                text="Nous demandons un avis sur votre fiche Google."
+                checked={automations.reviewRequest}
+                label="Demander un avis Google"
+                onToggle={() => toggleAutomation("reviewRequest")}
+              />
             </div>
+          </div>
+        </section>
 
-            <p className={styles.sDay}>On relance à votre place</p>
-            <div className={styles.rgSwitch}>
-              <span className={styles.rgSwitchMain}>
-                <b>Ils n&rsquo;ont pas ouvert</b>
-                <span>Deux heures après, on leur remet le lien. Ils sont souvent encore sur la route.</span>
-              </span>
-              <button
-                type="button"
-                className={`${styles.tog} ${automations.resendUnopened ? styles.on : ""}`}
-                role="switch"
-                aria-checked={automations.resendUnopened}
-                aria-label="Relancer ceux qui n'ont pas ouvert"
-                onClick={() => toggleAutomation("resendUnopened")}
-              >
-                <i />
-              </button>
-            </div>
-            <div className={styles.rgSwitch}>
-              <span className={styles.rgSwitchMain}>
-                <b>Ils ont regardé sans acheter</b>
-                <span>Le lendemain, on leur propose leurs photos à prix réduit. C&rsquo;est ce qui rapporte le plus.</span>
-              </span>
-              <button
-                type="button"
-                className={`${styles.tog} ${automations.reducedPriceOffer ? styles.on : ""}`}
-                role="switch"
-                aria-checked={automations.reducedPriceOffer}
-                aria-label="Proposer un prix réduit"
-                onClick={() => toggleAutomation("reducedPriceOffer")}
-              >
-                <i />
-              </button>
-            </div>
-            <div className={styles.rgSwitch}>
-              <span className={styles.rgSwitchMain}>
-                <b>Ils ont acheté</b>
-                <span>On leur demande un avis Google. Vos meilleures notes viennent de là.</span>
-              </span>
-              <button
-                type="button"
-                className={`${styles.tog} ${automations.reviewRequest ? styles.on : ""}`}
-                role="switch"
-                aria-checked={automations.reviewRequest}
-                aria-label="Demander un avis"
-                onClick={() => toggleAutomation("reviewRequest")}
-              >
-                <i />
-              </button>
-            </div>
-
-            {/* Le vendeur, c'est lui : son identité s'affiche sur la feuille de
-                paiement et sur chaque reçu. Stripe remplit le nom et
-                l'adresse quand il les connaît ; le SIRET se saisit ici. */}
-            <p className={styles.sDay}>Sur les reçus de vos clients</p>
+        {/* 4. Paiements et reçus. Le vendeur, c'est lui : son identité
+            s'affiche sur la feuille de paiement et sur chaque reçu. Stripe
+            remplit le nom et l'adresse quand il les connaît ; le SIRET se
+            saisit ici. */}
+        <section className={styles.rgSec} id="paiements" aria-labelledby="rg-h-paiements">
+          <div className={styles.rgSecHead}>
+            <h2 id="rg-h-paiements">Paiements et reçus</h2>
+            <p>Ces informations figurent sur la page de paiement et sur chaque reçu.</p>
+          </div>
+          <div className={styles.rgSecBody}>
+            {operator.stripeOnboarded ? <StripeConnectSection stripeOnboarded /> : null}
             <div className={styles.rgField}>
               <label htmlFor="rgLegalName">Raison sociale</label>
               <input
@@ -489,10 +596,12 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
               <label htmlFor="rgSiret">SIRET</label>
               <input
                 id="rgSiret"
-                className={styles.sdInp}
+                className={`${styles.sdInp} ${siretBad ? styles.rgInpBad : ""}`}
                 value={siret}
                 inputMode="numeric"
                 placeholder="123 456 789 00012"
+                aria-invalid={siretBad}
+                aria-describedby="rgSiretHint"
                 onChange={(e) => {
                   const value = e.target.value;
                   setSiret(value);
@@ -502,42 +611,55 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                   if (digits === "" || /^\d{14}$/.test(digits)) queue({ siret: value });
                 }}
               />
-              <span className={styles.rgHint}>
-                {siret.replace(/\s+/g, "") !== "" && !/^\d{14}$/.test(siret.replace(/\s+/g, ""))
-                  ? "Le SIRET compte 14 chiffres."
-                  : "Affichés à vos clients avant qu'ils paient, puis sur leur reçu."}
+              <span id="rgSiretHint" className={styles.rgHint}>
+                {siretBad ? "Le SIRET compte 14 chiffres." : "14 chiffres."}
               </span>
             </div>
-            <div className={styles.rgSwitch}>
-              <span className={styles.rgSwitchMain}>
-                <b>Franchise de TVA</b>
-                <span>Vos reçus portent « TVA non applicable, art. 293 B du CGI ».</span>
-              </span>
-              <button
-                type="button"
-                className={`${styles.tog} ${vatExempt ? styles.on : ""}`}
-                role="switch"
-                aria-checked={vatExempt}
-                aria-label="Franchise de TVA"
-                onClick={() => {
+            <div className={styles.rgList}>
+              <SwitchRow
+                title="Franchise de TVA"
+                text="Vos reçus portent « TVA non applicable, art. 293 B du CGI »."
+                checked={vatExempt}
+                label="Franchise de TVA"
+                onToggle={() => {
                   const next = !vatExempt;
                   setVatExempt(next);
                   queue({ vatExempt: next });
                 }}
-              >
-                <i />
-              </button>
+              />
             </div>
-
-            <StripeConnectSection stripeOnboarded={operator.stripeOnboarded} />
-
-            <form action="/auth/signout" method="post">
-              <button type="submit" className={styles.rgQuiet}>
-                Se déconnecter
-              </button>
-            </form>
           </div>
-        </div>
+        </section>
+
+        {/* 5. Les activités : légères quand elles sont cochées, la page n'a
+            pas à être portée par elles. */}
+        <section className={styles.rgSec} id="activites" aria-labelledby="rg-h-activites">
+          <div className={styles.rgSecHead}>
+            <h2 id="rg-h-activites">Vos activités</h2>
+            <p>Proposées à la création d&rsquo;une sortie et affichées sous votre nom.</p>
+          </div>
+          <div className={styles.rgSecBody}>
+            <div className={styles.rgChips}>
+              {ACTIVITIES.map((a) => {
+                const on = activities.has(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    className={`${styles.rgChip} ${on ? styles.rgChipOn : ""}`}
+                    aria-pressed={on}
+                    onClick={() => toggleActivity(a.id)}
+                  >
+                    {on ? <CheckIcon /> : null}
+                    {a.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <footer className={styles.rgEnd}>Chaque modification s&rsquo;enregistre seule.</footer>
       </div>
     </>
   );

@@ -1672,9 +1672,6 @@ select.nsInp {
   padding: 48px 0 24px;
   text-align: center;
 }
-.rgStripe {
-  margin-top: 16px;
-}
 .sdStripe {
   width: 100%;
   max-width: 520px;
@@ -2430,16 +2427,10 @@ button.sdClient:hover {
 }
 
 /* ---------- réglages ---------- */
-/* Deux colonnes sur grand écran, une sur téléphone. Pas de carte, pas de
-   filet : les sections se séparent par leur intitulé et par du vide. Il n'y
-   a plus de bouton « Enregistrer » — chaque champ s'enregistre seul et le
-   dit dans l'en-tête. */
-.rgCols {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 52px;
-  padding-bottom: 20px;
-}
+/* Refonte du 11/10/2026 (docs/maquette-reglages-v1.html). Une section = un
+   intitulé et une phrase à gauche, ses champs à droite, un filet entre les
+   sections. Pas de bouton « Enregistrer » : chaque champ s'enregistre seul
+   et le dit dans l'en-tête. */
 .rgStatus {
   display: inline-flex;
   align-items: center;
@@ -2447,122 +2438,78 @@ button.sdClient:hover {
   font-size: 0.9rem;
   color: var(--ink-4);
 }
-.rgField {
-  margin-bottom: 18px;
+.rgAlert {
+  margin: 4px 0 28px;
 }
-.rgField > label {
+.rgSec {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 56px;
+  padding: 36px 0;
+  border-top: 1px solid var(--line);
+}
+.rgSec:first-of-type {
+  border-top: 0;
+  padding-top: 8px;
+}
+.rgSecHead h2 {
+  font-family: inherit;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+.rgSecHead > p {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-4);
+  text-wrap: pretty;
+}
+.rgSecBody {
+  max-width: 600px;
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+.rgField > label,
+.rgLbl {
   display: block;
   font-size: 0.88rem;
   color: var(--ink-2);
-  margin-bottom: 7px;
+  margin-bottom: 8px;
 }
 .rgHint {
   display: block;
   font-size: 0.84rem;
   color: var(--ink-4);
-  margin-top: 6px;
+  margin-top: 7px;
+  line-height: 1.45;
 }
-/* L'adresse de la boutique : à lire et à copier, jamais à saisir. Même
-   gabarit que le lien d'une galerie publiée. */
-.rgCopy {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.rgInpBad,
+.rgInpBad:focus {
+  border-color: #c0392b;
 }
-.rgCopyUrl {
-  flex: 1;
-  min-width: 0;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  border-radius: 13px;
-  background: var(--line-2);
-  color: var(--ink-2);
-  font-size: 0.94rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rgPrice {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  /* min-height et non height : sur téléphone « Toutes les photos de la
-     sortie » passe sur deux lignes, qui débordaient du cadre. */
-  min-height: 46px;
-  padding: 4px 6px 4px 15px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: #fff;
-}
-.rgPrice > span:first-child {
-  flex: 1;
-  font-size: 0.97rem;
-  line-height: 1.3;
-}
-/* Un intitulé de section ouvre un nouveau bloc : la même respiration
-   au-dessus de chacun, qu'il suive un champ, une aide ou un interrupteur.
-   Avant, l'écart variait de 4 à 30 px selon ce qui précédait. */
-.rgCols .sDay {
-  margin-top: 34px;
-}
-.rgCols > div > .sDay:first-child {
-  margin-top: 0;
-}
-.rgPrice input {
-  width: 74px;
-  height: 36px;
-  border: 0;
-  background: none;
-  font-family: inherit;
-  font-size: 1.03rem;
-  font-weight: 500;
-  text-align: right;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.rgPrice input:focus {
-  outline: none;
-}
-.rgUnit {
-  padding-right: 10px;
+.rgEnd {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  font-size: 0.8rem;
   color: var(--ink-4);
 }
-.rgSwitch {
+
+/* Logo et couleur sur une ligne : la vignette, un filet, les teintes. */
+.rgBrandRow {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 15px 0;
-  border-top: 1px solid var(--line);
-}
-.rgSwitchMain {
-  flex: 1;
-}
-.rgSwitchMain b {
-  display: block;
-  font-size: 1rem;
-  font-weight: 500;
-  letter-spacing: -0.018em;
-}
-.rgSwitchMain span {
-  display: block;
-  font-size: 0.88rem;
-  color: var(--ink-4);
-  margin-top: 3px;
-  line-height: 1.45;
-}
-.rgLogo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 .rgLogoBtn {
-  width: 46px;
-  height: 46px;
+  width: 56px;
+  height: 56px;
   flex: 0 0 auto;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 14px;
   background: #fff;
   display: grid;
   place-items: center;
@@ -2571,38 +2518,75 @@ button.sdClient:hover {
   transition: border-color 0.14s;
 }
 .rgLogoBtn:hover {
-  border-color: var(--brand);
+  border-color: var(--ink-4);
 }
 .rgLogoBtn img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
-/* La couverture de la boutique : un aperçu à sa vraie forme, pas une
-   vignette carrée. Le rapport 16/9 est celui de l'écran d'accueil, c'est le
-   seul moyen de voir ce qui sera recadré avant de publier. */
+.rgVsep {
+  width: 1px;
+  height: 28px;
+  flex: 0 0 auto;
+  background: var(--line);
+}
+.rgSws {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rgSw {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.08);
+  transition: box-shadow 0.14s;
+}
+.rgSwOn {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink);
+}
+
+/* La couverture : assez grande pour juger le cadrage, l'aperçu à gauche
+   montre comment elle sera recadrée. */
 .rgCover {
+  position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 190px;
+  aspect-ratio: 16 / 6;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: #fff;
+  background: var(--fill);
   color: var(--ink-4);
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.14s;
 }
 .rgCover:hover {
-  border-color: var(--brand);
+  border-color: var(--ink-4);
 }
 .rgCover img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.rgCoverAct {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .rgCoverEmpty {
   display: flex;
@@ -2615,55 +2599,333 @@ button.sdClient:hover {
   font-size: 0.88rem;
 }
 
-.rgSws {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.rgSw {
-  width: 26px;
-  height: 26px;
-  border-radius: 9px;
-  border: 0;
-  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.08);
-  transition: box-shadow 0.14s;
-}
-.rgSwOn {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand);
-}
-.rgFoot {
+/* L'adresse de la page client : à lire et à copier, jamais à saisir. */
+.rgCopy {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 26px;
-  padding-top: 20px;
+  gap: 8px;
+  height: 46px;
+  padding: 0 5px 0 15px;
+  border-radius: 13px;
+  background: var(--line-2);
+}
+.rgCopyUrl {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: 0.94rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rgCopyBtn {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+}
+.rgCopyBtn:hover {
+  background: #fff;
+  color: var(--ink);
+}
+
+/* Les prix : le montant saisi en grand, dessous ce que le pro reçoit. */
+.rgTwo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.rgPrice {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px 13px;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.rgPrice:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+}
+.rgPrice label {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+}
+.rgPriceIn {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 4px;
+}
+.rgPriceIn input {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-bricolage), inherit;
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.rgPriceIn input::-webkit-outer-spin-button,
+.rgPriceIn input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.rgPriceIn input:focus {
+  outline: none;
+}
+.rgPriceIn em {
+  font-style: normal;
+  font-size: 1.15rem;
+  color: var(--ink-4);
+}
+.rgNet {
+  display: block;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-2);
+  font-size: 0.84rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rgNet b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Une liste d'interrupteurs : un cadre, des filets entre les lignes. */
+.rgList {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.rgRow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 16px;
+}
+.rgRow + .rgRow {
   border-top: 1px solid var(--line);
 }
-.rgFootIc {
-  width: 26px;
-  height: 26px;
+.rgRowMain {
+  flex: 1;
+}
+.rgRowMain b {
+  display: block;
+  font-size: 0.97rem;
+  font-weight: 500;
+  letter-spacing: -0.014em;
+}
+.rgRowMain > span:not(.rgWhen) {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--ink-4);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.rgRowMain .rgWhen {
+  display: table;
+  margin-bottom: 6px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--line-2);
+  color: var(--ink-3);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.rgOkIc {
+  width: 32px;
+  height: 32px;
   flex: 0 0 auto;
-  border-radius: 999px;
+  border-radius: 50%;
   background: var(--ok-bg);
   color: var(--ok-ink);
   display: grid;
   place-items: center;
 }
-.rgFootText {
-  flex: 1;
-  font-size: 0.97rem;
-  color: var(--ink-2);
+.rgStripe {
+  padding: 0 16px 16px;
 }
-.rgQuiet {
-  margin-top: 34px;
+
+/* Les activités : légères quand elles sont cochées, la page n'a pas à être
+   portée par elles. */
+.rgChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rgChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 13px;
+  border-radius: 10px;
+  font-size: 0.9rem;
   font-weight: 500;
-  font-family: inherit;
-  font-size: 0.97rem;
-  color: var(--ink-4);
-  transition: color 0.14s;
+  background: var(--line-2);
+  color: var(--ink-3);
+  box-shadow: inset 0 0 0 1px transparent;
+  transition: background 0.14s, color 0.14s, box-shadow 0.14s;
 }
-.rgQuiet:hover {
+.rgChip:hover {
+  background: var(--fill-2);
+  color: var(--ink);
+}
+.rgChipOn,
+.rgChipOn:hover {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+  padding-left: 10px;
+}
+
+/* L'aperçu de la page client, recopié de components/store/LinkRequest.tsx
+   à l'échelle de la colonne. */
+.rgPrev {
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+}
+.rgPrevBar {
+  height: 30px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--ink-4);
+  background: var(--line-2);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.rgPCover {
+  position: relative;
+  height: 128px;
+  background: #2a2a2a center / cover no-repeat;
+}
+.rgPCover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 6, 12, 0) 30%, rgba(8, 6, 12, 0.6) 100%);
+}
+.rgPOrg {
+  position: absolute;
+  z-index: 1;
+  left: 14px;
+  right: 14px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
+}
+.rgPOrgFlat {
+  position: static;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.rgPLogo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.rgPLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.rgPOrg b {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rgPOrg > span > span {
+  display: block;
+  font-size: 0.68rem;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rgPSheet {
+  position: relative;
+  z-index: 2;
+  margin-top: -14px;
+  padding: 16px 14px;
+  background: #fff;
+  border-radius: 14px 14px 0 0;
+}
+.rgPSheetFlat {
+  margin-top: 0;
+}
+.rgPH {
+  margin: 0;
+  font-family: var(--font-bricolage), inherit;
+  font-size: 1.08rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.rgPLbl {
+  margin-top: 12px;
+  font-size: 0.66rem;
   color: var(--ink-2);
+}
+.rgPIn {
+  margin-top: 5px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid #dcd8e1;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--ink-4);
+}
+.rgPCta {
+  margin-top: 8px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--op-btn, var(--ink));
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  transition: background 0.2s;
 }
 
 /* L'envoi qui continue ailleurs dans l'espace pro. Discret, en bas à gauche,
@@ -2756,12 +3018,20 @@ button.sdClient:hover {
   }}
 
 @media (max-width: 1120px) {
-  .rgCols {
+  .rgSec {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 36px;
+  }}
+
+/* Réglages : l'intitulé passe au-dessus de ses champs, l'aperçu de la page
+   client s'efface (il n'a plus de colonne où se poser). */
+@media (max-width: 860px) {
+  .rgSec {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0;
+    gap: 18px;
   }
-  .rgCols > div + div > .sDay:first-child {
-    margin-top: 34px;
+  .rgPrev {
+    display: none;
   }}
 
 @media (max-width: 760px) {
@@ -3241,14 +3511,39 @@ button.sdClient:hover {
   .nsTime {
     width: 124px;
   }
-  /* Les pastilles de couleur : 26 px se visaient mal au pouce. */
-  .rgSws {
-    gap: 10px;
-  }
+  /* Les pastilles de couleur : 28 px se visaient mal au pouce. */
   .rgSw {
     width: 32px;
     height: 32px;
-    border-radius: 10px;
+  }
+  /* Le logo et les sept teintes tiennent sur une ligne à 390 px. */
+  .rgBrandRow {
+    gap: 14px;
+  }
+  .rgVsep {
+    display: none;
+  }
+  .rgSws {
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .rgSec {
+    padding: 28px 0;
+  }
+  .rgTwo {
+    gap: 10px;
+  }
+  .rgPrice {
+    padding: 12px 13px 11px;
+  }
+  .rgPriceIn input {
+    font-size: 1.6rem;
+  }
+  .rgNet {
+    font-size: 0.78rem;
+  }
+  .rgRow {
+    padding: 14px;
   }
 }
 

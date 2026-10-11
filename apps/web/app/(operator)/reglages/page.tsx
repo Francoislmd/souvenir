@@ -16,6 +16,7 @@ export default async function ReglagesPage() {
         logoUrl: operator.logoUrl,
         coverUrl: operator.coverUrl,
         brandColor: operator.brandColor,
+        tagline: operator.tagline,
         pricePhotoCents: operator.pricePhotoCents,
         priceAllCents: operator.priceAllCents,
         packOnly: operator.packOnly,
