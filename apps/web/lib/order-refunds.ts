@@ -99,9 +99,10 @@ export type RefundResult =
  * Le pro rembourse tout ou partie d'un achat, depuis le détail d'une vente.
  *
  * Charge directe : le remboursement part du compte Stripe du pro
- * (`stripeAccount`) et la commission Linktrip n'est pas rendue
- * (`refund_application_fee: false`) — c'est la règle. Le plafond est ce que
- * le client a payé, moins ce qui lui a déjà été rendu.
+ * (`stripeAccount`), et la commission Linktrip est rendue au prorata du
+ * montant remboursé (`refund_application_fee: true`, décidé le 11/10/2026) :
+ * le pro ne paie pas la commission d'une vente qu'il annule. Le plafond est
+ * ce que le client a payé, moins ce qui lui a déjà été rendu.
  *
  * La base est mise à jour tout de suite, sans attendre le webhook :
  * charge.refunded arrivera ensuite avec le même cumul et sera ignoré
@@ -128,7 +129,7 @@ export async function refundOrder(operatorId: string, orderId: string, amountCen
       {
         payment_intent: order.stripePi,
         amount: amountCents,
-        refund_application_fee: false,
+        refund_application_fee: true,
         metadata: { orderId: order.id },
       },
       // Un double clic ne rembourse pas deux fois : même cumul, même montant, même clé.

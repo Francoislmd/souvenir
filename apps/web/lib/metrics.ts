@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { feeKeptCents } from "./fees";
 
 export interface GmvSummary {
   totalCents: number;
@@ -8,23 +9,25 @@ export interface GmvSummary {
 }
 
 export async function getGmv(operatorId: string, since?: Date, until?: Date): Promise<GmvSummary> {
-  const agg = await prisma.order.aggregate({
+  const orders = await prisma.order.findMany({
     where: {
       participant: { sortie: { operatorId } },
-      // Un achat remboursé reste compté : le client a récupéré son argent,
-      // mais la commission n'est pas rendue, elle reste à la charge du pro.
+      // Un achat remboursé reste compté, pour ce qu'il en reste : le montant
+      // rendu au client sort du total, la commission rendue sort de celle de
+      // Linktrip (au prorata, lib/fees.ts).
       status: { in: ["succeeded", "refunded"] },
       ...(since || until ? { paidAt: { ...(since ? { gte: since } : {}), ...(until ? { lt: until } : {}) } } : {}),
     },
-    _sum: { amountCents: true, feeCents: true, refundedAmountCents: true },
-    _count: true,
+    select: { amountCents: true, feeCents: true, refundedAmountCents: true },
   });
 
-  // Un remboursement partiel laisse la commande « succeeded » : ce qui a été
-  // rendu au client sort du total. La commission, elle, n'est pas rendue.
-  const totalCents = (agg._sum.amountCents ?? 0) - (agg._sum.refundedAmountCents ?? 0);
-  const platformCents = agg._sum.feeCents ?? 0;
-  return { totalCents, operatorCents: totalCents - platformCents, platformCents, orderCount: agg._count };
+  let totalCents = 0;
+  let platformCents = 0;
+  for (const o of orders) {
+    totalCents += o.amountCents - o.refundedAmountCents;
+    platformCents += feeKeptCents(o.feeCents, o.amountCents, o.refundedAmountCents);
+  }
+  return { totalCents, operatorCents: totalCents - platformCents, platformCents, orderCount: orders.length };
 }
 
 export interface Sale {

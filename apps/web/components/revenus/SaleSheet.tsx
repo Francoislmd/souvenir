@@ -7,6 +7,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { formatHourFr, formatSortieTitle, formatWhenFr } from "@/lib/format";
 import { CGV_DATE_LABEL, formatSiret } from "@/lib/seller-format";
 import type { SaleDetail } from "@/lib/sale-detail";
+import { feeRefundedCents } from "@/lib/fees";
 
 /** SaleDetail tel qu'il arrive en JSON : les dates sont des chaînes. */
 type Json<T> = { [K in keyof T]: T[K] extends Date ? string : T[K] extends Date | null ? string | null : T[K] extends object | null ? Json<T[K]> : T[K] };
@@ -135,7 +136,9 @@ export function SaleSheet({
 function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) {
   const percent = sale.amountCents > 0 ? Math.round((sale.feeCents / sale.amountCents) * 100) : 0;
   const settled = sale.status === "succeeded" && sale.refundedCents === 0 && !sale.disputeStatus;
-  const netCents = sale.stripe ? sale.amountCents - sale.feeCents - sale.stripe.feeCents - sale.refundedCents : null;
+  const feeBack = feeRefundedCents(sale.feeCents, sale.amountCents, sale.refundedCents);
+  const beforeStripe = sale.amountCents - sale.feeCents + feeBack - sale.refundedCents;
+  const netCents = sale.stripe ? beforeStripe - sale.stripe.feeCents : null;
   const { seller } = sale;
   const paidAt = new Date(sale.paidAt);
 
@@ -180,9 +183,15 @@ function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) 
             <dd>−{euros(sale.refundedCents)}</dd>
           </div>
         ) : null}
+        {feeBack > 0 ? (
+          <div>
+            <dt>Commission rendue par Linktrip</dt>
+            <dd>+{euros(feeBack)}</dd>
+          </div>
+        ) : null}
         <div className={styles.rvTotal}>
           <dt>Pour vous</dt>
-          <dd>{euros(netCents ?? sale.amountCents - sale.feeCents - sale.refundedCents)}</dd>
+          <dd>{euros(netCents ?? beforeStripe)}</dd>
         </div>
       </dl>
       {note || sale.disputeStatus ? (
@@ -282,8 +291,8 @@ function parseCents(input: string): number | null {
 }
 
 /**
- * Rembourser tout ou partie de l'achat. La commission Linktrip n'est pas
- * rendue : le remboursement sort en entier du solde Stripe du pro. Un
+ * Rembourser tout ou partie de l'achat. La commission Linktrip est rendue au
+ * prorata : le pro ne paie que sa part du montant remboursé. Un
  * remboursement total verrouille la galerie du client, un partiel la laisse
  * ouverte (lib/order-refunds.ts).
  */
@@ -298,7 +307,15 @@ function RefundBlock({ sale, onRefunded }: { sale: Sale; onRefunded: () => void 
 
   const cents = parseCents(value);
   const valid = cents !== null && cents >= 50 && cents <= remaining;
-  const full = valid && cents === remaining && sale.refundedCents === 0;
+  const full = valid && cents === remaining;
+  // Ce que le remboursement coûte au pro : le montant, moins la part de
+  // commission que Linktrip rend (même calcul que Stripe, au prorata).
+  const cost =
+    valid && cents !== null
+      ? cents -
+        (feeRefundedCents(sale.feeCents, sale.amountCents, sale.refundedCents + cents) -
+          feeRefundedCents(sale.feeCents, sale.amountCents, sale.refundedCents))
+      : null;
 
   async function submit(): Promise<void> {
     if (!valid || busy || cents === null) return;
@@ -367,7 +384,8 @@ function RefundBlock({ sale, onRefunded }: { sale: Sale; onRefunded: () => void 
         </button>
       </div>
       <p className={styles.rvSheetNote}>
-        La commission Linktrip ({euros(sale.feeCents)}) n&rsquo;est pas remboursée : le montant sort en entier de votre solde Stripe.{" "}
+        La commission Linktrip est rendue en proportion.
+        {cost !== null && cents !== null ? ` Sur votre solde Stripe : −${euros(cost)}, Linktrip rend ${euros(cents - cost)}.` : ""}{" "}
         {full ? "Le client perd l\u2019accès à ses photos." : "Le client garde ses photos."}
       </p>
       {!valid && value.trim() !== "" ? (
