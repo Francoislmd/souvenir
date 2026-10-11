@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { requireOperatorUser } from "@/lib/current-user";
 import { getGmv, getSales, nextPayoutDate } from "@/lib/metrics";
 import { formatEuros } from "@/lib/format";
 import { AppHeader } from "@/components/operator/AppHeader";
 import { CountUp } from "@/components/operator/CountUp";
+import { SalesList } from "@/components/revenus/SalesList";
 import styles from "@/app/(operator)/operator.module.css";
 
 function formatDateFr(d: Date): string {
@@ -42,22 +42,14 @@ export default async function RevenusPage() {
 
         <p className={styles.sDay}>Qui a acheté</p>
         <div className={styles.sdClients}>
-          {sales.length === 0 ? (
-            <p className={styles.sdNote}>Aucun achat pour l&rsquo;instant.</p>
-          ) : (
-            sales.map((s) => (
-              <Link key={s.id} href={`/revenus/${s.id}`} className={`${styles.sdClient} ${styles.rvRow}`}>
-                <span className={styles.sdAv}>{s.participantName.slice(0, 2).toUpperCase()}</span>
-                <span className={styles.sdClientMain}>
-                  <b>{s.participantName}</b>
-                  <span>
-                    {s.activity} · {formatDayFr(s.paidAt, now)}
-                  </span>
-                </span>
-                <span className={styles.rvAmount}>{formatEuros(s.amountCents)}</span>
-              </Link>
-            ))
-          )}
+          <SalesList
+            rows={sales.map((s) => ({
+              id: s.id,
+              name: s.participantName,
+              line: `${s.activity} · ${formatDayFr(s.paidAt, now)}`,
+              amount: formatEuros(s.amountCents),
+            }))}
+          />
         </div>
       </div>
     </>

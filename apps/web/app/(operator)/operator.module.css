@@ -2279,6 +2279,53 @@ dd > .rvMuted:only-child {
   font-size: 0.84rem !important;
   color: var(--ink-3) !important;
 }
+/* Les lignes de « Qui a acheté » sont des boutons : ils ouvrent le détail. */
+button.sdClient {
+  width: calc(100% + 36px);
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+button.sdClient:hover {
+  background: var(--line-2);
+}
+.shPanel.rvPanel {
+  max-width: 540px;
+}
+.rvSheetBody {
+  padding: 4px 20px 22px;
+}
+.rvSheetWait {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+}
+.rvSheetLead {
+  padding: 4px 0 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+}
+.rvSheetBig {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.rvSheetLead .rvSub {
+  font-size: 0.94rem;
+}
+.rvSheetNote {
+  margin: 0 0 22px;
+  font-size: 0.84rem;
+  color: var(--ink-4);
+}
+.rvLines + .sDay {
+  margin-top: 22px;
+}
 @media (max-width: 760px) {
   .rvLines > div {
     flex-direction: column;
