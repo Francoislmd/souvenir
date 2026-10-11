@@ -8,6 +8,10 @@ const { prismaMock, trackMock } = vi.hoisted(() => ({
 vi.mock("./prisma", () => ({ prisma: prismaMock }));
 vi.mock("./analytics", () => ({ track: trackMock }));
 vi.mock("./stripe", () => ({ stripe: {} }));
+vi.mock("./invoicing", () => ({
+  applicationFeeRefundedCents: vi.fn().mockResolvedValue(null),
+  creditOrderFee: vi.fn().mockResolvedValue(false),
+}));
 
 function makeOrder(overrides: Partial<Record<string, unknown>> = {}) {
   return {

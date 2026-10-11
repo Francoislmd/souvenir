@@ -61,9 +61,15 @@ model Operator {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users   User[]
-  sorties Sortie[]
-  events  Event[]
+  // Le client Stripe de l'opérateur sur le compte plateforme de Linktrip :
+  // c'est à lui que sont adressées les factures de commission (lib/invoicing.ts).
+  // Créé à la première facture.
+  stripeCustomerId String?
+
+  users    User[]
+  sorties  Sortie[]
+  events   Event[]
+  invoices Invoice[]
 }
 
 model User {
@@ -248,9 +254,67 @@ model Order {
   disputedAt          DateTime?
   disputeClosedAt     DateTime?
 
+  // Facturation de la commission (lib/invoicing.ts). Chaque commande figure
+  // sur une seule facture, une ligne par vente : la réservation par
+  // `invoiceId` est ce qui empêche de facturer deux fois la même vente.
+  // feeRefundedCents : la part de commission que Stripe a rendue au pro
+  // (ApplicationFee.amount_refunded), relue à chaque remboursement.
+  // feeInvoicedCents : ce que la ligne de facture a facturé. feeCreditedCents :
+  // ce que les avoirs ont déjà rendu sur cette ligne.
+  invoiceId        String?
+  feeRefundedCents Int     @default(0)
+  feeInvoicedCents Int?
+  feeCreditedCents Int     @default(0)
+
   participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  invoice     Invoice?    @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
 
   @@index([participantId])
+  @@index([invoiceId])
+}
+
+// Facture de commission Linktrip → opérateur, émise par Stripe Invoicing sur
+// le compte plateforme et marquée payée hors Stripe (la commission a déjà été
+// prélevée sur chaque vente) : Stripe ne facture rien pour ces factures.
+// Une facture ne couvre qu'un mois civil (art. 289 I-3 CGI, facture
+// récapitulative). Stripe est l'original : numéro, PDF, conservation.
+// status : pending (commandes réservées, Stripe pas fini) | open (finalisée,
+// pas encore marquée payée) | paid.
+model Invoice {
+  id              String    @id @default(cuid())
+  operatorId      String
+  stripeInvoiceId String?   @unique
+  number          String?
+  status          String    @default("pending")
+  trigger         String // monthly | manual
+  periodStart     DateTime // inclus
+  periodEnd       DateTime // exclu
+  amountCents     Int       @default(0)
+  lineCount       Int       @default(0)
+  issuedAt        DateTime?
+  createdAt       DateTime  @default(now())
+
+  operator    Operator            @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  creditNotes InvoiceCreditNote[]
+
+  @@index([operatorId, periodStart])
+  @@index([status])
+}
+
+// Avoir : la commission rendue sur une vente déjà facturée (remboursement).
+model InvoiceCreditNote {
+  id                 String   @id @default(cuid())
+  invoiceId          String
+  orderId            String
+  stripeCreditNoteId String   @unique
+  number             String
+  amountCents        Int
+  createdAt          DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
 }
 
 model Event {

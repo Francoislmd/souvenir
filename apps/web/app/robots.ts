@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         "/sorties",
         "/reglages",
         "/revenus",
+        "/factures",
         "/onboarding",
         "/signup",
         // Groupe de routes (auth) — pas de segment d'URL, chemins réels ci-dessous.

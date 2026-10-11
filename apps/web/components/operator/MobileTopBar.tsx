@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import styles from "@/app/(operator)/operator.module.css";
 import { Logo } from "@/components/brand/Logo";
 import { NAV_ITEMS } from "@/components/operator/nav-items";
-import { SortiesIcon, RevenusIcon, ReglagesIcon } from "@/components/operator/nav-icons";
+import { SortiesIcon, RevenusIcon, FacturesIcon, ReglagesIcon } from "@/components/operator/nav-icons";
 
-const ICONS = { sorties: SortiesIcon, revenus: RevenusIcon, reglages: ReglagesIcon };
+const ICONS = { sorties: SortiesIcon, revenus: RevenusIcon, factures: FacturesIcon, reglages: ReglagesIcon };
 
 /**
  * Le bandeau de marque du téléphone.

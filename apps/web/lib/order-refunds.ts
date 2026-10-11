@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { stripe } from "./stripe";
+import { applicationFeeRefundedCents, creditOrderFee } from "./invoicing";
 
 function getPaymentIntentId(pi: string | Stripe.PaymentIntent | null): string | null {
   if (!pi) return null;
@@ -26,7 +27,14 @@ export async function handleChargeRefunded(charge: Stripe.Charge): Promise<void>
   if (!piId) return;
 
   const order = await loadOrderWithOperator(piId);
-  if (!order || charge.amount_refunded <= order.refundedAmountCents) return;
+  if (!order) return;
+
+  // La commission rendue, relue chez Stripe : un remboursement depuis le
+  // tableau de bord Stripe du pro peut ne rien en rendre (lib/invoicing.ts).
+  const feeRefunded = await applicationFeeRefundedCents(charge).catch(() => null);
+  const amountChanged = charge.amount_refunded > order.refundedAmountCents;
+  const feeChanged = feeRefunded !== null && feeRefunded > (order.feeRefundedCents ?? 0);
+  if (!amountChanged && !feeChanged) return;
 
   // Remboursement total : la galerie se verrouille (order.status !==
   // "succeeded" re-verrouille au prochain chargement, cf. lib/gallery.ts).
@@ -35,17 +43,24 @@ export async function handleChargeRefunded(charge: Stripe.Charge): Promise<void>
   const updated = await prisma.order.update({
     where: { id: order.id },
     data: {
-      refundedAmountCents: charge.amount_refunded,
-      refundedAt: new Date(),
+      refundedAmountCents: Math.max(charge.amount_refunded, order.refundedAmountCents),
+      ...(amountChanged ? { refundedAt: new Date() } : {}),
+      ...(feeChanged ? { feeRefundedCents: feeRefunded } : {}),
       ...(charge.refunded ? { status: "refunded" } : {}),
     },
   });
 
-  await track("order_refunded", {
-    operatorId: order.participant.sortie.operatorId,
-    participantId: order.participantId,
-    meta: { amountRefundedCents: updated.refundedAmountCents, isFullRefund: charge.refunded },
-  });
+  if (amountChanged) {
+    await track("order_refunded", {
+      operatorId: order.participant.sortie.operatorId,
+      participantId: order.participantId,
+      meta: { amountRefundedCents: updated.refundedAmountCents, isFullRefund: charge.refunded },
+    });
+  }
+
+  // Vente déjà facturée : l'avoir part maintenant. S'il échoue, le cron
+  // mensuel le rattrape (runMonthlyInvoicing) — le webhook n'échoue pas pour ça.
+  await creditOrderFee(order.id).catch((error) => console.error("[refund] avoir non émis", order.id, error));
 }
 
 export async function handleDisputeCreated(dispute: Stripe.Dispute): Promise<void> {
@@ -124,8 +139,9 @@ export async function refundOrder(operatorId: string, orderId: string, amountCen
     return { ok: false, error: "invalid_amount", message: "Le montant doit être compris entre 0,50 € et ce que le client a payé." };
   }
 
+  let refund: Stripe.Refund;
   try {
-    await stripe.refunds.create(
+    refund = await stripe.refunds.create(
       {
         payment_intent: order.stripePi,
         amount: amountCents,
@@ -146,10 +162,27 @@ export async function refundOrder(operatorId: string, orderId: string, amountCen
 
   const refundedCents = order.refundedAmountCents + amountCents;
   const full = refundedCents >= order.amountCents;
+  // La commission réellement rendue par Stripe, pour la facture ou l'avoir.
+  let feeRefunded: number | null = null;
+  try {
+    const chargeId = typeof refund.charge === "string" ? refund.charge : refund.charge?.id;
+    if (chargeId) {
+      const charge = await stripe.charges.retrieve(chargeId, {}, { stripeAccount: account });
+      feeRefunded = await applicationFeeRefundedCents(charge);
+    }
+  } catch (error) {
+    console.error("[refund] commission rendue illisible chez Stripe", order.id, error);
+  }
   await prisma.order.update({
     where: { id: order.id },
-    data: { refundedAmountCents: refundedCents, refundedAt: new Date(), ...(full ? { status: "refunded" } : {}) },
+    data: {
+      refundedAmountCents: refundedCents,
+      refundedAt: new Date(),
+      ...(feeRefunded !== null ? { feeRefundedCents: feeRefunded } : {}),
+      ...(full ? { status: "refunded" } : {}),
+    },
   });
+  await creditOrderFee(order.id).catch((error) => console.error("[refund] avoir non émis", order.id, error));
   await track("order_refunded", {
     operatorId,
     participantId: order.participantId,

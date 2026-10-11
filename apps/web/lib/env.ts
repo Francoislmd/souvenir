@@ -67,6 +67,19 @@ const envSchema = z.object({
   // (utile en local et sur les previews Vercel, qui ne doivent pas polluer GA4).
   NEXT_PUBLIC_GTM_ID: optionalPattern(/^GTM-[A-Z0-9]+$/, "Format attendu : GTM-XXXXXXX"),
   NEXT_PUBLIC_GA4_ID: optionalPattern(/^G-[A-Z0-9]+$/, "Format attendu : G-XXXXXXXXXX"),
+  // L'émetteur des factures de commission (lib/invoicing.ts). Facultatives :
+  // tant que les trois premières manquent, aucune facture n'est émise (le
+  // cron ne fait rien, l'onglet Factures le dit). Linktrip est une entreprise
+  // individuelle : le nom est celui de l'entrepreneur, la mention « EI » est
+  // ajoutée par le code.
+  INVOICE_ISSUER_NAME: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().optional()),
+  INVOICE_ISSUER_ADDRESS: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().optional()),
+  INVOICE_ISSUER_SIREN: optionalPattern(/^\d{9}$/, "Le SIREN compte 9 chiffres, sans espaces"),
+  INVOICE_ISSUER_TRADE_NAME: z.string().default("Linktrip"),
+  // La mention de franchise en base. L'article 293 B du CGI est recodifié à
+  // l'article L. 223-3 du CIBS ; l'ancienne référence reste admise pendant la
+  // période de transition. À basculer ici, sans toucher au code.
+  INVOICE_VAT_MENTION: z.string().default("TVA non applicable, art. 293 B du CGI"),
 });
 
 export const env = envSchema.parse(process.env);

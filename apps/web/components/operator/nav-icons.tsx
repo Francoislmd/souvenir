@@ -42,6 +42,14 @@ export function RevenusIcon(p: IconProps) {
     </Icon>
   );
 }
+export function FacturesIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M6.25 3.75h8l3.5 3.5v13H6.25z" />
+      <path d="M14 3.75v3.75h3.75M9.25 12h5.5M9.25 15.5h5.5" />
+    </Icon>
+  );
+}
 export function ReglagesIcon(p: IconProps) {
   return (
     <Icon {...p}>

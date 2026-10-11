@@ -3280,3 +3280,19 @@ button.sdClient:hover {
     margin-bottom: 18px;
   }
 }
+
+/* Factures : la feuille « Générer une facture ». */
+.fcHint {
+  margin: 0;
+  padding: 12px 0 14px;
+  border-top: 1px solid var(--line);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ink-4);
+}
+.fcMsg {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}

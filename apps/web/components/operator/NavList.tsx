@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import styles from "@/app/(operator)/operator.module.css";
 import { Logo } from "@/components/brand/Logo";
 import { NAV_ITEMS } from "@/components/operator/nav-items";
-import { SortiesIcon, RevenusIcon, ReglagesIcon, BoutiqueIcon, OutwardIcon } from "@/components/operator/nav-icons";
+import { SortiesIcon, RevenusIcon, FacturesIcon, ReglagesIcon, BoutiqueIcon, OutwardIcon } from "@/components/operator/nav-icons";
 import { AccountMenu } from "@/components/operator/AccountMenu";
 
-const ICONS = { sorties: SortiesIcon, revenus: RevenusIcon, reglages: ReglagesIcon };
+const ICONS = { sorties: SortiesIcon, revenus: RevenusIcon, factures: FacturesIcon, reglages: ReglagesIcon };
 
 export function NavList({
   operatorName,
@@ -57,7 +57,7 @@ export function NavList({
       {/* La boutique telle que la voient les clients : l'opérateur la montre,
           la copie dans ses confirmations. Elle sort de l'espace pro, d'où sa
           place en bas, à part, et la flèche. Absente de la barre d'onglets du
-          téléphone, qui n'a de place que pour trois entrées. */}
+          téléphone, qui n'a de place que pour les quatre entrées du menu. */}
       <a href={storeHref} target="_blank" rel="noopener noreferrer" className={`${styles.sNav} ${styles.sNavAside}`}>
         <BoutiqueIcon />
         <span className={styles.sNavLabel}>Voir ma page client</span>
