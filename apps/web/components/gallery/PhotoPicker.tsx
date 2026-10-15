@@ -6,6 +6,7 @@ import styles from "@/components/gallery/sale.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
+import { StableImg } from "@/components/ui/StableImg";
 import { PlayMark, VideoBadge } from "@/components/ui/VideoBadge";
 import { formatDuration } from "@/lib/media";
 
@@ -20,10 +21,11 @@ export interface PickerPhoto {
 }
 
 /**
- * La page de vente : la grille, et une jauge à la place des formules.
+ * La page de vente : un diaporama (grande photo, flèches, bande de
+ * miniatures), et une jauge à la place des formules.
  * Maquette validée le 03/10/2026 : docs/maquette-page-vente-v2.html.
  *
- * Toucher une photo la choisit. Le total monte à chaque photo et s'arrête au
+ * Le bouton « Choisir » de la grande photo la choisit. Le total monte à chaque photo et s'arrête au
  * prix de toutes les photos (lib/pricing.ts plafonne déjà) : la jauge rend
  * ce plafond visible, et dit au client ce qu'il lui manque pour tout avoir.
  * Une fois le plafond atteint, les photos restantes sont incluses.
@@ -59,6 +61,10 @@ export function PhotoPicker({
   const [zoom, setZoom] = useState<number | null>(null);
   const zoomRef = useRef<number | null>(null);
   zoomRef.current = zoom;
+  // La photo affichée en grand sur la page (le diaporama).
+  const [at, setAt] = useState(0);
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const stageSwipe = useRef<{ x: number; y: number } | null>(null);
 
   const total = photos.length;
   const allIds = photos.map((p) => p.id);
@@ -76,13 +82,60 @@ export function PhotoPicker({
     function onKeyDown(e: KeyboardEvent): void {
       const at = zoomRef.current;
       if (at === null) return;
-      if (e.key === "Escape") setZoom(null);
+      if (e.key === "Escape") closeZoom();
       if (e.key === "ArrowLeft") setZoom((at - 1 + total) % total);
       if (e.key === "ArrowRight") setZoom((at + 1) % total);
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [zoom, total]);
+
+  const cur = total > 0 ? Math.min(at, total - 1) : 0;
+  const shown = photos[cur];
+  const shownOn = shown ? !packOnly && selected.has(shown.id) : false;
+  function go(delta: number): void {
+    if (total < 2) return;
+    setAt((a) => (Math.min(a, total - 1) + delta + total) % total);
+  }
+  function closeZoom(): void {
+    // Le diaporama reprend là où la visionneuse s'est arrêtée.
+    const z = zoomRef.current;
+    if (z !== null) setAt(z);
+    setZoom(null);
+  }
+
+  // Les flèches du clavier font défiler le diaporama, sauf dans un champ.
+  useEffect(() => {
+    if (zoom !== null || total < 2) return;
+    function onKeyDown(e: KeyboardEvent): void {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      setAt((a) => (Math.min(a, total - 1) + (e.key === "ArrowLeft" ? -1 : 1) + total) % total);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [zoom, total]);
+
+  // La miniature active reste visible dans la bande, centrée. Calcul à la
+  // main : scrollIntoView ferait aussi défiler la page verticalement.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const el = strip?.children[cur] as HTMLElement | undefined;
+    if (!strip || !el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    strip.scrollTo({ left: el.offsetLeft - (strip.clientWidth - el.offsetWidth) / 2, behavior: reduce ? "auto" : "smooth" });
+  }, [cur]);
+
+  // La photo suivante et la précédente sont chargées d'avance.
+  useEffect(() => {
+    if (total < 2) return;
+    for (const i of [(cur + 1) % total, (cur - 1 + total) % total]) {
+      const url = photos[i]?.previewUrl;
+      if (url) new Image().src = url;
+    }
+  }, [cur, total, photos]);
 
   const price = discount ?? ((cents: number) => cents);
   const n = packOnly ? total : selected.size;
@@ -169,66 +222,113 @@ export function PhotoPicker({
         <div>
           {head}
           <div className={styles.sub}>
-            <span>{packOnly ? "Toutes vos photos, en une fois" : n === 0 ? "Touchez celles que vous voulez" : `${n} sur ${total} choisie${n > 1 ? "s" : ""}`}</span>
+            <span>{packOnly ? "Toutes vos photos, en une fois" : n === 0 ? "Choisissez celles que vous voulez" : `${n} sur ${total} choisie${n > 1 ? "s" : ""}`}</span>
             {packOnly || total < 2 ? null : (
               <button type="button" className={styles.lnk} onClick={() => setSelected(n === total ? new Set() : new Set(allIds))}>
                 {n === total ? "Tout enlever" : "Tout prendre"}
               </button>
             )}
           </div>
-          <div className={styles.grid}>
-            {photos.map((photo, i) => {
-              const on = !packOnly && selected.has(photo.id);
-              const big = i === 0 && total >= 3;
-              return (
-                <div
-                  key={photo.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={packOnly ? undefined : on}
-                  aria-label={packOnly ? "Voir en grand" : `${photo.isVideo ? "Vidéo" : "Photo"}${photo.timeLabel ? ` de ${photo.timeLabel}` : ""}`}
-                  className={`${styles.tile} ${big ? styles.big : ""} ${on ? styles.on : ""}`}
-                  onClick={() => (packOnly ? setZoom(i) : toggle(photo.id))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      if (packOnly) setZoom(i);
-                      else toggle(photo.id);
-                    }
-                  }}
-                >
-                  {photo.previewUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photo.previewUrl} alt="" loading={i < 4 ? "eager" : "lazy"} decoding="async" />
-                  ) : (
-                    <TileSpinner />
-                  )}
-                  {photo.isVideo ? <VideoBadge durationSec={photo.durationSec} /> : <LockBadge />}
-                  {photo.timeLabel ? <span className={styles.time}>{photo.timeLabel}</span> : null}
-                  {packOnly ? null : (
-                    <span className={styles.check} aria-hidden="true">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                      </svg>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    aria-label="Voir en grand"
-                    className={styles.zoom}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setZoom(i);
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
+          {shown ? (
+            <div className={styles.viewer}>
+              <div
+                className={`${styles.stage} ${shownOn ? styles.on : ""}`}
+                onTouchStart={(e) => {
+                  const t = e.changedTouches[0];
+                  stageSwipe.current = t ? { x: t.clientX, y: t.clientY } : null;
+                }}
+                onTouchEnd={(e) => {
+                  const from = stageSwipe.current;
+                  const t = e.changedTouches[0];
+                  stageSwipe.current = null;
+                  if (!from || !t) return;
+                  const dx = t.clientX - from.x;
+                  if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(t.clientY - from.y)) return;
+                  go(dx < 0 ? 1 : -1);
+                }}
+              >
+                <button type="button" className={styles.stageHit} aria-label="Voir en plein écran" onClick={() => setZoom(cur)}>
+                  {shown.previewUrl ? <StableImg src={shown.previewUrl} eager /> : <TileSpinner tone="light" size={30} />}
+                </button>
+                {shown.isVideo ? (
+                  <>
+                    <PlayMark />
+                    <VideoBadge durationSec={shown.durationSec} />
+                  </>
+                ) : null}
+                {total > 1 ? (
+                  <span className={styles.stageCount}>
+                    {cur + 1} / {total}
+                  </span>
+                ) : null}
+                {shown.timeLabel ? <span className={styles.time}>{shown.timeLabel}</span> : null}
+                {packOnly ? null : (
+                  <button type="button" className={styles.pick} aria-pressed={shownOn} onClick={() => toggle(shown.id)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M20 6 9 17l-5-5" />
                     </svg>
+                    {shownOn ? "Choisie" : "Choisir"}
                   </button>
+                )}
+                <button type="button" aria-label="Voir en plein écran" className={styles.zoom} onClick={() => setZoom(cur)}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />
+                  </svg>
+                </button>
+                {total > 1 ? (
+                  <>
+                    <button type="button" className={`${styles.nav} ${styles.prev}`} aria-label="Photo précédente" onClick={() => go(-1)}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14.5 5 8 12l6.5 7" />
+                      </svg>
+                    </button>
+                    <button type="button" className={`${styles.nav} ${styles.next}`} aria-label="Photo suivante" onClick={() => go(1)}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9.5 5 16 12l-6.5 7" />
+                      </svg>
+                    </button>
+                  </>
+                ) : null}
+              </div>
+
+              {total > 1 ? (
+                <div className={styles.thumbs} ref={stripRef}>
+                  {photos.map((photo, i) => {
+                    const picked = !packOnly && selected.has(photo.id);
+                    return (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        className={`${styles.thumb} ${i === cur ? styles.thumbOn : ""}`}
+                        aria-current={i === cur ? "true" : undefined}
+                        aria-label={`${photo.isVideo ? "Vidéo" : "Photo"} ${i + 1}${photo.timeLabel ? `, ${photo.timeLabel}` : ""}${picked ? ", choisie" : ""}`}
+                        onClick={() => setAt(i)}
+                      >
+                        {photo.previewUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={photo.previewUrl} alt="" loading={i < 10 ? "eager" : "lazy"} decoding="async" draggable={false} />
+                        ) : null}
+                        {photo.isVideo ? (
+                          <span className={styles.thumbVid} aria-hidden="true">
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M6 4v16l14-8z" />
+                            </svg>
+                          </span>
+                        ) : null}
+                        {picked ? (
+                          <span className={styles.thumbPick} aria-hidden="true">
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <aside className={styles.side}>
@@ -280,7 +380,7 @@ export function PhotoPicker({
             <span className={gallery.boxCount}>
               {zoom! + 1} sur {total}
             </span>
-            <button type="button" className={gallery.boxClose} aria-label="Fermer" onClick={() => setZoom(null)}>
+            <button type="button" className={gallery.boxClose} aria-label="Fermer" onClick={closeZoom}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
@@ -356,23 +456,5 @@ export function PhotoPicker({
         </div>
       ) : null}
     </>
-  );
-}
-
-/**
- * Le cadenas de l'aperçu payant. Il était dessiné dans l'image
- * (lib/group-watermark.ts) et grossissait donc avec la vignette : deux fois
- * plus gros sur la grande. Posé ici, il a la même taille partout. Même
- * dessin : pastille encre, filet blanc, cadenas au trait.
- */
-function LockBadge() {
-  return (
-    <svg className={styles.tileLock} viewBox="-56 -56 112 112" aria-hidden="true">
-      <circle r="55.5" fill="rgba(20, 19, 32, 0.55)" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
-      <g transform="translate(0 2)" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="-17" y="-4" width="34" height="24" rx="5" />
-        <path d="M-10-4v-10a10 10 0 0 1 20 0v10" />
-      </g>
-    </svg>
   );
 }
