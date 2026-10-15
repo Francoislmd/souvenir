@@ -247,8 +247,15 @@ export function PhotoPicker({
                   go(dx < 0 ? 1 : -1);
                 }}
               >
+                <div className={styles.frame}>
                 <button type="button" className={styles.stageHit} aria-label="Voir en plein écran" onClick={() => setZoom(cur)}>
-                  {shown.previewUrl ? <StableImg src={shown.previewUrl} eager /> : <TileSpinner tone="light" size={30} />}
+                  {shown.previewUrl ? (
+                    <StableImg src={shown.previewUrl} eager />
+                  ) : (
+                    <span className={styles.stageEmpty}>
+                      <TileSpinner tone="light" size={30} />
+                    </span>
+                  )}
                 </button>
                 {shown.isVideo ? (
                   <>
@@ -289,6 +296,7 @@ export function PhotoPicker({
                     </button>
                   </>
                 ) : null}
+                </div>
               </div>
 
               {total > 1 ? (
