@@ -46,8 +46,15 @@ function unsubscribeHeaders(token: string): Record<string, string> {
 // fournit l'adresse (seule ou déjà sous la forme « Nom <adresse> ») ; le nom
 // vient de l'opérateur. Guillemets, chevrons et retours ligne retirés : un
 // nom d'école ne doit jamais pouvoir casser l'en-tête From.
-function fromHeader(displayName?: string): string {
-  const raw = env.RESEND_FROM_EMAIL.trim();
+//
+// Deux adresses : les transactionnels (invitation, galeries, achat) partent
+// de RESEND_FROM_EMAIL, les relances et l'offre de RESEND_MARKETING_FROM_EMAIL.
+// Gmail juge un expéditeur sur l'ensemble de ses envois : mêlés sur une seule
+// adresse, les mails à en-tête List-Unsubscribe faisaient classer
+// l'invitation elle-même en Promotions.
+function fromHeader(displayName?: string, marketing = false): string {
+  const marketingFrom = env.RESEND_MARKETING_FROM_EMAIL?.trim();
+  const raw = marketing && marketingFrom ? marketingFrom : env.RESEND_FROM_EMAIL.trim();
   const match = raw.match(/<([^>]+)>/);
   const address = (match ? match[1] : raw).trim();
   const name = (displayName ?? "").replace(/["<>\\\r\n]/g, "").trim();
@@ -62,11 +69,13 @@ async function dispatch(params: {
   element: ReactElement;
   replyTo?: string;
   headers?: Record<string, string>;
+  /** Relance ou offre : part de l'adresse marketing (fromHeader). */
+  marketing?: boolean;
 }): Promise<void> {
   const [html, text] = await Promise.all([render(params.element), render(params.element, { plainText: true })]);
 
   const { error } = await getResendClient().emails.send({
-    from: fromHeader(params.fromName),
+    from: fromHeader(params.fromName, params.marketing),
     to: params.to,
     subject: params.subject,
     html,
@@ -164,6 +173,7 @@ export async function sendPhotosReminderEmail(params: {
     fromName: params.operatorName,
     replyTo,
     headers: unsubscribeHeaders(params.token),
+    marketing: true,
   });
 }
 
@@ -208,6 +218,7 @@ export async function sendPhotosOfferEmail(params: {
     fromName: params.operatorName,
     replyTo,
     headers: unsubscribeHeaders(params.token),
+    marketing: true,
   });
 }
 
@@ -428,5 +439,6 @@ export async function sendGroupReminderEmail(params: {
     fromName: params.operatorName,
     replyTo,
     headers: unsubscribeHeaders(params.token),
+    marketing: true,
   });
 }

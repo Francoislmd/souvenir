@@ -30,6 +30,11 @@ const envSchema = z.object({
   TWILIO_SMS_FROM: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().min(1),
+  // Expéditeur des relances et de l'offre (mails marketing), sur un
+  // sous-domaine vérifié à part dans Resend (rappels@mail.linktrip.co) :
+  // la réputation « commerciale » des relances ne déteint plus sur
+  // l'invitation et la confirmation d'achat. Vide = RESEND_FROM_EMAIL.
+  RESEND_MARKETING_FROM_EMAIL: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   // Le sous-domaine des boutiques (store.linktrip.co). Facultative : en local
   // et sur les previews Vercel il n'y a pas de sous-domaine, les boutiques se
