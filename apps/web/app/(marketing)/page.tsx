@@ -333,7 +333,7 @@ export default function AccueilPage() {
               <div>
                 {FAQ.map(({ q, a }, i) => (
                   <details key={q} className="fqQa" name="faq-accueil" open={i === 0}>
-                    <summary className="fqSum">{q.replace(" ?", "\u00a0?")}<span className="fqSign" aria-hidden="true" /></summary>
+                    <summary className="fqSum">{q.replace(" ?", "\u00a0?").replace("e-mail", "e\u2011mail")}<span className="fqSign" aria-hidden="true" /></summary>
                     <p className="fqAns">{a}</p>
                   </details>
                 ))}

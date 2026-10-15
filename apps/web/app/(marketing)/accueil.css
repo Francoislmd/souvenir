@@ -83,7 +83,7 @@
 /* Téléphone */
 .accx .phone{border-radius:42px;background:#fff;padding:8px;border:1px solid var(--line)}
 .accx .scr{border-radius:34px;overflow:hidden;background:#fff;display:flex;flex-direction:column;position:relative}
-.accx .sbar{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 24px;font:600 11.5px var(--font-inter);letter-spacing:-.01em}
+.accx .sbar{flex:none;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 24px;font:600 11.5px var(--font-inter);letter-spacing:-.01em}
 .accx .sbar i{width:72px;height:21px;border-radius:12px;background:var(--ink)}
 .accx .sbar .sig{display:flex;gap:4px;align-items:center}
 .accx .sbar .sig b{display:block;width:18px;height:9px;border-radius:2.5px;border:1px solid var(--ink);position:relative}
@@ -663,4 +663,67 @@
 @media (min-width:641px) and (max-width:860px){
   .accx .hxCta .btn{flex:0 0 auto;padding:0 28px}
   .accx .hxCta small{width:auto;text-align:left}
+}
+
+/* ── Mobile allégé (15/10/2026) ──
+   Une seule démo sur la page : le carrousel « Ce qui se passe après la
+   sortie ». Le téléphone animé du héros et sa légende racontaient les mêmes
+   trois étapes, deux écrans plus haut. La liste des activités est déjà dans
+   le menu, et « Sans abonnement » dans le bloc tarif. */
+@media (max-width:640px){
+  .accx .hxDemo,.accx .hxDemo.rv,.accx .hxDemo.rv.in,.accx .hx .flow{display:none}
+  .accx .hxCta small{display:none}
+  .accx .acts{display:none}
+  .accx .ftrGrid > div:nth-child(3){display:none}
+
+  /* Héros : la carte remplit le premier écran. Avant, le haut du titre
+     suivant dépassait de quelques pixels sous la ligne de flottaison. */
+  .accx .hxBg{min-height:max(500px, min(820px, calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - 20px)))}
+
+  /* Un seul fond pour toute la page : la FAQ (blanc) et le fonctionnement
+     (#fbfaf9) tranchaient sur le papier du corps (#faf7f4). Les filets
+     suffisent à marquer le fonctionnement. */
+  .accx .fq,.accx .how{background:transparent}
+
+  /* Rythme : même respiration avant chaque titre de section. */
+  .accx .moment{padding:72px 0 64px}
+  .accx .how{padding:56px 0 48px}
+  .accx .price{padding:48px 0}
+  .accx .fq{padding:24px 0 56px}
+
+  /* Corps de texte : une seule taille hors titres et légendes. */
+  .accx .moment p,.accx .endIn p{font-size:16.5px;line-height:1.55}
+  .accx .fqAns{font-size:15.5px;line-height:1.6}
+
+  /* Fonctionnement : le téléphone touche le bas du cadre (il s'arrêtait
+     4 px au-dessus, un liseré sombre passait dessous), et la grille du
+     dépôt remplit l'écran au lieu d'y laisser une bande blanche. */
+  .accx .stage{--scrH:316px}
+  .accx .stage .grid img,.accx .stage .grid .more{aspect-ratio:4/5}
+  /* Étape 2 : « Voir mes photos » sortait de 4 px sous le cadre. */
+  .accx .stage .mbody .cov{height:124px}
+
+  /* FAQ : questions équilibrées, pas de « sortie ? » seul en bout de ligne. */
+  .accx .fqSum{text-wrap:balance}
+
+  /* Dernier appel : la photo se fond dans l'encre au lieu d'une coupe nette,
+     et cadre le passager en entier. */
+  .accx .endCard{isolation:isolate}
+  .accx .endCard > img{height:250px;object-position:56% 52%}
+  .accx .endCard::after{display:block;inset:auto 0 auto 0;top:170px;width:auto;height:81px;background:linear-gradient(180deg,rgba(22,19,32,0),var(--ink))}
+  .accx .endIn{padding-top:18px}
+
+  /* Pied : deux colonnes, aucun lien coupé sur deux lignes. */
+  .accx .ftrCol a,.accx .ftrCol button{font-size:14.5px;white-space:nowrap;min-height:38px}
+}
+/* Téléphones étroits : « Questions fréquentes » et « Simuler mes revenus »
+   ne tiennent plus en 14,5 px. On resserre la marge et le corps ; sous
+   370 px, le libellé passe à la ligne plutôt que de déborder. */
+@media (max-width:389px){
+  .accx .ftr{--lg:18px}
+  .accx .ftrGrid{column-gap:12px}
+  .accx .ftrCol a,.accx .ftrCol button{font-size:14px}
+}
+@media (max-width:369px){
+  .accx .ftrCol a,.accx .ftrCol button{white-space:normal;line-height:1.3;min-height:0;padding:9px 0}
 }
