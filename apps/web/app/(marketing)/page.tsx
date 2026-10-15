@@ -95,17 +95,6 @@ const FAQ_JSON_LD = {
    (activitesNav.ts) : un seul ordre, une seule orthographe sur tout le site. */
 const ACTIVITES_ACCUEIL = parMilieu("eau").concat(parMilieu("air"), parMilieu("terre"));
 
-/* Exemple de prix, une seule source pour le bloc #tarif. Frais Stripe d'une
-   carte européenne standard (1,5 % + 0,25 €, grille publique de Stripe France,
-   relue le 03/10/2026) : en charge directe ils sont à la charge du pro
-   (lib/checkout.ts), ils doivent donc apparaître dans ce qu'il touche. */
-const PACK_CENTS = 2500;
-const COMMISSION_CENTS = Math.round(PACK_CENTS * 0.2);
-const STRIPE_CENTS = Math.round(PACK_CENTS * 0.015 + 25);
-const NET_CENTS = PACK_CENTS - COMMISSION_CENTS - STRIPE_CENTS;
-const eur = (cents: number, decimals = cents % 100 !== 0) =>
-  `${(cents / 100).toLocaleString("fr-FR", { minimumFractionDigits: decimals ? 2 : 0, maximumFractionDigits: decimals ? 2 : 0 })}\u00a0€`;
-
 export default function AccueilPage() {
   return (
     <div className={landing.page}>
@@ -327,9 +316,9 @@ export default function AccueilPage() {
               <div className="slab">
                 <h2 className="h2">Vous payez uniquement quand vous vendez.</h2>
                 <div>
-                  <p className="lbl">Sur un pack à {eur(PACK_CENTS)}, vous recevez</p>
-                  <p className="net num">{eur(NET_CENTS)}</p>
-                  <p className="det">{eur(COMMISSION_CENTS)} de commission pour Linktrip (20&nbsp;%) et {eur(STRIPE_CENTS)} de frais Stripe, pour une carte européenne. Pas d’abonnement.</p>
+                  <p className="lbl">Commission sur chaque vente</p>
+                  <p className="net num">20&nbsp;%</p>
+                  <p className="det">Pas d’abonnement.</p>
                   <Link href="/produit#simulateur" className="calc">Calculer avec vos chiffres<svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
                 </div>
               </div>
