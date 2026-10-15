@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Header } from "@/components/marketing/Header";
 import { Logo } from "@/components/brand/Logo";
 import { ManageCookiesLink } from "@/components/analytics/ManageCookiesLink";
-import { parMilieu } from "@/components/marketing/activitesNav";
+import { NOM_ACTIVITE, parMilieu } from "@/components/marketing/activitesNav";
 import landing from "./landing.module.css";
 import { AccueilAnime } from "./AccueilAnime";
 import "./accueil.css";
@@ -94,6 +94,60 @@ const FAQ_JSON_LD = {
 /* La ligne d'activités sous le héros reprend exactement le menu du header
    (activitesNav.ts) : un seul ordre, une seule orthographe sur tout le site. */
 const ACTIVITES_ACCUEIL = parMilieu("eau").concat(parMilieu("air"), parMilieu("terre"));
+
+/* Mur de photos sous « Vous avez les photos ? » (15/10/2026) : deux rangées
+   qui défilent en sens opposé, portraits en haut, paysages en bas. Les
+   noms viennent de activitesNav.ts, chaque photo mène à sa page. */
+const MUR_PORTRAITS = [
+  ["rafting", "/accueil/activite-rafting.webp"],
+  ["parapente", "/accueil/activite-parapente.webp"],
+  ["surf", "/accueil/activite-surf.webp"],
+  ["canyoning", "/accueil/activite-canyoning.webp"],
+  ["plongee", "/accueil/activite-snorkeling.webp"],
+  ["parc-aventure", "/accueil/activite-parcours-aventure.webp"],
+  ["jet-ski", "/accueil/activite-jet-ski.webp"],
+  ["tyrolienne", "/accueil/activite-tyrolienne.webp"],
+  ["bouee", "/accueil/activite-bouee-tractee.webp"],
+  ["kayak", "/accueil/activite-kayak.webp"],
+  ["paddle", "/accueil/activite-paddle.webp"],
+] as const;
+const MUR_PAYSAGES = [
+  ["surf", "/landing/activites/surf-1.webp"],
+  ["tyrolienne", "/landing/activites/tyrolienne-1.webp"],
+  ["ski-nautique", "/accueil/mur-ski-nautique.webp"],
+  ["rafting", "/landing/activites/rafting-2.webp"],
+  ["canyoning", "/landing/activites/canyoning-2.webp"],
+  ["parc-aventure", "/landing/activites/parc-aventure-1.webp"],
+  ["jet-ski", "/landing/activites/jet-ski-1.webp"],
+  ["plongee", "/landing/activites/plongee-2.webp"],
+  ["kayak", "/landing/activites/kayak-1.webp"],
+  ["parapente", "/landing/activites/parapente-2.webp"],
+  ["bouee", "/landing/activites/bouee-2.webp"],
+] as const;
+
+/* Chaque rangée est rendue deux fois de suite : la seconde copie (masquée aux
+   lecteurs d'écran et au clavier) permet une boucle sans couture. */
+function MurRangee({ photos, forme }: { photos: readonly (readonly [keyof typeof NOM_ACTIVITE, string])[]; forme: "p" | "l" }) {
+  return (
+    <div className="murRail">
+      <div className="murRow">
+        {[0, 1].map((copie) =>
+          photos.map(([slug, src]) => (
+            <Link
+              key={`${copie}-${slug}`}
+              href={`/activites/${slug}`}
+              className={`murT ${forme}`}
+              {...(copie ? { "aria-hidden": true, tabIndex: -1 } : {})}
+            >
+              <img src={src} alt="" loading="lazy" decoding="async" />
+              <span>{NOM_ACTIVITE[slug]}</span>
+            </Link>
+          )),
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AccueilPage() {
   return (
@@ -224,6 +278,10 @@ export default function AccueilPage() {
               <h2 className="h2 q"><span className="gm">«&nbsp;</span>Vous avez les photos&nbsp;?<span className="gm">&nbsp;»</span></h2>
               <p>La question revient à chaque fin de sortie. Le plus souvent, les photos ne quittent jamais la carte.</p>
             </div>
+          </section>
+          <section className="mur" aria-label="Photos de sorties, par activité">
+            <MurRangee photos={MUR_PORTRAITS} forme="p" />
+            <MurRangee photos={MUR_PAYSAGES} forme="l" />
           </section>
           {/* 3. Fonctionnement */}
           <section className="how" id="fonctionnement">
