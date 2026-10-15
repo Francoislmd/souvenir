@@ -668,30 +668,26 @@
 /* ── Mur de photos (15/10/2026) ──
    Sous « Vous avez les photos ? » : deux rangées pleine largeur qui défilent
    en sens opposé. La piste porte la rangée deux fois, elle glisse d'une demi-
-   longueur (plus la moitié d'un espacement) pour boucler sans couture. Arrêt
-   au survol et au clavier ; mouvement réduit : rangée fixe, glissée au doigt. */
+   longueur (plus la moitié d'un espacement) pour boucler sans couture. Ni
+   fondu sur les bords, ni arrêt au survol, ni lien (15/10/2026) ; mouvement
+   réduit : rangée fixe, glissée au doigt. */
 .accx .moment:has(+ .mur){padding-bottom:clamp(40px, 4vw, 56px)}
 .accx .mur{--mg:12px;--mh:280px;padding-bottom:clamp(88px, 9vw, 128px);overflow:hidden}
-.accx .murRail{-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
 .accx .murRail + .murRail{margin-top:var(--mg)}
 .accx .murRow{display:flex;width:max-content;gap:var(--mg);animation:acc-murG 90s linear infinite}
 .accx .murRail + .murRail .murRow{animation-name:acc-murD;animation-duration:100s}
-.accx .mur:hover .murRow,.accx .mur:focus-within .murRow{animation-play-state:paused}
 @keyframes acc-murG{from{transform:translateX(0)}to{transform:translateX(calc(-50% - var(--mg) / 2))}}
 @keyframes acc-murD{from{transform:translateX(calc(-50% - var(--mg) / 2))}to{transform:translateX(0)}}
 .accx .murT{position:relative;flex:none;height:var(--mh);border-radius:20px;overflow:hidden;background:var(--line-2);isolation:isolate}
 .accx .murT.p{aspect-ratio:3/4}
 .accx .murT.l{aspect-ratio:4/3}
-.accx .murT img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease)}
+.accx .murT img{width:100%;height:100%;object-fit:cover}
 .accx .murT::after{content:"";position:absolute;inset:auto 0 0 0;height:46%;background:linear-gradient(180deg,rgba(12,10,18,0),rgba(12,10,18,.55));pointer-events:none}
-.accx .murT span{position:absolute;left:16px;bottom:14px;z-index:1;display:inline-flex;align-items:center;gap:6px;font:600 15px/1.2 var(--display);letter-spacing:-.005em;color:#fff}
-.accx .murT span::after{content:"";width:14px;height:14px;opacity:0;transform:translateX(-4px);transition:opacity .2s var(--ease),transform .2s var(--ease);background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
-@media (hover:hover){.accx .murT:hover img{transform:scale(1.04)}.accx .murT:hover span::after{opacity:1;transform:none}}
+.accx .murT span{position:absolute;left:16px;bottom:14px;z-index:1;font:600 15px/1.2 var(--display);letter-spacing:-.005em;color:#fff}
 @media (max-width:640px){
   .accx .mur{--mg:8px;--mh:200px;padding-bottom:64px}
   .accx .murRow{animation-duration:70s}
   .accx .murRail + .murRail .murRow{animation-duration:80s}
-  .accx .murRail{-webkit-mask-image:none;mask-image:none}
   .accx .murT{border-radius:16px}
   .accx .murT span{left:12px;bottom:11px;font-size:13.5px}
 }

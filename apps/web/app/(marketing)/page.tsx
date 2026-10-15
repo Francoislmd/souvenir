@@ -97,7 +97,7 @@ const ACTIVITES_ACCUEIL = parMilieu("eau").concat(parMilieu("air"), parMilieu("t
 
 /* Mur de photos sous « Vous avez les photos ? » (15/10/2026) : deux rangées
    qui défilent en sens opposé, portraits en haut, paysages en bas. Les
-   noms viennent de activitesNav.ts, chaque photo mène à sa page. */
+   noms viennent de activitesNav.ts. Photos non cliquables (15/10/2026). */
 const MUR_PORTRAITS = [
   ["rafting", "/accueil/activite-rafting.webp"],
   ["parapente", "/accueil/activite-parapente.webp"],
@@ -126,22 +126,21 @@ const MUR_PAYSAGES = [
 ] as const;
 
 /* Chaque rangée est rendue deux fois de suite : la seconde copie (masquée aux
-   lecteurs d'écran et au clavier) permet une boucle sans couture. */
+   lecteurs d'écran) permet une boucle sans couture. */
 function MurRangee({ photos, forme }: { photos: readonly (readonly [keyof typeof NOM_ACTIVITE, string])[]; forme: "p" | "l" }) {
   return (
     <div className="murRail">
       <div className="murRow">
         {[0, 1].map((copie) =>
           photos.map(([slug, src]) => (
-            <Link
+            <div
               key={`${copie}-${slug}`}
-              href={`/activites/${slug}`}
               className={`murT ${forme}`}
-              {...(copie ? { "aria-hidden": true, tabIndex: -1 } : {})}
+              {...(copie ? { "aria-hidden": true } : {})}
             >
               <img src={src} alt="" loading="lazy" decoding="async" />
               <span>{NOM_ACTIVITE[slug]}</span>
-            </Link>
+            </div>
           )),
         )}
       </div>
