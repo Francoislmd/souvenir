@@ -633,6 +633,17 @@
   place-items: center;
   background: #15131a;
 }
+/* Le cadenas de l'aperçu, au centre de la grande photo. */
+.tileLock {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  pointer-events: none;
+}
 .stageCount {
   position: absolute;
   z-index: 3;

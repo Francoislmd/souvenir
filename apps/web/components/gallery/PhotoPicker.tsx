@@ -262,7 +262,9 @@ export function PhotoPicker({
                     <PlayMark />
                     <VideoBadge durationSec={shown.durationSec} />
                   </>
-                ) : null}
+                ) : (
+                  <LockBadge />
+                )}
                 {total > 1 ? (
                   <span className={styles.stageCount}>
                     {cur + 1} / {total}
@@ -464,5 +466,22 @@ export function PhotoPicker({
         </div>
       ) : null}
     </>
+  );
+}
+
+/**
+ * Le cadenas de l'aperçu payant. Il était dessiné dans l'image
+ * (lib/group-watermark.ts) et grossissait donc avec la vignette. Posé ici,
+ * il a la même taille partout. Pastille encre, filet blanc, cadenas au trait.
+ */
+function LockBadge() {
+  return (
+    <svg className={styles.tileLock} viewBox="-56 -56 112 112" aria-hidden="true">
+      <circle r="55.5" fill="rgba(20, 19, 32, 0.55)" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
+      <g transform="translate(0 2)" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="-17" y="-4" width="34" height="24" rx="5" />
+        <path d="M-10-4v-10a10 10 0 0 1 20 0v10" />
+      </g>
+    </svg>
   );
 }
