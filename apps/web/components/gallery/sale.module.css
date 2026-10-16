@@ -577,7 +577,7 @@
 }
 .title {
   margin: 12px 0 0;
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.045em;
   line-height: 1.02;
@@ -1056,7 +1056,7 @@
     padding-top: 34px;
   }
   .title {
-    font-size: 2.9rem;
+    font-size: 2.1rem;
   }
   .frame {
     border-radius: 16px;
