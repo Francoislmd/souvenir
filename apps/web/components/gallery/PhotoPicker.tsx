@@ -141,7 +141,6 @@ export function PhotoPicker({
   const n = packOnly ? total : selected.size;
   const allCents = price(quote(total, total, pricing).totalCents);
   const selCents = price(quote(n, total, pricing).totalCents);
-  const rawCents = price(n * pricing.pricePhotoCents);
   // Le plafond est atteint : les photos restantes ne coûtent plus rien.
   const capped = n > 0 && n < total && selCents >= allCents;
   const takesAll = n === total || capped;
@@ -153,27 +152,30 @@ export function PhotoPicker({
     setSelected(new Set(allIds));
   }
 
+  // Une phrase, un seul fait : ce qu'il manque pour tout avoir. Le total est
+  // sur le bouton, il n'est pas répété au-dessus.
   const nudge: ReactNode = packOnly ? (
     "Sans filigrane, à télécharger dès le paiement."
   ) : n === 0 ? (
-    allCents < total * price(pricing.pricePhotoCents) ? `${unit} la photo. Au-delà de ${formatEuros(allCents)}, les suivantes sont incluses.` : `${unit} la photo.`
+    `${unit} la photo, ${formatEuros(allCents)} les ${total}.`
   ) : capped ? (
     <>
-      Vous avez atteint {formatEuros(allCents)} : les {total - n} autres photos sont incluses.{" "}
+      Les {total - n} autres sont incluses.{" "}
       <button type="button" className={styles.lnk} onClick={takeAll}>
         Les ajouter
       </button>
     </>
   ) : n === total ? (
-    `Toutes vos photos pour ${formatEuros(allCents)}, et celles ajoutées ensuite.`
+    "Et celles ajoutées ensuite."
   ) : (
     <>
-      Encore {formatEuros(allCents - selCents)} et vous avez les {total}.{" "}
+      Encore {formatEuros(allCents - selCents)} pour les {total}.{" "}
       <button type="button" className={styles.lnk} onClick={takeAll}>
         Tout prendre
       </button>
     </>
   );
+  const panelLabel = packOnly ? countLabel : n === 0 ? "Aucune photo choisie" : takesAll ? `Les ${total} photos` : `${n} photo${n > 1 ? "s" : ""}`;
   // Rien de choisi : la barre ne montre pas « 0 € » devant un bouton grisé.
   // Elle donne les deux prix, celui d'une photo à gauche, celui de toutes sur
   // le bouton, qui les coche toutes (le paiement reste un second geste).
@@ -202,13 +204,6 @@ export function PhotoPicker({
         </span>
       ) : null}
     </button>
-  );
-  const totalNode = (
-    <>
-      {/* Sans achat à l'unité, il n'y a pas de prix « avant » à barrer. */}
-      {!packOnly && rawCents > selCents ? <s>{formatEuros(rawCents)}</s> : null}
-      {formatEuros(selCents)}
-    </>
   );
 
   const zoomed = zoom !== null ? photos[zoom] : undefined;
@@ -345,25 +340,25 @@ export function PhotoPicker({
 
         <aside className={styles.side}>
           <div className={styles.panel}>
-            <div className={`${styles.row} ${styles.display}`}>
-              <span>{countLabel}</span>
-              <b>{totalNode}</b>
+            <div className={styles.panelHead}>
+              <span>{panelLabel}</span>
+              {!packOnly && n > 0 && !takesAll ? <em>sur {total}</em> : null}
             </div>
             {packOnly ? null : (
-              <>
-                <div className={styles.gauge} aria-hidden="true">
-                  <i style={{ width: `${pct}%` }} />
-                </div>
-                <div className={styles.legend}>
-                  <span>0 €</span>
-                  <span>Toutes : {formatEuros(allCents)}</span>
-                </div>
-              </>
+              <div className={styles.gauge} aria-hidden="true">
+                <i style={{ width: `${pct}%` }} />
+              </div>
             )}
             <p className={styles.nudge}>{nudge}</p>
             {error ? <p className={styles.error}>{error}</p> : null}
             {payButton}
-            <p className={styles.safe}>Apple Pay, Google Pay ou carte bancaire. Paiement sécurisé par Stripe.</p>
+            <p className={styles.safe}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="10" rx="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+              </svg>
+              Apple Pay, Google Pay ou carte
+            </p>
           </div>
         </aside>
       </div>

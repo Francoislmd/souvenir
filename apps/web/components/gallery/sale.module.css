@@ -861,14 +861,29 @@
   place-items: center;
 }
 
-/* La jauge : le total qui monte vers le prix de toutes les photos. */
+/* Le panneau de commande : le décompte, la jauge, une phrase, le bouton. */
 .panel {
   margin-top: 22px;
-  padding: 16px;
+  padding: 18px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: #fff;
 }
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.panelHead em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--ink-4);
+}
+/* Gardées pour la barre du bas sur téléphone. */
 .row {
   display: flex;
   justify-content: space-between;
@@ -888,15 +903,13 @@
 }
 .row s {
   margin-right: 8px;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
   font-size: 0.86rem;
   font-weight: 400;
-  letter-spacing: 0;
   color: var(--ink-4);
 }
 .gauge {
   position: relative;
-  height: 6px;
+  height: 4px;
   margin-top: 12px;
   border-radius: 99px;
   overflow: hidden;
@@ -908,14 +921,6 @@
   border-radius: 99px;
   background: var(--op);
   transition: width 0.3s cubic-bezier(0.3, 0.8, 0.3, 1);
-}
-.legend {
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.74rem;
-  color: var(--ink-4);
-  font-variant-numeric: tabular-nums;
 }
 .nudge {
   margin: 12px 0 0;
@@ -935,10 +940,13 @@
 }
 .safe {
   margin: 10px 0 0;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 0.76rem;
-  line-height: 1.4;
-  color: var(--ink-3);
+  color: var(--ink-4);
+  white-space: nowrap;
 }
 .faq {
   max-width: 1120px;
