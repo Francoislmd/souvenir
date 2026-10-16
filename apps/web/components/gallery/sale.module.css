@@ -566,14 +566,12 @@
   font-size: 0.88rem;
   color: var(--ink-3);
 }
-/* Le diaporama : une grande photo entière, sans bandes autour. La hauteur
-   est fixe (rien ne saute sous la photo d'une image à l'autre) et le cadre
-   prend la largeur de la photo : à côté d'une photo en hauteur, c'est le
-   fond de la page qui se voit, pas du noir. */
+/* Le diaporama : un cadre de taille fixe, le même pour toutes les photos,
+   que la photo remplit (object-fit: cover). Ni bandes noires ni cadre qui
+   change de largeur d'une photo à l'autre. La photo entière se voit en
+   plein écran (la visionneuse, en contain). */
 /* Le conteneur de mesure est .viewer, pas .stage : une unité cqw se
-   calcule sur un conteneur ancêtre, jamais sur l'élément lui-même. Posé
-   sur .stage, sa propre hauteur se mesurait sur l'écran et la photo sur
-   le cadre : un vide apparaissait sous la photo. */
+   calcule sur un conteneur ancêtre, jamais sur l'élément lui-même. */
 .viewer {
   margin-top: 14px;
   container-type: inline-size;
@@ -582,11 +580,6 @@
   /* Hauteur d'une photo 3:2 à pleine largeur, plafonnée par l'écran. */
   --stage-h: min(64vh, 440px);
   --stage-h: min(calc(100svh - 320px), 640px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: var(--stage-h);
-  min-height: 220px;
   -webkit-touch-callout: none;
   user-select: none;
 }
@@ -597,7 +590,9 @@
 }
 .frame {
   position: relative;
-  max-width: 100%;
+  width: 100%;
+  height: var(--stage-h);
+  min-height: 220px;
   border-radius: 14px;
   overflow: hidden;
   background: var(--line-2);
@@ -612,28 +607,30 @@
   pointer-events: none;
 }
 .stageHit {
+  position: absolute;
+  inset: 0;
   display: block;
   padding: 0;
   border: 0;
   background: none;
   cursor: zoom-in;
 }
-/* Hauteur en longueur définie, jamais en pourcentage : un max-height: 100%
-   dans un parent à hauteur automatique est ignoré, et la photo débordait. */
+/* Cadrage un peu au-dessus du centre : sur une photo en hauteur, ce sont
+   les têtes qui restent dans le cadre. */
 .stageHit img {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: var(--stage-h);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
   -webkit-user-drag: none;
 }
 .stageEmpty {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  width: calc(var(--stage-h) * 1.5);
-  max-width: 100%;
-  height: var(--stage-h);
   background: #15131a;
 }
 .stageCount {
