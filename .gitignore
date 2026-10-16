@@ -38,3 +38,7 @@ packages/db/generated/
 # typescript
 *.tsbuildinfo
 .vercel
+
+# Python (scripts du skill ui-ux-pro-max)
+__pycache__/
+*.pyc
