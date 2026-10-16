@@ -381,17 +381,14 @@ export function BoutiqueGallery({
         head={
           <>
             {bought ? <BackLink onClick={() => setBuyMore(false)} /> : null}
-            <div className={sale.ctx}>
-              {context.line}
-              {context.strong ? (
-                <>
-                  {" · "}
-                  <b>{context.strong}</b>
-                </>
-              ) : null}
-              {` · ${countLabel}`}
+            <div className={sale.chips}>
+              <span className={sale.chip}>{upperFirst(context.line)}</span>
+              {context.strong ? <span className={sale.chip}>{upperFirst(context.strong)}</span> : null}
+              <span className={`${sale.chip} ${sale.chipN}`}>{upperFirst(countLabel)}</span>
             </div>
-            <h1 className={`${sale.title} ${sale.display}`}>{context.title}</h1>
+            <h1 className={`${sale.title} ${sale.display}`}>
+              <span className={sale.titleLead}>{photosOf(context.title, unit)}</span> {activityInTitle(context.title)}
+            </h1>
           </>
         }
         after={
@@ -462,4 +459,26 @@ function boughtLabel(items: BoutiquePhoto[]): string {
 
 function allLabel(count: number): string {
   return count === 1 ? "Votre photo" : `Les ${count} photos`;
+}
+
+function upperFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * L'activité dans « Vos photos de rafting » : la majuscule tombe quand le
+ * mot est un nom commun (« Rafting » → « rafting »), elle reste sur un
+ * sigle (« SUP ») ou un nom propre en tête (« Ardèche » est rare, on
+ * l'accepte en minuscule plutôt que d'écrire « de Rafting »).
+ */
+function activityInTitle(activity: string): string {
+  const a = activity.trim();
+  if (a.length > 1 && a.charAt(1) === a.charAt(1).toLowerCase()) return a.charAt(0).toLowerCase() + a.slice(1);
+  return a;
+}
+
+/** « Vos photos de » ou « Vos photos d' » devant une voyelle (« d'escalade »). */
+function photosOf(activity: string, unit: string): string {
+  const lead = unit === "vidéo" ? "Vos vidéos" : "Vos photos";
+  return /^[aeiouyàâéèêëîïôöûüœ]/i.test(activity.trim()) ? `${lead} d’` : `${lead} de`;
 }

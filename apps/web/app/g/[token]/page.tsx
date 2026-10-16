@@ -80,9 +80,10 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const purchasedIds = access.packReached ? photos.map((p) => p.id) : Array.from(access.ids);
 
   const slot = participant.slotId ? await prisma.slot.findUnique({ where: { id: participant.slotId }, select: { startsAt: true, guide: true } }) : null;
-  // Titre « Canyoning », au-dessus « 26 sept. » puis, en gras, « départ 10 h
-  // avec Léa » : le client vérifie d'un coup d'œil que ce sont ses photos.
-  const shortDay = (slot?.startsAt ?? sortie.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
+  // Titre « Vos photos de canyoning », au-dessus trois pastilles : « vendredi
+  // 26 sept. », « départ 10 h avec Léa », le nombre de photos. Le client
+  // vérifie d'un coup d'œil que ce sont les siennes.
+  const shortDay = (slot?.startsAt ?? sortie.startsAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short", timeZone: "Europe/Paris" });
   const guide = slot?.guide ?? sortie.guide;
   const context = {
     title: sortie.activity,
