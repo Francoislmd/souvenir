@@ -618,6 +618,24 @@
     --stage-h: min(66.6cqw, calc(100svh - 320px));
   }
 }
+/* Sur téléphone, la photo passe bord à bord et prend presque un carré :
+   à 66 % de la largeur elle faisait 285 px de haut sur un grand iPhone,
+   avec un tiers d'écran vide dessous. Le plafond en svh garde la bande
+   et la barre de paiement à l'écran. */
+@media (max-width: 899px) {
+  .viewer {
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+  @supports (width: 1cqw) {
+    .stage {
+      --stage-h: min(100cqw, calc(100svh - 330px));
+    }
+  }
+  .viewer .frame {
+    border-radius: 0;
+  }
+}
 .frame {
   position: relative;
   width: 100%;
@@ -1467,4 +1485,14 @@
 .countryDial {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+}
+
+/* Bande des miniatures bord à bord sur téléphone, avec la marge rendue à
+   l'intérieur. En fin de feuille : la règle de base .thumbs est plus bas
+   que le bloc du diaporama et l'écraserait. */
+@media (max-width: 899px) {
+  .thumbs {
+    margin: 8px 0 0;
+    padding: 3px 16px;
+  }
 }
