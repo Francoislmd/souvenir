@@ -222,7 +222,7 @@ export function PhotoPicker({
         <div>
           {head}
           <div className={styles.sub}>
-            <span>{packOnly ? "Toutes vos photos, en une fois" : n === 0 ? "Choisissez celles que vous voulez" : `${n} sur ${total} choisie${n > 1 ? "s" : ""}`}</span>
+            <span>{packOnly ? "Pack complet" : n === 0 ? "Sélectionnez vos photos" : `${n} sur ${total} choisie${n > 1 ? "s" : ""}`}</span>
             {packOnly || total < 2 ? null : (
               <button type="button" className={styles.lnk} onClick={() => setSelected(n === total ? new Set() : new Set(allIds))}>
                 {n === total ? "Tout enlever" : "Tout prendre"}
