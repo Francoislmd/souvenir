@@ -394,7 +394,7 @@ export function BoutiqueGallery({
         after={
           <>
             <div className={sale.faq}>
-              <h2 className={sale.display}>Avant de payer</h2>
+              <h2 className={sale.display}>FAQ</h2>
               <div>
                 <details>
                   <summary>Combien de temps je garde mes photos&nbsp;?</summary>

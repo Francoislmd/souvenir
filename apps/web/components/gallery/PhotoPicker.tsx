@@ -191,7 +191,8 @@ export function PhotoPicker({
     onCheckout(takesAll ? allIds : Array.from(selected));
   }
 
-  const payLabel = n === 0 ? `Tout prendre · ${formatEuros(allCents)}` : `Payer ${formatEuros(selCents)}`;
+  const payLabel =
+    n === 0 ? `Tout prendre · ${formatEuros(allCents)}` : `${n === 1 && !takesAll ? "Débloquer ma photo" : "Débloquer mes photos"} · ${formatEuros(selCents)}`;
   const payButton = (
     <button type="button" className={styles.cta} onClick={n === 0 ? takeAll : checkout} disabled={busy} aria-busy={busy || undefined}>
       <span>{payLabel}</span>
@@ -204,7 +205,8 @@ export function PhotoPicker({
   );
   const totalNode = (
     <>
-      {rawCents > selCents ? <s>{formatEuros(rawCents)}</s> : null}
+      {/* Sans achat à l'unité, il n'y a pas de prix « avant » à barrer. */}
+      {!packOnly && rawCents > selCents ? <s>{formatEuros(rawCents)}</s> : null}
       {formatEuros(selCents)}
     </>
   );
