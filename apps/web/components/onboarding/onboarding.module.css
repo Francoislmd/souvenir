@@ -4,15 +4,15 @@
    l'espace pro (operator.module.css), pas celles de l'ancien assistant. */
 
 .ob {
-  --ink: #161320;
+  --ink: var(--foreground);
   --ink-2: #5a5d64;
-  --ink-3: #726c80;
+  --ink-3: var(--muted-foreground);
   --ink-4: #a6a0b2;
-  --line: #ece9ef;
+  --line: var(--input);
   --line-2: #f4f2f6;
   --fill: #f3f2f5;
   --fill-2: #eae8ee;
-  --brand: #ff5a1f;
+  --brand: var(--primary);
   --ok: #16a34a;
   --bg: #ffffff;
   --ft: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;

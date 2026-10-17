@@ -6,11 +6,11 @@
    couleur du prestataire, injectée en style inline par la route. */
 .page {
   --op-soft: color-mix(in srgb, var(--op) 10%, #fff);
-  --ink: #161320;
+  --ink: var(--foreground);
   --ink-2: #413c4e;
-  --ink-3: #726c80;
+  --ink-3: var(--muted-foreground);
   --ink-4: #a6a0b2;
-  --line: #ece9ef;
+  --line: var(--input);
   --line-2: #f4f2f6;
   --bg: #fbfaf9;
   --ok: #16a34a;

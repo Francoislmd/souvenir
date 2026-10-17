@@ -63,6 +63,12 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${interTight.variable} ${inter.variable}`}>
       <head>
+        {/* Aperçu des thèmes tweakcn (tweakcn.com/editor/theme) : en local
+            uniquement, jamais chargé en production. */}
+        {process.env.NODE_ENV === "development" && (
+          // eslint-disable-next-line @next/next/no-sync-scripts
+          <script src="https://tweakcn.com/live-preview.min.js" />
+        )}
         <GoogleTagManager />
       </head>
       <body className="antialiased">

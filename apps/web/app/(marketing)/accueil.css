@@ -1,7 +1,7 @@
 .accx{
-  --ink:#161320;--ink-2:#413c4e;--ink-3:#726c80;--ink-4:#a6a0b2;
-  --line:#ece9ef;--line-2:#f4f2f6;--soft:#fff1eb;--paper:#fbfaf9;
-  --brand:#ff5a1f;--brand-ink:#e8460c;--rose:#ff3d6e;--amber:#ffb443;
+  --ink:var(--foreground);--ink-2:#413c4e;--ink-3:var(--muted-foreground);--ink-4:#a6a0b2;
+  --line:var(--input);--line-2:#f4f2f6;--soft:var(--secondary);--paper:#fbfaf9;
+  --brand:var(--primary);--brand-ink:#e8460c;--rose:#ff3d6e;--amber:#ffb443;
   --sunset:linear-gradient(120deg,#ff3d6e,#ff5a1f 52%,#ffb443);
   
   --max:1320px;

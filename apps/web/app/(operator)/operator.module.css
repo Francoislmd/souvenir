@@ -9,15 +9,15 @@
    n'a rien à faire ici. */
 
 .app {
-  --brand: #ff5a1f;
+  --brand: var(--primary);
   --brand-ink: #e8460c;
   --aqua: #0fbeb6;
-  --ink: #161320;
-  --ink-3: #726c80;
+  --ink: var(--foreground);
+  --ink-3: var(--muted-foreground);
   --ink-4: #a6a0b2;
-  --line: #ece9ef;
+  --line: var(--input);
   --line-2: #f4f2f6;
-  --soft: #fff1eb;
+  --soft: var(--secondary);
   --bg: #ffffff;
   /* Le fond de la fenêtre, sur lequel flottent la colonne de verre et la
      carte du contenu (barre latérale A2, 22/09/2026). Blanc à peine froid,

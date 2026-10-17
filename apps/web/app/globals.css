@@ -213,21 +213,21 @@ body {
   letter-spacing: -.011em;
 
   --canvas: #FBFAF9;
-  --surface: #ffffff;
-  --border: #ECE9EF;
+  --surface: var(--card);
+  --border: var(--input);
   --border-strong: #A6A0B2;
-  --ink: #161320;
-  --ink-2: #726C80;
+  --ink: var(--foreground);
+  --ink-2: var(--muted-foreground);
   --muted: #A6A0B2;
 
-  --brand: #FF5A1F;
+  --brand: var(--primary);
   --brand-hover: #E8460C;
-  --brand-tint: #FFF1EB;
+  --brand-tint: var(--secondary);
   --brand-gradient: linear-gradient(115deg, #FF3D6E 0%, #FF5A1F 50%, #FFB443 100%);
 
-  --accent: #FF5A1F;
+  --accent: var(--primary);
   --accent-hover: #E8460C;
-  --accent-tint: #FFF1EB;
+  --accent-tint: var(--secondary);
 }
 
 @layer utilities {

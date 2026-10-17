@@ -6,16 +6,43 @@
    Inter Tight → --font-bricolage) : les noms legacy sont conservés pour ne
    pas casser les CSS existants, ceux-ci sont la lecture "propre". */
 :root {
-  --ink: #161320;
+  /* Noms shadcn (16/10/2026), pour que l'aperçu tweakcn
+     (tweakcn.com/editor/theme, script chargé en dev dans app/layout.tsx)
+     agisse sur le site : il écrit ces variables en style inline sur <html>.
+     Les valeurs sont exactement celles d'avant, le rendu ne change pas.
+     Seuls les tokens Linktrip de même valeur y sont reliés ; --paper,
+     --brand-ink et les tons d'encre secondaires restent fixes. */
+  --background: #faf7f4;
+  --foreground: #161320;
+  --card: #ffffff;
+  --card-foreground: #161320;
+  --popover: #ffffff;
+  --popover-foreground: #161320;
+  --primary: #ff5a1f;
+  --primary-foreground: #ffffff;
+  --secondary: #fff1eb;
+  --secondary-foreground: #e8460c;
+  --muted-foreground: #726c80;
+  --input: #ece9ef;
+  --ring: #ff5a1f;
+  --destructive: #dc2626;
+
+  --canvas: var(--background);
+  --surface: var(--card);
+  --danger: var(--destructive);
+
+  --ink: var(--foreground);
   --ink-2: #413c4e;
-  --ink-3: #726c80;
+  --ink-3: var(--muted-foreground);
   --ink-4: #a6a0b2;
-  --line: #ece9ef;
+  /* --line suit --input et non --border : --border garde l'ancien beige
+     (#ece4dc) de globals.css, --line est le gris rosé de la marque. */
+  --line: var(--input);
   --line-2: #f4f2f6;
-  --soft: #fff1eb;
+  --soft: var(--secondary);
   --paper: #fbfaf9;
 
-  --brand: #ff5a1f;
+  --brand: var(--primary);
   --brand-ink: #e8460c;
   --rose: #ff3d6e;
   --amber: #ffb443;
