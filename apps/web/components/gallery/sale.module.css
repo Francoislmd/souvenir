@@ -45,8 +45,8 @@
 }
 /* Rien à envoyer : un bouton éteint, pas la couleur du prestataire délavée. */
 .cta:disabled:not([aria-busy="true"]) {
-  background: var(--line-2, #f4f2f6);
-  color: var(--ink-4, #a6a0b2);
+  background: var(--line-2, #F1F3F6);
+  color: var(--ink-4, #A3AAB5);
   cursor: default;
 }
 /* En cours : le bouton garde sa couleur et sa largeur, la moulinette
@@ -100,13 +100,13 @@
      qu'une action, elle doit être visible sans défiler. */
   height: 300px;
   height: clamp(184px, 34svh, 300px);
-  background: #2a2830 50% 38% / cover no-repeat;
+  background: #2A303A 50% 38% / cover no-repeat;
 }
 .cover::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8, 6, 12, 0) 35%, rgba(8, 6, 12, 0.58) 100%);
+  background: linear-gradient(180deg, rgba(14, 17, 22, 0) 35%, rgba(14, 17, 22, 0.58) 100%);
 }
 .coverIn {
   position: absolute;
@@ -188,7 +188,7 @@
 .bareOrg .orgLogo:has(img),
 .topLogo:has(img) {
   background: #fff;
-  box-shadow: inset 0 0 0 1px rgba(22, 19, 32, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(25, 29, 36, 0.08);
 }
 .orgLogo img,
 .topLogo img {
@@ -269,7 +269,7 @@
   width: 100%;
   height: 52px;
   padding: 0 15px;
-  border: 1px solid #dcd8e1;
+  border: 1px solid #CBD1DA;
   border-radius: 14px;
   background: #fff;
   font-family: inherit;
@@ -463,7 +463,7 @@
     font-size: 1.15rem;
     font-weight: 650;
     letter-spacing: -0.02em;
-    background: linear-gradient(180deg, rgba(12, 10, 18, 0), rgba(12, 10, 18, 0.62));
+    background: linear-gradient(180deg, rgba(14, 17, 22, 0), rgba(14, 17, 22, 0.62));
   }
   .wall b span {
     display: block;
@@ -651,7 +651,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(10, 8, 14, 0.28), transparent 22%, transparent 74%, rgba(10, 8, 14, 0.42));
+  background: linear-gradient(180deg, rgba(14, 17, 22, 0.28), transparent 22%, transparent 74%, rgba(14, 17, 22, 0.42));
   pointer-events: none;
 }
 .stageHit {
@@ -679,7 +679,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: #15131a;
+  background: #191D24;
 }
 /* Le cadenas de l'aperçu, au centre de la grande photo. */
 .tileLock {
@@ -725,7 +725,7 @@
   padding: 0 13px 0 11px;
   border: 1.5px solid rgba(255, 255, 255, 0.92);
   border-radius: 99px;
-  background: rgba(22, 19, 32, 0.38);
+  background: rgba(25, 29, 36, 0.38);
   color: #fff;
   font-family: inherit;
   font-size: 0.84rem;
@@ -758,7 +758,7 @@
   height: 36px;
   border: 0;
   border-radius: 10px;
-  background: rgba(13, 12, 18, 0.42);
+  background: rgba(14, 17, 22, 0.42);
   color: #fff;
   display: grid;
   place-items: center;
@@ -873,7 +873,7 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: rgba(13, 12, 18, 0.55);
+  background: rgba(14, 17, 22, 0.55);
   color: #fff;
   display: grid;
   place-items: center;
@@ -931,7 +931,7 @@
   margin-top: 12px;
   border-radius: 99px;
   overflow: hidden;
-  background: #ebe8ef;
+  background: #E3E7EE;
 }
 .gauge i {
   position: absolute;
@@ -1365,7 +1365,7 @@
   gap: 10px;
   height: 54px;
   padding: 0 16px;
-  border: 1px solid #dcd8e1;
+  border: 1px solid #CBD1DA;
   border-radius: 14px;
   background: #fff;
   transition: border-color 0.15s;

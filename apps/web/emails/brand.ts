@@ -8,25 +8,25 @@
 
 export const brand = {
   // couleurs — mêmes valeurs que apps/web/styles/tokens.css
-  ink: "#161320",
-  ink2: "#413C4E",
-  ink3: "#726C80",
-  ink4: "#A6A0B2",
-  line: "#ECE9EF",
-  line2: "#F4F2F6",
-  soft: "#FFF1EB",
-  paper: "#F4F2F6",
+  ink: "#191D24",
+  ink2: "#3F4652",
+  ink3: "#6B7380",
+  ink4: "#A3AAB5",
+  line: "#E3E7EE",
+  line2: "#F1F3F6",
+  soft: "#EEF4FF",
+  paper: "#F1F3F6",
   white: "#FFFFFF",
-  orange: "#FF5A1F", // remplace le dégradé partout en email
-  orangeInk: "#E8460C",
-  aqua: "#0FBEB6",
-  ok: "#16A34A",
-  okSoft: "#EAF7EF",
+  orange: "#1A55D6", // bleu Océan (17/10/2026), nom de clé historique ; remplace le dégradé en email
+  orangeInk: "#1544AC",
+  aqua: "#2AA6A4",
+  ok: "#1E7B3A",
+  okSoft: "#E6F4EA",
   whatsapp: "#25D366",
 
   // typographie — polices système en repli, les webfonts ne sont pas fiables en email
   fontBody: "Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  fontHead: "'Inter Tight', Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+  fontHead: "Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
 
   // gabarit
   width: 560, // largeur maximale du bloc de contenu

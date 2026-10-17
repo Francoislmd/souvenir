@@ -79,11 +79,11 @@ async function getInstance(): Promise<ConnectInstance> {
     appearance: {
       overlays: "dialog",
       variables: {
-        colorPrimary: "#FF5A1F",
-        colorText: "#161320",
-        colorSecondaryText: "#726C80",
-        colorBorder: "#ECE9EF",
-        buttonPrimaryColorBackground: "#FF5A1F",
+        colorPrimary: "#1A55D6",
+        colorText: "#191D24",
+        colorSecondaryText: "#6B7380",
+        colorBorder: "#E3E7EE",
+        buttonPrimaryColorBackground: "#1A55D6",
         buttonPrimaryColorText: "#FFFFFF",
         borderRadius: "12px",
         buttonBorderRadius: "12px",
@@ -151,7 +151,7 @@ export function StripeOnboarding({ onDone }: { onDone: (ready: boolean) => void 
         </div>
       ) : null}
       {status === "error" ? (
-        <p style={{ margin: "12px 0", fontSize: "0.94rem", color: "#c2410c" }}>
+        <p style={{ margin: "12px 0", fontSize: "0.94rem", color: "#1544AC" }}>
           Stripe ne s&rsquo;est pas affiché. Rechargez la page, ou réessayez dans une minute.
         </p>
       ) : null}

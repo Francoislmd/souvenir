@@ -133,7 +133,7 @@ export default function OrderConfirmed({
                 <tbody>
                   <tr>
                     <td align="center" style={{ padding: "20px 18px" }}>
-                      <Text style={{ margin: 0, color: "#FFB443", fontSize: 19, letterSpacing: "3px" }}>&#9733;&#9733;&#9733;&#9733;&#9733;</Text>
+                      <Text style={{ margin: 0, color: "#FFB020", fontSize: 19, letterSpacing: "3px" }}>&#9733;&#9733;&#9733;&#9733;&#9733;</Text>
                       <Text style={{ ...s.h1, fontSize: 16, marginTop: 9 }}>Vous avez aimé votre sortie ?</Text>
                       <Text style={{ ...s.lead, fontSize: 13, marginTop: 6 }}>
                         Un avis Google prend 30 secondes et aide énormément une petite structure comme {operatorName}.

@@ -18,8 +18,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   ghost: "text-ink-2 [@media(hover:hover)]:hover:text-ink",
   // Dégradé signature (--sunset) : réservé aux CTA principaux de la landing (cf. HANDOFF §4 règle 1).
   sunset:
-    "bg-[image:var(--sunset)] text-white shadow-[0_10px_26px_-9px_rgba(255,90,31,0.6)] [@media(hover:hover)]:hover:brightness-105 [@media(hover:hover)]:hover:-translate-y-px",
-  dark: "bg-ink text-white [@media(hover:hover)]:hover:bg-[#2A2438] [@media(hover:hover)]:hover:-translate-y-px",
+    "bg-[image:var(--sunset)] text-white shadow-[0_10px_26px_-9px_rgba(26, 85, 214,0.6)] [@media(hover:hover)]:hover:brightness-105 [@media(hover:hover)]:hover:-translate-y-px",
+  dark: "bg-ink text-white [@media(hover:hover)]:hover:bg-[#2A303A] [@media(hover:hover)]:hover:-translate-y-px",
   // Orange uni, à plat : le bouton d'action du header marketing (03/10/2026).
   // Ni dégradé ni halo, pour un seul style de bouton d'action sur tout le site.
   brand: "bg-brand text-white [@media(hover:hover)]:hover:bg-brand-hover",

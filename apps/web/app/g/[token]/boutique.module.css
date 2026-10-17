@@ -7,14 +7,14 @@
 .page {
   --op-soft: color-mix(in srgb, var(--op) 10%, #fff);
   --ink: var(--foreground);
-  --ink-2: #413c4e;
+  --ink-2: #3F4652;
   --ink-3: var(--muted-foreground);
-  --ink-4: #a6a0b2;
+  --ink-4: #A3AAB5;
   --line: var(--input);
-  --line-2: #f4f2f6;
-  --bg: #fbfaf9;
-  --ok: #16a34a;
-  --ok-soft: #eaf7ef;
+  --line-2: #F1F3F6;
+  --bg: #F7F8FA;
+  --ok: #1E7B3A;
+  --ok-soft: #E6F4EA;
 
   /* Pleine largeur. La version précédente enfermait la page dans une
      colonne de 480 px posée au milieu de l'écran, avec une ombre portée

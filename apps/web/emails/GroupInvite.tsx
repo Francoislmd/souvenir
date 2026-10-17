@@ -124,7 +124,7 @@ export default function GroupInvite({
 GroupInvite.PreviewProps = {
   operatorName: "Canyon Aventure",
   operatorInitials: "CA",
-  operatorColor: "#0FBEB6",
+  operatorColor: "#2AA6A4",
   activity: "Canyoning",
   sortieDate: "22 juillet",
   sortiePlace: "Angon",

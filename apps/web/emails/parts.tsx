@@ -34,7 +34,7 @@ export function Hero({
   heroUrl?: string;
   subtitle: string;
 }) {
-  const bg = heroUrl ? "#2a2830" : buttonColor(operatorColor);
+  const bg = heroUrl ? "#2A303A" : buttonColor(operatorColor);
   return (
     <table
       width="100%"
@@ -51,7 +51,7 @@ export function Hero({
     >
       <tbody>
         <tr>
-          <td style={{ backgroundColor: heroUrl ? "rgba(10,8,14,0.38)" : "transparent", padding: heroUrl ? "124px 24px 22px" : "26px 24px 22px" }}>
+          <td style={{ backgroundColor: heroUrl ? "rgba(14, 17, 22,0.38)" : "transparent", padding: heroUrl ? "124px 24px 22px" : "26px 24px 22px" }}>
             <table cellPadding={0} cellSpacing={0} border={0} role="presentation">
               <tbody>
                 <tr>

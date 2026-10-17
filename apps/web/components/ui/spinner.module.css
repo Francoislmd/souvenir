@@ -17,8 +17,8 @@
 
 /* Sur fond clair : le filet du projet, la tête en couleur de marque. */
 .brand {
-  --sp-track: var(--line, #ece9ef);
-  --sp-head: var(--brand, #ff5a1f);
+  --sp-track: var(--line, #E3E7EE);
+  --sp-head: var(--brand, #1A55D6);
 }
 /* Dans un bouton : la moulinette prend la couleur du texte, quelle que soit
    la variante (encre, marque, fantôme). */
@@ -68,7 +68,7 @@
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.5;
-  color: var(--ink-3, #726c80);
+  color: var(--ink-3, #6B7380);
 }
 
 /* Posée dans une vignette dont l'aperçu n'est pas encore prêt. */

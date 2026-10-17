@@ -13,9 +13,9 @@
   width: 100%;
   max-width: 640px;
   background: #fff;
-  border: 1px solid rgba(22, 19, 32, 0.1);
+  border: 1px solid rgba(25, 29, 36, 0.1);
   border-radius: 18px;
-  box-shadow: 0 18px 50px -18px rgba(22, 19, 32, 0.45);
+  box-shadow: 0 18px 50px -18px rgba(25, 29, 36, 0.45);
   padding: 18px 18px 16px;
   animation: rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -40,14 +40,14 @@
 .title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #161320;
+  color: #191D24;
   margin: 0 0 6px;
 }
 
 .text {
   font-size: 0.82rem;
   line-height: 1.5;
-  color: rgba(85, 80, 97, 0.95);
+  color: rgba(75, 83, 97, 0.95);
   margin: 0;
 }
 
@@ -77,23 +77,23 @@
 }
 
 .accept {
-  background: #161320;
+  background: #191D24;
   color: #fff;
-  border: 1px solid #161320;
+  border: 1px solid #191D24;
 }
 
 .accept:hover {
-  background: #2a2438;
+  background: #2A303A;
 }
 
 .refuse {
   background: #fff;
-  color: #161320;
-  border: 1px solid rgba(22, 19, 32, 0.18);
+  color: #191D24;
+  border: 1px solid rgba(25, 29, 36, 0.18);
 }
 
 .refuse:hover {
-  background: rgba(22, 19, 32, 0.04);
+  background: rgba(25, 29, 36, 0.04);
 }
 
 .link {
@@ -103,7 +103,7 @@
   padding: 10px 8px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: rgba(85, 80, 97, 0.95);
+  color: rgba(75, 83, 97, 0.95);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -111,7 +111,7 @@
 
 .panel {
   margin-top: 14px;
-  border-top: 1px solid rgba(22, 19, 32, 0.08);
+  border-top: 1px solid rgba(25, 29, 36, 0.08);
   padding-top: 12px;
   display: grid;
   gap: 10px;
@@ -127,7 +127,7 @@
   margin-top: 3px;
   width: 16px;
   height: 16px;
-  accent-color: #161320;
+  accent-color: #191D24;
   flex: 0 0 auto;
 }
 
@@ -137,7 +137,7 @@
 
 .rowLabel {
   font-size: 0.8rem;
-  color: #161320;
+  color: #191D24;
   font-weight: 600;
   display: block;
 }
@@ -145,7 +145,7 @@
 .rowHint {
   font-size: 0.76rem;
   line-height: 1.45;
-  color: rgba(85, 80, 97, 0.9);
+  color: rgba(75, 83, 97, 0.9);
   margin: 2px 0 0;
 }
 

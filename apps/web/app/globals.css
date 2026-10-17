@@ -5,13 +5,13 @@
 :root {
   /* Palette "Souvenir" — chaleureuse, outdoor : papier crème en fond, encre
      chaude pour le texte, tangerine comme couleur de marque. */
-  --canvas: #faf7f4;
+  --canvas: #F7F8FA;
   --surface: #ffffff;
-  --border: #ece4dc;
-  --border-strong: #ddd0c2;
-  --ink: #1f1b17;
-  --ink-2: #6e6259;
-  --muted: #a89c90;
+  --border: #E3E7EE;
+  --border-strong: #E3E7EE;
+  --ink: #191D24;
+  --ink-2: #6B7380;
+  --muted: #A3AAB5;
 
   /* Marque Souvenir — fixe, indépendante du thème opérateur (cf. .wm/Logo).
      Utilisée pour le badge "via Souvenir" et la marque Souvenir elle-même.
@@ -27,11 +27,11 @@
   --accent-hover: #4338ca;
   --accent-tint: #eef2ff;
 
-  --success: #16a34a;
-  --success-tint: #f0fdf4;
+  --success: #1E7B3A;
+  --success-tint: #E6F4EA;
   --warning: #d97706;
   --warning-tint: #fffbeb;
-  --danger: #dc2626;
+  --danger: #B42318;
   --danger-tint: #fef2f2;
 }
 
@@ -212,21 +212,21 @@ body {
   font-family: var(--font-space-grotesk), 'Inter', system-ui, sans-serif;
   letter-spacing: -.011em;
 
-  --canvas: #FBFAF9;
+  --canvas: #F7F8FA;
   --surface: var(--card);
   --border: var(--input);
-  --border-strong: #A6A0B2;
+  --border-strong: #A3AAB5;
   --ink: var(--foreground);
   --ink-2: var(--muted-foreground);
-  --muted: #A6A0B2;
+  --muted: #A3AAB5;
 
   --brand: var(--primary);
-  --brand-hover: #E8460C;
+  --brand-hover: #1544AC;
   --brand-tint: var(--secondary);
-  --brand-gradient: linear-gradient(115deg, #FF3D6E 0%, #FF5A1F 50%, #FFB443 100%);
+  --brand-gradient: linear-gradient(115deg, #5BB4FF 0%, #2F6FEB 50%, #1A3FB0 100%);
 
   --accent: var(--primary);
-  --accent-hover: #E8460C;
+  --accent-hover: #1544AC;
   --accent-tint: var(--secondary);
 }
 

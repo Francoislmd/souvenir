@@ -217,7 +217,7 @@ export function SortieScreen({
 
   useEffect(() => {
     if (!published || !shareUrl || qrDataUrl) return;
-    void QRCode.toDataURL(shareUrl, { width: 480, margin: 2, color: { dark: "#161320", light: "#FFFFFF" } }).then(setQrDataUrl);
+    void QRCode.toDataURL(shareUrl, { width: 480, margin: 2, color: { dark: "#191D24", light: "#FFFFFF" } }).then(setQrDataUrl);
   }, [published, shareUrl, qrDataUrl]);
 
   useEffect(() => {

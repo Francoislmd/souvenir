@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+import { Inter } from "next/font/google";
 import { env } from "@/lib/env";
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/GoogleTagManager";
 import { PageViewTracker } from "@/components/analytics/PageViewTracker";
@@ -8,10 +8,10 @@ import "./globals.css";
 import "@/styles/tokens.css";
 
 // Les variables --font-bricolage / --font-space-grotesk sont conservées pour
-// ne pas casser tous les composants qui les référencent déjà : on y fait
-// simplement pointer les polices Linktrip (Inter Tight pour les titres, Inter
-// pour le corps de texte).
-const interTight = Inter_Tight({
+// ne pas casser tous les composants qui les référencent déjà.
+// Design system Océan (17/10/2026) : une seule famille, Inter, titres en 800.
+// La variable --font-bricolage garde son nom historique mais pointe sur Inter.
+const interTight = Inter({
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
   variable: "--font-bricolage",

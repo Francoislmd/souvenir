@@ -105,7 +105,7 @@ export default function YourGalleries({ operatorName, operatorInitials, operator
 YourGalleries.PreviewProps = {
   operatorName: "Canyon Aventure",
   operatorInitials: "CA",
-  operatorColor: "#0FBEB6",
+  operatorColor: "#2AA6A4",
   galleries: [
     { activity: "Canyoning", date: "26 septembre", detail: "départ 10 h", photoCount: 42, url: "https://linktrip.co/g/a" },
     { activity: "Rafting", date: "2 octobre", detail: "départ 14 h", photoCount: 38, url: "https://linktrip.co/g/b" },

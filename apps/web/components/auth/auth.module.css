@@ -3,7 +3,7 @@
    remises à zéro passent par :where() pour ne jamais écraser une classe. */
 
 .auth {
-  --paper: #fbfaf9;
+  --paper: #F7F8FA;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -88,7 +88,7 @@
   margin-bottom: 26px;
 }
 .card h1 {
-  font-family: var(--font-inter-tight), "Inter Tight", sans-serif;
+  font-family: var(--font-inter-tight), Inter, sans-serif;
   font-weight: 700;
   margin: 0;
   font-size: 1.75rem;
@@ -282,7 +282,7 @@
   margin-top: 11px;
 }
 .auth .ghost:hover {
-  background: #eae8ee;
+  background: #E3E7EE;
 }
 
 .msg {
@@ -352,7 +352,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: #eaf7ef;
+  background: #E6F4EA;
   display: grid;
   place-items: center;
   margin: 0 auto 18px;

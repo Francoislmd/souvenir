@@ -80,12 +80,12 @@ export function WaitlistForm({ initialEmail = "" }: WaitlistFormProps) {
   }
 
   const cardClass =
-    "mx-auto w-full max-w-[640px] rounded-[clamp(18px,1.6vw,26px)] border border-line bg-white px-[clamp(20px,2.2vw,34px)] py-[clamp(20px,3vh,34px)] shadow-[0_30px_60px_-34px_rgba(22,19,32,0.34)]";
+    "mx-auto w-full max-w-[640px] rounded-[clamp(18px,1.6vw,26px)] border border-line bg-white px-[clamp(20px,2.2vw,34px)] py-[clamp(20px,3vh,34px)] shadow-[0_30px_60px_-34px_rgba(25, 29, 36,0.34)]";
 
   if (success) {
     return (
       <div className={cx(cardClass, "py-[clamp(26px,5vh,54px)] text-center")}>
-        <div className="mx-auto mb-[18px] flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[image:var(--sunset)] shadow-[0_10px_26px_-9px_rgba(255,90,31,0.6)]">
+        <div className="mx-auto mb-[18px] flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[image:var(--sunset)] shadow-[0_10px_26px_-9px_rgba(26, 85, 214,0.6)]">
           <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="#fff" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12.5l4.5 4.5L19 7.5" />
           </svg>

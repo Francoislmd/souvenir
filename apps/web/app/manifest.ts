@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Vos photos de sortie deviennent un revenu.",
     start_url: "/",
     display: "standalone",
-    background_color: "#FBFAF9",
-    theme_color: "#FF5A1F",
+    background_color: "#F7F8FA",
+    theme_color: "#1A55D6",
     icons: [
       { src: "/icons/icone-app-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icons/icone-app-512.png", sizes: "512x512", type: "image/png" },

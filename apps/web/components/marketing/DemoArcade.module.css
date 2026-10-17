@@ -83,7 +83,7 @@
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: clamp(12px, 1.1vw, 20px);
-  box-shadow: 0 30px 56px -28px rgba(22, 19, 32, 0.6);
+  box-shadow: 0 30px 56px -28px rgba(25, 29, 36, 0.6);
   transition: transform 0.35s ease;
 }
 .vLeft {
@@ -127,7 +127,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.94);
   color: var(--ink);
-  box-shadow: 0 16px 34px -14px rgba(22, 19, 32, 0.65);
+  box-shadow: 0 16px 34px -14px rgba(25, 29, 36, 0.65);
   transition: transform 0.22s ease;
 }
 .trio:hover .play {

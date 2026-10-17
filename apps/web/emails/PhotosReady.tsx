@@ -23,7 +23,7 @@ export interface PhotosReadyProps {
   firstName: string; // « Julie »
   operatorName: string; // « Annecy Vol Libre »
   operatorInitials: string; // « AV »
-  operatorColor: string; // couleur choisie par l'opérateur, ex. « #FF5A1F »
+  operatorColor: string; // couleur choisie par l'opérateur, ex. « #1A55D6 »
   operatorLogoUrl?: string; // remplace le badge à initiales quand il est défini
   activity: string; // « Canyoning »
   sortieDate: string; // « 22 juillet »
@@ -177,7 +177,7 @@ PhotosReady.PreviewProps = {
   firstName: "Julie",
   operatorName: "Annecy Vol Libre",
   operatorInitials: "AV",
-  operatorColor: "#FF5A1F",
+  operatorColor: "#1A55D6",
   activity: "Canyoning",
   sortieDate: "22 juillet",
   sortieTime: "14 h 30",

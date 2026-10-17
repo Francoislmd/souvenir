@@ -62,7 +62,7 @@ export function ReinitialiserForm() {
     return (
       <div style={{ textAlign: "center" }}>
         <div className={styles.ring}>
-          <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#1E7B3A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </div>

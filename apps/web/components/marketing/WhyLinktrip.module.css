@@ -42,7 +42,7 @@
   width: min(1200px, 120%);
   height: 900px;
   pointer-events: none;
-  background: radial-gradient(closest-side, rgba(255, 90, 31, 0.32), rgba(255, 61, 110, 0.11) 55%, transparent 78%);
+  background: radial-gradient(closest-side, rgba(26, 85, 214, 0.32), rgba(91, 180, 255, 0.11) 55%, transparent 78%);
 }
 .panel > * {
   position: relative;
@@ -205,7 +205,7 @@
   overflow: hidden;
   background: #fff;
   color: var(--ink);
-  box-shadow: 0 40px 70px -34px rgba(22, 19, 32, 0.55);
+  box-shadow: 0 40px 70px -34px rgba(25, 29, 36, 0.55);
 }
 .uiBar {
   display: flex;
@@ -283,7 +283,7 @@
   padding: 9px;
   border-radius: 38px;
   background: #fff;
-  box-shadow: 0 40px 74px -28px rgba(22, 19, 32, 0.75);
+  box-shadow: 0 40px 74px -28px rgba(25, 29, 36, 0.75);
 }
 .storyScreen {
   position: relative;
@@ -337,7 +337,7 @@
   object-fit: cover;
   /* Double anneau en box-shadow plutôt qu'une bordure : la photo garde sa taille
      utile, l'anneau vit à l'extérieur. */
-  box-shadow: 0 0 0 1.5px #fff, 0 0 0 3.5px rgba(255, 90, 31, 0.85);
+  box-shadow: 0 0 0 1.5px #fff, 0 0 0 3.5px rgba(26, 85, 214, 0.85);
 }
 .storyTop b {
   font-weight: 700;
@@ -478,7 +478,7 @@
   padding: 9px;
   border-radius: 38px;
   background: #fff;
-  box-shadow: 0 40px 74px -28px rgba(22, 19, 32, 0.75);
+  box-shadow: 0 40px 74px -28px rgba(25, 29, 36, 0.75);
 }
 .phoneScreen {
   /* Liseré gris entre le cadre blanc et l'écran : sans lui, l'écran (blanc) et

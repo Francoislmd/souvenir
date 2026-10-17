@@ -46,7 +46,7 @@ export default function MotDePasseOubliePage() {
       <>
         <div style={{ textAlign: "center" }}>
           <div className={styles.ring} style={{ background: "var(--soft)" }}>
-            <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#E8460C" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#1544AC" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="5" width="18" height="14" rx="2.5" />
               <path d="m3 7 9 6 9-6" />
             </svg>

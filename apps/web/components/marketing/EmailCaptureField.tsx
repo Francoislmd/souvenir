@@ -81,7 +81,7 @@ export function EmailCaptureField({
             buttonClassName ??
             cx(
               "flex-shrink-0 whitespace-nowrap rounded-full px-5 text-[13.5px] font-semibold text-white transition disabled:opacity-60",
-              "bg-ink shadow-[0_8px_22px_-8px_rgba(22,19,32,0.5)] [@media(hover:hover)]:hover:bg-[#2A2438]",
+              "bg-ink shadow-[0_8px_22px_-8px_rgba(25, 29, 36,0.5)] [@media(hover:hover)]:hover:bg-[#2A303A]",
             )
           }
           style={buttonClassName ? undefined : { paddingTop: "clamp(12px, 1.7vh, 15px)", paddingBottom: "clamp(12px, 1.7vh, 15px)" }}

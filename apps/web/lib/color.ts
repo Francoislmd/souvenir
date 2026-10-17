@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-const INK = "#161320";
+const INK = "#191D24";
 
 /**
  * La couleur du prestataire pour un bouton à texte blanc, sauf si elle est
