@@ -151,19 +151,24 @@ export default function HomePage() {
 
         {/* 2. Activités */}
         <section className={s.acts} aria-label="Activités">
-          <div className={s.wrap}>
-            <ul className={s.actsList}>
-              {ACTIVITIES.map((a) => (
-                <li key={a.name}>
-                  <svg width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" fill="currentColor" stroke="currentColor" strokeLinecap="round" style={{ flexShrink: 0 }}>
-                    {a.parts.map((p, i) => (
-                      <path key={i} d={p.d} transform={p.t || undefined} strokeWidth={p.sw} />
-                    ))}
-                  </svg>
-                  {a.name}
-                </li>
+          <div className={s.actsViewport}>
+            <div className={s.actsTrack}>
+              {/* Trois fois la même liste : la piste glisse d'une copie et boucle sans couture. Les copies sont muettes. */}
+              {[0, 1, 2].map((copy) => (
+                <ul key={copy} className={s.actsList} aria-hidden={copy > 0 || undefined}>
+                  {ACTIVITIES.map((a) => (
+                    <li key={a.name}>
+                      <svg width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" fill="currentColor" stroke="currentColor" strokeLinecap="round" style={{ flexShrink: 0 }}>
+                        {a.parts.map((p, i) => (
+                          <path key={i} d={p.d} transform={p.t || undefined} strokeWidth={p.sw} />
+                        ))}
+                      </svg>
+                      {a.name}
+                    </li>
+                  ))}
+                </ul>
               ))}
-            </ul>
+            </div>
           </div>
         </section>
 

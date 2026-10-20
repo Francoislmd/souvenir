@@ -482,19 +482,32 @@
   border-bottom: 1px solid var(--line);
   padding: 36px 0;
 }
+/* Bandeau en boucle continue : la piste porte trois copies de la liste et
+   glisse d'une copie (-33,33 %) ; trois et non deux pour couvrir les écrans
+   plus larges qu'une copie (~1 575 px) ; chaque élément porte son espacement à droite (pas de gap)
+   pour que la moitié tombe pile sur le début de la copie. */
+.actsViewport {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.actsViewport::-webkit-scrollbar {
+  display: none;
+}
+.actsTrack {
+  display: flex;
+  width: max-content;
+  animation: acts-loop 45s linear infinite;
+}
+.acts:hover .actsTrack {
+  animation-play-state: paused;
+}
 .actsList {
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-wrap: nowrap;
-  justify-content: space-between;
-  gap: 24px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.actsList::-webkit-scrollbar {
-  display: none;
 }
 .actsList li {
   display: flex;
@@ -508,6 +521,7 @@
   text-transform: uppercase;
   color: #a3aab5;
   white-space: nowrap;
+  margin-right: 56px;
 }
 
 /* ---------- cartes ---------- */
@@ -1241,6 +1255,11 @@
     transform: none;
   }
 }
+@keyframes acts-loop {
+  to {
+    transform: translateX(calc(-100% / 3));
+  }
+}
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -1263,6 +1282,17 @@
   .track,
   .heroPhoto {
     animation: none !important;
+  }
+  /* Sans animation : une seule liste, qui défile au doigt. */
+  .actsViewport {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .actsTrack {
+    animation: none;
+  }
+  .actsList[aria-hidden] {
+    display: none;
   }
   .card,
   .btn,
@@ -1324,17 +1354,11 @@
   .acts {
     padding: 20px 0;
   }
-  .acts .wrap {
-    padding: 0;
-  }
-  .actsList {
-    justify-content: flex-start;
-    scroll-snap-type: x mandatory;
-    padding: 0 16px;
-    gap: 28px;
-  }
   .actsList li {
-    scroll-snap-align: start;
+    margin-right: 36px;
+  }
+  .actsTrack {
+    animation-duration: 35s;
   }
   .sub {
     margin-bottom: 32px;
