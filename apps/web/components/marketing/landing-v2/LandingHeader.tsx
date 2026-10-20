@@ -103,7 +103,17 @@ export function LandingHeader() {
             </li>
           ))}
         </ul>
-        <div className={styles.drawerCtas}>
+        <div className={styles.drawerFoot}>
+          <div className={styles.drawerCta}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/landing-v2/rafting-drone.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+            <span className={styles.drawerShade} aria-hidden="true" />
+            <p className={styles.drawerCtaTitle}>Prêt à vendre vos photos ?</p>
+            <p className={styles.drawerCtaText}>Créez votre compte en 3 minutes.</p>
+            <Link href="/signup" tabIndex={open ? 0 : -1} className={`${styles.btn} ${styles.white}`} onClick={() => close()}>
+              Créer un compte gratuit
+            </Link>
+          </div>
           <Link href="/connexion" tabIndex={open ? 0 : -1} className={`${styles.btn} ${styles.ghost}`} onClick={() => close()}>
             Connexion
           </Link>

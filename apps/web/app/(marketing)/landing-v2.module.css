@@ -253,7 +253,9 @@
   transform: translateY(-5.125px) rotate(-45deg);
 }
 
-/* Volet mobile : plein écran sous la barre, par-dessus la page. */
+/* Volet mobile : plein écran sous la barre, par-dessus la page.
+   Hauteur en lvh (barres de Safari comprises) pour que la page ne dépasse
+   jamais en bas ; le contenu, lui, s'arrête au-dessus des barres (dvh). */
 .header[data-open] {
   background: #fff;
   backdrop-filter: none;
@@ -265,11 +267,12 @@
   left: 0;
   right: 0;
   height: calc(100vh - 69px);
-  height: calc(100dvh - 69px);
+  height: calc(100lvh - 69px);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: #fff;
-  padding: 8px var(--gutter) max(24px, env(safe-area-inset-bottom));
+  padding: 4px var(--gutter) 24px;
+  padding-bottom: calc(100lvh - 100dvh + max(20px, env(safe-area-inset-bottom)));
   box-sizing: border-box;
   flex-direction: column;
   opacity: 0;
@@ -298,12 +301,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 64px;
+  min-height: 56px;
   text-decoration: none;
   color: var(--ink);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   -webkit-tap-highlight-color: transparent;
 }
 .drawerList a svg {
@@ -318,15 +321,59 @@
   outline-offset: -2px;
   border-radius: 8px;
 }
-.drawerCtas {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.drawerFoot {
   margin-top: auto;
   padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.drawerCtas .btn {
+.drawerFoot .btn {
   width: 100%;
+  height: 48px;
+  font-size: 15px;
+}
+/* Reprise du bloc final (.final), à l'échelle du volet. */
+.drawerCta {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--ocean-900);
+  color: #fff;
+  text-align: center;
+  padding: 24px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.drawerCta img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+}
+.drawerShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(14, 46, 117, 0.55) 0%, rgba(14, 46, 117, 0.82) 100%);
+}
+.drawerCta > :not(img):not(.drawerShade) {
+  position: relative;
+}
+.drawerCtaTitle {
+  margin: 0 0 4px;
+  font-size: 20px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+.drawerCtaText {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #dce7ff;
 }
 
 /* ---------- hero ---------- */
@@ -1237,6 +1284,9 @@
   }
   .drawer {
     display: flex;
+  }
+  .header[data-open] .headCta {
+    display: none;
   }
   .headRow {
     padding-top: 12px;
