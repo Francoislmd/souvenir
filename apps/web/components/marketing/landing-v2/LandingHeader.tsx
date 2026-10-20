@@ -28,6 +28,8 @@ export function LandingHeader() {
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const firstLinkRef = useRef<HTMLAnchorElement>(null);
+  /** Ouvert au clavier (Entrée, Espace) : seul cas où le focus descend dans le volet. Au doigt, Safari dessinerait l'anneau de focus sur le premier lien. */
+  const byKeyboard = useRef(false);
 
   const close = useCallback((refocus = false) => {
     lockScroll(false);
@@ -38,7 +40,7 @@ export function LandingHeader() {
   useEffect(() => {
     if (!open) return;
     lockScroll(true);
-    firstLinkRef.current?.focus({ preventScroll: true });
+    if (byKeyboard.current) firstLinkRef.current?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close(true);
     const mq = window.matchMedia(DESKTOP);
@@ -79,7 +81,11 @@ export function LandingHeader() {
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={open}
             aria-controls="lt-volet"
-            onClick={() => (open ? close() : setOpen(true))}
+            onClick={(e) => {
+              if (open) return close();
+              byKeyboard.current = e.detail === 0;
+              setOpen(true);
+            }}
           >
             <span className={styles.burgerLines} aria-hidden="true">
               <span />
