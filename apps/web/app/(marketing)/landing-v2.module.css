@@ -1288,6 +1288,10 @@
   .header[data-open] .headCta {
     display: none;
   }
+  .brand svg {
+    height: 24px;
+    width: auto;
+  }
   .headRow {
     padding-top: 12px;
     padding-bottom: 12px;
