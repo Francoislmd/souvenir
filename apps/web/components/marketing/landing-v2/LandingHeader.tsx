@@ -21,9 +21,8 @@ function lockScroll(on: boolean) {
 
 /**
  * En-tête de la landing : liens d'ancre sur ordinateur, volet sous 760 px.
- * Le volet se pose par-dessus la page (il ne la pousse pas), sur un voile qui
- * ferme au toucher ; la page ne défile plus derrière ; Échap, un lien ou le
- * passage en grand écran le referment.
+ * Le volet couvre tout l'écran sous la barre ; la page ne défile plus
+ * derrière ; Échap, un lien ou le passage en grand écran le referment.
  */
 export function LandingHeader() {
   const [open, setOpen] = useState(false);
@@ -91,7 +90,6 @@ export function LandingHeader() {
         </div>
       </div>
 
-      <div className={styles.scrim} aria-hidden="true" onClick={() => close()} />
       <nav id="lt-volet" className={styles.drawer} aria-label="Menu" aria-hidden={!open}>
         <ul className={styles.drawerList}>
           {NAV.map((l, i) => (

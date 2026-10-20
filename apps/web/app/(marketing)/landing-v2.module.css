@@ -253,41 +253,25 @@
   transform: translateY(-5.125px) rotate(-45deg);
 }
 
-/* Volet mobile : posé sous la barre, par-dessus la page, sur un voile. */
+/* Volet mobile : plein écran sous la barre, par-dessus la page. */
 .header[data-open] {
   background: #fff;
+  backdrop-filter: none;
 }
-.scrim,
 .drawer {
   display: none;
-}
-.scrim {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  height: 100vh;
-  height: 100dvh;
-  background: rgba(25, 29, 36, 0.32);
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 220ms ease,
-    visibility 0s linear 220ms;
-}
-.drawer {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  max-height: calc(100dvh - 69px);
+  height: calc(100vh - 69px);
+  height: calc(100dvh - 69px);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: #fff;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0 0 20px 20px;
-  padding: 4px var(--gutter) max(20px, env(safe-area-inset-bottom));
+  padding: 8px var(--gutter) max(24px, env(safe-area-inset-bottom));
   box-sizing: border-box;
+  flex-direction: column;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
@@ -296,7 +280,6 @@
     transform 220ms ease,
     visibility 0s linear 220ms;
 }
-.header[data-open] .scrim,
 .header[data-open] .drawer {
   opacity: 1;
   visibility: visible;
@@ -315,12 +298,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 56px;
+  min-height: 64px;
   text-decoration: none;
   color: var(--ink);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   -webkit-tap-highlight-color: transparent;
 }
 .drawerList a svg {
@@ -339,7 +322,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 12px;
+  margin-top: auto;
+  padding-top: 24px;
 }
 .drawerCtas .btn {
   width: 100%;
@@ -1237,7 +1221,6 @@
   .btn,
   .tile,
   .burgerLines span,
-  .scrim,
   .drawer {
     transition: none;
   }
@@ -1252,9 +1235,8 @@
   .burger {
     display: flex;
   }
-  .scrim,
   .drawer {
-    display: block;
+    display: flex;
   }
   .headRow {
     padding-top: 12px;
