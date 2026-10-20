@@ -216,21 +216,133 @@
   color: var(--ink);
   padding: 0;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.burgerLines {
+  position: relative;
+  width: 18px;
+  height: 12px;
+}
+.burgerLines span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1.75px;
+  border-radius: 2px;
+  background: currentColor;
+  transition:
+    transform 220ms ease,
+    opacity 160ms ease;
+}
+.burgerLines span:nth-child(1) {
+  top: 0;
+}
+.burgerLines span:nth-child(2) {
+  top: calc(50% - 0.875px);
+}
+.burgerLines span:nth-child(3) {
+  bottom: 0;
+}
+.header[data-open] .burgerLines span:nth-child(1) {
+  transform: translateY(5.125px) rotate(45deg);
+}
+.header[data-open] .burgerLines span:nth-child(2) {
+  opacity: 0;
+}
+.header[data-open] .burgerLines span:nth-child(3) {
+  transform: translateY(-5.125px) rotate(-45deg);
+}
+
+/* Volet mobile : posé sous la barre, par-dessus la page, sur un voile. */
+.header[data-open] {
+  background: #fff;
+}
+.scrim,
+.drawer {
+  display: none;
+}
+.scrim {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(25, 29, 36, 0.32);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 220ms ease,
+    visibility 0s linear 220ms;
 }
 .drawer {
-  border-top: 1px solid var(--line);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: calc(100dvh - 69px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: #fff;
-  padding: 8px var(--gutter) 20px;
-  display: flex;
-  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 20px 20px;
+  padding: 4px var(--gutter) max(20px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition:
+    opacity 200ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
 }
-.drawer a {
+.header[data-open] .scrim,
+.header[data-open] .drawer {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.drawerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.drawerList li + li {
+  border-top: 1px solid var(--line);
+}
+.drawerList a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
   text-decoration: none;
   color: var(--ink);
   font-size: 17px;
   font-weight: 600;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--line);
+  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+}
+.drawerList a svg {
+  color: #a3aab5;
+  flex: none;
+}
+.drawerList a:active {
+  color: var(--ocean-500);
+}
+.drawerList a:focus-visible {
+  outline: 2px solid var(--ocean-500);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+.drawerCtas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+}
+.drawerCtas .btn {
+  width: 100%;
 }
 
 /* ---------- hero ---------- */
@@ -1123,7 +1235,10 @@
   }
   .card,
   .btn,
-  .tile {
+  .tile,
+  .burgerLines span,
+  .scrim,
+  .drawer {
     transition: none;
   }
 }
@@ -1136,6 +1251,10 @@
   }
   .burger {
     display: flex;
+  }
+  .scrim,
+  .drawer {
+    display: block;
   }
   .headRow {
     padding-top: 12px;
