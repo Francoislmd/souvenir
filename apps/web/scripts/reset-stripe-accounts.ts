@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   const { prisma } = await import("../lib/prisma");
 
   const key = process.env.STRIPE_SECRET_KEY ?? "";
-  console.log(`Clé Stripe dans .env.local : ${key.startsWith("sk_live_") ? "LIVE" : key.startsWith("sk_test_") ? "test" : "absente"}`);
+  console.log(`Clé Stripe dans .env.local : ${/^[sr]k_live_/.test(key) ? "LIVE" : /^[sr]k_test_/.test(key) ? "test" : "absente"}`);
 
   const operators = await prisma.operator.findMany({
     where: { OR: [{ stripeAccountId: { not: null } }, { stripeOnboarded: true }] },

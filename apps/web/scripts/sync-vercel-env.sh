@@ -83,7 +83,7 @@ if [[ " ${VARS[*]} " == *" RESEND_FROM_EMAIL "* ]] && [[ "$(valeur RESEND_FROM_E
 fi
 
 SK=$(valeur STRIPE_SECRET_KEY)
-if [[ " ${VARS[*]} " == *" STRIPE_SECRET_KEY "* ]] && [[ "$SK" == sk_test_* ]]; then
+if [[ " ${VARS[*]} " == *" STRIPE_SECRET_KEY "* ]] && [[ "$SK" == sk_test_* || "$SK" == rk_test_* ]]; then
   echo "⚠ La clé Stripe de .env.local est une clé de TEST : la production n'encaissera rien de réel."
   printf "Continuer quand même ? [o/N] "
   read -r OK </dev/tty
