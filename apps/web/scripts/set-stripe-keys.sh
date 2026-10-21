@@ -16,17 +16,25 @@ ENVFILE="$WEB/.env.local"
 ask() {
   local name="$1" prefix="$2" label="$3" val=""
   while true; do
-    printf '%s (%s…) : ' "$label" "$prefix" >&2
+    printf '%s (%s…) : ' "$label" "${prefix//|/ ou }" >&2
     IFS= read -rs val; echo >&2
     val="$(printf '%s' "$val" | tr -d '[:space:]')"
-    case "$val" in
-      "$prefix"*) printf '%s' "$val"; return 0 ;;
-      *) echo "  ✗ doit commencer par $prefix, recommence." >&2 ;;
-    esac
+    # Plusieurs préfixes possibles, séparés par « | » (ex. "sk_|rk_").
+    local ok=0 p
+    IFS='|' read -ra prefixes <<< "$prefix"
+    for p in "${prefixes[@]}"; do
+      case "$val" in "$p"*) ok=1 ;; esac
+    done
+    if [ "$ok" = 1 ]; then printf '%s' "$val"; return 0; fi
+    echo "  ✗ doit commencer par ${prefix//|/ ou }, recommence." >&2
   done
 }
 
-SK=$(ask STRIPE_SECRET_KEY "sk_" "Clé secrète")
+# Stripe ne délivre plus que des clés « restreintes » rk_live_… à la création,
+# même en « Accès complet » (constaté le 21/10/2026) : les deux sont acceptées.
+# La clé doit être en ACCÈS COMPLET : « sauf opérations sensibles » interdit la
+# création des comptes Connect des opérateurs.
+SK=$(ask STRIPE_SECRET_KEY "sk_|rk_" "Clé secrète")
 PK=$(ask NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "pk_" "Clé publiable")
 WH=$(ask STRIPE_WEBHOOK_SECRET "whsec_" "Secret du webhook « Votre compte »")
 WC=$(ask STRIPE_CONNECT_WEBHOOK_SECRET "whsec_" "Secret du webhook « Comptes connectés »")
