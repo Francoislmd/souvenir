@@ -98,7 +98,7 @@ pousser() {
   echo "✓ $V (${#VAL} caractères)"
 }
 for V in "${VARS[@]}"; do pousser "$V" "$(valeur "$V")"; done
-for V in "${OPTS[@]}"; do
+for V in ${OPTS[@]+"${OPTS[@]}"}; do
   VAL=$(valeur "$V")
   if [ -n "$VAL" ]; then pousser "$V" "$VAL"; else echo "· $V vide, laissée telle quelle dans Vercel"; fi
 done
