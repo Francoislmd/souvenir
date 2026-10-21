@@ -25,13 +25,28 @@ export async function ensureStripeAccount(dbUser: OperatorUser): Promise<string>
   const { operator } = dbUser;
   if (operator.stripeAccountId) return operator.stripeAccountId;
 
+  // L'opérateur est le vendeur, Linktrip ne l'est jamais (décidé le
+  // 21/10/2026). Le compte est donc le sien de bout en bout :
+  // - losses.payments = "stripe" : un solde négatif après remboursement ou
+  //   litige est recouvré par Stripe auprès de l'opérateur, jamais auprès de
+  //   Linktrip. Avec `type: "express"`, c'était la plateforme qui payait.
+  // - fees.payer = "account" : les frais Stripe sont prélevés sur l'opérateur.
+  // - stripe_dashboard = "full" : son propre tableau de bord Stripe. Stripe
+  //   n'accepte pas losses = "stripe" avec le tableau de bord Express.
+  // Ne jamais revenir à `type: "express"` ni à losses = "application".
+  // Le type de tableau de bord ne se change pas sur un compte existant :
+  // un compte Express créé avant ce changement doit être recréé.
   const account = await stripe.accounts.create({
-    type: "express",
+    controller: {
+      losses: { payments: "stripe" },
+      fees: { payer: "account" },
+      requirement_collection: "stripe",
+      stripe_dashboard: { type: "full" },
+    },
     country: "FR",
     email: dbUser.email,
     capabilities: {
       card_payments: { requested: true },
-      transfers: { requested: true },
     },
     business_profile: {
       name: operator.name,
@@ -62,6 +77,10 @@ function oneLineAddress(address: Stripe.Address | null | undefined): string | nu
  * la raison sociale et l'adresse de l'entreprise, ou le nom et l'adresse de
  * l'entrepreneur individuel. Seules les colonnes encore vides sont écrites :
  * ce que l'opérateur a saisi dans Réglages n'est jamais écrasé.
+ *
+ * Sur un compte au tableau de bord Stripe complet (le cas de tous les comptes
+ * depuis le 21/10/2026), Stripe ne rend pas `individual` à la plateforme : on
+ * retombe sur `business_profile`, et le reste se saisit dans Réglages.
  *
  * Le SIRET n'est pas lu : Stripe ne rend au compte plateforme qu'un booléen
  * (`tax_id_provided`), jamais le numéro. Il se saisit dans Réglages.
