@@ -36,8 +36,7 @@ export default function MentionsLegalesPage() {
       <p>
         La base de données est hébergée par Supabase Inc. (supabase.com), à Paris. Les photos
         et vidéos sont stockées par Cloudflare, Inc., 101 Townsend Street, San Francisco,
-        CA 94107, États-Unis (cloudflare.com), dans des centres de données situés en Europe
-        de l&apos;Ouest.
+        CA 94107, États-Unis (cloudflare.com), dans l&apos;Union européenne.
       </p>
 
       <h2 id="propriete">Propriété intellectuelle</h2>

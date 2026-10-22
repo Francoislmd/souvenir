@@ -95,7 +95,7 @@ export default function ConfidentialitePage() {
       <p>Pour fonctionner, Linktrip s&apos;appuie sur les prestataires suivants :</p>
       <ul>
         <li><strong>Supabase</strong> — hébergement de la base de données, à Paris ;</li>
-        <li><strong>Cloudflare</strong> — stockage des photos et vidéos, en Europe de l&apos;Ouest ;</li>
+        <li><strong>Cloudflare</strong> — stockage des photos et vidéos, dans l&apos;Union européenne ;</li>
         <li><strong>Stripe</strong> — traitement des paiements ;</li>
         <li><strong>Twilio</strong> — envoi des messages WhatsApp ;</li>
         <li><strong>Resend</strong> — envoi des emails ;</li>
@@ -112,7 +112,7 @@ export default function ConfidentialitePage() {
         absence de cookie tant que vous n&apos;avez pas accepté).
       </p>
       <p>
-        La base de données est hébergée à Paris et les fichiers en Europe de l&apos;Ouest.
+        La base de données est hébergée à Paris et les fichiers dans l&apos;Union européenne.
         Plusieurs de nos prestataires sont des sociétés américaines (Vercel, Cloudflare,
         Supabase, Stripe, Twilio, Resend) : lorsqu&apos;un transfert de données hors de
         l&apos;Union européenne a lieu, il est encadré par le cadre de protection des données
