@@ -9,7 +9,7 @@ export default function CgvPage() {
   return (
     <>
       <h1>Conditions générales de vente</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 29 septembre 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 22 octobre 2026</p>
       <p>
         Les présentes conditions générales de vente (CGV) régissent, d&apos;une part, la vente
         de photos numériques aux participants via la plateforme Linktrip, et d&apos;autre part
@@ -33,7 +33,7 @@ export default function CgvPage() {
       <p>
         Le prix des photos et packs proposés est fixé librement par chaque opérateur et affiché
         avant toute confirmation d&apos;achat, toutes taxes comprises. Le paiement est réalisé en
-        ligne par carte bancaire via Stripe, prestataire de paiement sécurisé, et encaissé
+        ligne par carte bancaire, Apple Pay ou Google Pay via Stripe, prestataire de paiement sécurisé, et encaissé
         directement sur le compte Stripe de l&apos;opérateur. Linktrip n&apos;a jamais accès aux
         données bancaires du participant.
       </p>
@@ -103,8 +103,16 @@ export default function CgvPage() {
       </p>
       <p>
         L&apos;opérateur étant le vendeur, les remboursements et les contestations de paiement
-        (chargebacks) sont imputés sur son compte Stripe. En cas de remboursement total,
-        TODO(françois) : préciser si la commission Linktrip est restituée à l&apos;opérateur.
+        (chargebacks) sont imputés sur son compte Stripe. Lorsque l&apos;opérateur rembourse
+        un achat depuis son espace Linktrip, la commission Linktrip lui est rendue au prorata
+        du montant remboursé, et Linktrip émet l&apos;avoir correspondant.
+      </p>
+
+      <h3 id="facturation">Facturation</h3>
+      <p>
+        Linktrip émet chaque mois une facture récapitulative des commissions prélevées sur
+        les ventes du mois écoulé, consultable dans l&apos;espace de l&apos;opérateur. TVA non
+        applicable, article 293 B du Code général des impôts.
       </p>
 
       <h3 id="responsabilite-operateur">Responsabilité de l&apos;opérateur</h3>

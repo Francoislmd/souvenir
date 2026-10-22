@@ -9,7 +9,7 @@ export default function CguPage() {
   return (
     <>
       <h1>Conditions générales d&apos;utilisation</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 1er octobre 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 22 octobre 2026</p>
 
       <h2 id="objet">1. Objet</h2>
       <p>
@@ -100,7 +100,7 @@ export default function CguPage() {
       <h2 id="conservation">6. Conservation et suppression des données</h2>
       <p>
         Les photos et les informations d&apos;un participant sont automatiquement supprimées de
-        nos serveurs 90 jours après la fin de la sortie, sauf suppression anticipée demandée
+        nos serveurs 90 jours après la publication de la sortie, sauf suppression anticipée demandée
         par le participant. Le détail de ce traitement figure dans notre{" "}
         <a href="/confidentialite">politique de confidentialité</a>.
       </p>
@@ -131,8 +131,10 @@ export default function CguPage() {
 
       <h2 id="droit-applicable">9. Droit applicable</h2>
       <p>
-        Les présentes CGU sont soumises au droit français. TODO(françois) : confirmer la
-        juridiction compétente en cas de litige.
+        Les présentes CGU sont soumises au droit français. En cas de litige avec un
+        opérateur, et à défaut d&apos;accord amiable, les tribunaux de Paris sont seuls
+        compétents. Un participant agissant en tant que consommateur conserve la possibilité
+        de saisir la juridiction que lui reconnaît la loi, notamment celle de son domicile.
       </p>
 
       <h2 id="contact">10. Contact</h2>

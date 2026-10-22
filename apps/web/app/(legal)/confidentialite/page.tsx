@@ -10,7 +10,7 @@ export default function ConfidentialitePage() {
   return (
     <>
       <h1>Politique de confidentialité</h1>
-      <p className="text-sm text-muted">Dernière mise à jour : 11 août 2026</p>
+      <p className="text-sm text-muted">Dernière mise à jour : 22 octobre 2026</p>
       <p>
         Cette page vous explique quelles données personnelles Linktrip collecte, pourquoi, et
         combien de temps elles sont conservées. Si vous êtes participant à une sortie, vous
@@ -20,9 +20,17 @@ export default function ConfidentialitePage() {
 
       <h2 id="responsable">Responsable du traitement</h2>
       <p>
-        Le responsable du traitement des données décrites ci-dessous est TODO(françois) :
-        raison sociale de la société, contactable à{" "}
-        <a href="mailto:hello@linktrip.co">hello@linktrip.co</a>.
+        Pour les données des opérateurs (compte, facturation) et des visiteurs du site, le
+        responsable du traitement est François Lemarchand, entrepreneur individuel exerçant
+        sous le nom commercial Linktrip (SIRET 131 395 865 00010, 19 rue George Sand,
+        75016 Paris), joignable à <a href="mailto:hello@linktrip.co">hello@linktrip.co</a>.
+      </p>
+      <p>
+        Pour les données des participants (coordonnées, photos), le responsable du traitement
+        est l&apos;opérateur qui a organisé la sortie. Linktrip les traite pour son compte, en
+        qualité de sous-traitant (voir les <a href="/cgu">CGU</a>). Vous pouvez exercer vos
+        droits auprès de l&apos;opérateur ou en nous écrivant : nous lui transmettons votre
+        demande.
       </p>
 
       <h2 id="donnees">Données que nous collectons</h2>
@@ -35,8 +43,8 @@ export default function ConfidentialitePage() {
         </li>
         <li>
           <strong>Participants</strong> : nom, et un moyen de contact (email ou numéro de
-          téléphone WhatsApp) transmis par l&apos;opérateur ou saisi lors de l&apos;inscription
-          à une sortie, afin de vous envoyer le lien de votre galerie privée.
+          téléphone WhatsApp) transmis par l&apos;opérateur, afin de vous envoyer le lien de
+          votre galerie privée.
         </li>
         <li>
           <strong>Photos</strong> : les photos prises pendant votre sortie par l&apos;opérateur,
@@ -86,11 +94,12 @@ export default function ConfidentialitePage() {
       <h2 id="sous-traitants">Nos sous-traitants</h2>
       <p>Pour fonctionner, Linktrip s&apos;appuie sur les prestataires suivants :</p>
       <ul>
-        <li><strong>Supabase</strong> — hébergement de la base de données et stockage des photos ;</li>
+        <li><strong>Supabase</strong> — hébergement de la base de données, à Paris ;</li>
+        <li><strong>Cloudflare</strong> — stockage des photos et vidéos, en Europe de l&apos;Ouest ;</li>
         <li><strong>Stripe</strong> — traitement des paiements ;</li>
         <li><strong>Twilio</strong> — envoi des messages WhatsApp ;</li>
         <li><strong>Resend</strong> — envoi des emails ;</li>
-        <li><strong>Vercel</strong> — hébergement du site et exécution des tâches planifiées ;</li>
+        <li><strong>Vercel</strong> — hébergement du site et exécution des tâches planifiées, sur des serveurs situés à Paris ;</li>
         <li>
           <strong>Google Ireland Limited</strong> — mesure d&apos;audience du site
           (Google Analytics 4 et Google Tag Manager), uniquement si vous y consentez.
@@ -103,9 +112,12 @@ export default function ConfidentialitePage() {
         absence de cookie tant que vous n&apos;avez pas accepté).
       </p>
       <p>
-        TODO(françois) : confirmer la localisation des données chez Supabase, Stripe, Twilio,
-        Resend et Vercel (UE / hors UE) et, le cas échéant, les garanties de transfert
-        applicables.
+        La base de données est hébergée à Paris et les fichiers en Europe de l&apos;Ouest.
+        Plusieurs de nos prestataires sont des sociétés américaines (Vercel, Cloudflare,
+        Supabase, Stripe, Twilio, Resend) : lorsqu&apos;un transfert de données hors de
+        l&apos;Union européenne a lieu, il est encadré par le cadre de protection des données
+        UE–États-Unis (Data Privacy Framework) ou par les clauses contractuelles types de la
+        Commission européenne.
       </p>
 
       <h2 id="droits">Vos droits</h2>
