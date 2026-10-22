@@ -28,11 +28,26 @@ const nextConfig = {
     // retirer si upgrade vers Next 15+, où c'est stable par défaut.
     instrumentationHook: true,
     serverComponentsExternalPackages: ["@prisma/client", "prisma", "sharp", "@napi-rs/canvas"],
+    // Ce qui part dans CHAQUE fonction Vercel : le strict nécessaire à Prisma
+    // sur Vercel, et rien d'autre. Jusqu'au 22/10/2026 on y mettait tous les
+    // moteurs (*.node, y compris celui du Mac), tout runtime/** (wasm MySQL,
+    // SQLite…) et @prisma/engines (outils de migration, inutiles à
+    // l'exécution) : ~40 Mo par fonction, ce qui saturait le « Functions
+    // Storage » gratuit de Vercel (10 Go) au fil des déploiements.
     outputFileTracingIncludes: {
       "/**": [
-        "../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/*.node",
-        "../../node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/runtime/**",
-        "../../node_modules/.pnpm/@prisma+engines@*/node_modules/@prisma/engines/*.node",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/runtime/library.js",
+      ],
+    },
+    outputFileTracingExcludes: {
+      "/**": [
+        "../../node_modules/.pnpm/@prisma+engines@*/**",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-darwin*",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/runtime/*.wasm",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/runtime/query_engine_bg.*",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/runtime/edge*",
+        "../../node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/runtime/react-native*",
       ],
     },
   },
