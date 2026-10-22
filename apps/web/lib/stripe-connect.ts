@@ -45,8 +45,11 @@ export async function ensureStripeAccount(dbUser: OperatorUser): Promise<string>
     },
     country: "FR",
     email: dbUser.email,
+    // Stripe refuse card_payments sans transfers (« Accounts do not currently
+    // support card_payments without transfers »), même en charge directe.
     capabilities: {
       card_payments: { requested: true },
+      transfers: { requested: true },
     },
     business_profile: {
       name: operator.name,
