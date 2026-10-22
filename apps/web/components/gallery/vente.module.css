@@ -1,0 +1,472 @@
+/* Page de vente de la galerie privée, mise en page du 22/10/2026 (canvas
+   « Page de vente, design system ») : header, titre, grille de photos,
+   panneau de paiement collé à droite sur ordinateur, barre réduite en bas
+   sur téléphone, FAQ, footer. Les boutons gardent --op, la couleur choisie
+   par le prestataire (.page de app/g/[token]/boutique.module.css). */
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 48px);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.top {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.topIn {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.logo {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--op-soft);
+  color: var(--op);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+.whoText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.whoText strong,
+.whoText span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.whoText strong {
+  font-size: 1.06rem;
+  font-weight: 600;
+}
+.whoText span {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--line-2);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+/* ── Titre ──────────────────────────────────────────────────────────── */
+.head {
+  padding: 40px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.title {
+  margin: 0;
+  font-size: 2.25rem;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+.meta {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ink-3);
+}
+.headRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 0.94rem;
+  color: var(--ink-3);
+}
+
+/* ── Grille + panneau ───────────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 32px;
+  align-items: start;
+  padding-bottom: 56px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--line);
+}
+.tileHit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.tileHit img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tileLock {
+  position: relative;
+  width: 26%;
+  height: 26%;
+  max-width: 56px;
+  max-height: 56px;
+  pointer-events: none;
+}
+.tileOn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 3px var(--op);
+  pointer-events: none;
+}
+.check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid #cbd1da;
+  color: transparent;
+  pointer-events: none;
+}
+.tileOn .check {
+  background: var(--op);
+  border-color: var(--op);
+  color: #fff;
+}
+.zoom {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.time {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(20, 19, 32, 0.55);
+  border-radius: 999px;
+  padding: 3px 8px;
+  pointer-events: none;
+}
+.tile:focus-within {
+  outline: 2px solid var(--op);
+  outline-offset: 2px;
+}
+
+/* Panneau de paiement (ordinateur) */
+.panel {
+  position: sticky;
+  top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow:
+    0 1px 2px rgba(25, 29, 36, 0.04),
+    0 12px 32px -16px rgba(25, 29, 36, 0.18);
+}
+.panelHead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.panelHead span {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.price {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+.gauge {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--op-soft);
+  overflow: hidden;
+}
+.gauge i {
+  display: block;
+  height: 100%;
+  background: var(--op);
+  transition: width 0.2s ease;
+}
+.hint {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.safe {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+/* Barre réduite (téléphone) */
+.bar {
+  display: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.barIn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.barText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.barText span {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.barText b {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.bar .barCta {
+  width: auto;
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.panel .panelCta {
+  border-radius: 999px;
+  height: 52px;
+}
+
+/* ── FAQ ────────────────────────────────────────────────────────────── */
+.faq {
+  max-width: 720px;
+  padding-bottom: 56px;
+}
+.faq h2 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.faq details {
+  border-bottom: 1px solid var(--line);
+}
+.faq details:first-of-type {
+  border-top: 1px solid var(--line);
+}
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-weight: 600;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: "+";
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  transition: transform 0.2s ease;
+}
+.faq details[open] summary::after {
+  transform: rotate(45deg);
+}
+.faq details p {
+  margin: 0 0 16px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  font-size: 0.94rem;
+}
+.faq a {
+  color: var(--op);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+.foot {
+  background: #f7f8fa;
+  border-top: 1px solid var(--line);
+}
+.footIn {
+  padding-top: 56px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 32px 40px;
+}
+.footWho {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.94rem;
+  color: var(--ink-3);
+}
+.footWho a {
+  color: var(--ink-2);
+  text-underline-offset: 3px;
+}
+.footWho strong {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.footLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 1rem;
+}
+.footLinks a {
+  color: var(--ink-2);
+  text-underline-offset: 3px;
+}
+.powered {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+
+/* ── Téléphone ──────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .secureLabel {
+    display: none;
+  }
+  .head {
+    padding-top: 24px;
+  }
+  .title {
+    font-size: 1.65rem;
+  }
+  .layout {
+    display: block;
+    padding-bottom: 40px;
+  }
+  .panel {
+    display: none;
+  }
+  .bar {
+    display: block;
+  }
+  .grid {
+    gap: 4px;
+  }
+  .tile {
+    border-radius: 6px;
+  }
+  .zoom {
+    width: 32px;
+    height: 32px;
+    left: 4px;
+    top: 4px;
+  }
+  .check {
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+  }
+  .time {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gauge i,
+  .faq summary::after {
+    transition: none;
+  }
+}

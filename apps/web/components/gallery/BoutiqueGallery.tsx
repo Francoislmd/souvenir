@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/components/gallery/gallery.module.css";
-import sale from "@/components/gallery/sale.module.css";
+import v from "@/components/gallery/vente.module.css";
 import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
@@ -379,51 +379,55 @@ export function BoutiqueGallery({
         busy={busy}
         discount={reducedOfferActive ? applyReducedOffer : undefined}
         head={
-          <>
+          <div className={v.head}>
             {bought ? <BackLink onClick={() => setBuyMore(false)} /> : null}
-            <div className={sale.chips}>
-              <span className={sale.chip}>{upperFirst(context.line)}</span>
-              {context.strong ? <span className={sale.chip}>{upperFirst(context.strong)}</span> : null}
-              <span className={`${sale.chip} ${sale.chipN}`}>{upperFirst(countLabel)}</span>
-            </div>
-            <h1 className={`${sale.title} ${sale.display}`}>
-              <span className={sale.titleLead}>{sessionOf(context.title)}</span>{context.title.trim()}
-            </h1>
-          </>
+            <h1 className={v.title}>{photosOf(context.title, videoCount === pickable.length)}</h1>
+            <p className={v.meta}>
+              {[upperFirst(context.line), context.strong, countLabel].filter(Boolean).join(" · ")}
+            </p>
+          </div>
         }
         after={
           <>
-            <div className={sale.faq}>
-              <h2 className={sale.display}>FAQ</h2>
-              <div>
-                <details>
-                  <summary>Combien de temps je garde mes photos&nbsp;?</summary>
-                  <p>Elles se téléchargent pendant 90 jours, en pleine résolution et sans filigrane.</p>
-                </details>
-                <details>
-                  <summary>D&rsquo;autres photos arrivent après mon achat&nbsp;?</summary>
-                  <p>Si vous avez tout pris, elles sont à vous sans rien payer de plus. Sinon, elles apparaissent ici, au même prix.</p>
-                </details>
-                <details>
-                  <summary>J&rsquo;achète quelques photos, puis je veux tout&nbsp;?</summary>
-                  <p>Ce que vous avez déjà payé est déduit. Vous ne payez jamais plus que le prix de toutes les photos.</p>
-                </details>
-                <details>
-                  <summary>Une photo me gêne</summary>
-                  <p>
-                    <a href={`/g/${token}/retrait`}>Retirez-la ici</a>. Elle disparaît tout de suite, sans justification.
-                  </p>
-                </details>
+            <div className={`${v.wrap} ${v.faq}`}>
+              <h2>Questions fréquentes</h2>
+              <details>
+                <summary>Combien de temps je garde mes photos&nbsp;?</summary>
+                <p>Elles se téléchargent pendant 90 jours, en pleine résolution et sans filigrane.</p>
+              </details>
+              <details>
+                <summary>D&rsquo;autres photos arrivent après mon achat&nbsp;?</summary>
+                <p>Si vous avez tout pris, elles sont à vous sans rien payer de plus. Sinon, elles apparaissent ici, au même prix.</p>
+              </details>
+              <details>
+                <summary>J&rsquo;achète quelques photos, puis je veux tout&nbsp;?</summary>
+                <p>Ce que vous avez déjà payé est déduit. Vous ne payez jamais plus que le prix de toutes les photos.</p>
+              </details>
+              <details>
+                <summary>Une photo me gêne</summary>
+                <p>
+                  <a href={`/g/${token}/retrait`}>Retirez-la ici</a>. Elle disparaît tout de suite, sans justification.
+                </p>
+              </details>
+            </div>
+            <footer className={v.foot}>
+              <div className={`${v.wrap} ${v.footIn}`}>
+                <div className={v.footWho}>
+                  <strong>{operatorName}</strong>
+                  {seller?.email ? <a href={`mailto:${seller.email}`}>{seller.email}</a> : null}
+                  {seller?.address ? <span>{seller.address}</span> : null}
+                </div>
+                <nav className={v.footLinks} aria-label="Liens utiles">
+                  <a href="/cgv">Conditions de vente</a>
+                  <a href={`/g/${token}/retrait`}>Retirer une photo</a>
+                  <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
+                  <a href={`/g/${token}/confidentialite`}>Confidentialité</a>
+                </nav>
+                <span className={v.powered}>
+                  Propulsé par <Logo variant="lockup" height={18} title="Linktrip" />
+                </span>
               </div>
-            </div>
-            <div className={sale.saleFoot}>
-              <span className={sale.powered}>
-                Propulsé par <Logo variant="wordmark" tone="mono" height={12} title="Linktrip" />
-              </span>
-              <span>
-                <a href="/cgv">Conditions de vente</a> · <a href={`/g/${token}/retrait`}>Retirer une photo</a> · <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
-              </span>
-            </div>
+            </footer>
           </>
         }
         onCheckout={(ids) => void openCheckout(ids)}
@@ -465,7 +469,9 @@ function upperFirst(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** « Votre session de » ou « Votre session d' » devant une voyelle (« d'Escalade »). */
-function sessionOf(activity: string): string {
-  return /^[aeiouyàâéèêëîïôöûüœ]/i.test(activity.trim()) ? "Votre session d\u2019" : "Votre session de ";
+/** « Vos photos de rafting », « Vos vidéos d'escalade ». */
+function photosOf(activity: string, videosOnly: boolean): string {
+  const a = activity.trim();
+  const of = /^[aeiouyàâéèêëîïôöûüœh]/i.test(a) ? "d\u2019" : "de ";
+  return `Vos ${videosOnly ? "vidéos" : "photos"} ${of}${a.toLowerCase()}`;
 }

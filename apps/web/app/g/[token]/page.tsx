@@ -43,7 +43,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const title = formatSortieTitle(sortie.activity, sortie.place);
   const page = (children: React.ReactNode) => (
     <div className={styles.page} style={operatorVars(operator.brandColor)}>
-      <SaleHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
+      <SaleHeader operatorName={operator.name} logoUrl={operator.logoUrl} place={sortie.place ?? operator.tagline} />
       {children}
     </div>
   );
