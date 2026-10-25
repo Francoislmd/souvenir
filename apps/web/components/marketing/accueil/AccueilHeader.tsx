@@ -19,6 +19,8 @@ export function AccueilHeader() {
 
   useEffect(() => {
     if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     const mq = window.matchMedia("(min-width: 761px)");
     const onMq = () => mq.matches && setOpen(false);
@@ -27,11 +29,12 @@ export function AccueilHeader() {
     return () => {
       window.removeEventListener("keydown", onKey);
       mq.removeEventListener("change", onMq);
+      document.body.style.overflow = prev;
     };
   }, [open]);
 
   return (
-    <header className={s.header}>
+    <header className={`${s.header} ${open ? s.headerOpen : ""}`}>
       <div className={s.headRow}>
         <Link href="/" aria-label="Linktrip, accueil" className={s.brand} onClick={() => setOpen(false)}>
           <LogoOcean height={28} />
@@ -64,17 +67,25 @@ export function AccueilHeader() {
         </button>
       </div>
       <nav id="accueil-menu" className={s.drawer} aria-label="Menu" hidden={!open}>
-        {NAV.map((l) => (
-          <a key={l.href} href={l.href} onClick={() => setOpen(false)}>
-            {l.label}
-          </a>
-        ))}
-        <Link href="/connexion" onClick={() => setOpen(false)}>
-          Se connecter
-        </Link>
-        <Link href="/signup" className={`${s.btn} ${s.primary}`} onClick={() => setOpen(false)}>
-          Créer un compte gratuit
-        </Link>
+        <div className={s.drawerLinks}>
+          {NAV.map((l) => (
+            <a key={l.href} href={l.href} onClick={() => setOpen(false)}>
+              {l.label}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </a>
+          ))}
+        </div>
+        <div className={s.drawerFoot}>
+          <Link href="/signup" className={`${s.btn} ${s.primary}`} onClick={() => setOpen(false)}>
+            Créer un compte gratuit
+            <Arrow />
+          </Link>
+          <Link href="/connexion" className={`${s.btn} ${s.drawerAlt}`} onClick={() => setOpen(false)}>
+            Se connecter
+          </Link>
+        </div>
       </nav>
     </header>
   );

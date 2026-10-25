@@ -1471,31 +1471,55 @@
   .burger {
     display: flex;
   }
+  .header {
+    left: 0;
+    transform: none;
+  }
+  .headerOpen .login {
+    display: none;
+  }
   .drawer {
-    display: block;
-    padding: 4px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 64px);
+    padding: 8px 20px calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: #ffffff;
     border-top: 1px solid var(--line);
   }
   .drawer[hidden] {
     display: none;
   }
-  .drawer a {
-    display: block;
-    padding: 12px 0;
-    font-size: 16px;
+  .drawerLinks a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+    font-size: 20px;
     font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--ink);
     text-decoration: none;
-    border-bottom: 1px solid var(--soft);
+    border-bottom: 1px solid var(--line);
   }
-  .drawer {
-    background: #ffffff;
+  .drawerLinks a svg {
+    color: var(--ink-3);
   }
-  .drawer .btn {
-    margin-top: 12px;
+  .drawerFoot {
+    margin-top: auto;
+    padding-top: 24px;
+    display: grid;
+    gap: 10px;
+  }
+  .drawerFoot .btn {
     width: 100%;
-    color: #ffffff;
-    border-bottom: 0;
+    height: 52px;
+    font-size: 16px;
+  }
+  .drawerAlt {
+    background: #ffffff;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1.5px var(--line);
   }
   .top {
     padding: 64px 16px 0;
