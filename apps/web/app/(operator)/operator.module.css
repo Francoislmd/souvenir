@@ -11,6 +11,10 @@
 .app {
   --brand: var(--primary);
   --brand-ink: #B8361F;
+  /* Boutons d'action principaux : aubergine, comme la landing, la connexion
+     et l'inscription (25/10/2026). Le corail reste l'accent. */
+  --cta: #2A1022;
+  --cta-hover: #4C3045;
   --aqua: #2AA6A4;
   --ink: var(--foreground);
   --ink-3: var(--muted-foreground);
@@ -628,14 +632,14 @@
   margin-left: -3px;
   flex: 0 0 auto;
 }
-/* À plat, comme le reste de l'interface : l'orange suffit à désigner
-   l'action principale, un halo de même couleur le faisait baver sur le blanc. */
+/* À plat, en aubergine (--cta) : la couleur suffit à désigner l'action
+   principale, sans halo. */
 .sBtnPri {
-  background: var(--brand);
+  background: var(--cta);
   color: #fff;
 }
 .sBtnPri:hover {
-  background: var(--brand-ink);
+  background: var(--cta-hover);
 }
 .sBtnPri:active {
   background: #B8361F;
@@ -1258,11 +1262,11 @@ select.nsInp {
 }
 .nsGo {
   min-width: 76px;
-  background: var(--brand);
+  background: var(--cta);
   color: #fff;
 }
 .nsGo:hover:not(:disabled) {
-  background: var(--brand-ink);
+  background: var(--cta-hover);
 }
 .nsGo:disabled:not([aria-busy="true"]) {
   opacity: 0.5;
@@ -1423,12 +1427,12 @@ select.nsInp {
     width: 100%;
     height: 50px;
     border-radius: 13px;
-    background: var(--brand);
+    background: var(--cta);
     font-size: 1.03rem;
   }
   .sdDropBtn:hover,
   .sdDropBtn:active {
-    background: var(--brand-ink);
+    background: var(--cta-hover);
   }
 }
 .sdNote {
