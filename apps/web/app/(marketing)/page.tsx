@@ -10,6 +10,7 @@ import { CheckCircle, Locked } from "@/components/marketing/accueil/Locked";
 import { Simulator } from "@/components/marketing/accueil/Simulator";
 import { Solution } from "@/components/marketing/accueil/Solution";
 import { Steps } from "@/components/marketing/accueil/Steps";
+import { Reveal } from "@/components/marketing/accueil/Reveal";
 import s from "./accueil.module.css";
 
 /* Accueil façon Payfit, refonte du 24/10/2026 : portée depuis le canvas
@@ -100,6 +101,7 @@ export default function HomePage() {
     <div className={`${inter.variable} ${s.page}`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
       <AccueilHeader />
+      <Reveal />
 
       <main>
         {/* 1. Hero : texte sur grille à gauche, vidéo et téléphone à droite */}

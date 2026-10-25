@@ -1740,6 +1740,82 @@
   }
 }
 
+/* ---------- Animations ---------- */
+@keyframes lt-rise {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes lt-reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(6% 6% 6% 6% round 24px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 0);
+  }
+}
+@keyframes lt-float {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -10px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .heroLeft > * {
+    animation: lt-rise 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .heroLeft > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .heroLeft > :nth-child(3) {
+    animation-delay: 160ms;
+  }
+  .heroLeft > :nth-child(4) {
+    animation-delay: 240ms;
+  }
+  .heroLeft > :nth-child(5) {
+    animation-delay: 320ms;
+  }
+  .heroRight {
+    animation: lt-reveal 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) 150ms both;
+  }
+  .phone {
+    animation: lt-rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 500ms both;
+  }
+  .pol {
+    animation: lt-float 5s ease-in-out infinite alternate;
+  }
+  .pol:nth-child(2n) {
+    animation-duration: 6.5s;
+    animation-delay: -2s;
+  }
+  .pol:nth-child(3n) {
+    animation-duration: 5.8s;
+    animation-delay: -3.5s;
+  }
+  .btn {
+    transition: background-color 150ms ease, border-color 150ms ease, translate 150ms ease;
+  }
+  .btn:hover {
+    translate: 0 -2px;
+  }
+  .demoGrid span {
+    transition: scale 400ms ease;
+  }
+  .demoPlayer:hover .demoGrid span {
+    scale: 1.03;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .track {
     animation: none;
