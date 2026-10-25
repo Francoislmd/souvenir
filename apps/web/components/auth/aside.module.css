@@ -1,0 +1,233 @@
+.aside {
+  position: sticky;
+  top: 16px;
+  height: calc(100dvh - 32px);
+  margin: 16px 16px 16px 0;
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  text-align: center;
+  color: #2a1022;
+  background-color: #fff3ec;
+  background-image: radial-gradient(90% 70% at 10% 0%, #fcd3c2 0%, rgba(252, 211, 194, 0) 60%),
+    radial-gradient(80% 60% at 100% 100%, #fbd0d6 0%, rgba(251, 208, 214, 0) 60%);
+}
+.stage {
+  position: relative;
+  width: 330px;
+  margin-bottom: 64px;
+  animation: in 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.card {
+  border: 2px solid #2a1022;
+  border-radius: 24px;
+  background: #ffffff;
+  padding: 18px 18px 20px;
+  text-align: left;
+}
+.cardHead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+.cardHead strong {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.cardHead span {
+  font-size: 12px;
+  color: #806a76;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ph {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ph > span {
+  position: absolute;
+  inset: 0;
+  background: #fceee7 center / cover no-repeat;
+}
+.locked > span {
+  filter: blur(5px);
+  transform: scale(1.1);
+}
+.picked {
+  box-shadow: inset 0 0 0 2.5px #e8553b;
+}
+.ph i {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+}
+.lock {
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  width: 30px;
+  height: 30px;
+  background: rgba(42, 16, 34, 0.45);
+}
+.tick {
+  top: 7px;
+  right: 7px;
+  width: 22px;
+  height: 22px;
+  background: #e8553b;
+}
+.total {
+  display: flex;
+  justify-content: space-between;
+  margin: 14px 2px 10px;
+  font-size: 13px;
+  color: #5e4757;
+}
+.total strong {
+  color: #2a1022;
+}
+.pay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 999px;
+  background: #2a1022;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pill {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  padding: 11px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 2px solid transparent;
+  background: linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(90deg, #ffa27f, #f2643f, #f7b6b9, #ffa27f) border-box;
+  animation: pop 600ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 900ms both;
+}
+.pill b {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff1ea;
+  font-weight: 700;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  background: #1e7b3a;
+  box-shadow: 0 0 0 0 rgba(30, 123, 58, 0.4);
+  animation: ping 2s ease-out 1.6s infinite;
+}
+.title {
+  margin: 0;
+  max-width: 440px;
+  font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.text {
+  margin: 12px 0 22px;
+  max-width: 440px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #5e4757;
+  text-wrap: pretty;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #2a1022;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+.cta:hover {
+  background: #fceee7;
+}
+@keyframes in {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(30, 123, 58, 0.4);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px rgba(30, 123, 58, 0);
+  }
+}
+@media (max-width: 960px) {
+  .aside {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .pill,
+  .dot {
+    animation: none;
+  }
+}
+
+/* La mise en page en deux colonnes : le formulaire à gauche, ce panneau à droite. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100dvh;
+  background: #ffffff;
+}
+.split > :first-child {
+  min-width: 0;
+}
+@media (max-width: 960px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

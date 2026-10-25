@@ -133,6 +133,23 @@
   color: var(--ink);
 }
 
+/* Le premier écran, à côté du panneau pêche (AuthSplit) : centré comme la
+   connexion. */
+@media (min-width: 961px) {
+  .obCompte .scr {
+    max-width: 440px;
+    justify-content: center;
+    padding-bottom: 12vh;
+  }
+  .obCompte .scr > h1,
+  .obCompte .scr > .lede {
+    text-align: center;
+  }
+  .obCompte .scr > .lede {
+    margin-bottom: 8px;
+  }
+}
+
 /* ── Un écran ────────────────────────────────────────────── */
 .scr {
   width: 100%;

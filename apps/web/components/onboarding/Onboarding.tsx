@@ -9,6 +9,7 @@ import { operatorTagline } from "@/lib/tagline";
 import { Spinner } from "@/components/ui/Spinner";
 import { Logo } from "@/components/brand/Logo";
 import { StripeOnboarding } from "@/components/stripe/StripeOnboarding";
+import { AuthSplit } from "@/components/auth/AuthAside";
 import { AccountForm } from "./AccountForm";
 import styles from "./onboarding.module.css";
 
@@ -231,8 +232,8 @@ export function Onboarding({
         ? "prix"
         : ORDER[index - 1]!;
 
-  return (
-    <div className={styles.ob}>
+  const screen = (
+    <div className={step === "compte" ? `${styles.ob} ${styles.obCompte}` : styles.ob}>
       <header className={styles.head}>
         <div className={styles.headLeft}>
           {back === "home" ? (
@@ -489,6 +490,10 @@ export function Onboarding({
       ) : null}
     </div>
   );
+
+  // Le premier écran (le compte) a la même mise en page que la connexion :
+  // le formulaire à gauche, le panneau pêche à droite.
+  return step === "compte" ? <AuthSplit variant="signup">{screen}</AuthSplit> : screen;
 }
 
 /** L'identité légale envoyée avec la structure : la fiche choisie, sinon le

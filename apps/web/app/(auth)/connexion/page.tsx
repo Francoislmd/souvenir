@@ -93,8 +93,8 @@ export default function ConnexionPage() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Connexion</h1>
-        <p className={styles.lead}>Accédez à vos sorties, vos photos et vos ventes.</p>
+        <h1>Bienvenue</h1>
+        <p className={styles.lead}>Connectez-vous pour accéder à vos sorties.</p>
       </div>
 
       <ErrorBanner message={error} />
