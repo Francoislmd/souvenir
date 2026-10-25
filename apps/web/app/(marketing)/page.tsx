@@ -403,21 +403,47 @@ export default function HomePage() {
                   La démo
                 </p>
                 <strong>Le parcours complet, en une minute</strong>
-                <span>Du dépôt des photos au paiement du client.</span>
+                <ol className={s.demoSteps}>
+                  <li>
+                    <b>1</b>Vous déposez les photos de la sortie
+                  </li>
+                  <li>
+                    <b>2</b>Chaque client reçoit son lien
+                  </li>
+                  <li>
+                    <b>3</b>Il paie, l’argent arrive chez vous
+                  </li>
+                </ol>
                 <Link href="/produit#demo" className={`${s.btn} ${s.primary}`}>
                   Lancer la démo
                   <Arrow />
                 </Link>
               </div>
-              <Link href="/produit#demo" className={s.demoPlayer} style={{ backgroundImage: "url(/landing-payfit/hero-poster.webp)" }} aria-label="Lancer la démo produit">
+              <Link href="/produit#demo" className={`${s.demoPlayer} ${s.peach}`} aria-label="Lancer la démo produit">
+                <span className={s.demoScreen} aria-hidden="true">
+                  <span className={s.demoChrome}>
+                    <i />
+                    <i />
+                    <i />
+                    <em>linktrip.co/rafting-samedi</em>
+                  </span>
+                  <span className={s.demoGrid}>
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                      <span key={n} style={{ backgroundImage: `url(/landing-payfit/r-${n}.webp)` }} />
+                    ))}
+                  </span>
+                </span>
                 <span className={s.playBtn} aria-hidden="true">
                   <svg width="30" height="30" viewBox="0 0 24 24" style={{ marginLeft: 4 }}>
                     <path d="M7 4.5v15l12.5-7.5z" fill="#E8553B" />
                   </svg>
                 </span>
-                <span className={s.demoTag}>
-                  <i />
-                  Démo produit · 1 min
+                <span className={s.demoBar} aria-hidden="true">
+                  <span>0:00</span>
+                  <span className={s.demoTrack}>
+                    <i />
+                  </span>
+                  <span>1:00</span>
                 </span>
               </Link>
             </div>

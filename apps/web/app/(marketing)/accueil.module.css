@@ -848,28 +848,53 @@
   border-radius: 24px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 380px;
+  grid-template-columns: 5fr 7fr;
+  background: var(--ocean-50);
 }
 .demoText {
-  background: var(--ocean-50);
-  padding: 36px;
+  padding: 48px 44px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
 }
 .demoText strong {
   font-weight: 800;
   font-size: 34px;
   line-height: 1.1;
-}
-.demoText > span {
-  font-size: 15px;
-  color: var(--ink-3);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 .demoText .btn {
   align-self: flex-start;
+  margin-top: 4px;
+}
+.demoSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.demoSteps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  color: var(--ink-3);
+}
+.demoSteps b {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: #ffffff;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .demoPlayer {
   position: relative;
@@ -877,22 +902,65 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 380px;
-  background: var(--navy) center / cover no-repeat;
+  min-height: 420px;
+  padding: 44px 44px 72px;
   text-decoration: none;
 }
-.demoPlayer::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(58, 21, 48, 0.25) 0%, rgba(58, 21, 48, 0.65) 100%);
+.demoScreen {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+  transform: rotate(-1.5deg);
+  transition: transform 250ms ease;
+}
+.demoPlayer:hover .demoScreen {
+  transform: rotate(0deg);
+}
+.demoChrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.demoChrome i {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  background: var(--line);
+}
+.demoChrome em {
+  margin-left: 10px;
+  padding: 3px 12px;
+  border-radius: 99px;
+  background: var(--soft);
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.demoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 10px;
+}
+.demoGrid span {
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  background: center / cover no-repeat;
 }
 .playBtn {
-  position: relative;
+  position: absolute;
+  top: calc(50% - 14px);
+  left: 50%;
+  translate: -50% -50%;
   width: 84px;
   height: 84px;
   border-radius: 999px;
   background: #ffffff;
+  box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -901,25 +969,34 @@
 .demoPlayer:hover .playBtn {
   transform: scale(1.06);
 }
-.demoTag {
+.demoBar {
   position: absolute;
-  left: 20px;
-  bottom: 20px;
-  display: inline-flex;
+  left: 44px;
+  right: 44px;
+  bottom: 24px;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--ink);
-  border-radius: 999px;
-  padding: 7px 14px;
-  font-size: 13px;
+  gap: 12px;
+  font-size: 12px;
   font-weight: 600;
+  color: var(--ink);
 }
-.demoTag i {
-  width: 8px;
-  height: 8px;
+.demoTrack {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.6);
+}
+.demoTrack i {
+  display: block;
+  width: 0;
+  height: 100%;
   border-radius: 99px;
   background: var(--blue);
+  transition: width 600ms ease;
+}
+.demoPlayer:hover .demoTrack i {
+  width: 18%;
 }
 
 /* ---------- Prise en main ---------- */
@@ -1615,8 +1692,21 @@
   .demoText strong {
     font-size: 26px;
   }
+  .demoText {
+    padding: 32px 22px;
+  }
   .demoPlayer {
-    min-height: 240px;
+    min-height: 0;
+    padding: 28px 20px 60px;
+  }
+  .demoBar {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+  .playBtn {
+    width: 64px;
+    height: 64px;
   }
   .quote {
     min-height: 0;
