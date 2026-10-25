@@ -1406,7 +1406,19 @@
   .sim,
   .faq,
   .hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sim > *,
+  .solution > *,
+  .faq > * {
+    min-width: 0;
+  }
+  .simInputs,
+  .simResult {
+    padding: 28px 22px;
+  }
+  .simFoot .doodle {
+    display: none;
   }
   .split {
     gap: 16px;
