@@ -27,6 +27,12 @@
   outline-offset: 3px;
   border-radius: 10px;
 }
+/* Les champs n'ont que leur bordure foncée au focus, pas de second cadre (25/10/2026). */
+.auth input:focus-visible,
+.auth textarea:focus-visible,
+.auth select:focus-visible {
+  outline: none;
+}
 
 /* ---------- cadre ---------- */
 .top {

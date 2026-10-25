@@ -49,6 +49,12 @@
   outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
+/* Les champs n'ont que leur bordure foncée au focus, pas de second cadre (25/10/2026). */
+.ob input:focus-visible,
+.ob textarea:focus-visible,
+.ob select:focus-visible {
+  outline: none;
+}
 :where(.ob) h1,
 :where(.ob) h2 {
   font-family: var(--ft);
