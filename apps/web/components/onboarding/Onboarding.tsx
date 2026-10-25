@@ -269,11 +269,16 @@ export function Onboarding({
             </span>
           )}
         </div>
-        <div className={styles.prog} aria-hidden="true">
-          {ORDER.map((s, i) => (
-            <i key={s} className={i <= index ? styles.on : undefined} />
-          ))}
-        </div>
+        {/* Pas d'étapes au-dessus du premier écran (25/10/2026). */}
+        {step === "compte" ? (
+          <span aria-hidden="true" />
+        ) : (
+          <div className={styles.prog} aria-hidden="true">
+            {ORDER.map((s, i) => (
+              <i key={s} className={i <= index ? styles.on : undefined} />
+            ))}
+          </div>
+        )}
         {step === "compte" ? (
           <Link href="/connexion" className={styles.login}>
             Se connecter

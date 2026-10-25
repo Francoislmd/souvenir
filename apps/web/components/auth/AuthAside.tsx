@@ -22,15 +22,6 @@ const COPY = {
   },
 } as const;
 
-function Lock() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-      <rect x="5" y="11" width="14" height="10" rx="2.5" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  );
-}
-
 function Tick() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -38,13 +29,6 @@ function Tick() {
     </svg>
   );
 }
-
-const PHOTOS: [string, boolean][] = [
-  ["/landing-payfit/r-1.webp", true],
-  ["/landing-payfit/r-3.webp", false],
-  ["/landing-payfit/r-5.webp", true],
-  ["/landing-payfit/r-2.webp", false],
-];
 
 export function AuthAside({ variant }: { variant: keyof typeof COPY }) {
   const c = COPY[variant];
@@ -56,32 +40,21 @@ export function AuthAside({ variant }: { variant: keyof typeof COPY }) {
             <strong>Votre sortie Rafting</strong>
             <span>Samedi · Gorges du Verdon</span>
           </div>
-          <div className={s.grid}>
-            {PHOTOS.map(([src, picked]) => (
-              <span key={src} className={`${s.ph} ${picked ? s.picked : s.locked}`}>
-                <span style={{ backgroundImage: `url(${src})` }} />
-                {picked ? (
-                  <i className={s.tick}>
-                    <Tick />
-                  </i>
-                ) : (
-                  <i className={s.lock}>
-                    <Lock />
-                  </i>
-                )}
-              </span>
-            ))}
-          </div>
+          <span className={s.photo} style={{ backgroundImage: "url(/landing-payfit/r-1.webp)" }}>
+            <i className={s.tick}>
+              <Tick />
+            </i>
+          </span>
           <div className={s.total}>
-            <span>2 photos</span>
-            <strong>12,00 €</strong>
+            <span>1 photo HD</span>
+            <strong>6,00 €</strong>
           </div>
           <span className={s.pay}>Payer</span>
         </div>
         <div className={s.pill}>
           <span className={s.dot} />
           Paiement reçu
-          <b>+ 12,00 €</b>
+          <b>+ 6,00 €</b>
         </div>
       </div>
       <h2 className={s.title}>{c.title}</h2>
