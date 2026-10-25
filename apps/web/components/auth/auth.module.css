@@ -237,11 +237,9 @@
   width: 100%;
   height: 50px;
   margin-top: 22px;
-  /* Le bouton principal est le même partout (07/10/2026) : orange de marque
-     à plat, comme « Créer mon compte » à l'inscription et « Nouvelle
-     sortie » dans l'espace pro. Il était encre ici, orange en dégradé là. */
-  border-radius: 13px;
-  background: var(--brand);
+  /* Aubergine, comme les boutons de la landing (25/10/2026). */
+  border-radius: 999px;
+  background: #2a1022;
   color: #fff;
   font-weight: 600;
   font-size: 1rem;
@@ -253,7 +251,7 @@
   transition: background 0.14s;
 }
 .btn:hover {
-  background: var(--brand-ink);
+  background: #4c3045;
 }
 .btn:disabled {
   opacity: 0.4;

@@ -304,17 +304,18 @@
   width: 100%;
   height: 52px;
   padding: 0 22px;
-  border-radius: 14px;
+  border-radius: 999px;
   font-size: 1.03rem;
   font-weight: 600;
   letter-spacing: -0.015em;
 }
+/* Aubergine, comme les boutons de la landing et de la connexion (25/10/2026). */
 .ob .pri {
-  background: var(--brand);
+  background: #2a1022;
   color: #fff;
 }
 .ob .pri:hover {
-  background: var(--brand-ink);
+  background: #4c3045;
 }
 .ob .pri:active {
   transform: translateY(1px);
