@@ -1,8 +1,8 @@
 .accx{
-  --ink:var(--foreground);--ink-2:#3F4652;--ink-3:var(--muted-foreground);--ink-4:#A3AAB5;
-  --line:var(--input);--line-2:#F1F3F6;--soft:var(--secondary);--paper:#F7F8FA;
-  --brand:var(--primary);--brand-ink:#1544AC;--rose:#5BB4FF;--amber:#FFB020;
-  --sunset:linear-gradient(120deg,#5BB4FF,#2F6FEB 52%,#1A3FB0);
+  --ink:var(--foreground);--ink-2:#4C3045;--ink-3:var(--muted-foreground);--ink-4:#BCA7AF;
+  --line:var(--input);--line-2:#FCEEE7;--soft:var(--secondary);--paper:#FFF7F2;
+  --brand:var(--primary);--brand-ink:#B8361F;--rose:#FFA27F;--amber:#FFB020;
+  --sunset:linear-gradient(120deg,#FFA27F,#F2643F 52%,#C23A2A);
   
   --max:1320px;
   --r-xl:32px;--r-lg:24px;--r-md:16px;--r-sm:10px;
@@ -143,7 +143,7 @@
 .accx .stageBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;transform:scale(1.04)}
 /* Voile uniforme : les trois photos n'ont pas la même teinte, il les accorde
    et détache le téléphone blanc du fond. */
-.accx .stage::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(25, 29, 36,.1);pointer-events:none}
+.accx .stage::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(42, 16, 34,.1);pointer-events:none}
 .accx .stage .phone{border-color:rgba(255,255,255,.6)}
 .accx .stageIn{height:100%;display:flex;align-items:flex-start;justify-content:center;padding:36px 24px 0}
 .accx .meta{padding:26px 4px 0}
@@ -261,7 +261,7 @@
 @keyframes acc-faqFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .accx .fqTail{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:clamp(28px, 4vh, 44px)}
 .accx .fqTailM{display:none}
-.accx .btnSunset{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:600;color:#fff;background:var(--sunset);box-shadow:0 10px 26px -9px rgba(26, 85, 214,.6);transition:transform .15s,filter .15s}
+.accx .btnSunset{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:600;color:#fff;background:var(--sunset);box-shadow:0 10px 26px -9px rgba(212, 68, 44,.6);transition:transform .15s,filter .15s}
 @media (hover:hover){.accx .btnSunset:hover{filter:brightness(1.05);transform:translateY(-1px)}}
 @media (max-width:900px){.accx .fqWrap{grid-template-columns:minmax(0,1fr);gap:clamp(24px, 4vh, 36px)}.accx .fqAside{position:static}.accx .fqTailD{display:none}.accx .fqTailM{display:flex;grid-column:1/-1}}
 @media (max-width:1280px){.accx .fq,.accx .ftr{--lg:34px}}
@@ -272,7 +272,7 @@
 .accx .end{padding:0 0 clamp(72px, 8vw, 104px)}
 .accx .endCard{position:relative;border-radius:var(--r-xl);overflow:hidden;min-height:440px;display:flex;align-items:center;color:#fff;background:var(--ink)}
 .accx .endCard > img{position:absolute;top:0;right:0;width:50%;height:100%;object-fit:cover;object-position:50% 40%}
-.accx .endCard::after{content:"";position:absolute;inset:0 0 0 auto;width:50%;background:linear-gradient(90deg,var(--ink),rgba(25, 29, 36,0) 38%)}
+.accx .endCard::after{content:"";position:absolute;inset:0 0 0 auto;width:50%;background:linear-gradient(90deg,var(--ink),rgba(42, 16, 34,0) 38%)}
 .accx .endIn{position:relative;z-index:1;padding:clamp(32px, 5vw, 72px);max-width:640px}
 .accx .endIn .h2{color:#fff}
 .accx .endIn p{margin-top:16px;font-size:18px;line-height:1.55;color:rgba(255,255,255,.84)}
@@ -294,7 +294,7 @@
 .accx .ftrField:focus-within{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.4)}
 .accx .ftrField input{flex:1;min-width:0;font:400 16px var(--font-inter),sans-serif;color:#fff;background:transparent;border:0;outline:none;padding:clamp(12px, 1.7vh, 15px) 8px}
 .accx .ftrField input::placeholder{color:rgba(255,255,255,.42)}
-.accx .ftrSubmit{flex:none;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:0;cursor:pointer;border-radius:99px;padding:clamp(13px, 1.8vh, 16px) 24px;font:800 15px var(--display);letter-spacing:-.008em;color:#fff;background:var(--sunset);box-shadow:0 10px 26px -9px rgba(26, 85, 214,.6);transition:transform .18s,filter .18s}
+.accx .ftrSubmit{flex:none;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:0;cursor:pointer;border-radius:99px;padding:clamp(13px, 1.8vh, 16px) 24px;font:800 15px var(--display);letter-spacing:-.008em;color:#fff;background:var(--sunset);box-shadow:0 10px 26px -9px rgba(212, 68, 44,.6);transition:transform .18s,filter .18s}
 @media (hover:hover){.accx .ftrSubmit:hover{transform:translateY(-1px);filter:brightness(1.05)}}
 .accx .trust{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.45)}
 .accx .trust svg{width:15px;height:15px;flex:none}
@@ -317,7 +317,7 @@
 @media (max-width:1000px){
   .accx .ftrField{flex-direction:column;align-items:stretch;gap:10px;width:100%;background:transparent;border:0;border-radius:0;padding:0}
   .accx .ftrField input{flex:none;width:100%;height:52px;padding:0 16px;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.06)}
-  .accx .ftrField input:focus{border-color:rgba(255,255,255,.45);box-shadow:0 0 0 3px rgba(26, 85, 214,.18)}
+  .accx .ftrField input:focus{border-color:rgba(255,255,255,.45);box-shadow:0 0 0 3px rgba(212, 68, 44,.18)}
   .accx .ftrSubmit{width:100%;height:52px;justify-content:center;padding:0 20px;border-radius:14px;font-size:16px}
 }
 @media (max-width:780px){.accx .ftrMark{display:none}}
@@ -378,7 +378,7 @@
 .accx .nav2 svg{color:var(--brand-ink)}
 
 /* Doigt */
-.accx .fg{position:absolute;left:0;top:0;z-index:20;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(25, 29, 36,.22);border:2px solid rgba(255,255,255,.95);box-shadow:0 4px 14px rgba(14, 17, 22,.28);opacity:0;pointer-events:none;transition:translate .55s var(--ease),opacity .25s}
+.accx .fg{position:absolute;left:0;top:0;z-index:20;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(42, 16, 34,.22);border:2px solid rgba(255,255,255,.95);box-shadow:0 4px 14px rgba(14, 17, 22,.28);opacity:0;pointer-events:none;transition:translate .55s var(--ease),opacity .25s}
 .accx .fg.show{opacity:1}
 .accx .fg::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid rgba(255,255,255,.9);opacity:0}
 .accx .fg.press{animation:acc-fgp .42s cubic-bezier(.3,.7,.3,1)}
@@ -714,7 +714,7 @@
   .accx .hxBg{min-height:max(500px, min(820px, calc(100svh - clamp(64px, 4.8vh + 36px, 80px) - 20px)))}
 
   /* Un seul fond pour toute la page : la FAQ (blanc) et le fonctionnement
-     (#F7F8FA) tranchaient sur le papier du corps (#F7F8FA). Les filets
+     (#FFF7F2) tranchaient sur le papier du corps (#FFF7F2). Les filets
      suffisent à marquer le fonctionnement. */
   .accx .fq,.accx .how{background:transparent}
 
@@ -743,7 +743,7 @@
      et cadre le passager en entier. */
   .accx .endCard{isolation:isolate}
   .accx .endCard > img{height:250px;object-position:56% 52%}
-  .accx .endCard::after{display:block;inset:auto 0 auto 0;top:170px;width:auto;height:81px;background:linear-gradient(180deg,rgba(25, 29, 36,0),var(--ink))}
+  .accx .endCard::after{display:block;inset:auto 0 auto 0;top:170px;width:auto;height:81px;background:linear-gradient(180deg,rgba(42, 16, 34,0),var(--ink))}
   .accx .endIn{padding-top:18px}
 
   /* Pied : deux colonnes, aucun lien coupé sur deux lignes. */

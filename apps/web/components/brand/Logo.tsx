@@ -61,7 +61,7 @@ export function Logo({
   const gid = useId();
   const [vx, vy, vw, vh] = VIEW[variant];
   const mono = tone === "mono" || tone === "mono-white";
-  const ink = tone === "white" || tone === "mono-white" ? "#FFFFFF" : "#191D24";
+  const ink = tone === "white" || tone === "mono-white" ? "#FFFFFF" : "#2A1022";
   const accent = mono ? ink : `url(#${gid})`;
 
   const symbol = (
@@ -92,9 +92,9 @@ export function Logo({
       {!mono && (
         <defs>
           <linearGradient id={gid} x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stopColor="#5BB4FF" />
-            <stop offset="0.52" stopColor="#2F6FEB" />
-            <stop offset="1" stopColor="#1A3FB0" />
+            <stop offset="0" stopColor="#FFA27F" />
+            <stop offset="0.52" stopColor="#F2643F" />
+            <stop offset="1" stopColor="#C23A2A" />
           </linearGradient>
         </defs>
       )}

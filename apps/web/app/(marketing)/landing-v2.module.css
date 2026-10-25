@@ -3,19 +3,19 @@
    dans les variables de .page : ne pas les recopier ailleurs. */
 
 .page {
-  --ocean-50: #eef4ff;
-  --ocean-100: #d9e6ff;
-  --ocean-200: #c9daff;
-  --ocean-500: #1a55d6;
-  --ocean-600: #1544ac;
-  --ocean-900: #0e2e75;
-  --ink: #191d24;
-  --ink-2: #3f4652;
-  --ink-3: #4b5361;
-  --ink-4: #6b7380;
-  --line: #e3e7ee;
-  --line-2: #cbd1da;
-  --soft: #f7f8fa;
+  --ocean-50: #FFEFE7;
+  --ocean-100: #FCDCCD;
+  --ocean-200: #F9C8B6;
+  --ocean-500: #D4442C;
+  --ocean-600: #B8361F;
+  --ocean-900: #3A1530;
+  --ink: #2A1022;
+  --ink-2: #4C3045;
+  --ink-3: #5E4757;
+  --ink-4: #806A76;
+  --line: #F2E2DA;
+  --line-2: #E8D2C9;
+  --soft: #FFF7F2;
   --ok: #1e7b3a;
   --ok-bg: #e6f4ea;
   --gutter: clamp(16px, 4vw, 48px);
@@ -118,7 +118,7 @@
 .primary:hover {
   background: var(--ocean-600);
   color: #fff;
-  box-shadow: 0 10px 24px -8px rgba(26, 85, 214, 0.6);
+  box-shadow: 0 10px 24px -8px rgba(212, 68, 44, 0.6);
 }
 .ghost {
   background: #fff;
@@ -310,7 +310,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 .drawerList a svg {
-  color: #a3aab5;
+  color: #BCA7AF;
   flex: none;
 }
 .drawerList a:active {
@@ -356,7 +356,7 @@
 .drawerShade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(14, 46, 117, 0.55) 0%, rgba(14, 46, 117, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(58, 21, 48, 0.55) 0%, rgba(58, 21, 48, 0.82) 100%);
 }
 .drawerCta > :not(img):not(.drawerShade) {
   position: relative;
@@ -435,8 +435,8 @@
 }
 .heroCta {
   box-shadow:
-    0 1px 2px rgba(25, 29, 36, 0.08),
-    0 6px 16px -4px rgba(26, 85, 214, 0.45);
+    0 1px 2px rgba(42, 16, 34, 0.08),
+    0 6px 16px -4px rgba(212, 68, 44, 0.45);
 }
 .checks {
   display: flex;
@@ -463,8 +463,8 @@
   overflow: hidden;
   background: #2a6fa3;
   box-shadow:
-    0 6px 16px rgba(25, 29, 36, 0.12),
-    0 16px 40px -8px rgba(25, 29, 36, 0.18);
+    0 6px 16px rgba(42, 16, 34, 0.12),
+    0 16px 40px -8px rgba(42, 16, 34, 0.18);
   animation: float 6s ease-in-out infinite;
 }
 .heroPhoto img {
@@ -519,7 +519,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #a3aab5;
+  color: #BCA7AF;
   white-space: nowrap;
   margin-right: 56px;
 }
@@ -542,8 +542,8 @@
   transform: translateY(-4px);
   border-color: var(--ocean-200);
   box-shadow:
-    0 2px 4px rgba(25, 29, 36, 0.04),
-    0 18px 40px -12px rgba(26, 85, 214, 0.22);
+    0 2px 4px rgba(42, 16, 34, 0.04),
+    0 18px 40px -12px rgba(212, 68, 44, 0.22);
 }
 .benefit {
   background: var(--soft);
@@ -610,7 +610,7 @@
   border-radius: 20px;
   overflow: hidden;
   background: var(--line);
-  box-shadow: 0 10px 30px -12px rgba(25, 29, 36, 0.35);
+  box-shadow: 0 10px 30px -12px rgba(42, 16, 34, 0.35);
   transition: transform 300ms ease;
 }
 .tile:hover {
@@ -664,7 +664,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 1px 2px rgba(25, 29, 36, 0.04);
+  box-shadow: 0 1px 2px rgba(42, 16, 34, 0.04);
 }
 .stepHead {
   display: flex;
@@ -845,8 +845,8 @@
   flex-direction: column;
   gap: 22px;
   box-shadow:
-    0 6px 16px rgba(25, 29, 36, 0.06),
-    0 16px 40px -8px rgba(25, 29, 36, 0.12);
+    0 6px 16px rgba(42, 16, 34, 0.06),
+    0 16px 40px -8px rgba(42, 16, 34, 0.12);
 }
 .badge {
   align-self: flex-start;
@@ -931,7 +931,7 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
-  box-shadow: 0 1px 2px rgba(25, 29, 36, 0.04);
+  box-shadow: 0 1px 2px rgba(42, 16, 34, 0.04);
 }
 .field {
   display: flex;
@@ -974,8 +974,8 @@
   flex-direction: column;
   gap: 24px;
   justify-content: space-between;
-  background: radial-gradient(420px 240px at 100% 0%, rgba(91, 180, 255, 0.45) 0%, rgba(91, 180, 255, 0) 70%), var(--ocean-500);
-  box-shadow: 0 16px 40px -12px rgba(26, 85, 214, 0.55);
+  background: radial-gradient(420px 240px at 100% 0%, rgba(255, 162, 127, 0.45) 0%, rgba(255, 162, 127, 0) 70%), var(--ocean-500);
+  box-shadow: 0 16px 40px -12px rgba(212, 68, 44, 0.55);
 }
 .simResult > :not(svg) {
   position: relative;
@@ -1060,7 +1060,7 @@
 }
 .faqItem[open] {
   border-color: var(--ocean-200);
-  box-shadow: 0 1px 2px rgba(25, 29, 36, 0.04);
+  box-shadow: 0 1px 2px rgba(42, 16, 34, 0.04);
 }
 .faqItem summary {
   list-style: none;
@@ -1131,7 +1131,7 @@
 .finalShade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(14, 46, 117, 0.55) 0%, rgba(14, 46, 117, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(58, 21, 48, 0.55) 0%, rgba(58, 21, 48, 0.82) 100%);
 }
 .final > :not(img):not(.finalShade) {
   position: relative;

@@ -7,12 +7,12 @@
 .page {
   --op-soft: color-mix(in srgb, var(--op) 10%, #fff);
   --ink: var(--foreground);
-  --ink-2: #3F4652;
+  --ink-2: #4C3045;
   --ink-3: var(--muted-foreground);
-  --ink-4: #A3AAB5;
+  --ink-4: #BCA7AF;
   --line: var(--input);
-  --line-2: #F1F3F6;
-  --bg: #F7F8FA;
+  --line-2: #FCEEE7;
+  --bg: #FFF7F2;
   --ok: #1E7B3A;
   --ok-soft: #E6F4EA;
 

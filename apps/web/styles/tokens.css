@@ -12,19 +12,19 @@
      Les valeurs sont exactement celles d'avant, le rendu ne change pas.
      Seuls les tokens Linktrip de même valeur y sont reliés ; --paper,
      --brand-ink et les tons d'encre secondaires restent fixes. */
-  --background: #F7F8FA;
-  --foreground: #191D24;
+  --background: #FFF7F2;
+  --foreground: #2A1022;
   --card: #ffffff;
-  --card-foreground: #191D24;
+  --card-foreground: #2A1022;
   --popover: #ffffff;
-  --popover-foreground: #191D24;
-  --primary: #1A55D6;
+  --popover-foreground: #2A1022;
+  --primary: #D4442C;
   --primary-foreground: #ffffff;
-  --secondary: #EEF4FF;
-  --secondary-foreground: #1544AC;
-  --muted-foreground: #6B7380;
-  --input: #E3E7EE;
-  --ring: #1A55D6;
+  --secondary: #FFEFE7;
+  --secondary-foreground: #B8361F;
+  --muted-foreground: #806A76;
+  --input: #F2E2DA;
+  --ring: #D4442C;
   --destructive: #B42318;
 
   --canvas: var(--background);
@@ -32,23 +32,23 @@
   --danger: var(--destructive);
 
   --ink: var(--foreground);
-  --ink-2: #3F4652;
+  --ink-2: #4C3045;
   --ink-3: var(--muted-foreground);
-  --ink-4: #A3AAB5;
+  --ink-4: #BCA7AF;
   /* --line suit --input et non --border : --border garde l'ancien beige
-     (#E3E7EE) de globals.css, --line est le gris rosé de la marque. */
+     (#F2E2DA) de globals.css, --line est le gris rosé de la marque. */
   --line: var(--input);
-  --line-2: #F1F3F6;
+  --line-2: #FCEEE7;
   --soft: var(--secondary);
-  --paper: #F7F8FA;
+  --paper: #FFF7F2;
 
   --brand: var(--primary);
-  --brand-ink: #1544AC;
-  --rose: #5BB4FF;
+  --brand-ink: #B8361F;
+  --rose: #FFA27F;
   --amber: #FFB020;
   --aqua: #2AA6A4;
   --ok: #1E7B3A;
-  --sunset: linear-gradient(120deg, #5BB4FF, #2F6FEB 52%, #1A3FB0);
+  --sunset: linear-gradient(120deg, #FFA27F, #F2643F 52%, #C23A2A);
 
   /* Alias vers les tokens Tailwind existants (voir tailwind.config.ts) pour
      que .btn/.text-brand/etc suivent la nouvelle couleur de marque sans

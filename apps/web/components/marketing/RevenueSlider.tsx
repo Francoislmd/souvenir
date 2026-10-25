@@ -58,7 +58,7 @@ export function RevenueSlider() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-[880px] rounded-[clamp(18px,1.6vw,26px)] border border-line bg-white px-[clamp(20px,2.4vw,38px)] py-[clamp(20px,3vh,34px)] shadow-[0_30px_60px_-34px_rgba(25, 29, 36,0.34)]">
+      <div className="mx-auto w-full max-w-[880px] rounded-[clamp(18px,1.6vw,26px)] border border-line bg-white px-[clamp(20px,2.4vw,38px)] py-[clamp(20px,3vh,34px)] shadow-[0_30px_60px_-34px_rgba(42, 16, 34,0.34)]">
         <div className="grid grid-cols-1 gap-x-[clamp(22px,3vw,44px)] gap-y-[clamp(14px,2vh,22px)] max-[999px]:gap-y-5 min-[1000px]:grid-cols-2">
           {SLIDERS.map((s) => {
             const value = values[s.id]!;

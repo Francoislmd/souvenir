@@ -13,8 +13,8 @@ export default async function PrivacyPage({ params }: { params: { token: string 
   const operator = participant.sortie.operator;
 
   return (
-    <main style={{ maxWidth: 520, margin: "0 auto", minHeight: "100vh", background: "#fff", padding: "32px 20px", fontFamily: "'Inter', system-ui, sans-serif", color: "#191D24" }}>
-      <Link href={`/g/${participant.token}`} style={{ fontSize: "0.9rem", color: "#6B7380", textDecoration: "underline" }}>
+    <main style={{ maxWidth: 520, margin: "0 auto", minHeight: "100vh", background: "#fff", padding: "32px 20px", fontFamily: "'Inter', system-ui, sans-serif", color: "#2A1022" }}>
+      <Link href={`/g/${participant.token}`} style={{ fontSize: "0.9rem", color: "#806A76", textDecoration: "underline" }}>
         ← Retour à votre galerie
       </Link>
 
@@ -25,21 +25,21 @@ export default async function PrivacyPage({ params }: { params: { token: string 
       </h1>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
-        <div style={{ border: "1px solid #E3E7EE", borderRadius: 16, padding: 16, background: "#F7F8FA" }}>
+        <div style={{ border: "1px solid #F2E2DA", borderRadius: 16, padding: 16, background: "#FFF7F2" }}>
           <p style={{ fontWeight: 700, fontSize: "0.9rem", margin: 0 }}>👁 Qui voit quoi</p>
-          <p style={{ marginTop: 6, fontSize: "0.87rem", color: "#3F4652", lineHeight: 1.5 }}>
+          <p style={{ marginTop: 6, fontSize: "0.87rem", color: "#4C3045", lineHeight: 1.5 }}>
             Vos photos ne sont visibles que via ce lien privé. Aucun autre participant de la sortie n&rsquo;y a accès.
           </p>
         </div>
-        <div style={{ border: "1px solid #E3E7EE", borderRadius: 16, padding: 16, background: "#F7F8FA" }}>
+        <div style={{ border: "1px solid #F2E2DA", borderRadius: 16, padding: 16, background: "#FFF7F2" }}>
           <p style={{ fontWeight: 700, fontSize: "0.9rem", margin: 0 }}>🗓 Rétention 90 jours</p>
-          <p style={{ marginTop: 6, fontSize: "0.87rem", color: "#3F4652", lineHeight: 1.5 }}>
+          <p style={{ marginTop: 6, fontSize: "0.87rem", color: "#4C3045", lineHeight: 1.5 }}>
             Vos photos personnelles sont conservées 90 jours sur nos serveurs, puis supprimées automatiquement.
           </p>
         </div>
-        <div style={{ border: "1px solid #E3E7EE", borderRadius: 16, padding: 16, background: "#F7F8FA" }}>
+        <div style={{ border: "1px solid #F2E2DA", borderRadius: 16, padding: 16, background: "#FFF7F2" }}>
           <p style={{ fontWeight: 700, fontSize: "0.9rem", margin: 0 }}>🔒 Sous-traitants</p>
-          <p style={{ marginTop: 6, fontSize: "0.87rem", color: "#3F4652", lineHeight: 1.5 }}>
+          <p style={{ marginTop: 6, fontSize: "0.87rem", color: "#4C3045", lineHeight: 1.5 }}>
             {operator.name} utilise Stripe (paiement), Supabase (stockage) et Twilio (WhatsApp) pour vous livrer et vous vendre vos photos.
           </p>
         </div>
@@ -54,10 +54,10 @@ export default async function PrivacyPage({ params }: { params: { token: string 
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 999,
-          border: "1px solid #E3E7EE",
+          border: "1px solid #F2E2DA",
           fontSize: "0.9rem",
           fontWeight: 600,
-          color: "#191D24",
+          color: "#2A1022",
           textDecoration: "none",
         }}
       >
@@ -71,7 +71,7 @@ export default async function PrivacyPage({ params }: { params: { token: string 
           display: "block",
           textAlign: "center",
           fontSize: "0.85rem",
-          color: "#6B7380",
+          color: "#806A76",
           textDecoration: "underline",
         }}
       >

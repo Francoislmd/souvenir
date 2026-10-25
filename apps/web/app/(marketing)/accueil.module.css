@@ -1,22 +1,22 @@
-/* Accueil façon Payfit (24/10/2026), porté depuis le canvas Claude Design
-   « Landing façon Payfit, design system ». Design system Océan : Inter,
-   bleu #1A55D6, neutres bleutés, couleurs secondaires réservées aux fonds. */
+/* Accueil façon Payfit (24/10/2026), design system Corail depuis le 25/10/2026, porté depuis le canvas Claude Design
+   « Landing façon Payfit, design system ». Design system Corail : Inter,
+   boutons aubergine, accent corail #E8553B, neutres chauds, fonds pêche. */
 
 .page {
-  --blue: #1a55d6;
-  --blue-600: #1544ac;
-  --navy: #0e2e75;
-  --ink: #191d24;
-  --ink-2: #3f4652;
-  --ink-3: #4b5361;
-  --ink-4: #6b7380;
-  --line: #e3e7ee;
-  --line-strong: #cbd1da;
-  --soft: #f7f8fa;
-  --ocean-50: #eef4ff;
-  --ocean-100: #d9e6ff;
+  --blue: #E8553B;
+  --blue-600: #C23A2A;
+  --navy: #3A1530;
+  --ink: #2A1022;
+  --ink-2: #4C3045;
+  --ink-3: #5E4757;
+  --ink-4: #806A76;
+  --line: #F2E2DA;
+  --line-strong: #E8D2C9;
+  --soft: #FFF7F2;
+  --ocean-50: #FFEFE7;
+  --ocean-100: #FCDCCD;
   --soleil: #ffedc2;
-  --lagon: #cdeeee;
+  --lagon: #FDE1E4;
   --gutter: clamp(12px, 8.9vw, 128px);
   font-family: var(--lt-font), system-ui, sans-serif;
   color: var(--ink);
@@ -51,12 +51,13 @@
   cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease;
 }
+/* Design system Corail : boutons pleins en aubergine, le corail reste un accent. */
 .primary {
-  background: var(--blue);
+  background: var(--ink);
   color: #ffffff;
 }
 .primary:hover {
-  background: var(--blue-600);
+  background: var(--navy);
 }
 .secondary {
   background: #ffffff;
@@ -200,9 +201,17 @@
 }
 .grid {
   background-color: var(--ocean-50);
-  background-image: linear-gradient(rgba(26, 85, 214, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 85, 214, 0.07) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(232, 85, 59, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 85, 59, 0.07) 1px, transparent 1px);
   background-size: 150px 150px;
+}
+.peach {
+  background-color: #fbd9c9;
+  background-image: linear-gradient(rgba(232, 85, 59, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 85, 59, 0.09) 1px, transparent 1px),
+    radial-gradient(120% 90% at 0% 0%, #f6a88f 0%, rgba(246, 168, 143, 0) 60%),
+    radial-gradient(100% 80% at 100% 100%, #f7b6b9 0%, rgba(247, 182, 185, 0) 60%);
+  background-size: 150px 150px, 150px 150px, 100% 100%, 100% 100%;
 }
 .heroLeft {
   display: flex;
@@ -350,7 +359,7 @@
 .payBtn {
   height: 48px;
   border-radius: 999px;
-  background: var(--blue);
+  background: var(--ink);
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
@@ -538,7 +547,7 @@
 .mock {
   background: #ffffff;
   border-radius: 14px;
-  border: 1px solid rgba(25, 29, 36, 0.14);
+  border: 1px solid rgba(42, 16, 34, 0.14);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -546,7 +555,7 @@
   font-size: 12px;
 }
 .drop {
-  border: 2px dashed #bcc3cd;
+  border: 2px dashed #DCC6BE;
   border-radius: 10px;
   height: 70px;
   display: flex;
@@ -662,7 +671,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #f1f3f6;
+  background: #FCEEE7;
   color: var(--ink-3);
   display: flex;
   align-items: center;
@@ -750,7 +759,7 @@
 .visCard {
   background: #ffffff;
   border-radius: 14px;
-  border: 1px solid rgba(25, 29, 36, 0.12);
+  border: 1px solid rgba(42, 16, 34, 0.12);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -803,7 +812,7 @@
 }
 .miniBtn {
   align-self: flex-start;
-  background: var(--blue);
+  background: var(--ink);
   color: #ffffff;
   border-radius: 999px;
   padding: 8px 16px;
@@ -816,7 +825,7 @@
   gap: 16px;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f1f3f6;
+  border-bottom: 1px solid #FCEEE7;
 }
 .saleRow span:nth-child(2) {
   color: var(--ink-4);
@@ -876,7 +885,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(14, 46, 117, 0.25) 0%, rgba(14, 46, 117, 0.65) 100%);
+  background: linear-gradient(180deg, rgba(58, 21, 48, 0.25) 0%, rgba(58, 21, 48, 0.65) 100%);
 }
 .playBtn {
   position: relative;
@@ -1063,7 +1072,7 @@
   justify-content: center;
   text-align: center;
   padding: 56px 48px;
-  background: linear-gradient(180deg, rgba(14, 46, 117, 0.45) 0%, rgba(10, 20, 40, 0.7) 100%),
+  background: linear-gradient(180deg, rgba(58, 21, 48, 0.45) 0%, rgba(10, 20, 40, 0.7) 100%),
     url(/landing-payfit/citation-jet-ski.webp) center 50% / cover no-repeat;
   color: #ffffff;
 }
@@ -1240,7 +1249,7 @@
   padding: 9px 9px 30px;
   background: #ffffff;
   border-radius: 6px;
-  border: 1px solid rgba(25, 29, 36, 0.08);
+  border: 1px solid rgba(42, 16, 34, 0.08);
 }
 .pol span {
   display: block;
@@ -1452,7 +1461,7 @@
     height: 44px;
     padding: 0 16px;
     border-radius: 999px;
-    background: var(--blue);
+    background: var(--ink);
     color: #ffffff;
     font-size: 15px;
   }

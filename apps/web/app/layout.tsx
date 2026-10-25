@@ -9,7 +9,7 @@ import "@/styles/tokens.css";
 
 // Les variables --font-bricolage / --font-space-grotesk sont conservées pour
 // ne pas casser tous les composants qui les référencent déjà.
-// Design system Océan (17/10/2026) : une seule famille, Inter, titres en 800.
+// Design system Corail (25/10/2026, ex-Océan) : une seule famille, Inter, titres en 800.
 // La variable --font-bricolage garde son nom historique mais pointe sur Inter.
 const interTight = Inter({
   subsets: ["latin"],

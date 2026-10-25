@@ -25,13 +25,13 @@ export default function DeleteRequestPage() {
               <path d="M20 6 9 17l-5-5" />
             </svg>
           </div>
-          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginTop: 20, color: "#191D24" }}>Vos photos ont été supprimées</h1>
-          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#6B7380" }}>Ce lien n&rsquo;est plus valide.</p>
+          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginTop: 20, color: "#2A1022" }}>Vos photos ont été supprimées</h1>
+          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#806A76" }}>Ce lien n&rsquo;est plus valide.</p>
         </>
       ) : (
         <>
-          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, color: "#191D24" }}>Supprimer vos photos ?</h1>
-          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#6B7380", lineHeight: 1.5 }}>
+          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, color: "#2A1022" }}>Supprimer vos photos ?</h1>
+          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#806A76", lineHeight: 1.5 }}>
             Vos photos personnelles seront supprimées immédiatement et définitivement. Cette action est irréversible.
           </p>
           <button

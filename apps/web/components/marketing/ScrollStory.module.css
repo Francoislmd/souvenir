@@ -65,9 +65,9 @@
   background: var(--line-2);
   aspect-ratio: 3 / 4;
   box-shadow:
-    0 30px 60px -26px rgba(25, 29, 36, 0.34),
-    0 2px 10px -4px rgba(25, 29, 36, 0.1),
-    0 0 0 1px rgba(25, 29, 36, 0.05);
+    0 30px 60px -26px rgba(42, 16, 34, 0.34),
+    0 2px 10px -4px rgba(42, 16, 34, 0.1),
+    0 0 0 1px rgba(42, 16, 34, 0.05);
 }
 
 /* Vignette discrète : sans elle, une photo à bord clair (neige, ciel blanc) perd
@@ -127,8 +127,8 @@
   backdrop-filter: blur(22px) saturate(1.7);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    0 40px 80px -50px rgba(25, 29, 36, 0.55),
-    0 2px 12px -6px rgba(25, 29, 36, 0.12),
+    0 40px 80px -50px rgba(42, 16, 34, 0.55),
+    0 2px 12px -6px rgba(42, 16, 34, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
@@ -163,7 +163,7 @@
   width: min(200px, 38vw);
   height: 3px;
   border-radius: 999px;
-  background: rgba(25, 29, 36, 0.07);
+  background: rgba(42, 16, 34, 0.07);
   overflow: hidden;
 }
 .progressFill {

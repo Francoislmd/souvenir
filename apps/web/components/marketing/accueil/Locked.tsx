@@ -17,7 +17,7 @@ export function Locked({ src }: { src: string }) {
 
 export function CheckCircle() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191D24" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2A1022" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="9.5" />
       <path d="M8 12.3l2.7 2.7L16 9.7" />
     </svg>

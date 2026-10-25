@@ -68,8 +68,8 @@
 .pa .slab{background:var(--ink);color:#fff;border-radius:var(--r-slab);position:relative;overflow:hidden;}
 .pa .slab::before,
 .pa .slab::after{content:"";position:absolute;width:44%;aspect-ratio:1;border-radius:50%;filter:blur(10px);pointer-events:none;}
-.pa .slab::before{left:-10%;top:-64%;background:radial-gradient(closest-side,rgba(26, 85, 214,.20),transparent);}
-.pa .slab::after{right:-8%;bottom:-70%;background:radial-gradient(closest-side,rgba(91, 180, 255,.15),transparent);}
+.pa .slab::before{left:-10%;top:-64%;background:radial-gradient(closest-side,rgba(212, 68, 44,.20),transparent);}
+.pa .slab::after{right:-8%;bottom:-70%;background:radial-gradient(closest-side,rgba(255, 162, 127,.15),transparent);}
 .pa .slab > *{position:relative;z-index:1;}
 .pa .card{background:#fff;border:1px solid var(--line);border-radius:var(--r-card);}
 
@@ -99,14 +99,14 @@
 .pa .hero__panel{min-width:0;border-radius:var(--r-card);position:relative;overflow:hidden;min-height:470px;background:var(--ink);}
 .pa .hero__photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .pa .hero__panel::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(to top, rgba(25, 29, 36,.24), transparent 42%);
-  box-shadow:inset 0 0 0 1px rgba(25, 29, 36,.06);border-radius:inherit;}
+  background:linear-gradient(to top, rgba(42, 16, 34,.24), transparent 42%);
+  box-shadow:inset 0 0 0 1px rgba(42, 16, 34,.06);border-radius:inherit;}
 .pa .hero__prot{position:absolute;inset:0;clip-path:inset(0 0 0 50%);}
-.pa .hero__prot::after{content:"";position:absolute;inset:0;background:rgba(25, 29, 36,.22);}
+.pa .hero__prot::after{content:"";position:absolute;inset:0;background:rgba(42, 16, 34,.22);}
 .pa .hero__seam{position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(255,255,255,.42);}
 .pa .hero__lock{position:absolute;z-index:3;top:50%;left:50%;transform:translate(-50%,-50%);
   width:clamp(62px,5vw,80px);height:clamp(62px,5vw,80px);border-radius:50%;display:grid;place-items:center;
-  background:rgba(25, 29, 36,.5);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.22);}
+  background:rgba(42, 16, 34,.5);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.22);}
 .pa .hero__lock svg{width:44%;height:44%;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 .pa .hero__legend{position:absolute;z-index:3;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;
   font-family:var(--font-inter-tight), system-ui, sans-serif;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
@@ -124,7 +124,7 @@
 .pa .scWmRow:nth-child(even){transform:translateX(58px);}
 .pa .scWm span{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-inter-tight), system-ui, sans-serif;
   font-weight:800;font-size:12.5px;letter-spacing:.2em;color:rgba(255,255,255,.5);
-  text-shadow:0 1px 2px rgba(25, 29, 36,.4);white-space:nowrap;}
+  text-shadow:0 1px 2px rgba(42, 16, 34,.4);white-space:nowrap;}
 .pa .scWm svg{width:13px;height:13px;flex:none;}
 /* Sur une carte de mode, le filigrane est une texture derrière le nom du mode. */
 .pa .scWm--s{gap:26px;}
@@ -204,13 +204,13 @@
 .pa .modeShot > img{width:100%;height:100%;object-fit:cover;}
 /* Le dégradé bas porte le nom du mode ; il ne sert qu'à ça. */
 .pa .modeShot::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(to top,rgba(25, 29, 36,.64),rgba(25, 29, 36,.04) 54%);}
-.pa .modeVeil{position:absolute;inset:0;z-index:2;background:rgba(25, 29, 36,.08);}
+  background:linear-gradient(to top,rgba(42, 16, 34,.64),rgba(42, 16, 34,.04) 54%);}
+.pa .modeVeil{position:absolute;inset:0;z-index:2;background:rgba(42, 16, 34,.08);}
 .pa .modeShot .scWm{z-index:3;}
 .pa .modeTag{position:absolute;z-index:4;right:clamp(15px,1.8vw,22px);top:clamp(15px,1.8vw,22px);
   font-family:var(--font-inter-tight), system-ui, sans-serif;font-size:13px;font-weight:800;color:#fff;
   background:var(--sunset);padding:10px 16px;border-radius:99px;white-space:nowrap;}
-.pa .modeTag--ink{background:rgba(25, 29, 36,.72);backdrop-filter:blur(6px);}
+.pa .modeTag--ink{background:rgba(42, 16, 34,.72);backdrop-filter:blur(6px);}
 .pa .modeName{position:absolute;z-index:4;left:clamp(18px,2vw,26px);bottom:clamp(16px,1.8vw,22px);
   display:flex;align-items:center;gap:12px;color:#fff;}
 .pa .modeName h3{font-family:var(--font-inter-tight), system-ui, sans-serif;font-size:clamp(20px,1.2vw + .4vh,25px);font-weight:800;letter-spacing:-.02em;}
@@ -218,7 +218,7 @@
   background:rgba(255,255,255,.16);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.24);}
 .pa .modeIco svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .pa .modeLock{position:absolute;z-index:4;right:clamp(15px,1.8vw,22px);bottom:clamp(15px,1.8vw,22px);
-  width:46px;height:46px;border-radius:50%;background:rgba(25, 29, 36,.55);backdrop-filter:blur(8px);
+  width:46px;height:46px;border-radius:50%;background:rgba(42, 16, 34,.55);backdrop-filter:blur(8px);
   border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;}
 .pa .modeLock svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 .pa .modeTxt{padding:clamp(22px,2vw,30px);display:flex;flex-direction:column;flex:1;}

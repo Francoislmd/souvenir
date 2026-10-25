@@ -148,7 +148,7 @@ export function Solution() {
               <div className={s.brandRow}>
                 <span className={s.logoBox}>LOGO</span>
                 <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span style={{ color: "#6B7380", fontSize: 12 }}>Nom affiché</span>
+                  <span style={{ color: "#806A76", fontSize: 12 }}>Nom affiché</span>
                   <strong style={{ fontSize: 15 }}>{p.brand}</strong>
                 </span>
               </div>

@@ -8,17 +8,17 @@
 
 export const brand = {
   // couleurs — mêmes valeurs que apps/web/styles/tokens.css
-  ink: "#191D24",
-  ink2: "#3F4652",
-  ink3: "#6B7380",
-  ink4: "#A3AAB5",
-  line: "#E3E7EE",
-  line2: "#F1F3F6",
-  soft: "#EEF4FF",
-  paper: "#F1F3F6",
+  ink: "#2A1022",
+  ink2: "#4C3045",
+  ink3: "#806A76",
+  ink4: "#BCA7AF",
+  line: "#F2E2DA",
+  line2: "#FCEEE7",
+  soft: "#FFEFE7",
+  paper: "#FCEEE7",
   white: "#FFFFFF",
-  orange: "#1A55D6", // bleu Océan (17/10/2026), nom de clé historique ; remplace le dégradé en email
-  orangeInk: "#1544AC",
+  orange: "#D4442C", // corail du design system Corail (25/10/2026), nom de clé historique ; remplace le dégradé en email
+  orangeInk: "#B8361F",
   aqua: "#2AA6A4",
   ok: "#1E7B3A",
   okSoft: "#E6F4EA",

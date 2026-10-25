@@ -5,12 +5,12 @@ import s from "@/app/(marketing)/accueil.module.css";
 
 /* « La prise en main » : trois étapes en accordéon horizontal. L'étape
    ouverte s'élargit et montre un visuel produit. */
-const BG = ["#F7F8FA", "#CDEEEE", "#FFEDC2"];
+const BG = ["#FFF7F2", "#FDE1E4", "#FFEDC2"];
 
 function Check() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
-      <circle cx="12" cy="12" r="11" fill="#191D24" />
+      <circle cx="12" cy="12" r="11" fill="#2A1022" />
       <path d="M7.5 12.3l3 3 6-6.3" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -41,7 +41,7 @@ const STEPS = [
             LOGO
           </span>
           <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ color: "#6B7380", fontSize: 11 }}>Nom affiché</span>
+            <span style={{ color: "#806A76", fontSize: 11 }}>Nom affiché</span>
             <strong>Votre structure</strong>
           </span>
         </div>
@@ -73,12 +73,12 @@ const STEPS = [
           <Check />
           Compte bancaire ajouté
         </div>
-        <div className={s.okRow} style={{ background: "#F7F8FA", justifyContent: "space-between" }}>
+        <div className={s.okRow} style={{ background: "#FFF7F2", justifyContent: "space-between" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className={s.ring} />
             Activer les paiements
           </span>
-          <span style={{ color: "#6B7380" }}>›</span>
+          <span style={{ color: "#806A76" }}>›</span>
         </div>
         <span className={s.miniBtn}>Connecter Stripe</span>
       </div>

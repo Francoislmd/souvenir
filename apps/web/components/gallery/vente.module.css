@@ -177,7 +177,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.92);
-  border: 1.5px solid #cbd1da;
+  border: 1.5px solid #E8D2C9;
   color: transparent;
   pointer-events: none;
 }
@@ -230,8 +230,8 @@
   flex-direction: column;
   gap: 16px;
   box-shadow:
-    0 1px 2px rgba(25, 29, 36, 0.04),
-    0 12px 32px -16px rgba(25, 29, 36, 0.18);
+    0 1px 2px rgba(42, 16, 34, 0.04),
+    0 12px 32px -16px rgba(42, 16, 34, 0.18);
 }
 .panelHead {
   display: flex;
@@ -374,7 +374,7 @@
 
 /* ── Footer ─────────────────────────────────────────────────────────── */
 .foot {
-  background: #f7f8fa;
+  background: #FFF7F2;
   border-top: 1px solid var(--line);
 }
 .footIn {

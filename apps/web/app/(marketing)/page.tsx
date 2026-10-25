@@ -13,7 +13,7 @@ import { Steps } from "@/components/marketing/accueil/Steps";
 import s from "./accueil.module.css";
 
 /* Accueil façon Payfit, refonte du 24/10/2026 : portée depuis le canvas
-   Claude Design « Landing façon Payfit, design system » (bleu Océan).
+   Claude Design « Landing façon Payfit, design system » (design system Corail depuis le 25/10/2026).
    L'accueil précédent (landing-v2.module.css, commit 5f26a7c) reste dans
    l'historique git ; ses composants LogoOcean et landing-data sont réutilisés. */
 
@@ -64,7 +64,7 @@ const POLAROIDS: [string, "left" | "right", string, number, number, number, stri
 
 function Doodle({ children }: { children: React.ReactNode }) {
   return (
-    <svg className={s.doodle} width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="#191D24" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={s.doodle} width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="#2A1022" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
@@ -105,7 +105,7 @@ export default function HomePage() {
         {/* 1. Hero : texte sur grille à gauche, vidéo et téléphone à droite */}
         <div className={s.top}>
           <section className={s.hero}>
-            <div className={`${s.heroLeft} ${s.grid}`}>
+            <div className={`${s.heroLeft} ${s.peach}`}>
               <p className={s.heroEyebrow}>Activités outdoor</p>
               <h1 className={s.h1}>Monétisez vos photos. Automatisez vos ventes.</h1>
               <p className={s.lead}>
@@ -234,7 +234,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className={s.tile} style={{ background: "linear-gradient(135deg, #F4F2FC 0%, #FFFFFF 55%, #ECF8F8 100%)" }}>
+              <div className={s.tile} style={{ background: "linear-gradient(135deg, #F4F2FC 0%, #FFFFFF 55%, #FFF1EA 100%)" }}>
                 <Doodle>
                   <rect x="8" y="14" width="26" height="19" rx="3" />
                   <path d="M8 16l13 9 13-9" />
@@ -248,7 +248,7 @@ export default function HomePage() {
                     {[
                       ["lea@…", "Envoyé", "#ECE9F9", "#4B3FA0"],
                       ["tom@…", "Ouvert", "#FFEDC2", "#7A4B00"],
-                      ["+33 6 …", "Payé", "#E2F4F3", "#136B6A"],
+                      ["+33 6 …", "Payé", "#FDE1E4", "#B23A52"],
                       ["ines@…", "Payé", "#E6F4EA", "#1E7B3A"],
                     ].map(([who, st, bg, fg]) => (
                       <div key={who} className={s.status}>
@@ -273,7 +273,7 @@ export default function HomePage() {
 
             <div className={s.row3}>
               <div className={s.photoTile} role="img" aria-label="Deux pilotes de jet ski sur la mer" style={{ backgroundImage: `url(${M("jet-ski")})`, backgroundPosition: "center 48%" }} />
-              <div className={s.tile} style={{ background: "#CDEEEE", justifyContent: "center" }}>
+              <div className={s.tile} style={{ background: "#FDE1E4", justifyContent: "center" }}>
                 <Doodle>
                   <rect x="7" y="13" width="30" height="20" rx="3" />
                   <path d="M7 19h30M12 27h7" />
@@ -342,13 +342,13 @@ export default function HomePage() {
                 className={`${s.whyCard} ${s.whyPhoto}`}
                 style={{
                   backgroundImage:
-                    "linear-gradient(180deg, rgba(14,46,117,0.92) 0%, rgba(14,46,117,0.55) 45%, rgba(14,46,117,0.05) 100%), url(/landing/immersive/rafting-eaux-vives.webp)",
+                    "linear-gradient(180deg, rgba(58, 21, 48,0.92) 0%, rgba(58, 21, 48,0.55) 45%, rgba(58, 21, 48,0.05) 100%), url(/landing/immersive/rafting-eaux-vives.webp)",
                 }}
               >
                 <h3>Ils gagnent du temps</h3>
                 <p>Linktrip automatise l’envoi des photos et leur mise en vente. Plus besoin de gérer les transferts, les clés USB ou les paiements manuellement.</p>
               </div>
-              <div className={s.whyCard} style={{ background: "#EEF4FF" }}>
+              <div className={s.whyCard} style={{ background: "#FFEFE7" }}>
                 <h3>Ils génèrent des revenus en plus</h3>
                 <p>Vos clients retrouvent leurs photos en ligne et les achètent à l’unité ou en pack. Vos photos restent disponibles à la vente, même après l’activité.</p>
                 <div className={s.statRow}>
@@ -356,14 +356,14 @@ export default function HomePage() {
                     <span className={s.statLabel}>Vos photos en vente</span>
                     <strong className={s.statValue}>24 h/24</strong>
                   </div>
-                  <svg className={s.doodle} width="64" height="52" viewBox="0 0 64 52" fill="none" stroke="#1A55D6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg className={s.doodle} width="64" height="52" viewBox="0 0 64 52" fill="none" stroke="#E8553B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M4 46 L58 20 L22 30 Z" />
                     <path d="M22 30 L30 44 L58 20" />
                     <path d="M44 6 L46 12 M52 8 L49 13 M58 14 L52 16" />
                   </svg>
                 </div>
               </div>
-              <div className={s.whyCard} style={{ background: "#D9E6FF" }}>
+              <div className={s.whyCard} style={{ background: "#FCDCCD" }}>
                 <h3>Ils développent leur visibilité</h3>
                 <p>Chaque galerie met votre entreprise en avant. Lorsque vos clients partagent leurs souvenirs, ils contribuent aussi à faire connaître votre activité.</p>
                 <div className={s.statRow}>
@@ -371,7 +371,7 @@ export default function HomePage() {
                     <span className={s.statLabel}>Votre marque sur chaque galerie</span>
                     <strong className={s.statValue}>@votreentreprise</strong>
                   </div>
-                  <svg className={s.doodle} width="44" height="38" viewBox="0 0 60 52" fill="none" stroke="#1A55D6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg className={s.doodle} width="44" height="38" viewBox="0 0 60 52" fill="none" stroke="#E8553B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="6" y="14" width="44" height="30" rx="6" />
                     <path d="M18 14 L22 7 H34 L38 14" />
                     <circle cx="28" cy="29" r="9" />
@@ -412,7 +412,7 @@ export default function HomePage() {
               <Link href="/produit#demo" className={s.demoPlayer} style={{ backgroundImage: "url(/landing-payfit/hero-poster.webp)" }} aria-label="Lancer la démo produit">
                 <span className={s.playBtn} aria-hidden="true">
                   <svg width="30" height="30" viewBox="0 0 24 24" style={{ marginLeft: 4 }}>
-                    <path d="M7 4.5v15l12.5-7.5z" fill="#1A55D6" />
+                    <path d="M7 4.5v15l12.5-7.5z" fill="#E8553B" />
                   </svg>
                 </span>
                 <span className={s.demoTag}>
@@ -506,7 +506,7 @@ export default function HomePage() {
 
         {/* 11. Rejoindre (polaroïds) */}
         <section style={{ padding: "40px 24px 88px" }}>
-          <div className={`${s.join} ${s.grid}`}>
+          <div className={`${s.join} ${s.peach}`}>
             {POLAROIDS.map(([img, side, x, top, w, rot, cls]) => (
               <span key={img + side} className={`${s.pol} ${cls}`} aria-hidden="true" style={{ ...(side === "left" ? { left: x } : { right: x }), top, width: w, transform: `rotate(${rot}deg)` }}>
                 <span style={{ backgroundImage: `url(${M(img)})` }} />
@@ -592,14 +592,14 @@ export default function HomePage() {
             </span>
             <span className={s.seals}>
               <span className={s.seal}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A55D6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8553B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="5" y="11" width="14" height="9" rx="2.5" />
                   <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                 </svg>
                 Paiement sécurisé par Stripe
               </span>
               <span className={s.seal}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A55D6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8553B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z" />
                   <path d="M9 12l2 2 4-4" />
                 </svg>

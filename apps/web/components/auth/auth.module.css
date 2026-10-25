@@ -3,7 +3,7 @@
    remises à zéro passent par :where() pour ne jamais écraser une classe. */
 
 .auth {
-  --paper: #F7F8FA;
+  --paper: #FFF7F2;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -282,7 +282,7 @@
   margin-top: 11px;
 }
 .auth .ghost:hover {
-  background: #E3E7EE;
+  background: #F2E2DA;
 }
 
 .msg {

@@ -85,7 +85,7 @@ export function WhyLinktrip() {
             className={`${styles.row} reveal`}
             style={
               {
-                "--glow": "radial-gradient(closest-side,rgba(26, 85, 214,.30),transparent)",
+                "--glow": "radial-gradient(closest-side,rgba(212, 68, 44,.30),transparent)",
               } as CSSProperties
             }
           >
@@ -130,7 +130,7 @@ export function WhyLinktrip() {
             className={`${styles.row} reveal`}
             style={
               {
-                "--glow": "radial-gradient(closest-side,rgba(91, 180, 255,.28),transparent)",
+                "--glow": "radial-gradient(closest-side,rgba(255, 162, 127,.28),transparent)",
               } as CSSProperties
             }
           >
@@ -258,7 +258,7 @@ export function WhyLinktrip() {
             className={`${styles.row} reveal`}
             style={
               {
-                "--glow": "radial-gradient(closest-side,rgba(91, 180, 255,.26),transparent)",
+                "--glow": "radial-gradient(closest-side,rgba(255, 162, 127,.26),transparent)",
               } as CSSProperties
             }
           >

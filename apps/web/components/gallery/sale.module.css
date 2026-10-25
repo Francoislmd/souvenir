@@ -45,8 +45,8 @@
 }
 /* Rien à envoyer : un bouton éteint, pas la couleur du prestataire délavée. */
 .cta:disabled:not([aria-busy="true"]) {
-  background: var(--line-2, #F1F3F6);
-  color: var(--ink-4, #A3AAB5);
+  background: var(--line-2, #FCEEE7);
+  color: var(--ink-4, #BCA7AF);
   cursor: default;
 }
 /* En cours : le bouton garde sa couleur et sa largeur, la moulinette
@@ -188,7 +188,7 @@
 .bareOrg .orgLogo:has(img),
 .topLogo:has(img) {
   background: #fff;
-  box-shadow: inset 0 0 0 1px rgba(25, 29, 36, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(42, 16, 34, 0.08);
 }
 .orgLogo img,
 .topLogo img {
@@ -269,7 +269,7 @@
   width: 100%;
   height: 52px;
   padding: 0 15px;
-  border: 1px solid #CBD1DA;
+  border: 1px solid #E8D2C9;
   border-radius: 14px;
   background: #fff;
   font-family: inherit;
@@ -679,7 +679,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: #191D24;
+  background: #2A1022;
 }
 /* Le cadenas de l'aperçu, au centre de la grande photo. */
 .tileLock {
@@ -725,7 +725,7 @@
   padding: 0 13px 0 11px;
   border: 1.5px solid rgba(255, 255, 255, 0.92);
   border-radius: 99px;
-  background: rgba(25, 29, 36, 0.38);
+  background: rgba(42, 16, 34, 0.38);
   color: #fff;
   font-family: inherit;
   font-size: 0.84rem;
@@ -931,7 +931,7 @@
   margin-top: 12px;
   border-radius: 99px;
   overflow: hidden;
-  background: #E3E7EE;
+  background: #F2E2DA;
 }
 .gauge i {
   position: absolute;
@@ -1365,7 +1365,7 @@
   gap: 10px;
   height: 54px;
   padding: 0 16px;
-  border: 1px solid #CBD1DA;
+  border: 1px solid #E8D2C9;
   border-radius: 14px;
   background: #fff;
   transition: border-color 0.15s;

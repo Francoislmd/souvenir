@@ -145,7 +145,7 @@ export function Parcours() {
           </div>
           <div className="shot">
             <div className="shot__win" data-anim="sortie">
-              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#6B7380" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#6B7380" stroke="none" /></svg><span>Sorties</span><em>Semaine du 11 août</em></div>
+              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#806A76" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#806A76" stroke="none" /></svg><span>Sorties</span><em>Semaine du 11 août</em></div>
               <div className="shot__body">
                 <div className="scene">
                   <div className="scSess">
@@ -179,7 +179,7 @@ export function Parcours() {
           </div>
           <div className="shot">
             <div className="shot__win" data-anim="depot">
-              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#6B7380" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#6B7380" stroke="none" /></svg><span>Sortie du 12 août · Canyoning</span><em>42 photos</em></div>
+              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#806A76" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#806A76" stroke="none" /></svg><span>Sortie du 12 août · Canyoning</span><em>42 photos</em></div>
               <div className="shot__body">
                 <div className="scene">
 
@@ -231,7 +231,7 @@ export function Parcours() {
           </div>
           <div className="shot">
             <div className="shot__win" data-anim="protection">
-              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#6B7380" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#6B7380" stroke="none" /></svg><span>Galerie du client</span><em className="scSwap"><span className="scLbl scLblA">Aperçu protégé</span><span className="scLbl scLblB">Fichier livré</span></em></div>
+              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#806A76" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#806A76" stroke="none" /></svg><span>Galerie du client</span><em className="scSwap"><span className="scLbl scLblA">Aperçu protégé</span><span className="scLbl scLblB">Fichier livré</span></em></div>
               <div className="shot__body" style={{ padding: "0" }}>
                 <div className="scene">
                   <div className="scProt">
@@ -261,7 +261,7 @@ export function Parcours() {
           </div>
           <div className="shot">
             <div className="shot__win" data-anim="boutique">
-              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#6B7380" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#6B7380" stroke="none" /></svg><span>Réglages · Boutique</span><em className="scSwap"><span className="scLbl scOnA">Brouillon</span><span className="scLbl scOnB">En ligne</span></em></div>
+              <div className="shot__top"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="#806A76" strokeWidth="10" strokeLinecap="round"><path d="M58 20 H36 A16 16 0 0 0 20 36 V64 A16 16 0 0 0 36 80 H64 A16 16 0 0 0 80 64 V42" /><circle cx="73" cy="27" r="10" fill="#806A76" stroke="none" /></svg><span>Réglages · Boutique</span><em className="scSwap"><span className="scLbl scOnA">Brouillon</span><span className="scLbl scOnB">En ligne</span></em></div>
               <div className="shot__body">
                 <div className="scene">
                   <div className="scShop">

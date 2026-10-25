@@ -13,9 +13,9 @@
   width: 100%;
   max-width: 640px;
   background: #fff;
-  border: 1px solid rgba(25, 29, 36, 0.1);
+  border: 1px solid rgba(42, 16, 34, 0.1);
   border-radius: 18px;
-  box-shadow: 0 18px 50px -18px rgba(25, 29, 36, 0.45);
+  box-shadow: 0 18px 50px -18px rgba(42, 16, 34, 0.45);
   padding: 18px 18px 16px;
   animation: rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -40,7 +40,7 @@
 .title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #191D24;
+  color: #2A1022;
   margin: 0 0 6px;
 }
 
@@ -77,9 +77,9 @@
 }
 
 .accept {
-  background: #191D24;
+  background: #2A1022;
   color: #fff;
-  border: 1px solid #191D24;
+  border: 1px solid #2A1022;
 }
 
 .accept:hover {
@@ -88,12 +88,12 @@
 
 .refuse {
   background: #fff;
-  color: #191D24;
-  border: 1px solid rgba(25, 29, 36, 0.18);
+  color: #2A1022;
+  border: 1px solid rgba(42, 16, 34, 0.18);
 }
 
 .refuse:hover {
-  background: rgba(25, 29, 36, 0.04);
+  background: rgba(42, 16, 34, 0.04);
 }
 
 .link {
@@ -111,7 +111,7 @@
 
 .panel {
   margin-top: 14px;
-  border-top: 1px solid rgba(25, 29, 36, 0.08);
+  border-top: 1px solid rgba(42, 16, 34, 0.08);
   padding-top: 12px;
   display: grid;
   gap: 10px;
@@ -127,7 +127,7 @@
   margin-top: 3px;
   width: 16px;
   height: 16px;
-  accent-color: #191D24;
+  accent-color: #2A1022;
   flex: 0 0 auto;
 }
 
@@ -137,7 +137,7 @@
 
 .rowLabel {
   font-size: 0.8rem;
-  color: #191D24;
+  color: #2A1022;
   font-weight: 600;
   display: block;
 }

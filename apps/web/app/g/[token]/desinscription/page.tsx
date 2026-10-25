@@ -25,22 +25,22 @@ export default function UnsubscribePage() {
               <path d="M20 6 9 17l-5-5" />
             </svg>
           </div>
-          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginTop: 20, color: "#191D24" }}>Vous ne recevrez plus ces messages</h1>
-          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#6B7380" }}>
+          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginTop: 20, color: "#2A1022" }}>Vous ne recevrez plus ces messages</h1>
+          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#806A76" }}>
             Vous continuerez de recevoir l&rsquo;email de vos photos et votre reçu d&rsquo;achat, qui ne sont pas concernés.
           </p>
         </>
       ) : (
         <>
-          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, color: "#191D24" }}>Ne plus recevoir ces emails ?</h1>
-          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#6B7380", lineHeight: 1.5 }}>
+          <h1 style={{ fontFamily: "var(--font-bricolage), Inter, sans-serif", fontSize: "1.3rem", fontWeight: 700, color: "#2A1022" }}>Ne plus recevoir ces emails ?</h1>
+          <p style={{ marginTop: 8, fontSize: "0.9rem", color: "#806A76", lineHeight: 1.5 }}>
             Vous ne recevrez plus de relances ni d&rsquo;offres. L&rsquo;email de livraison de vos photos et votre reçu d&rsquo;achat continueront de vous être envoyés.
           </p>
           <button
             type="button"
             onClick={confirmUnsubscribe}
             disabled={loading}
-            style={{ marginTop: 24, height: 44, width: "100%", borderRadius: 999, border: "1px solid #191D24", background: "none", fontSize: "0.9rem", fontWeight: 600, color: "#191D24", opacity: loading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            style={{ marginTop: 24, height: 44, width: "100%", borderRadius: 999, border: "1px solid #2A1022", background: "none", fontSize: "0.9rem", fontWeight: 600, color: "#2A1022", opacity: loading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           >
             {loading ? (
               <>
