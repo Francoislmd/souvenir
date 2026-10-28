@@ -134,10 +134,11 @@
   align-items: start;
   padding-bottom: 56px;
 }
+/* Même espace entre la grande photo et les vignettes qu'entre les vignettes. */
 .show {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
 }
 .stage {
@@ -229,9 +230,9 @@
 
 .thumbs {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
-  padding: 4px 2px 6px;
+  padding: 0 0 4px;
   scrollbar-width: thin;
 }
 .thumb {
@@ -575,7 +576,7 @@
   }
   /* Vignettes carrées, plus grandes : on y reconnaît les visages. */
   .thumbs {
-    gap: 8px;
+    gap: 10px;
   }
   .thumb {
     width: 72px;

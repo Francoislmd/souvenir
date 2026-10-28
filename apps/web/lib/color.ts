@@ -19,7 +19,16 @@ export function buttonColor(hex: string, fallback: string = INK): string {
   return 1.05 / (luminance + 0.05) >= 3 ? `#${m[1]}` : fallback;
 }
 
-/** Les variables de couleur du cadre de page côté client : --op et --op-btn. */
-export function operatorVars(brandColor: string): CSSProperties {
-  return { "--op": brandColor, "--op-btn": buttonColor(brandColor) } as CSSProperties;
+/**
+ * Les variables de couleur du cadre de page côté client : --op (accents) et
+ * --op-btn (boutons pleins).
+ *
+ * Depuis le 28/10/2026, les pages client suivent le design system Corail,
+ * quelle que soit la couleur choisie par le prestataire : boutons aubergine,
+ * accents corail. La couleur du prestataire reste enregistrée (Réglages) ;
+ * pour la rebrancher, renvoyer brandColor et buttonColor(brandColor) ici.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- gardé pour rebrancher la couleur du pro
+export function operatorVars(_brandColor: string): CSSProperties {
+  return { "--op": "#E8553B", "--op-btn": "#2A1022" } as CSSProperties;
 }

@@ -259,7 +259,7 @@ export function PaymentSheet({
           )}
           .
         </p>
-        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe", variables: { borderRadius: "14px" } } }}>
+        <Elements stripe={stripePromise} options={{ clientSecret, locale: "fr", appearance: { theme: "stripe", variables: { borderRadius: "14px", colorPrimary: "#2A1022", colorText: "#2A1022", colorDanger: "#B42318", fontFamily: "Inter, system-ui, sans-serif" } } }}>
           <PaymentForm amountCents={amountCents} merchantName={merchantName} onSuccess={onSuccess} onClose={onClose} />
         </Elements>
         <div className={styles.fine}>
