@@ -130,7 +130,7 @@ export function PhotoPicker({
   const takesAll = all || n === total || capped;
   const off = !all && n === 0;
   const allLabel = total === 1 ? "Votre photo" : `Les ${total} photos`;
-  const recapLabel = all ? allLabel : `${n} photo${n > 1 ? "s" : ""}`;
+  const recapLabel = all || capped ? allLabel : `${n} photo${n > 1 ? "s" : ""}`;
   const recapPrice = eur2(all ? allCents : selCents);
 
   function pay(): void {
@@ -272,8 +272,9 @@ export function PhotoPicker({
             ) : null}
           </div>
 
+          {/* Une seule carte : la formule en deux lignes à cocher, le total,
+              le bouton. Pas de titre, pas de cartes empilées (28/10/2026). */}
           <aside className={v.panel} aria-label="Paiement">
-            <h2 className={v.panelTitle}>Choisissez votre formule</h2>
             <div className={v.formulas} role="radiogroup" aria-label="Formule">
               {formulas.map((f) => {
                 const on = f.id === "all" ? all : !all;
@@ -286,6 +287,7 @@ export function PhotoPicker({
                     className={`${v.formula} ${on ? v.formulaOn : ""}`}
                     onClick={() => setFormula(f.id)}
                   >
+                    <span className={v.radio} aria-hidden="true" />
                     <span className={v.formulaText}>
                       <span className={v.formulaName}>{f.name}</span>
                       <span className={v.formulaSub}>{f.sub}</span>
@@ -295,30 +297,20 @@ export function PhotoPicker({
                 );
               })}
             </div>
-            <div className={v.recap}>
-              <div className={v.recapHead}>
-                <span>{recapLabel}</span>
-                <strong className={v.price}>{recapPrice}</strong>
-              </div>
-              {!all && unitCents > 0 && n * unitCents > allCents ? (
-                <p className={v.hint}>
-                  Au-delà de {Math.floor(allCents / unitCents)} photos, la formule «&nbsp;Toutes les photos&nbsp;» revient moins cher&nbsp;: le prix est plafonné à {eur2(allCents)}.
-                </p>
-              ) : null}
-              {error ? <p className={styles.error}>{error}</p> : null}
-              {payButton(v.panelCta)}
-              <p className={v.safe}>
-                <span className={v.safeDot} aria-hidden="true" />
-                Paiement 100&nbsp;% sécurisé
-              </p>
-              <ul className={v.methods} aria-label="Moyens de paiement acceptés">
-                <li>CB</li>
-                <li>Visa</li>
-                <li>MC</li>
-                <li>A&nbsp;Pay</li>
-                <li>G&nbsp;Pay</li>
-              </ul>
+            <div className={v.total}>
+              <span>{recapLabel}</span>
+              <strong>{recapPrice}</strong>
             </div>
+            {capped ? <p className={v.hint}>Prix plafonné&nbsp;: toutes les photos sont incluses.</p> : null}
+            {error ? <p className={styles.error}>{error}</p> : null}
+            {payButton(v.panelCta)}
+            <p className={v.safe}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="9" rx="2.5" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+              </svg>
+              Carte, Apple Pay ou Google Pay
+            </p>
           </aside>
         </div>
       </div>

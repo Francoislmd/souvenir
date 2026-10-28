@@ -83,46 +83,25 @@
 
 /* ── Titre ──────────────────────────────────────────────────────────── */
 .head {
-  padding: 36px 0 24px;
+  padding: 32px 0 20px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 6px;
 }
 .title {
   margin: 0;
-  font-size: 2.1rem;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   font-weight: 600;
   text-wrap: balance;
 }
-.chips {
-  list-style: none;
-  margin: 4px 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.meta {
+  margin: 0;
+  font-size: 0.94rem;
+  color: var(--ink-3);
 }
-.chips li {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: #FFF7F2;
-  border: 1px solid var(--line);
-  font-size: 0.88rem;
-  color: var(--ink-2);
-  white-space: nowrap;
-}
-.chips svg {
-  flex-shrink: 0;
-  color: #E8553B;
-}
-
 /* ── Diaporama + panneau ────────────────────────────────────────────── */
 .layout {
   display: grid;
@@ -182,8 +161,7 @@
 }
 .lock {
   position: relative;
-  width: 10.7%;
-  min-width: 40px;
+  width: 44px;
   aspect-ratio: 1;
   pointer-events: none;
 }
@@ -271,99 +249,96 @@
   justify-content: center;
 }
 
-/* Panneau : la formule, puis le récapitulatif */
+/* Panneau : une seule carte, la formule, le total, le bouton */
 .panel {
   position: sticky;
   top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  padding: 8px 20px 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-.panelTitle {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  gap: 14px;
 }
 .formulas {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 .formula {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 18px 20px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: #fff;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
   font: inherit;
   color: var(--ink);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.formulaOn {
-  background: #FFF1EA;
-  border: 1.5px solid #E8553B;
+.radio {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1.5px solid #D9C3BA;
+  background: #fff;
+}
+.formulaOn .radio {
+  border: 5px solid #E8553B;
 }
 .formulaText {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 .formulaName {
-  font-size: 1.12rem;
+  font-size: 0.94rem;
   font-weight: 500;
 }
 .formulaSub {
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   color: var(--ink-3);
 }
 .formulaPrice {
-  font-size: 1.25rem;
+  font-size: 0.94rem;
   font-weight: 500;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.recap {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 20px;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.recapHead {
+.total {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 4px;
 }
-.recapHead span {
-  font-size: 0.94rem;
+.total span {
+  font-size: 0.88rem;
   color: var(--ink-3);
 }
-.price {
-  font-size: 1.9rem;
+.total strong {
+  font-size: 1.35rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .hint {
-  margin: 0;
-  font-size: 0.82rem;
+  margin: -6px 0 0;
+  font-size: 0.8rem;
   line-height: 1.45;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 .panel .panelCta {
   border-radius: 999px;
-  height: 52px;
+  height: 48px;
+  font-size: 0.94rem;
   font-weight: 500;
 }
 /* Le bouton de la maquette : aubergine, pêche quand il n'y a rien à commander. */
@@ -382,41 +357,13 @@
   color: #fff;
 }
 .safe {
-  margin: 0;
+  margin: -4px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 0.82rem;
+  gap: 6px;
+  font-size: 0.75rem;
   color: var(--ink-3);
-}
-.safeDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 99px;
-  background: var(--ok);
-}
-.methods {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.methods li {
-  width: 46px;
-  height: 30px;
-  border: 1px solid #E8D2C9;
-  border-radius: 5px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.62rem;
-  color: var(--ink-3);
-  white-space: nowrap;
 }
 
 /* Barre réduite (téléphone) */
@@ -469,7 +416,7 @@
 }
 .faq h2 {
   margin: 0 0 12px;
-  font-size: 1.25rem;
+  font-size: 1.06rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -609,15 +556,7 @@
     gap: 10px;
   }
   .title {
-    font-size: 1.56rem;
-  }
-  .chips {
-    gap: 6px;
-  }
-  .chips li {
-    height: 30px;
-    padding: 0 11px;
-    font-size: 0.82rem;
+    font-size: 1.35rem;
   }
   .layout {
     display: block;
