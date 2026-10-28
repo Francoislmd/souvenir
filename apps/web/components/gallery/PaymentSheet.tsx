@@ -240,7 +240,7 @@ export function PaymentSheet({
         <span className={styles.grab} />
         <div className={styles.sum}>
           <span>{label}</span>
-          <b>{formatEuros(amountCents)}</b>
+          <b>{(amountCents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2 })}</b>
         </div>
         {seller ? <p className={styles.vend}>Vendu par {seller.name}</p> : null}
         {/* La renonciation au droit de rétractation (L221-28 13°) se lit AVANT

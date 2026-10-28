@@ -1255,3 +1255,22 @@ a.topIn:focus-visible {
   background: #fff;
   color: #2A1022;
 }
+
+/* Sur ordinateur, la feuille de paiement devient une vraie modale : centrée
+   dans l'écran, plus large, coins arrondis partout, sans poignée (28/10/2026). */
+@media (min-width: 761px) {
+  .sheet {
+    align-items: center;
+    padding: 32px 24px;
+  }
+  .pn {
+    max-width: 600px;
+    max-height: calc(100vh - 64px);
+    border-radius: 24px;
+    padding: 32px 36px 28px;
+    box-shadow: 0 24px 64px -24px rgba(42, 16, 34, 0.35);
+  }
+  .grab {
+    display: none;
+  }
+}
