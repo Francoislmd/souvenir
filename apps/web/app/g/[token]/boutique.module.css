@@ -21,6 +21,9 @@
      pour simuler un téléphone : sur un ordinateur, les photos y étaient
      minuscules alors que c'est tout ce qu'on est venu voir. */
   min-height: 100vh;
+  /* Rien ne doit pouvoir faire glisser la page de côté sur téléphone.
+     `clip` et non `hidden` : la barre d'achat reste collée en bas. */
+  overflow-x: clip;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-space-grotesk), system-ui, -apple-system, sans-serif;

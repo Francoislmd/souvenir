@@ -483,6 +483,13 @@
   color: var(--ink);
   text-decoration: none;
 }
+/* Une adresse e-mail longue n'a pas d'espace où couper : sans ça, elle sort
+   de sa colonne et rend toute la page plus large que le téléphone. */
+.footCol a,
+.footCol span,
+.legal span {
+  overflow-wrap: anywhere;
+}
 .footCol a:hover {
   color: #E8553B;
 }
