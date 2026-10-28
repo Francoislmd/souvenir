@@ -98,9 +98,25 @@
   text-wrap: balance;
 }
 .meta {
-  margin: 0;
-  font-size: 0.94rem;
-  color: var(--ink-3);
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.meta svg {
+  flex-shrink: 0;
+  color: #E8553B;
 }
 /* ── Diaporama + panneau ────────────────────────────────────────────── */
 .layout {

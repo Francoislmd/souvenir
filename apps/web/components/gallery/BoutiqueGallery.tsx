@@ -385,7 +385,26 @@ export function BoutiqueGallery({
           <div className={v.head}>
             {bought ? <BackLink onClick={() => setBuyMore(false)} /> : null}
             <h1 className={v.title}>{photosOfDay(context.day, videoCount === pickable.length)}</h1>
-            <p className={v.meta}>{[context.place, upperFirst(countLabel)].filter(Boolean).join(" · ")}</p>
+            {/* Picto corail + texte, sans fond ni cadre (28/10/2026). */}
+            <ul className={v.meta}>
+              {context.place ? (
+                <li>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
+                    <circle cx="12" cy="10" r="2.3" />
+                  </svg>
+                  {context.place}
+                </li>
+              ) : null}
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2.5" />
+                  <circle cx="9" cy="10.5" r="1.8" />
+                  <path d="m21 16-5-5-8 8" />
+                </svg>
+                {upperFirst(countLabel)}
+              </li>
+            </ul>
           </div>
         }
         after={
