@@ -20,17 +20,20 @@ export interface PickerPhoto {
   timeLabel?: string | null;
 }
 
+type Formula = "unit" | "all";
+
 /**
- * La page de vente (canvas « Page de vente, design system », 22/10/2026) :
- * le titre, une grille de photos, et le paiement. Remplace le diaporama.
+ * La page de vente (canvas « Page de vente, design system Corail »,
+ * 28/10/2026) : un diaporama, une bande de vignettes, et à droite le choix
+ * de la formule puis le récapitulatif. Remplace la grille du 22/10.
  *
- * Toucher une photo la choisit ; la loupe l'ouvre en grand. En mode pack
- * seul, il n'y a rien à choisir : toucher une photo l'ouvre.
- * Le total monte à chaque photo et s'arrête au prix de toutes les photos
- * (lib/pricing.ts plafonne déjà) : la jauge rend ce plafond visible.
+ * Toucher la photo affichée la choisit (formule à l'unité) ; le bouton en
+ * haut à gauche l'ouvre en grand. En mode pack seul, rien à choisir :
+ * toucher la photo l'ouvre. Le total s'arrête au prix de toutes les photos
+ * (lib/pricing.ts plafonne déjà).
  *
- * Sur ordinateur, le panneau de paiement reste collé à droite de la
- * grille ; sur téléphone, une barre réduite reste en bas de l'écran.
+ * Aucun texte sur la photo : le filigrane est dans les pixels de l'aperçu,
+ * le reste vit sous l'image ou dans le panneau.
  */
 export function PhotoPicker({
   photos,
@@ -50,19 +53,30 @@ export function PhotoPicker({
   busy: boolean;
   /** Remise en cours (offre à durée limitée), appliquée à l'affichage comme au débit. */
   discount?: (cents: number) => number;
-  /** Le titre, au-dessus de la grille. */
+  /** Le titre, au-dessus du diaporama. */
   head: ReactNode;
-  /** Les questions et le pied de page, sous la grille. */
+  /** Les questions et le pied de page, sous la page. */
   after?: ReactNode;
   onCheckout: (photoIds: string[]) => void;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [cur, setCur] = useState(0);
+  const [formula, setFormula] = useState<Formula>(packOnly ? "all" : "unit");
   const [zoom, setZoom] = useState<number | null>(null);
   const zoomRef = useRef<number | null>(null);
   zoomRef.current = zoom;
+  const stripRef = useRef<HTMLDivElement>(null);
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
 
   const total = photos.length;
   const allIds = photos.map((p) => p.id);
+  const at = total > 0 ? Math.min(cur, total - 1) : 0;
+  const current = photos[at];
+
+  function go(i: number): void {
+    if (total === 0) return;
+    setCur((i + total) % total);
+  }
 
   function toggle(id: string): void {
     if (packOnly) return;
@@ -70,76 +84,61 @@ export function PhotoPicker({
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setSelected(next);
+    // Choisir une photo, c'est choisir la formule à l'unité.
+    setFormula("unit");
   }
+
+  // La vignette en cours reste visible dans la bande, sans faire sauter la page.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const thumb = strip?.children[at] as HTMLElement | undefined;
+    if (!strip || !thumb) return;
+    const left = thumb.offsetLeft - strip.clientWidth / 2 + thumb.clientWidth / 2;
+    strip.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [at]);
 
   useEffect(() => {
     if (zoom === null) return;
     function onKeyDown(e: KeyboardEvent): void {
-      const at = zoomRef.current;
-      if (at === null) return;
+      const z = zoomRef.current;
+      if (z === null) return;
       if (e.key === "Escape") closeZoom();
-      if (e.key === "ArrowLeft") setZoom((at - 1 + total) % total);
-      if (e.key === "ArrowRight") setZoom((at + 1) % total);
+      if (e.key === "ArrowLeft") setZoom((z - 1 + total) % total);
+      if (e.key === "ArrowRight") setZoom((z + 1) % total);
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [zoom, total]);
 
   function closeZoom(): void {
+    // On revient dans le diaporama sur la photo qu'on regardait.
+    if (zoomRef.current !== null) setCur(zoomRef.current);
     setZoom(null);
   }
 
   const price = discount ?? ((cents: number) => cents);
-  const n = packOnly ? total : selected.size;
+  const n = selected.size;
+  const all = packOnly || formula === "all";
   const allCents = price(quote(total, total, pricing).totalCents);
   const selCents = price(quote(n, total, pricing).totalCents);
+  const unitCents = price(pricing.pricePhotoCents);
   // Le plafond est atteint : les photos restantes ne coûtent plus rien.
-  const capped = n > 0 && n < total && selCents >= allCents;
-  const takesAll = n === total || capped;
-  const pct = allCents > 0 ? Math.min(100, Math.round((selCents / allCents) * 100)) : 0;
-  const unit = formatEuros(price(pricing.pricePhotoCents));
+  const capped = !all && n > 0 && n < total && selCents >= allCents;
+  const takesAll = all || n === total || capped;
+  const off = !all && n === 0;
   const allLabel = total === 1 ? "Votre photo" : `Les ${total} photos`;
-
-  function takeAll(): void {
-    setSelected(new Set(allIds));
-  }
-
-  const label = packOnly
-    ? allLabel
-    : n === 0
-      ? allLabel
-      : takesAll
-        ? `${allLabel}, prix maximum`
-        : `${n} photo${n > 1 ? "s" : ""} choisie${n > 1 ? "s" : ""}`;
-  const shownPrice = formatEuros(n === 0 || packOnly ? allCents : selCents);
-
-  // Une phrase, un seul fait.
-  const hint: ReactNode = packOnly ? (
-    "Sans filigrane, à télécharger dès le paiement."
-  ) : n === 0 ? (
-    `Ou touchez une photo pour la choisir, ${unit} pièce.`
-  ) : takesAll ? (
-    "Toutes les photos sont incluses, et celles ajoutées ensuite."
-  ) : (
-    <>
-      Encore {formatEuros(allCents - selCents)} pour les {total}.{" "}
-      <button type="button" className={styles.lnk} onClick={takeAll}>
-        Tout prendre
-      </button>
-    </>
-  );
+  const recapLabel = all ? allLabel : `${n} photo${n > 1 ? "s" : ""}`;
+  const recapPrice = formatEuros(all ? allCents : selCents);
 
   function pay(): void {
-    // Rien de choisi : le bouton vend tout. Au plafond, le client paie le
-    // prix de toutes les photos : il les reçoit toutes.
-    if (packOnly || n === 0 || takesAll) onCheckout(allIds);
-    else onCheckout(Array.from(selected));
+    if (off) return;
+    // Au plafond, le client paie le prix de toutes les photos : il les reçoit toutes.
+    onCheckout(takesAll ? allIds : Array.from(selected));
   }
 
-  const payLabel = packOnly || n === 0 || takesAll ? `Tout acheter · ${formatEuros(allCents)}` : `Payer ${formatEuros(selCents)}`;
   const payButton = (extra: string) => (
-    <button type="button" className={`${styles.cta} ${extra}`} onClick={pay} disabled={busy || total === 0} aria-busy={busy || undefined}>
-      <span>{payLabel}</span>
+    <button type="button" className={`${styles.cta} ${extra}`} onClick={pay} disabled={busy || total === 0 || off} aria-busy={busy || undefined}>
+      <span>Commander</span>
       {busy ? (
         <span className={styles.ctaBusy}>
           <Spinner size={18} tone="light" label="Un instant" />
@@ -148,91 +147,158 @@ export function PhotoPicker({
     </button>
   );
 
+  const formulas: { id: Formula; name: string; sub: string; cents: number }[] = [
+    ...(packOnly ? [] : [{ id: "unit" as const, name: "À l’unité", sub: "Téléchargement HD", cents: unitCents }]),
+    { id: "all", name: total === 1 ? "Votre photo" : "Toutes les photos", sub: total === 1 ? "En HD" : `Les ${total} photos en HD`, cents: allCents },
+  ];
+
   const zoomed = zoom !== null ? photos[zoom] : undefined;
   const zoomedOn = zoomed ? selected.has(zoomed.id) : false;
   function step(delta: number): void {
-    setZoom((at) => (at === null ? at : (at + delta + total) % total));
+    setZoom((z) => (z === null ? z : (z + delta + total) % total));
   }
-  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
+  const kindOf = (p: PickerPhoto) => (p.isVideo ? "la vidéo" : "la photo");
+  const currentOn = current ? !packOnly && selected.has(current.id) : false;
 
   return (
     <>
       <div className={v.wrap}>
         {head}
         <div className={v.layout}>
-          <div>
-            {!packOnly && total > 1 ? (
-              <div className={v.headRow}>
-                <span>{n === 0 ? "Choisissez vos photos" : `${n} sur ${total} choisie${n > 1 ? "s" : ""}`}</span>
-                <button type="button" className={styles.lnk} onClick={() => setSelected(n === total ? new Set() : new Set(allIds))}>
-                  {n === total ? "Tout enlever" : "Tout prendre"}
+          <div className={v.show}>
+            {/* Le diaporama : une photo à la fois, pleine largeur. */}
+            <div
+              className={`${v.stage} ${currentOn ? v.stageOn : ""}`}
+              onTouchStart={(e) => {
+                const t = e.changedTouches[0];
+                swipeFrom.current = t ? { x: t.clientX, y: t.clientY } : null;
+              }}
+              onTouchEnd={(e) => {
+                const from = swipeFrom.current;
+                const t = e.changedTouches[0];
+                swipeFrom.current = null;
+                if (!from || !t) return;
+                const dx = t.clientX - from.x;
+                if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(t.clientY - from.y)) return;
+                go(at + (dx < 0 ? 1 : -1));
+              }}
+            >
+              {current ? (
+                <button
+                  key={current.id}
+                  type="button"
+                  className={v.slide}
+                  aria-pressed={packOnly ? undefined : currentOn}
+                  aria-label={
+                    packOnly
+                      ? `Voir ${kindOf(current)} ${at + 1} en grand`
+                      : `${currentOn ? "Retirer" : "Choisir"} ${kindOf(current)} ${at + 1} sur ${total}${current.timeLabel ? `, ${current.timeLabel}` : ""}`
+                  }
+                  onClick={() => (packOnly ? setZoom(at) : toggle(current.id))}
+                >
+                  {current.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={current.previewUrl} alt="" decoding="async" draggable={false} />
+                  ) : (
+                    <TileSpinner />
+                  )}
+                  {current.isVideo ? <PlayMark /> : current.previewUrl ? <LockBadge /> : null}
                 </button>
-              </div>
-            ) : null}
-            <div className={v.grid}>
-              {photos.map((photo, i) => {
-                const on = !packOnly && selected.has(photo.id);
-                const kind = photo.isVideo ? "la vidéo" : "la photo";
-                return (
-                  <div key={photo.id} className={`${v.tile} ${on ? v.tileOn : ""}`}>
+              ) : null}
+              {current?.isVideo ? <VideoBadge durationSec={current.durationSec} /> : null}
+              {current ? (
+                <button type="button" className={`${v.round} ${v.zoomBtn}`} aria-label={`Voir ${kindOf(current)} en grand`} onClick={() => setZoom(at)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M15 4h5v5M9 20H4v-5M20 4l-6 6M4 20l6-6" />
+                  </svg>
+                </button>
+              ) : null}
+              {total > 1 ? (
+                <>
+                  <button type="button" className={`${v.round} ${v.prev}`} aria-label="Photo précédente" onClick={() => go(at - 1)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="m15 6-6 6 6 6" />
+                    </svg>
+                  </button>
+                  <button type="button" className={`${v.round} ${v.next}`} aria-label="Photo suivante" onClick={() => go(at + 1)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </button>
+                </>
+              ) : null}
+            </div>
+
+            {/* Les vignettes : où j'en suis, ce que j'ai pris. */}
+            {total > 1 ? (
+              <div className={v.thumbs} ref={stripRef}>
+                {photos.map((photo, i) => {
+                  const on = !packOnly && selected.has(photo.id);
+                  return (
                     <button
+                      key={photo.id}
                       type="button"
-                      className={v.tileHit}
-                      aria-pressed={packOnly ? undefined : on}
-                      aria-label={packOnly ? `Voir ${kind} ${i + 1} en grand` : `${on ? "Retirer" : "Choisir"} ${kind} ${i + 1}${photo.timeLabel ? `, ${photo.timeLabel}` : ""}`}
-                      onClick={() => (packOnly ? setZoom(i) : toggle(photo.id))}
+                      className={`${v.thumb} ${i === at ? v.thumbCur : ""} ${on ? v.thumbOn : ""}`}
+                      aria-label={`${photo.isVideo ? "Vidéo" : "Photo"} ${i + 1}${on ? ", choisie" : ""}`}
+                      aria-current={i === at ? "true" : undefined}
+                      onClick={() => go(i)}
                     >
                       {photo.previewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={photo.previewUrl} alt="" loading={i < 9 ? "eager" : "lazy"} decoding="async" draggable={false} />
-                      ) : (
-                        <TileSpinner />
-                      )}
-                      {photo.isVideo ? <PlayMark /> : photo.previewUrl ? <LockBadge /> : null}
+                        <img src={photo.previewUrl} alt="" loading={i < 8 ? "eager" : "lazy"} decoding="async" draggable={false} />
+                      ) : null}
+                      {on ? (
+                        <span className={v.thumbCheck} aria-hidden="true">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        </span>
+                      ) : null}
                     </button>
-                    {photo.isVideo ? <VideoBadge durationSec={photo.durationSec} /> : null}
-                    {photo.timeLabel && !photo.isVideo ? <span className={v.time}>{photo.timeLabel}</span> : null}
-                    {packOnly ? null : (
-                      <span className={v.check} aria-hidden="true">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 6 9 17l-5-5" />
-                        </svg>
-                      </span>
-                    )}
-                    {packOnly ? null : (
-                      <button type="button" className={v.zoom} aria-label={`Voir ${kind} ${i + 1} en grand`} onClick={() => setZoom(i)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <circle cx="11" cy="11" r="6.5" />
-                          <path d="m20 20-4.2-4.2" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
 
           <aside className={v.panel} aria-label="Paiement">
-            <div className={v.panelHead}>
-              <span>{label}</span>
-              <strong className={v.price}>{shownPrice}</strong>
+            <h2 className={v.panelTitle}>Choisissez votre formule</h2>
+            <div className={v.formulas} role="radiogroup" aria-label="Formule">
+              {formulas.map((f) => {
+                const on = f.id === "all" ? all : !all;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    className={`${v.formula} ${on ? v.formulaOn : ""}`}
+                    onClick={() => setFormula(f.id)}
+                  >
+                    <span className={v.formulaText}>
+                      <span className={v.formulaName}>{f.name}</span>
+                      <span className={v.formulaSub}>{f.sub}</span>
+                    </span>
+                    <span className={v.formulaPrice}>{formatEuros(f.cents)}</span>
+                  </button>
+                );
+              })}
             </div>
-            {packOnly ? null : (
-              <div className={v.gauge} aria-hidden="true">
-                <i style={{ width: `${n === 0 ? 0 : pct}%` }} />
+            <div className={v.recap}>
+              <div className={v.recapHead}>
+                <span>{recapLabel}</span>
+                <strong className={v.price}>{recapPrice}</strong>
               </div>
-            )}
-            <p className={v.hint}>{hint}</p>
-            {error ? <p className={styles.error}>{error}</p> : null}
-            {payButton(v.panelCta)}
-            <p className={v.safe}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="5" y="11" width="14" height="9" rx="2.5" />
-                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-              </svg>
-              Carte, Apple Pay, Google Pay
-            </p>
+              {off && total > 1 ? <p className={v.hint}>Touchez une photo pour la choisir.</p> : null}
+              {capped ? <p className={v.hint}>Vous avez atteint le prix de toutes les photos : elles sont toutes incluses.</p> : null}
+              {error ? <p className={styles.error}>{error}</p> : null}
+              {payButton(v.panelCta)}
+              <p className={v.safe}>
+                <span className={v.safeDot} aria-hidden="true" />
+                Paiement 100&nbsp;% sécurisé
+              </p>
+              <p className={v.methods}>Carte bancaire, Apple Pay, Google Pay</p>
+            </div>
           </aside>
         </div>
       </div>
@@ -243,8 +309,8 @@ export function PhotoPicker({
         {error ? <p className={styles.error}>{error}</p> : null}
         <div className={v.barIn}>
           <div className={v.barText}>
-            <span>{label}</span>
-            <b>{shownPrice}</b>
+            <span>{recapLabel}</span>
+            <b>{recapPrice}</b>
           </div>
           {payButton(v.barCta)}
         </div>
@@ -318,7 +384,7 @@ export function PhotoPicker({
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
-                    {zoomed.isVideo ? "Choisir cette vidéo" : "Choisir cette photo"} · {formatEuros(pricing.pricePhotoCents)}
+                    {zoomed.isVideo ? "Choisir cette vidéo" : "Choisir cette photo"} · {formatEuros(unitCents)}
                   </>
                 )}
               </button>
@@ -336,14 +402,13 @@ export function PhotoPicker({
 }
 
 /**
- * Le cadenas de l'aperçu payant. Il était dessiné dans l'image
- * (lib/group-watermark.ts) et grossissait donc avec la vignette. Posé ici,
- * il a la même taille partout. Pastille encre, filet blanc, cadenas au trait.
+ * Le cadenas de l'aperçu payant, posé au centre de la photo. Pastille encre,
+ * filet blanc, cadenas au trait : même dessin que le badge de l'e-mail.
  */
 function LockBadge() {
   return (
-    <svg className={v.tileLock} viewBox="-56 -56 112 112" aria-hidden="true">
-      <circle r="55.5" fill="rgba(20, 19, 32, 0.55)" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
+    <svg className={v.lock} viewBox="-56 -56 112 112" aria-hidden="true">
+      <circle r="55.5" fill="rgba(42, 16, 34, 0.55)" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="1.5" />
       <g transform="translate(0 2)" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="-17" y="-4" width="34" height="24" rx="5" />
         <path d="M-10-4v-10a10 10 0 0 1 20 0v10" />

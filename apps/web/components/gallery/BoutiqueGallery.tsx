@@ -7,7 +7,7 @@ import v from "@/components/gallery/vente.module.css";
 import { applyReducedOffer, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
 import { PhotoPicker } from "@/components/gallery/PhotoPicker";
-import type { Seller } from "@/lib/seller-format";
+import { formatSiret, type Seller } from "@/lib/seller-format";
 import { PaymentSheet } from "@/components/gallery/PaymentSheet";
 import { DownloadIcon } from "@/components/gallery/icons";
 import { Logo } from "@/components/brand/Logo";
@@ -77,6 +77,8 @@ export function BoutiqueGallery({
   googleReviewUrl,
   reducedOfferActive,
   operatorName,
+  operatorLogoUrl,
+  operatorTagline,
   seller,
   receiptTo,
 }: {
@@ -88,7 +90,7 @@ export function BoutiqueGallery({
   when: string;
   /** La ligne au-dessus du titre : « Canyoning · 26 sept. » puis, en gras, « départ 10 h avec Léa ». */
   /** Le titre (l'activité), puis la ligne au-dessus : la date et, en gras, le départ. */
-  context: { title: string; line: string; strong?: string | null };
+  context: { title: string; line: string; strong?: string | null; day: string; place?: string | null };
   photos: BoutiquePhoto[];
   pricing: PricingConfig;
   packOnly: boolean;
@@ -101,6 +103,9 @@ export function BoutiqueGallery({
   reducedOfferActive: boolean;
   /** Le vendeur, nommé dans la feuille Apple Pay. */
   operatorName?: string;
+  /** Le logo et la phrase du prestataire, repris dans le pied de page. */
+  operatorLogoUrl?: string | null;
+  operatorTagline?: string | null;
   /** Le vendeur au sens légal, nommé avant le paiement. */
   seller: Seller | null;
   /** Où part le reçu : l'adresse e-mail, ou « WhatsApp ». Null si inconnu. */
@@ -381,10 +386,26 @@ export function BoutiqueGallery({
         head={
           <div className={v.head}>
             {bought ? <BackLink onClick={() => setBuyMore(false)} /> : null}
-            <h1 className={v.title}>{photosOf(context.title, videoCount === pickable.length)}</h1>
-            <p className={v.meta}>
-              {[upperFirst(context.line), context.strong, countLabel].filter(Boolean).join(" · ")}
-            </p>
+            <h1 className={v.title}>{photosOfDay(context.day, videoCount === pickable.length)}</h1>
+            <ul className={v.chips}>
+              {context.place ? (
+                <li>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
+                    <circle cx="12" cy="10" r="2.3" />
+                  </svg>
+                  {context.place}
+                </li>
+              ) : null}
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2.5" />
+                  <circle cx="9" cy="10.5" r="1.8" />
+                  <path d="m21 16-5-5-8 8" />
+                </svg>
+                {upperFirst(countLabel)}
+              </li>
+            </ul>
           </div>
         }
         after={
@@ -410,22 +431,57 @@ export function BoutiqueGallery({
                 </p>
               </details>
             </div>
+            {/* Même gabarit que le footer de la landing. C'est le prestataire
+                qui vend (charge directe) : son identité, pas celle de Linktrip. */}
             <footer className={v.foot}>
               <div className={`${v.wrap} ${v.footIn}`}>
-                <div className={v.footWho}>
-                  <strong>{operatorName}</strong>
-                  {seller?.email ? <a href={`mailto:${seller.email}`}>{seller.email}</a> : null}
-                  {seller?.address ? <span>{seller.address}</span> : null}
+                <div className={v.footGrid}>
+                  <div className={v.footBrand}>
+                    <span className={v.footName}>
+                      <span className={v.logo}>
+                        {operatorLogoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={operatorLogoUrl} alt="" />
+                        ) : (
+                          (operatorName ?? "").slice(0, 2).toUpperCase()
+                        )}
+                      </span>
+                      {operatorName}
+                    </span>
+                    {operatorTagline ? <span className={v.footTag}>{operatorTagline}</span> : null}
+                  </div>
+                  <div className={v.footCol}>
+                    <span>Votre commande</span>
+                    <a href={`/g/${token}/retrait`}>Retirer une photo</a>
+                    <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
+                    {seller?.email ? <a href={`mailto:${seller.email}`}>Aide</a> : null}
+                  </div>
+                  <div className={v.footCol}>
+                    <span>Le prestataire</span>
+                    {seller?.name ? <span>{seller.name}</span> : null}
+                    {seller?.address ? <span>{seller.address}</span> : null}
+                    {seller?.email ? <a href={`mailto:${seller.email}`}>{seller.email}</a> : null}
+                  </div>
+                  <div className={v.footCol}>
+                    <span>Paiement</span>
+                    <span>Paiement sécurisé par Stripe</span>
+                    <span>Carte, Apple Pay, Google Pay</span>
+                    <span>Reçu envoyé après l&rsquo;achat</span>
+                  </div>
                 </div>
-                <nav className={v.footLinks} aria-label="Liens utiles">
-                  <a href="/cgv">Conditions de vente</a>
-                  <a href={`/g/${token}/retrait`}>Retirer une photo</a>
-                  <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
-                  <a href={`/g/${token}/confidentialite`}>Confidentialité</a>
-                </nav>
-                <span className={v.powered}>
-                  Propulsé par <Logo variant="lockup" height={18} title="Linktrip" />
-                </span>
+                <div className={v.footBottom}>
+                  <span>
+                    © {new Date().getFullYear()} {seller?.name ?? operatorName}
+                    {seller?.siret ? ` · SIRET ${formatSiret(seller.siret)}` : ""}
+                  </span>
+                  <nav className={v.footLegal} aria-label="Informations légales">
+                    <a href="/cgv">CGV</a>
+                    <a href={`/g/${token}/confidentialite`}>Confidentialité</a>
+                  </nav>
+                  <span className={v.powered}>
+                    Propulsé par <Logo variant="lockup" height={18} title="Linktrip" />
+                  </span>
+                </div>
               </div>
             </footer>
           </>
@@ -469,9 +525,7 @@ function upperFirst(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** « Vos photos de rafting », « Vos vidéos d'escalade ». */
-function photosOf(activity: string, videosOnly: boolean): string {
-  const a = activity.trim();
-  const of = /^[aeiouyàâéèêëîïôöûüœh]/i.test(a) ? "d\u2019" : "de ";
-  return `Vos ${videosOnly ? "vidéos" : "photos"} ${of}${a.toLowerCase()}`;
+/** « Vos photos du samedi 26 septembre », « Vos vidéos du … ». */
+function photosOfDay(day: string, videosOnly: boolean): string {
+  return `Vos ${videosOnly ? "vidéos" : "photos"} du ${day.toLowerCase()}`;
 }

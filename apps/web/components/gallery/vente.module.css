@@ -1,8 +1,9 @@
-/* Page de vente de la galerie privée, mise en page du 22/10/2026 (canvas
-   « Page de vente, design system ») : header, titre, grille de photos,
-   panneau de paiement collé à droite sur ordinateur, barre réduite en bas
-   sur téléphone, FAQ, footer. Les boutons gardent --op, la couleur choisie
-   par le prestataire (.page de app/g/[token]/boutique.module.css). */
+/* Page de vente de la galerie privée, mise en page du 28/10/2026 (canvas
+   « Page de vente, design system Corail ») : header, titre et pastilles,
+   diaporama + vignettes, choix de la formule et récapitulatif à droite sur
+   ordinateur (sous les photos sur téléphone, avec une barre réduite collée
+   en bas), FAQ, footer. Les boutons et les accents gardent --op, la couleur
+   choisie par le prestataire (.page de app/g/[token]/boutique.module.css). */
 
 .wrap {
   max-width: 1200px;
@@ -40,7 +41,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 .logo img {
   width: 100%;
@@ -61,7 +62,7 @@
 }
 .whoText strong {
   font-size: 1.06rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 .whoText span {
   font-size: 0.82rem;
@@ -73,43 +74,56 @@
   gap: 6px;
   flex-shrink: 0;
   font-size: 0.82rem;
-  font-weight: 500;
   color: var(--ink-2);
-  background: var(--line-2);
+  background: #FFF7F2;
+  border: 1px solid var(--line);
   border-radius: 999px;
   padding: 6px 12px;
 }
 
 /* ── Titre ──────────────────────────────────────────────────────────── */
 .head {
-  padding: 40px 0 24px;
+  padding: 36px 0 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
 }
 .title {
   margin: 0;
-  font-size: 2.25rem;
-  line-height: 1.1;
-  letter-spacing: -0.035em;
-  font-weight: 800;
+  font-size: 2.1rem;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  text-wrap: balance;
 }
-.meta {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--ink-3);
-}
-.headRow {
+.chips {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 12px;
-  font-size: 0.94rem;
-  color: var(--ink-3);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #FFF7F2;
+  border: 1px solid var(--line);
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chips svg {
+  flex-shrink: 0;
+  color: var(--op);
 }
 
-/* ── Grille + panneau ───────────────────────────────────────────────── */
+/* ── Diaporama + panneau ────────────────────────────────────────────── */
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -117,19 +131,34 @@
   align-items: start;
   padding-bottom: 56px;
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+.show {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
 }
-.tile {
+.stage {
   position: relative;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 2;
   border-radius: 12px;
   overflow: hidden;
   background: var(--line);
 }
-.tileHit {
+/* La photo choisie : un liseré à la couleur du prestataire, par-dessus l'image. */
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 4px var(--op);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+.stageOn::after {
+  opacity: 1;
+}
+.slide {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -142,137 +171,229 @@
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  animation: slideIn 0.28s ease both;
 }
-.tileHit img {
+.slide img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.tileLock {
+@keyframes slideIn {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.lock {
   position: relative;
-  width: 26%;
-  height: 26%;
-  max-width: 56px;
-  max-height: 56px;
+  width: 14%;
+  max-width: 64px;
+  min-width: 44px;
+  aspect-ratio: 1;
   pointer-events: none;
 }
-.tileOn::after {
-  content: "";
+.round {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 3px var(--op);
-  pointer-events: none;
-}
-.check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1.5px solid #E8D2C9;
-  color: transparent;
-  pointer-events: none;
-}
-.tileOn .check {
-  background: var(--op);
-  border-color: var(--op);
-  color: #fff;
-}
-.zoom {
-  position: absolute;
-  left: 6px;
-  top: 6px;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: #fff;
   color: var(--ink);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.time {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #fff;
-  background: rgba(20, 19, 32, 0.55);
-  border-radius: 999px;
-  padding: 3px 8px;
-  pointer-events: none;
+.zoomBtn {
+  left: 12px;
+  top: 12px;
 }
-.tile:focus-within {
+.prev,
+.next {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.prev {
+  left: 12px;
+}
+.next {
+  right: 12px;
+}
+.round:focus-visible,
+.slide:focus-visible,
+.thumb:focus-visible,
+.formula:focus-visible {
   outline: 2px solid var(--op);
   outline-offset: 2px;
 }
 
-/* Panneau de paiement (ordinateur) */
+.thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 6px;
+  scrollbar-width: thin;
+}
+.thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 76px;
+  height: 57px;
+  border: 0;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--line);
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+.thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumbCur,
+.thumbOn {
+  opacity: 1;
+}
+.thumbCheck {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--op);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Panneau : la formule, puis le récapitulatif */
 .panel {
   position: sticky;
   top: 24px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 24px;
-  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow:
-    0 1px 2px rgba(42, 16, 34, 0.04),
-    0 12px 32px -16px rgba(42, 16, 34, 0.18);
 }
-.panelHead {
+.panelTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.formulas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.formula {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.formulaOn {
+  background: var(--op-soft);
+  border: 1.5px solid var(--op);
+}
+.formulaText {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.panelHead span {
+.formulaName {
+  font-size: 1.12rem;
+  font-weight: 500;
+}
+.formulaSub {
   font-size: 0.88rem;
   color: var(--ink-3);
 }
-.price {
-  font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.035em;
+.formulaPrice {
+  font-size: 1.25rem;
+  font-weight: 500;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.gauge {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--op-soft);
-  overflow: hidden;
+.recap {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.gauge i {
-  display: block;
-  height: 100%;
-  background: var(--op);
-  transition: width 0.2s ease;
+.recapHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.recapHead span {
+  font-size: 0.94rem;
+  color: var(--ink-3);
+}
+.price {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .hint {
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.5;
+  font-size: 0.82rem;
+  line-height: 1.45;
   color: var(--ink-2);
+}
+.panel .panelCta {
+  border-radius: 999px;
+  height: 52px;
+  font-weight: 500;
 }
 .safe {
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.safeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--ok);
+}
+.methods {
+  margin: -6px 0 0;
+  text-align: center;
+  font-size: 0.78rem;
   color: var(--ink-3);
 }
 
@@ -306,20 +427,17 @@
 }
 .barText b {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 .bar .barCta {
   width: auto;
   flex-shrink: 0;
   height: 48px;
-  padding: 0 20px;
+  padding: 0 22px;
   border-radius: 999px;
   white-space: nowrap;
-}
-.panel .panelCta {
-  border-radius: 999px;
-  height: 52px;
+  font-weight: 500;
 }
 
 /* ── FAQ ────────────────────────────────────────────────────────────── */
@@ -330,7 +448,7 @@
 .faq h2 {
   margin: 0 0 12px;
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 .faq details {
@@ -347,7 +465,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .faq summary::-webkit-details-marker {
   display: none;
@@ -372,52 +490,91 @@
   color: var(--op);
 }
 
-/* ── Footer ─────────────────────────────────────────────────────────── */
+/* ── Footer (même gabarit que la landing) ───────────────────────────── */
 .foot {
   background: #FFF7F2;
   border-top: 1px solid var(--line);
 }
 .footIn {
   padding-top: 56px;
-  padding-bottom: 64px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 32px 40px;
+  padding-bottom: 28px;
 }
-.footWho {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.94rem;
-  color: var(--ink-3);
+.footGrid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+  gap: 28px;
 }
-.footWho a {
-  color: var(--ink-2);
-  text-underline-offset: 3px;
-}
-.footWho strong {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-.footLinks {
+.footBrand {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  font-size: 1rem;
 }
-.footLinks a {
+.footName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.12rem;
+  font-weight: 500;
+}
+.footName .logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.footTag {
+  font-size: 0.88rem;
+  line-height: 1.5;
   color: var(--ink-2);
+  max-width: 30ch;
+}
+.footCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.footCol > span:first-child {
+  font-weight: 500;
+  color: var(--ink);
+}
+.footCol a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.footCol a:hover {
+  color: var(--ink);
+  text-decoration: underline;
   text-underline-offset: 3px;
+}
+.footBottom {
+  margin-top: 44px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.footLegal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.footLegal a {
+  color: var(--ink-3);
+  text-decoration: none;
+}
+.footLegal a:hover {
+  color: var(--ink);
 }
 .powered {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.88rem;
-  color: var(--ink-3);
 }
 
 /* ── Téléphone ──────────────────────────────────────────────────────── */
@@ -426,46 +583,65 @@
     display: none;
   }
   .head {
-    padding-top: 24px;
+    padding: 24px 0 16px;
+    gap: 10px;
   }
   .title {
-    font-size: 1.65rem;
+    font-size: 1.56rem;
+  }
+  .chips {
+    gap: 6px;
+  }
+  .chips li {
+    height: 30px;
+    padding: 0 11px;
+    font-size: 0.82rem;
   }
   .layout {
     display: block;
     padding-bottom: 40px;
   }
+  /* La photo d'un bord à l'autre de l'écran, carrée : c'est là qu'on se cherche. */
+  .stage {
+    margin: 0 -16px;
+    aspect-ratio: 1 / 1;
+    max-height: calc(100svh - 220px);
+    border-radius: 0;
+  }
+  .thumb {
+    width: 64px;
+    height: 48px;
+  }
+  /* Le panneau passe sous les photos, sans rester collé : la barre du bas s'en charge. */
   .panel {
+    position: static;
+    margin-top: 24px;
+  }
+  .panelTitle {
+    font-size: 1.25rem;
+  }
+  .panel .panelCta,
+  .panel .safe,
+  .panel .methods {
     display: none;
   }
   .bar {
     display: block;
   }
-  .grid {
-    gap: 4px;
+  .footGrid {
+    grid-template-columns: 1fr 1fr;
   }
-  .tile {
-    border-radius: 6px;
-  }
-  .zoom {
-    width: 32px;
-    height: 32px;
-    left: 4px;
-    top: 4px;
-  }
-  .check {
-    top: 6px;
-    right: 6px;
-    width: 24px;
-    height: 24px;
-  }
-  .time {
-    display: none;
+  .footBrand {
+    grid-column: 1 / -1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gauge i,
+  .slide {
+    animation: none;
+  }
+  .stage::after,
+  .thumb,
   .faq summary::after {
     transition: none;
   }

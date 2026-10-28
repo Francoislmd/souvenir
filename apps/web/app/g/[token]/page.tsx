@@ -89,6 +89,9 @@ export default async function GalleryPage({ params }: { params: { token: string 
     title: sortie.activity,
     line: shortDay,
     strong: slot ? `départ ${formatHourFr(slot.startsAt)}${guide ? ` avec ${guide}` : ""}` : guide ? `avec ${guide}` : null,
+    // Titre « Vos photos du samedi 26 septembre », pastille du lieu dessous.
+    day: formatDayFr(slot?.startsAt ?? sortie.startsAt),
+    place: sortie.place,
   };
   const when = slot ? `${formatDayFr(slot.startsAt)}, départ de ${formatHourFr(slot.startsAt)}` : formatWhenFr(sortie.startsAt);
 
@@ -117,6 +120,8 @@ export default async function GalleryPage({ params }: { params: { token: string 
       googleReviewUrl={operator.googleReviewUrl}
       reducedOfferActive={reducedOfferActive}
       operatorName={operator.name}
+      operatorLogoUrl={operator.logoUrl}
+      operatorTagline={operator.tagline}
       seller={seller}
       receiptTo={receiptTo}
     />,
