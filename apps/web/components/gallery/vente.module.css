@@ -557,18 +557,20 @@
     display: block;
     padding-bottom: 40px;
   }
-  /* La photo d'un bord à l'autre de l'écran, carrée : c'est là qu'on se cherche. */
+  /* La photo dans la marge blanche de la page, coins arrondis : elle ne
+     touche plus les bords de l'écran (28/10/2026). */
   .stage {
-    margin: 0 -16px;
     aspect-ratio: 1 / 1;
-    border-radius: 0;
+    border-radius: 12px;
   }
-  .slide {
-    border-radius: 0;
+  /* Vignettes carrées, plus grandes : on y reconnaît les visages. */
+  .thumbs {
+    gap: 8px;
   }
   .thumb {
-    width: 64px;
-    height: 48px;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
   }
   /* Comme la maquette : sur téléphone, la barre du bas remplace le panneau. */
   .panel {
