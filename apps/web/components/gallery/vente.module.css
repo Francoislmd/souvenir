@@ -409,141 +409,113 @@
   font-weight: 500;
 }
 
-/* ── FAQ ────────────────────────────────────────────────────────────── */
-.faq {
-  max-width: 720px;
-  padding-bottom: 56px;
+/* ── Footer : celui de la landing, même dessin (accueil.module.css) ───── */
+.footer {
+  padding: 0 24px 24px;
 }
-.faq h2 {
-  margin: 0 0 12px;
-  font-size: 1.06rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.faq details {
-  border-bottom: 1px solid var(--line);
-}
-.faq details:first-of-type {
-  border-top: 1px solid var(--line);
-}
-.faq summary {
-  list-style: none;
-  cursor: pointer;
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  font-weight: 500;
-}
-.faq summary::-webkit-details-marker {
-  display: none;
-}
-.faq summary::after {
-  content: "+";
-  font-size: 1.35rem;
-  font-weight: 400;
-  color: var(--ink-3);
-  transition: transform 0.2s ease;
-}
-.faq details[open] summary::after {
-  transform: rotate(45deg);
-}
-.faq details p {
-  margin: 0 0 16px;
-  color: var(--ink-2);
-  line-height: 1.6;
-  font-size: 0.94rem;
-}
-.faq a {
-  color: #B8361F;
-}
-
-/* ── Footer (même gabarit que la landing) ───────────────────────────── */
 .foot {
-  background: #FFF7F2;
-  border-top: 1px solid var(--line);
+  max-width: 1392px;
+  margin: 0 auto;
+  border-radius: 24px;
+  padding: 64px clamp(22px, 7.5vw, 104px) 44px;
+  background-color: #FFEFE7;
+  background-image: linear-gradient(rgba(232, 85, 59, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 85, 59, 0.07) 1px, transparent 1px);
+  background-size: 150px 150px;
 }
-.footIn {
-  padding-top: 56px;
-  padding-bottom: 28px;
-}
-.footGrid {
-  display: grid;
-  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
-  gap: 28px;
-}
-.footBrand {
+.footTop {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 56px;
 }
 .footName {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.12rem;
-  font-weight: 500;
-}
-.footName .logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-}
-.footTag {
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: var(--ink-2);
-  max-width: 30ch;
-}
-.footCol {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 0.88rem;
-  color: var(--ink-2);
-}
-.footCol > span:first-child {
-  font-weight: 500;
-  color: var(--ink);
-}
-.footCol a {
-  color: var(--ink-2);
-  text-decoration: none;
-}
-.footCol a:hover {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.footBottom {
-  margin-top: 44px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.82rem;
-  color: var(--ink-3);
-}
-.footLegal {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-}
-.footLegal a {
-  color: var(--ink-3);
-  text-decoration: none;
-}
-.footLegal a:hover {
-  color: var(--ink);
+  gap: 12px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .powered {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.footCols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+}
+.footCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.footCol h4 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.footCol a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.footCol a:hover {
+  color: #E8553B;
+}
+.footBottom {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid #FCDCCD;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 13px;
+  color: #BCA7AF;
+}
+.legal a {
+  color: inherit;
+  text-decoration: none;
+}
+.legal a:hover {
+  color: var(--ink);
+}
+.seals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #FCDCCD;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .footCols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* ── Téléphone ──────────────────────────────────────────────────────── */
@@ -582,18 +554,26 @@
   .bar {
     display: block;
   }
-  .footGrid {
-    grid-template-columns: 1fr 1fr;
+  .footer {
+    padding: 0 12px 12px;
   }
-  .footBrand {
-    grid-column: 1 / -1;
+  .foot {
+    padding: 40px 22px 28px;
+  }
+  .footTop {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 36px;
+  }
+  .footBottom {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .track,
-  .thumb,
-  .faq summary::after {
+  .thumb {
     transition: none;
   }
 }

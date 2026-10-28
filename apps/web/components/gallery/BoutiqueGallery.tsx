@@ -78,7 +78,6 @@ export function BoutiqueGallery({
   reducedOfferActive,
   operatorName,
   operatorLogoUrl,
-  operatorTagline,
   seller,
   receiptTo,
 }: {
@@ -103,9 +102,8 @@ export function BoutiqueGallery({
   reducedOfferActive: boolean;
   /** Le vendeur, nommé dans la feuille Apple Pay. */
   operatorName?: string;
-  /** Le logo et la phrase du prestataire, repris dans le pied de page. */
+  /** Le logo du prestataire, repris dans le pied de page. */
   operatorLogoUrl?: string | null;
-  operatorTagline?: string | null;
   /** Le vendeur au sens légal, nommé avant le paiement. */
   seller: Seller | null;
   /** Où part le reçu : l'adresse e-mail, ou « WhatsApp ». Null si inconnu. */
@@ -392,78 +390,78 @@ export function BoutiqueGallery({
         }
         after={
           <>
-            <div className={`${v.wrap} ${v.faq}`}>
-              <h2>Questions fréquentes</h2>
-              <details>
-                <summary>Combien de temps je garde mes photos&nbsp;?</summary>
-                <p>Elles se téléchargent pendant 90 jours, en pleine résolution et sans filigrane.</p>
-              </details>
-              <details>
-                <summary>D&rsquo;autres photos arrivent après mon achat&nbsp;?</summary>
-                <p>Si vous avez tout pris, elles sont à vous sans rien payer de plus. Sinon, elles apparaissent ici, au même prix.</p>
-              </details>
-              <details>
-                <summary>J&rsquo;achète quelques photos, puis je veux tout&nbsp;?</summary>
-                <p>Ce que vous avez déjà payé est déduit. Vous ne payez jamais plus que le prix de toutes les photos.</p>
-              </details>
-              <details>
-                <summary>Une photo me gêne</summary>
-                <p>
-                  <a href={`/g/${token}/retrait`}>Retirez-la ici</a>. Elle disparaît tout de suite, sans justification.
-                </p>
-              </details>
-            </div>
-            {/* Même gabarit que le footer de la landing. C'est le prestataire
-                qui vend (charge directe) : son identité, pas celle de Linktrip. */}
-            <footer className={v.foot}>
-              <div className={`${v.wrap} ${v.footIn}`}>
-                <div className={v.footGrid}>
-                  <div className={v.footBrand}>
-                    <span className={v.footName}>
-                      <span className={v.logo}>
-                        {operatorLogoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={operatorLogoUrl} alt="" />
-                        ) : (
-                          (operatorName ?? "").slice(0, 2).toUpperCase()
-                        )}
-                      </span>
-                      {operatorName}
+            {/* Le footer de la landing, même dessin (carte à grille corail, logo,
+                colonnes, mentions et pastilles), avec ce que l'acheteur doit
+                trouver. C'est le prestataire qui vend (charge directe). */}
+            <footer className={v.footer}>
+              <div className={v.foot}>
+                <div className={v.footTop}>
+                  <span className={v.footName}>
+                    <span className={v.logo}>
+                      {operatorLogoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={operatorLogoUrl} alt="" />
+                      ) : (
+                        (operatorName ?? "").slice(0, 2).toUpperCase()
+                      )}
                     </span>
-                    {operatorTagline ? <span className={v.footTag}>{operatorTagline}</span> : null}
-                  </div>
-                  <div className={v.footCol}>
-                    <span>Votre commande</span>
+                    {operatorName}
+                  </span>
+                  <span className={v.powered}>
+                    Propulsé par <Logo variant="lockup" height={22} title="Linktrip" />
+                  </span>
+                </div>
+                <div className={v.footCols}>
+                  <nav className={v.footCol} aria-label="Votre commande">
+                    <h4>Votre commande</h4>
                     <a href={`/g/${token}`}>Retrouver mes photos</a>
-                    {seller?.email ? <a href={`mailto:${seller.email}?subject=Probl%C3%A8me%20de%20t%C3%A9l%C3%A9chargement`}>Problème de téléchargement</a> : null}
                     <a href={`/g/${token}/retrait`}>Retirer une photo</a>
-                    {seller?.email ? <a href={`mailto:${seller.email}`}>Aide</a> : null}
-                  </div>
+                    <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
+                  </nav>
                   <div className={v.footCol}>
-                    <span>Le prestataire</span>
+                    <h4>Le prestataire</h4>
+                    {seller?.name ? <span>{seller.name}</span> : null}
                     {seller?.address ? <span>{seller.address}</span> : null}
                     {seller?.email ? <a href={`mailto:${seller.email}`}>{seller.email}</a> : null}
                   </div>
+                  <nav className={v.footCol} aria-label="Aide">
+                    <h4>Aide</h4>
+                    {seller?.email ? <a href={`mailto:${seller.email}?subject=Probl%C3%A8me%20de%20t%C3%A9l%C3%A9chargement`}>Problème de téléchargement</a> : null}
+                    {seller?.email ? <a href={`mailto:${seller.email}`}>Contacter {operatorName}</a> : null}
+                    <a href={`/g/${token}/confidentialite`}>Vos données</a>
+                  </nav>
                   <div className={v.footCol}>
-                    <span>Paiement</span>
-                    <span>Paiement sécurisé par Stripe</span>
+                    <h4>Paiement</h4>
                     <span>Carte, Apple Pay, Google Pay</span>
                     <span>Reçu envoyé par e-mail</span>
                   </div>
                 </div>
                 <div className={v.footBottom}>
-                  <span>
-                    © {new Date().getFullYear()} {seller?.name ?? operatorName}
-                    {seller?.siret ? ` · SIRET ${formatSiret(seller.siret)}` : ""}
-                  </span>
-                  <nav className={v.footLegal} aria-label="Informations légales">
-                    <a href="/cgv">CGV</a>
+                  <span className={v.legal}>
+                    <span>
+                      © {new Date().getFullYear()} {seller?.name ?? operatorName}
+                      {seller?.siret ? ` · SIRET ${formatSiret(seller.siret)}` : ""}
+                    </span>
                     <a href="/mentions-legales">Mentions légales</a>
+                    <a href="/cgv">CGV</a>
                     <a href={`/g/${token}/confidentialite`}>Confidentialité</a>
                     <a href="/confidentialite#cookies">Cookies</a>
-                  </nav>
-                  <span className={v.powered}>
-                    Propulsé par <Logo variant="lockup" height={18} title="Linktrip" />
+                  </span>
+                  <span className={v.seals}>
+                    <span className={v.seal}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8553B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="9" rx="2.5" />
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                      </svg>
+                      Paiement sécurisé par Stripe
+                    </span>
+                    <span className={v.seal}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8553B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z" />
+                        <path d="M9 12l2 2 4-4" />
+                      </svg>
+                      Données hébergées en UE
+                    </span>
                   </span>
                 </div>
               </div>

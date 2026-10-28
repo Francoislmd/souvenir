@@ -43,7 +43,7 @@ export default async function GalleryPage({ params }: { params: { token: string 
   const title = formatSortieTitle(sortie.activity, sortie.place);
   const page = (children: React.ReactNode) => (
     <div className={styles.page} style={operatorVars(operator.brandColor)}>
-      <SaleHeader operatorName={operator.name} logoUrl={operator.logoUrl} place={sortie.place ?? operator.tagline} />
+      <SaleHeader operatorName={operator.name} logoUrl={operator.logoUrl} />
       {children}
     </div>
   );
@@ -121,7 +121,6 @@ export default async function GalleryPage({ params }: { params: { token: string 
       reducedOfferActive={reducedOfferActive}
       operatorName={operator.name}
       operatorLogoUrl={operator.logoUrl}
-      operatorTagline={operator.tagline}
       seller={seller}
       receiptTo={receiptTo}
     />,
