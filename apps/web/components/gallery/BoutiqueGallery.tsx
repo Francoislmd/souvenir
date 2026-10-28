@@ -415,8 +415,8 @@ export function BoutiqueGallery({
             <footer className={v.footer}>
               <div className={v.foot}>
                 <div className={v.footTop}>
-                  <span className={v.footName}>
-                    <span className={v.logo}>
+                  <span className={v.who}>
+                    <span className={`${v.logo} ${v.footLogo}`}>
                       {operatorLogoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={operatorLogoUrl} alt="" />
@@ -424,10 +424,13 @@ export function BoutiqueGallery({
                         (operatorName ?? "").slice(0, 2).toUpperCase()
                       )}
                     </span>
-                    {operatorName}
+                    <span className={v.whoText}>
+                      <strong>{operatorName}</strong>
+                      <span>Galerie privée</span>
+                    </span>
                   </span>
                   <span className={v.powered}>
-                    Propulsé par <Logo variant="lockup" height={22} title="Linktrip" />
+                    Propulsé par <Logo variant="lockup" height={16} title="Linktrip" />
                   </span>
                 </div>
                 <div className={v.footCols}>
@@ -446,7 +449,7 @@ export function BoutiqueGallery({
                   <nav className={v.footCol} aria-label="Aide">
                     <h4>Aide</h4>
                     {seller?.email ? <a href={`mailto:${seller.email}?subject=Probl%C3%A8me%20de%20t%C3%A9l%C3%A9chargement`}>Problème de téléchargement</a> : null}
-                    {seller?.email ? <a href={`mailto:${seller.email}`}>Contacter {operatorName}</a> : null}
+                    {seller?.email ? <a href={`mailto:${seller.email}`}>Contacter le prestataire</a> : null}
                     <a href={`/g/${token}/confidentialite`}>Vos données</a>
                   </nav>
                   <div className={v.footCol}>

@@ -451,22 +451,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 56px;
+  gap: 16px 24px;
+  margin-bottom: 48px;
 }
-.footName {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+/* Le prestataire comme dans le header : pastille blanche, nom, « Galerie privée ». */
+.footLogo {
+  background: #fff;
+  border: 1px solid var(--line);
 }
 .powered {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
+  gap: 6px;
+  font-size: 0.75rem;
   color: var(--ink-3);
 }
 .footCols {
@@ -477,18 +474,19 @@
 .footCol {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  font-size: 15px;
-  color: var(--ink);
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink-2);
 }
 .footCol h4 {
-  margin: 0 0 6px;
-  font-size: 18px;
+  margin: 0 0 4px;
+  font-size: 0.88rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 .footCol a {
-  color: var(--ink);
+  color: var(--ink-2);
   text-decoration: none;
 }
 /* Une adresse e-mail longue n'a pas d'espace où couper : sans ça, elle sort
@@ -595,12 +593,24 @@
     padding: 0 12px 12px;
   }
   .foot {
-    padding: 40px 22px 28px;
+    padding: 32px 20px 24px;
   }
   .footTop {
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 36px;
+    margin-bottom: 28px;
+  }
+  .footCols {
+    gap: 24px 20px;
+  }
+  .footBottom {
+    margin-top: 32px;
+  }
+  .seal {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
   }
   .footBottom {
     flex-direction: column;
