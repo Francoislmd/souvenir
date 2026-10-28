@@ -440,7 +440,7 @@ export function BoutiqueGallery({
                     <a href={`/g/${token}/retrait`}>Retirer une photo</a>
                     <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
                   </nav>
-                  <div className={v.footCol}>
+                  <div className={`${v.footCol} ${v.footDesk}`}>
                     <h4>Le prestataire</h4>
                     {seller?.name ? <span>{seller.name}</span> : null}
                     {seller?.address ? <span>{seller.address}</span> : null}
@@ -452,7 +452,7 @@ export function BoutiqueGallery({
                     {seller?.email ? <a href={`mailto:${seller.email}`}>Contacter le prestataire</a> : null}
                     <a href={`/g/${token}/confidentialite`}>Vos données</a>
                   </nav>
-                  <div className={v.footCol}>
+                  <div className={`${v.footCol} ${v.footDesk}`}>
                     <h4>Paiement</h4>
                     <span>Carte, Apple Pay, Google Pay</span>
                     <span>Reçu envoyé par e-mail</span>

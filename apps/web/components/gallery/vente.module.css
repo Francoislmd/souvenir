@@ -601,8 +601,25 @@
     align-items: flex-start;
     margin-bottom: 28px;
   }
+  /* Sur téléphone, deux colonnes seulement (commande, aide) : l'identité du
+     vendeur reste dans la ligne légale et sur l'écran de paiement, les
+     moyens de paiement dans les pastilles. */
+  .footDesk {
+    display: none;
+  }
   .footCols {
     gap: 24px 20px;
+  }
+  .footCol {
+    font-size: 0.82rem;
+    gap: 8px;
+  }
+  .footCol h4 {
+    font-size: 0.82rem;
+  }
+  .legal {
+    gap: 6px 14px;
+    font-size: 12px;
   }
   .footBottom {
     margin-top: 32px;
