@@ -2,8 +2,8 @@
    « Page de vente, design system Corail ») : header, titre et pastilles,
    diaporama + vignettes, choix de la formule et récapitulatif à droite sur
    ordinateur (sous les photos sur téléphone, avec une barre réduite collée
-   en bas), FAQ, footer. Les boutons et les accents gardent --op, la couleur
-   choisie par le prestataire (.page de app/g/[token]/boutique.module.css). */
+   en bas), FAQ, footer. Couleurs de la maquette, strictement : bouton
+   aubergine #2A1022, accents corail #E8553B (28/10/2026). */
 
 .wrap {
   max-width: 1200px;
@@ -35,8 +35,8 @@
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--op-soft);
-  color: var(--op);
+  background: #FFEFE7;
+  color: #B8361F;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,7 +120,7 @@
 }
 .chips svg {
   flex-shrink: 0;
-  color: var(--op);
+  color: #E8553B;
 }
 
 /* ── Diaporama + panneau ────────────────────────────────────────────── */
@@ -142,36 +142,27 @@
   aspect-ratio: 3 / 2;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--line);
 }
-/* La photo choisie : un liseré à la couleur du prestataire, par-dessus l'image. */
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 4px var(--op);
-  opacity: 0;
-  transition: opacity 0.18s ease;
-  pointer-events: none;
-}
-.stageOn::after {
-  opacity: 1;
+.track {
+  display: flex;
+  gap: 10px;
+  height: 100%;
+  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .slide {
-  position: absolute;
-  inset: 0;
-  width: 100%;
+  position: relative;
+  flex: 0 0 100%;
   height: 100%;
   border: 0;
   padding: 0;
-  background: none;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #FCEEE7;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
-  animation: slideIn 0.28s ease both;
 }
 .slide img {
   position: absolute;
@@ -180,19 +171,19 @@
   height: 100%;
   object-fit: cover;
 }
-@keyframes slideIn {
-  from {
-    opacity: 0.35;
-  }
-  to {
-    opacity: 1;
-  }
+/* La photo choisie : un liseré corail, par-dessus l'image. */
+.slideOn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 4px #E8553B;
+  pointer-events: none;
 }
 .lock {
   position: relative;
-  width: 14%;
-  max-width: 64px;
-  min-width: 44px;
+  width: 10.7%;
+  min-width: 40px;
   aspect-ratio: 1;
   pointer-events: none;
 }
@@ -230,7 +221,7 @@
 .slide:focus-visible,
 .thumb:focus-visible,
 .formula:focus-visible {
-  outline: 2px solid var(--op);
+  outline: 2px solid #E8553B;
   outline-offset: 2px;
 }
 
@@ -273,7 +264,7 @@
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: var(--op);
+  background: #E8553B;
   color: #fff;
   display: flex;
   align-items: center;
@@ -316,8 +307,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 .formulaOn {
-  background: var(--op-soft);
-  border: 1.5px solid var(--op);
+  background: #FFF1EA;
+  border: 1.5px solid #E8553B;
 }
 .formulaText {
   display: flex;
@@ -375,6 +366,21 @@
   height: 52px;
   font-weight: 500;
 }
+/* Le bouton de la maquette : aubergine, pêche quand il n'y a rien à commander. */
+.panel .panelCta,
+.bar .barCta {
+  background: #2A1022;
+  color: #fff;
+}
+.panel .panelCta:not(:disabled):hover,
+.bar .barCta:not(:disabled):hover {
+  background: #4C3045;
+}
+.panel .panelCta:disabled:not([aria-busy="true"]),
+.bar .barCta:disabled:not([aria-busy="true"]) {
+  background: #E8D2C9;
+  color: #fff;
+}
 .safe {
   margin: 0;
   display: flex;
@@ -391,10 +397,26 @@
   background: var(--ok);
 }
 .methods {
-  margin: -6px 0 0;
-  text-align: center;
-  font-size: 0.78rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.methods li {
+  width: 46px;
+  height: 30px;
+  border: 1px solid #E8D2C9;
+  border-radius: 5px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
   color: var(--ink-3);
+  white-space: nowrap;
 }
 
 /* Barre réduite (téléphone) */
@@ -487,7 +509,7 @@
   font-size: 0.94rem;
 }
 .faq a {
-  color: var(--op);
+  color: #B8361F;
 }
 
 /* ── Footer (même gabarit que la landing) ───────────────────────────── */
@@ -605,24 +627,17 @@
   .stage {
     margin: 0 -16px;
     aspect-ratio: 1 / 1;
-    max-height: calc(100svh - 220px);
+    border-radius: 0;
+  }
+  .slide {
     border-radius: 0;
   }
   .thumb {
     width: 64px;
     height: 48px;
   }
-  /* Le panneau passe sous les photos, sans rester collé : la barre du bas s'en charge. */
+  /* Comme la maquette : sur téléphone, la barre du bas remplace le panneau. */
   .panel {
-    position: static;
-    margin-top: 24px;
-  }
-  .panelTitle {
-    font-size: 1.25rem;
-  }
-  .panel .panelCta,
-  .panel .safe,
-  .panel .methods {
     display: none;
   }
   .bar {
@@ -637,10 +652,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .slide {
-    animation: none;
-  }
-  .stage::after,
+  .track,
   .thumb,
   .faq summary::after {
     transition: none;

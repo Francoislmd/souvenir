@@ -6,6 +6,9 @@ import styles from "@/components/gallery/sale.module.css";
 import v from "@/components/gallery/vente.module.css";
 import { quote, type PricingConfig } from "@/lib/pricing";
 import { formatEuros } from "@/lib/format";
+
+/** « 6,00 € » : la page de vente affiche les centimes, comme la maquette. */
+const eur2 = (cents: number) => (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 import { Spinner, TileSpinner } from "@/components/ui/Spinner";
 import { PlayMark, VideoBadge } from "@/components/ui/VideoBadge";
 import { formatDuration } from "@/lib/media";
@@ -128,7 +131,7 @@ export function PhotoPicker({
   const off = !all && n === 0;
   const allLabel = total === 1 ? "Votre photo" : `Les ${total} photos`;
   const recapLabel = all ? allLabel : `${n} photo${n > 1 ? "s" : ""}`;
-  const recapPrice = formatEuros(all ? allCents : selCents);
+  const recapPrice = eur2(all ? allCents : selCents);
 
   function pay(): void {
     if (off) return;
@@ -158,7 +161,6 @@ export function PhotoPicker({
     setZoom((z) => (z === null ? z : (z + delta + total) % total));
   }
   const kindOf = (p: PickerPhoto) => (p.isVideo ? "la vidéo" : "la photo");
-  const currentOn = current ? !packOnly && selected.has(current.id) : false;
 
   return (
     <>
@@ -168,7 +170,7 @@ export function PhotoPicker({
           <div className={v.show}>
             {/* Le diaporama : une photo à la fois, pleine largeur. */}
             <div
-              className={`${v.stage} ${currentOn ? v.stageOn : ""}`}
+              className={v.stage}
               onTouchStart={(e) => {
                 const t = e.changedTouches[0];
                 swipeFrom.current = t ? { x: t.clientX, y: t.clientY } : null;
@@ -183,28 +185,37 @@ export function PhotoPicker({
                 go(at + (dx < 0 ? 1 : -1));
               }}
             >
-              {current ? (
-                <button
-                  key={current.id}
-                  type="button"
-                  className={v.slide}
-                  aria-pressed={packOnly ? undefined : currentOn}
-                  aria-label={
-                    packOnly
-                      ? `Voir ${kindOf(current)} ${at + 1} en grand`
-                      : `${currentOn ? "Retirer" : "Choisir"} ${kindOf(current)} ${at + 1} sur ${total}${current.timeLabel ? `, ${current.timeLabel}` : ""}`
-                  }
-                  onClick={() => (packOnly ? setZoom(at) : toggle(current.id))}
-                >
-                  {current.previewUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={current.previewUrl} alt="" decoding="async" draggable={false} />
-                  ) : (
-                    <TileSpinner />
-                  )}
-                  {current.isVideo ? <PlayMark /> : current.previewUrl ? <LockBadge /> : null}
-                </button>
-              ) : null}
+              <div className={v.track} style={{ transform: `translateX(calc(${-at} * (100% + 10px)))` }}>
+                {photos.map((photo, i) => {
+                  const on = !packOnly && selected.has(photo.id);
+                  // Seules la photo affichée et ses voisines chargent leur image.
+                  const near = Math.abs(i - at) <= 1 || (at === 0 && i === total - 1) || (at === total - 1 && i === 0);
+                  return (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      className={`${v.slide} ${on ? v.slideOn : ""}`}
+                      tabIndex={i === at ? 0 : -1}
+                      aria-hidden={i === at ? undefined : true}
+                      aria-pressed={packOnly || i !== at ? undefined : on}
+                      aria-label={
+                        packOnly
+                          ? `Voir ${kindOf(photo)} ${i + 1} en grand`
+                          : `${on ? "Retirer" : "Choisir"} ${kindOf(photo)} ${i + 1} sur ${total}${photo.timeLabel ? `, ${photo.timeLabel}` : ""}`
+                      }
+                      onClick={() => (i !== at ? go(i) : packOnly ? setZoom(i) : toggle(photo.id))}
+                    >
+                      {photo.previewUrl && near ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photo.previewUrl} alt="" decoding="async" draggable={false} />
+                      ) : !photo.previewUrl ? (
+                        <TileSpinner />
+                      ) : null}
+                      {photo.isVideo ? <PlayMark /> : photo.previewUrl ? <LockBadge /> : null}
+                    </button>
+                  );
+                })}
+              </div>
               {current?.isVideo ? <VideoBadge durationSec={current.durationSec} /> : null}
               {current ? (
                 <button type="button" className={`${v.round} ${v.zoomBtn}`} aria-label={`Voir ${kindOf(current)} en grand`} onClick={() => setZoom(at)}>
@@ -279,7 +290,7 @@ export function PhotoPicker({
                       <span className={v.formulaName}>{f.name}</span>
                       <span className={v.formulaSub}>{f.sub}</span>
                     </span>
-                    <span className={v.formulaPrice}>{formatEuros(f.cents)}</span>
+                    <span className={v.formulaPrice}>{eur2(f.cents)}</span>
                   </button>
                 );
               })}
@@ -289,15 +300,24 @@ export function PhotoPicker({
                 <span>{recapLabel}</span>
                 <strong className={v.price}>{recapPrice}</strong>
               </div>
-              {off && total > 1 ? <p className={v.hint}>Touchez une photo pour la choisir.</p> : null}
-              {capped ? <p className={v.hint}>Vous avez atteint le prix de toutes les photos : elles sont toutes incluses.</p> : null}
+              {!all && unitCents > 0 && n * unitCents > allCents ? (
+                <p className={v.hint}>
+                  Au-delà de {Math.floor(allCents / unitCents)} photos, la formule «&nbsp;Toutes les photos&nbsp;» revient moins cher&nbsp;: le prix est plafonné à {eur2(allCents)}.
+                </p>
+              ) : null}
               {error ? <p className={styles.error}>{error}</p> : null}
               {payButton(v.panelCta)}
               <p className={v.safe}>
                 <span className={v.safeDot} aria-hidden="true" />
                 Paiement 100&nbsp;% sécurisé
               </p>
-              <p className={v.methods}>Carte bancaire, Apple Pay, Google Pay</p>
+              <ul className={v.methods} aria-label="Moyens de paiement acceptés">
+                <li>CB</li>
+                <li>Visa</li>
+                <li>MC</li>
+                <li>A&nbsp;Pay</li>
+                <li>G&nbsp;Pay</li>
+              </ul>
             </div>
           </aside>
         </div>
@@ -408,7 +428,7 @@ export function PhotoPicker({
 function LockBadge() {
   return (
     <svg className={v.lock} viewBox="-56 -56 112 112" aria-hidden="true">
-      <circle r="55.5" fill="rgba(42, 16, 34, 0.55)" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="1.5" />
+      <circle r="55.5" fill="rgba(42, 16, 34, 0.55)" stroke="rgba(255, 255, 255, 0.85)" strokeWidth="1.5" />
       <g transform="translate(0 2)" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="-17" y="-4" width="34" height="24" rx="5" />
         <path d="M-10-4v-10a10 10 0 0 1 20 0v10" />

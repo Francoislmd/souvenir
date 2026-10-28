@@ -452,13 +452,13 @@ export function BoutiqueGallery({
                   </div>
                   <div className={v.footCol}>
                     <span>Votre commande</span>
+                    <a href={`/g/${token}`}>Retrouver mes photos</a>
+                    {seller?.email ? <a href={`mailto:${seller.email}?subject=Probl%C3%A8me%20de%20t%C3%A9l%C3%A9chargement`}>Problème de téléchargement</a> : null}
                     <a href={`/g/${token}/retrait`}>Retirer une photo</a>
-                    <a href={`/g/${token}/supprimer`}>Supprimer mes photos</a>
                     {seller?.email ? <a href={`mailto:${seller.email}`}>Aide</a> : null}
                   </div>
                   <div className={v.footCol}>
                     <span>Le prestataire</span>
-                    {seller?.name ? <span>{seller.name}</span> : null}
                     {seller?.address ? <span>{seller.address}</span> : null}
                     {seller?.email ? <a href={`mailto:${seller.email}`}>{seller.email}</a> : null}
                   </div>
@@ -466,7 +466,7 @@ export function BoutiqueGallery({
                     <span>Paiement</span>
                     <span>Paiement sécurisé par Stripe</span>
                     <span>Carte, Apple Pay, Google Pay</span>
-                    <span>Reçu envoyé après l&rsquo;achat</span>
+                    <span>Reçu envoyé par e-mail</span>
                   </div>
                 </div>
                 <div className={v.footBottom}>
@@ -476,7 +476,9 @@ export function BoutiqueGallery({
                   </span>
                   <nav className={v.footLegal} aria-label="Informations légales">
                     <a href="/cgv">CGV</a>
+                    <a href="/mentions-legales">Mentions légales</a>
                     <a href={`/g/${token}/confidentialite`}>Confidentialité</a>
+                    <a href="/confidentialite#cookies">Cookies</a>
                   </nav>
                   <span className={v.powered}>
                     Propulsé par <Logo variant="lockup" height={18} title="Linktrip" />
