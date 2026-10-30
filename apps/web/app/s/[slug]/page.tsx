@@ -35,7 +35,6 @@ export default async function StorePage({ params }: { params: { slug: string } }
       shareCode: true,
       activity: true,
       startsAt: true,
-      slots: { select: { startsAt: true }, orderBy: { startsAt: "asc" } },
       _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } },
     },
   });
@@ -47,8 +46,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
       dayNumber: s.startsAt.toLocaleDateString("fr-FR", { day: "numeric", timeZone: "Europe/Paris" }),
       month: s.startsAt.toLocaleDateString("fr-FR", { month: "short", timeZone: "Europe/Paris" }).replace(".", ""),
       weekday: s.startsAt.toLocaleDateString("fr-FR", { weekday: "long", timeZone: "Europe/Paris" }).replace(/^./, (c) => c.toUpperCase()),
-      // L'heure de la sortie, ou celles de ses départs s'il y en a plusieurs.
-      hours: (s.slots.length > 1 ? s.slots.map((d) => d.startsAt) : [s.startsAt]).map(formatHourFr).join(", "),
+      hours: formatHourFr(s.startsAt),
       photoCount: s._count.photos,
     }));
 

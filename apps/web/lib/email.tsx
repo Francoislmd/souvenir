@@ -277,7 +277,6 @@ export async function sendPhotoWithdrawalNotifiedEmail(params: {
   operatorName: string;
   activity: string;
   sortieDate: string;
-  slotLabel: string;
   galleryUrl: string;
 }): Promise<void> {
   const to = await getReplyTo(params.operatorId);
@@ -287,7 +286,6 @@ export async function sendPhotoWithdrawalNotifiedEmail(params: {
     operatorName: params.operatorName,
     activity: params.activity,
     sortieDate: params.sortieDate,
-    slotLabel: params.slotLabel,
     galleryUrl: params.galleryUrl,
   };
   await dispatch({

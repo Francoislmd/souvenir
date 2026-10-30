@@ -47,13 +47,13 @@ export function remainingCapCents(access: Access, priceAllCents: number): number
 }
 
 /**
- * Les photos qu'un client peut voir : celles de son créneau (sortie de
- * groupe), sinon les siennes et les communes (galerie individuelle). Une
- * seule définition, partagée par la galerie, le paiement et l'archive zip :
- * ce qui se voit est exactement ce qui s'achète et se télécharge.
+ * Les photos qu'un client peut voir : celles de la sortie qui sont à lui ou
+ * communes. En sortie de groupe, aucune photo n'a de propriétaire : le client
+ * voit toute la sortie. Plus de notion de départ depuis le 30/10/2026 (une
+ * sortie = une galerie) ; `slotId` est accepté mais ignoré. Une seule
+ * définition, partagée par la galerie, le paiement et l'archive zip : ce qui
+ * se voit est exactement ce qui s'achète et se télécharge.
  */
 export function visiblePhotoWhere(participant: { id: string; sortieId: string; slotId?: string | null }) {
-  return participant.slotId
-    ? { slotId: participant.slotId, hiddenAt: null, status: { not: "FAILED" as const } }
-    : { sortieId: participant.sortieId, hiddenAt: null, status: { not: "FAILED" as const }, OR: [{ ownerId: participant.id }, { ownerId: null }] };
+  return { sortieId: participant.sortieId, hiddenAt: null, status: { not: "FAILED" as const }, OR: [{ ownerId: participant.id }, { ownerId: null }] };
 }

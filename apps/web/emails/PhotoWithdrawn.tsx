@@ -11,11 +11,10 @@ export interface PhotoWithdrawnProps {
   operatorName: string;
   activity: string;
   sortieDate: string;
-  slotLabel: string;
   galleryUrl: string; // lien vers la sortie, côté app opérateur
 }
 
-export default function PhotoWithdrawn({ operatorName, activity, sortieDate, slotLabel, galleryUrl }: PhotoWithdrawnProps) {
+export default function PhotoWithdrawn({ operatorName, activity, sortieDate, galleryUrl }: PhotoWithdrawnProps) {
   return (
     <Html lang="fr">
       <Head />
@@ -25,7 +24,7 @@ export default function PhotoWithdrawn({ operatorName, activity, sortieDate, slo
           <Section style={{ padding: 22 }}>
             <Text style={s.h1}>Une photo a été retirée</Text>
             <Text style={s.lead}>
-              Un client de votre sortie {activity} du {sortieDate} (créneau {slotLabel}) a demandé le retrait d&rsquo;une photo — sans justification, comme
+              Un client de votre sortie {activity} du {sortieDate} a demandé le retrait d&rsquo;une photo — sans justification, comme
               promis. Elle a été masquée immédiatement, partout.
             </Text>
             <Text style={{ ...s.lead, marginTop: 12 }}>
@@ -48,6 +47,5 @@ PhotoWithdrawn.PreviewProps = {
   operatorName: "Canyon Aventure",
   activity: "Canyoning",
   sortieDate: "22 juillet",
-  slotLabel: "11 h 00",
   galleryUrl: "https://linktrip.co/sorties/abc123",
 } satisfies PhotoWithdrawnProps;

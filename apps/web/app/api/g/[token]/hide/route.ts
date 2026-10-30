@@ -32,11 +32,10 @@ export async function POST(request: Request, { params }: { params: { token: stri
       select: { id: true, sortieId: true, slotId: true, deletedAt: true, sortie: { include: { operator: { select: { id: true, name: true } } } } },
     });
     if (!participant || participant.deletedAt) return Response.json({ error: "not_found" }, { status: 404 });
-    if (participant.sortie.mode === "GROUPE" && !participant.slotId) return Response.json({ error: "not_found" }, { status: 404 });
+    if (participant.sortie.mode === "GROUPE" && participant.sortie.status !== "SENT") return Response.json({ error: "not_found" }, { status: 404 });
 
     const photo = await prisma.photo.findFirst({
       where: { ...visiblePhotoWhere(participant), id: parsed.data.photoId },
-      include: { slot: true },
     });
     if (!photo) return Response.json({ error: "not_found" }, { status: 404 });
 
@@ -50,7 +49,6 @@ export async function POST(request: Request, { params }: { params: { token: stri
         operatorName: operator.name,
         activity: participant.sortie.activity,
         sortieDate: formatDateFr(participant.sortie.startsAt),
-        slotLabel: photo.slot?.label ?? "-",
         galleryUrl: `${env.NEXT_PUBLIC_APP_URL}/sorties/${photo.sortieId}`,
       });
     } catch (error) {

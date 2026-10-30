@@ -14,8 +14,8 @@ export default async function PrivateWithdrawPage({ params }: { params: { token:
     include: { sortie: { include: { operator: true } } },
   });
   if (!participant || participant.deletedAt) notFound();
-  // Pas encore de départ choisi : il n'y a rien à montrer, donc rien à retirer.
-  if (participant.sortie.mode === "GROUPE" && !participant.slotId) redirect(`/g/${participant.token}`);
+  // Sortie pas encore publiée : il n'y a rien à montrer, donc rien à retirer.
+  if (participant.sortie.mode === "GROUPE" && participant.sortie.status !== "SENT") redirect(`/g/${participant.token}`);
 
   const operator = participant.sortie.operator;
   const photos = await getBoutiquePhotos(

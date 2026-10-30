@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
-import { departureKnown, departuresWithPhotos, galleryTeaser, privateGalleryUrl, sendPrivateInvite } from "@/lib/private-link";
+import { galleryTeaser, privateGalleryUrl, sendPrivateInvite } from "@/lib/private-link";
 import { GALLERIES_SUBJECT, sendYourGalleriesEmail } from "@/lib/email";
 import { photosOf } from "@/lib/format";
 import { parsePhone, phoneVariants } from "@/lib/phone";
@@ -22,7 +22,7 @@ type LinkOutcome =
   /** Le lien personnel vient de partir. */
   | "sent"
   /** L'adresse est sur la liste, mais ses photos ne sont pas encore prêtes
-   *  (sortie pas publiée, ou départ pas encore indiqué) : le lien partira seul. */
+   *  (sortie pas encore publiée) : le lien partira seul. */
   | "pending"
   /** Aucune sortie ne correspond à cette adresse. */
   | "no_match";
@@ -79,7 +79,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
         return reply("no_match");
       }
 
-      const ready = sortie.status === "SENT" && departureKnown(participant, (await departuresWithPhotos(sortie.id)).length);
+      const ready = sortie.status === "SENT";
       if (ready) {
         try {
           await sendPrivateInvite(participant, sortie);
@@ -107,7 +107,6 @@ export async function POST(request: Request, { params }: { params: { slug: strin
     const ready: typeof participants = [];
     for (const participant of participants) {
       if (participant.sortie.status !== "SENT") continue;
-      if (participant.sortie.mode === "GROUPE" && !departureKnown(participant, (await departuresWithPhotos(participant.sortieId)).length)) continue;
       ready.push(participant);
     }
 

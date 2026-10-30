@@ -5,44 +5,24 @@ import { sendGroupInviteEmail } from "./email";
 import { buildEmailCover } from "./email-cover";
 import { getPreviewUrl } from "./storage";
 import { visiblePhotoWhere } from "./access";
-import { formatHourFr, photosOf } from "./format";
+import { photosOf } from "./format";
 import { sendTextMessage } from "./twilio";
 
 /**
- * Les départs d'une sortie de groupe qui ont des photos. À partir de deux,
- * chaque client doit être rattaché au sien par le prestataire avant de
- * recevoir son lien : comme un dossard, l'adresse mène à SES photos, et le
- * client ne choisit rien lui-même.
- */
-export async function departuresWithPhotos(sortieId: string) {
-  const slots = await prisma.slot.findMany({
-    where: { sortieId },
-    orderBy: { startsAt: "asc" },
-    include: { _count: { select: { photos: { where: { hiddenAt: null, status: { not: "FAILED" } } } } } },
-  });
-  return slots.filter((s) => s._count.photos > 0).map((s) => ({ id: s.id, startsAt: s.startsAt, photoCount: s._count.photos }));
-}
-
-/** Le lien peut partir : un seul départ (ou aucun encore), ou le sien est indiqué. */
-export function departureKnown(participant: { slotId: string | null }, departureCount: number): boolean {
-  return departureCount <= 1 || !!participant.slotId;
-}
-
-/**
  * Ce que le mail montre de la galerie d'un client : le nombre de photos de
- * son départ, quatre vignettes très floutées, et l'heure du départ.
+ * la sortie et quatre vignettes très floutées. Plus de départ depuis le
+ * 30/10/2026 : une sortie = une galerie, la même pour tous ses clients.
  */
-export async function galleryTeaser(participant: { id: string; sortieId: string; slotId: string | null }): Promise<{ photoCount: number; thumbs: string[]; detail: string | null }> {
+export async function galleryTeaser(participant: { id: string; sortieId: string; slotId?: string | null }): Promise<{ photoCount: number; thumbs: string[]; detail: string | null }> {
   const where = visiblePhotoWhere(participant);
-  const [photoCount, blurred, slot] = await Promise.all([
+  const [photoCount, blurred] = await Promise.all([
     prisma.photo.count({ where }),
     prisma.photo.findMany({ where: { ...where, blurEmailKey: { not: null } }, select: { blurEmailKey: true }, orderBy: [{ takenAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }], take: 4 }),
-    participant.slotId ? prisma.slot.findUnique({ where: { id: participant.slotId }, select: { startsAt: true } }) : null,
   ]);
   return {
     photoCount,
     thumbs: blurred.map((p) => getPreviewUrl(p.blurEmailKey!)),
-    detail: slot ? `départ ${formatHourFr(slot.startsAt)}` : null,
+    detail: null,
   };
 }
 
@@ -65,8 +45,7 @@ export async function sendPrivateInvite(
   sortie: Sortie & { operator: Operator },
   coverUrl?: string | null,
 ): Promise<void> {
-  const row = await prisma.participant.findUnique({ where: { id: participant.id }, select: { slotId: true } });
-  const teaser = await galleryTeaser({ id: participant.id, sortieId: sortie.id, slotId: row?.slotId ?? null });
+  const teaser = await galleryTeaser({ id: participant.id, sortieId: sortie.id });
   if (!participant.contact.includes("@")) {
     // Un numéro de téléphone : le lien part par SMS (lib/twilio.ts).
     await sendTextMessage(
@@ -109,11 +88,7 @@ export async function sendPendingInvites(sortieId: string): Promise<number> {
   });
   if (!sortie || sortie.status !== "SENT" || sortie.participants.length === 0) return 0;
 
-  // Plusieurs départs : seuls les clients rattachés au leur reçoivent le lien.
-  // Les autres le recevront quand le prestataire l'indiquera.
-  const departures = await departuresWithPhotos(sortie.id);
-  const ready = sortie.participants.filter((p) => departureKnown(p, departures.length));
-  if (ready.length === 0) return 0;
+  const ready = sortie.participants;
 
   const coverUrl = await buildEmailCover(sortie.id).catch(() => null);
   let sent = 0;

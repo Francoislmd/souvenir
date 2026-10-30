@@ -4,9 +4,8 @@ import { operatorVars } from "@/lib/color";
 import { track } from "@/lib/analytics";
 import { getBoutiquePhotos } from "@/lib/gallery";
 import { accessFromOrders, remainingCapCents } from "@/lib/access";
-import { departuresWithPhotos } from "@/lib/private-link";
 import { getSeller } from "@/lib/seller";
-import { formatDayFr, formatHourFr, formatSortieTitle, formatWhenFr } from "@/lib/format";
+import { formatDayFr, formatSortieTitle, formatWhenFr } from "@/lib/format";
 import { SaleHeader } from "@/components/gallery/SaleHeader";
 import { BoutiqueGallery } from "@/components/gallery/BoutiqueGallery";
 import galleryStyles from "@/components/gallery/gallery.module.css";
@@ -20,12 +19,11 @@ export const dynamic = "force-dynamic";
  * La galerie privée d'un client. C'est la seule porte vers des photos : le
  * QR code de la sortie ne montre rien, il envoie ce lien par e-mail.
  *
- * Sortie de groupe : le client voit son départ et rien d'autre. Le départ
- * est indiqué par le prestataire, jamais choisi par le client ; s'il n'y en
- * a qu'un, il est attribué d'office.
+ * Sortie de groupe : le client voit toutes les photos de la sortie (plus de
+ * notion de départ depuis le 30/10/2026).
  */
 export default async function GalleryPage({ params }: { params: { token: string } }) {
-  let participant = await prisma.participant.findUnique({
+  const participant = await prisma.participant.findUnique({
     where: { token: params.token },
     include: { sortie: { include: { operator: true } }, orders: true },
   });
@@ -48,26 +46,15 @@ export default async function GalleryPage({ params }: { params: { token: string 
     </div>
   );
 
-  if (sortie.mode === "GROUPE" && !participant.slotId) {
-    const withPhotos = await departuresWithPhotos(sortie.id);
-
-    if (withPhotos.length !== 1) {
-      return page(
-        <div className={galleryStyles.head}>
-          <h1>{title}</h1>
-          <p className={galleryStyles.sub}>{formatWhenFr(sortie.startsAt)}</p>
-          <p className={galleryStyles.hint}>
-            {withPhotos.length === 0
-              ? "Vos photos arrivent. Ce lien reste le bon : revenez-y un peu plus tard."
-              : `${operator.name} n'a pas encore indiqué votre départ. Ce lien reste le bon : revenez-y un peu plus tard.`}
-          </p>
-        </div>,
-      );
-    }
-
-    // Un seul départ : c'est forcément le sien.
-    await prisma.participant.updateMany({ where: { id: participant.id, slotId: null }, data: { slotId: withPhotos[0]!.id } });
-    participant = { ...participant, slotId: withPhotos[0]!.id };
+  // Sortie de groupe pas encore publiée : rien à montrer pour l'instant.
+  if (sortie.mode === "GROUPE" && sortie.status !== "SENT") {
+    return page(
+      <div className={galleryStyles.head}>
+        <h1>{title}</h1>
+        <p className={galleryStyles.sub}>{formatWhenFr(sortie.startsAt)}</p>
+        <p className={galleryStyles.hint}>Vos photos arrivent. Ce lien reste le bon : revenez-y un peu plus tard.</p>
+      </div>,
+    );
   }
 
   const access = accessFromOrders(participant.orders, operator.priceAllCents);
@@ -79,21 +66,19 @@ export default async function GalleryPage({ params }: { params: { token: string 
   );
   const purchasedIds = access.packReached ? photos.map((p) => p.id) : Array.from(access.ids);
 
-  const slot = participant.slotId ? await prisma.slot.findUnique({ where: { id: participant.slotId }, select: { startsAt: true, guide: true } }) : null;
-  // Titre « Vos photos de canyoning », au-dessus trois pastilles : « vendredi
-  // 26 sept. », « départ 10 h avec Léa », le nombre de photos. Le client
-  // vérifie d'un coup d'œil que ce sont les siennes.
-  const shortDay = (slot?.startsAt ?? sortie.startsAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short", timeZone: "Europe/Paris" });
-  const guide = slot?.guide ?? sortie.guide;
+  // Titre « Vos photos de canyoning », au-dessus les pastilles : « vendredi
+  // 26 sept. », « avec Léa », le nombre de photos. Le client vérifie d'un
+  // coup d'œil que ce sont les siennes.
+  const shortDay = sortie.startsAt.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short", timeZone: "Europe/Paris" });
   const context = {
     title: sortie.activity,
     line: shortDay,
-    strong: slot ? `départ ${formatHourFr(slot.startsAt)}${guide ? ` avec ${guide}` : ""}` : guide ? `avec ${guide}` : null,
+    strong: sortie.guide ? `avec ${sortie.guide}` : null,
     // Titre « Vos photos du samedi 26 septembre », pastille du lieu dessous.
-    day: formatDayFr(slot?.startsAt ?? sortie.startsAt),
+    day: formatDayFr(sortie.startsAt),
     place: sortie.place,
   };
-  const when = slot ? `${formatDayFr(slot.startsAt)}, départ de ${formatHourFr(slot.startsAt)}` : formatWhenFr(sortie.startsAt);
+  const when = formatWhenFr(sortie.startsAt);
 
   const seller = await getSeller(operator.id);
   // Le reçu part par le canal du participant (lib/order-fulfillment.ts).

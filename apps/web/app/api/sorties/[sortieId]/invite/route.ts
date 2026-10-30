@@ -5,7 +5,7 @@ import { getOperatorUser } from "@/lib/current-user";
 import { deriveChannel } from "@/lib/channel";
 import { nameFromEmail } from "@/lib/emails";
 import { parsePhone, phoneVariants } from "@/lib/phone";
-import { departureKnown, departuresWithPhotos, sendPrivateInvite } from "@/lib/private-link";
+import { sendPrivateInvite } from "@/lib/private-link";
 import { buildEmailCover } from "@/lib/email-cover";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -16,8 +16,6 @@ export const maxDuration = 60;
 const schema = z.object({
   // Adresses e-mail ou numéros de téléphone (le lien part alors par SMS).
   emails: z.array(z.string().trim().min(1).max(254)).min(1).max(200),
-  /** Le départ de ces adresses : la liste collée sous « Départ de 10 h ». */
-  slotId: z.string().min(1).optional(),
 });
 
 /**
@@ -45,7 +43,7 @@ function sendFailureReason(error: unknown): string {
  * Chaque adresse devient un Participant, marqué `sentAt` : c'est ce qui la
  * fait apparaître dans « Vos clients » avec l'état « Envoyé ». Avant, l'envoi
  * ne laissait aucune trace et l'opérateur ne savait plus à qui il avait écrit.
- * Chaque client choisit son départ à la première ouverture de son lien.
+ * Tous les clients d'une sortie reçoivent la même galerie : toutes ses photos.
  *
  * Réenvoyer à une adresse déjà présente ne la duplique pas.
  */
@@ -79,14 +77,6 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
     // Un bandeau par envoi, partagé par tous les destinataires.
     const coverUrl = await buildEmailCover(sortie.id);
     const now = new Date();
-    // Plusieurs départs : l'adresse est ajoutée à la liste, et son lien part
-    // quand le prestataire indique son départ (api/participants/[id]/slot).
-    const departureCount = sortie.status === "SENT" ? (await departuresWithPhotos(sortie.id)).length : 0;
-    const slotId = parsed.data.slotId;
-    if (slotId) {
-      const slot = await prisma.slot.findFirst({ where: { id: slotId, sortieId: sortie.id }, select: { id: true } });
-      if (!slot) return Response.json({ error: "Départ introuvable" }, { status: 404 });
-    }
     let sent = 0;
     let waiting = 0;
     let failure: string | null = null;
@@ -96,7 +86,7 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
         // qui renvoie à toute sa liste ne doit pas la voir doubler.
         const existing = await prisma.participant.findFirst({
           where: { sortieId: sortie.id, deletedAt: null, ...(to.includes("@") ? { contact: { equals: to, mode: "insensitive" as const } } : { contact: { in: phoneVariants(to) } }) },
-          select: { id: true, token: true, contact: true, slotId: true, orders: { where: { status: "succeeded" }, select: { id: true } } },
+          select: { id: true, token: true, contact: true },
         });
         const participant =
           existing ??
@@ -109,22 +99,15 @@ export async function POST(request: Request, { params }: { params: { sortieId: s
               token: crypto.randomUUID(),
               consentAt: now,
               deleteAt: new Date(now.getTime() + 90 * DAY_MS),
-              slotId: slotId ?? null,
             },
-            select: { id: true, token: true, contact: true, slotId: true, orders: { where: { status: "succeeded" }, select: { id: true } } },
+            select: { id: true, token: true, contact: true },
           }));
 
-        // Collée sous un autre départ : on la déplace, sauf si elle a déjà
-        // payé des photos du sien (elles disparaîtraient de sa galerie).
-        if (slotId && participant.slotId !== slotId && participant.orders.length === 0) {
-          await prisma.participant.update({ where: { id: participant.id }, data: { slotId } });
-          participant.slotId = slotId;
-        }
-        if (!departureKnown(participant, departureCount)) {
+        // Avant publication, l'adresse attend : sendPendingInvites la servira.
+        if (sortie.status !== "SENT") {
           waiting += 1;
           continue;
         }
-        // Chacun reçoit SA galerie : le lien n'ouvre que son départ.
         await sendPrivateInvite(participant, sortie, coverUrl);
         sent += 1;
       } catch (error) {

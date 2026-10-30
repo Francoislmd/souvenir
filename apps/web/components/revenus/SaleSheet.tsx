@@ -212,12 +212,6 @@ function SaleBody({ sale, onRefunded }: { sale: Sale; onRefunded: () => void }) 
             <span className={styles.rvMuted}>{formatWhenFr(new Date(sale.sortie.startsAt))}</span>
           </dd>
         </div>
-        {sale.slotLabel ? (
-          <div>
-            <dt>Départ</dt>
-            <dd>{sale.slotLabel}</dd>
-          </div>
-        ) : null}
         <div>
           <dt>Contenu</dt>
           <dd>{contentLabel(sale.isPack, sale.itemCount, sale.videoCount) || "—"}</dd>

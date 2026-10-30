@@ -4,7 +4,6 @@ import { prisma } from "./prisma";
 import { track } from "./analytics";
 import { ORIGINALS_BUCKET, PREVIEWS_BUCKET, downloadObject, uploadObject } from "./storage";
 import { generateGroupPreview } from "./group-watermark";
-import { clusterByTime, type ClusterItem } from "./cluster";
 import { imageSourceKeyOf } from "./media";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -23,11 +22,6 @@ interface PhotoPrep {
   groupPreviewKey: string | null;
   /** Le fichier source a pu être lu : sans lui, la photo n'a rien à montrer. */
   readable?: boolean;
-}
-
-const parisDayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" });
-function isSameParisDay(a: Date, b: Date): boolean {
-  return parisDayFormatter.format(a) === parisDayFormatter.format(b);
 }
 
 // Le filigrane tourne désormais un modèle de détection de visage (TF.js,
@@ -241,19 +235,18 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
       : { id: photo.id, takenAt: photo.takenAt, groupPreviewKey: photo.groupPreviewKey };
   });
   progress.onSorting?.();
-  // L'EXIF n'est fiable que si elle tombe le même jour (heure de Paris) que
-  // la date renseignée par l'opérateur pour la sortie — sinon on l'ignore
-  // plutôt que de lui faire confiance aveuglément. Cas vus en pratique :
-  // photos de test/captures d'écran sans rapport, photos ré-uploadées d'une
-  // autre sortie, horloge d'appareil mal réglée. Sans ce garde-fou, une
-  // seule photo à l'EXIF aberrant peut (a) afficher un horaire de créneau
-  // sans rapport avec la sortie, et (b) entrer en collision avec le repli
-  // "sans EXIF" des autres photos si leur tuilage retombe sur cette même
-  // date par coïncidence — créant un faux créneau distinct pour ce qui
-  // n'est qu'une erreur de métadonnées.
-  const prepared = preparedRaw.map((p) => (p.takenAt && !isSameParisDay(p.takenAt, sortie.startsAt) ? { ...p, takenAt: null } : p));
-  const items: ClusterItem[] = prepared.map((p) => ({ id: p.id, takenAt: p.takenAt }));
-  const clusters = clusterByTime(items, undefined, sortie.startsAt);
+  // Une sortie = une galerie (30/10/2026) : plus de découpage en départs.
+  // Avant, les photos étaient regroupées par heure de prise de vue
+  // (lib/cluster.ts), et celles sans heure valable partaient dans un
+  // « créneau de repli » à part : une sortie de 15 photos dont une seule
+  // avait son EXIF donnait deux « départs de 15 h 46 ». Un seul Slot est
+  // gardé, comme support technique de la couverture ; le client n'en voit
+  // rien. Couverture : la première photo dans l'ordre de prise de vue.
+  const ordered = [...preparedRaw].sort((x, y) => {
+    if (x.takenAt && y.takenAt) return x.takenAt.getTime() - y.takenAt.getTime();
+    return x.takenAt ? -1 : y.takenAt ? 1 : 0;
+  });
+  const clusters = ordered.length > 0 ? [{ ids: ordered.map((p) => p.id), startsAt: sortie.startsAt }] : [];
 
   await prisma.$transaction(
     async (tx) => {
@@ -281,6 +274,9 @@ export async function publishGroupSortie(sortieId: string, progress: PublishProg
         });
 
         await tx.photo.updateMany({ where: { id: { in: cluster.ids } }, data: { slotId: slot.id } });
+        // Tous les clients de la sortie sur ce Slot unique (la suppression
+        // ci-dessus a remis leur slotId à null).
+        await tx.participant.updateMany({ where: { sortieId: sortie.id }, data: { slotId: slot.id } });
       }
 
       // takenAt et groupPreviewKey sont renseignés sur chaque photo préparée
