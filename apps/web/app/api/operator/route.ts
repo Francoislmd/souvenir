@@ -97,13 +97,13 @@ export async function POST(request: Request): Promise<Response> {
 
   // Un lien « commission offerte » ouvert avant l'inscription (app/code/[code]).
   // Un code déjà pris ou inconnu n'empêche pas la création du compte.
-  let feeWaivedUntil: string | null = null;
+  let feeWaiverDays: number | null = null;
   const pendingCode = cookies().get(FEE_CODE_COOKIE)?.value;
   if (pendingCode) {
     const result = await redeemFeeCode(operator.id, pendingCode).catch(() => null);
-    if (result?.ok) feeWaivedUntil = result.until.toISOString();
+    if (result?.ok) feeWaiverDays = result.days;
     cookies().delete(FEE_CODE_COOKIE);
   }
 
-  return Response.json({ operatorId: operator.id, slug: operator.slug, feeWaivedUntil }, { status: 201 });
+  return Response.json({ operatorId: operator.id, slug: operator.slug, feeWaiverDays }, { status: 201 });
 }

@@ -71,6 +71,7 @@ export default async function SignupPage({ searchParams }: { searchParams: { nam
         packOnly: o.packOnly,
         stripeOnboarded: o.stripeOnboarded,
         feePercent: o.feePercent,
+        feeWaiverDays: o.feeWaiverDays,
         feeWaivedUntil: o.feeWaivedUntil?.toISOString() ?? null,
         vatExempt: o.vatExempt,
         imageRightsAcked: !!o.imageRightsAckAt,

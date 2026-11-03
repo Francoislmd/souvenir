@@ -40,7 +40,9 @@ interface OperatorSettings {
   priceAllCents: number;
   packOnly: boolean;
   feePercent: number;
-  /** Commission offerte jusqu'à cette date (ISO) : code « commission offerte ». */
+  /** Code « commission offerte » : durée de la période, qui démarre à la première vente. */
+  feeWaiverDays: number | null;
+  /** Fin de la période (ISO), posée à la première vente. */
   feeWaivedUntil: string | null;
   /** Le compte a déjà utilisé un code : le champ ne s'affiche plus. */
   feeCodeUsed: boolean;
@@ -60,7 +62,7 @@ function dateFr(iso: string): string {
 }
 
 const CODE_NOTICES: Record<string, string> = {
-  ok: "Code appliqué : la commission Linktrip est offerte.",
+  ok: "Code appliqué : la commission est offerte, à partir de votre première vente.",
   invalid: "Ce code n'existe pas ou n'est plus valable.",
   rate_limited: "Trop d'essais. Réessayez dans une heure.",
   stripe: "Le code n'a pas pu être vérifié. Réessayez depuis ce champ.",
@@ -160,12 +162,14 @@ export function ReglagesForm({
   const [vatExempt, setVatExempt] = useState(operator.vatExempt);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [copied, setCopied] = useState(false);
-  const [waivedUntil, setWaivedUntil] = useState(operator.feeWaivedUntil);
+  const [waiverDays, setWaiverDays] = useState(operator.feeWaiverDays);
+  const waivedUntil = operator.feeWaivedUntil;
   const [codeUsed, setCodeUsed] = useState(operator.feeCodeUsed);
   const [code, setCode] = useState("");
   const [codeBusy, setCodeBusy] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
-  const waived = !!waivedUntil && new Date(waivedUntil) > new Date();
+  // Offerte tant que la période court, et avant la première vente qui la démarre.
+  const waived = waivedUntil ? new Date(waivedUntil) > new Date() : !!waiverDays;
   const feeNow = waived ? 0 : operator.feePercent;
 
   // Plus de bouton « Enregistrer » : les interrupteurs avaient l'air immédiats
@@ -247,9 +251,9 @@ export function ReglagesForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
-      const body = (await res.json().catch(() => ({}))) as { until?: string; message?: string };
-      if (res.ok && body.until) {
-        setWaivedUntil(body.until);
+      const body = (await res.json().catch(() => ({}))) as { days?: number; message?: string };
+      if (res.ok && body.days) {
+        setWaiverDays(body.days);
         setCodeUsed(true);
         setCode("");
         toast(CODE_NOTICES.ok);
@@ -527,6 +531,11 @@ export function ReglagesForm({
                 Commission Linktrip offerte jusqu&rsquo;au {dateFr(waivedUntil)}, puis {operator.feePercent} % sur chaque vente. Les frais
                 Stripe sont à votre charge.
               </p>
+            ) : waived && waiverDays ? (
+              <p>
+                Commission Linktrip offerte pendant {waiverDays} jours à partir de votre première vente, puis {operator.feePercent} %. Les
+                frais Stripe sont à votre charge.
+              </p>
             ) : (
               <p>Linktrip prélève {operator.feePercent} % sur chaque vente. Les frais Stripe sont à votre charge.</p>
             )}
@@ -620,7 +629,7 @@ export function ReglagesForm({
                   </button>
                 </form>
                 <span id="rgFeeCodeHint" className={`${styles.rgHint} ${codeError ? styles.rgHintBad : ""}`}>
-                  {codeError ?? "Un code reçu de Linktrip ? Il supprime la commission pendant la période indiquée."}
+                  {codeError ?? "Un code reçu de Linktrip ? La période offerte démarre à votre première vente."}
                 </span>
               </div>
             )}

@@ -31,9 +31,12 @@ model Operator {
   pricePhotoCents Int     @default(800)
   priceAllCents   Int     @default(3900) // "Toutes vos photos" — aussi "Tout le créneau" en mode GROUPE
   feePercent      Int     @default(20)
-  // Commission offerte jusqu'à cette date (code promo Stripe « commission
-  // offerte », lib/fee-waiver.ts). Tant qu'elle n'est pas passée, application_fee_amount
-  // vaut 0 ; feePercent reprend ensuite tout seul.
+  // Code promo Stripe « commission offerte » (lib/fee-waiver.ts). Le code
+  // pose feeWaiverDays ; la période ne démarre qu'à la première vente, qui
+  // pose feeWaivedUntil = date de la vente + feeWaiverDays. D'ici là et
+  // jusqu'à cette date, application_fee_amount vaut 0 ; feePercent reprend
+  // ensuite tout seul.
+  feeWaiverDays   Int?
   feeWaivedUntil  DateTime?
   packOnly        Boolean @default(false) // true = le client ne peut acheter que le pack complet, pas photo par photo
 

@@ -1,3 +1,4 @@
+import { startFeeWaiverClock } from "./fee-waiver";
 import type Stripe from "stripe";
 import type { Operator, Order, Participant, Sortie } from "@souvenir/db";
 import { prisma } from "./prisma";
@@ -133,6 +134,11 @@ export async function fulfillPaymentIntent(intent: Stripe.PaymentIntent): Promis
     include: { sortie: { include: { operator: true } } },
   });
   if (!participant) return;
+
+  // Code « commission offerte » en attente : cette première vente démarre la période.
+  await startFeeWaiverClock(participant.sortie.operator, updated.paidAt ?? new Date()).catch((error) =>
+    console.error("[fee-code] période non démarrée", participant.sortie.operatorId, error),
+  );
 
   await track("purchase_succeeded", {
     operatorId: participant.sortie.operatorId,

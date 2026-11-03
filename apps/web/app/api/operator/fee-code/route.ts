@@ -27,5 +27,5 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "stripe", message: "Le code n'a pas pu être vérifié. Réessayez dans un instant." }, { status: 502 });
   }
   if (!result.ok) return Response.json({ error: result.error, message: result.message }, { status: 400 });
-  return Response.json({ until: result.until.toISOString() });
+  return Response.json({ days: result.days });
 }

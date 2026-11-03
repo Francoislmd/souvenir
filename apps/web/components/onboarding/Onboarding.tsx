@@ -45,7 +45,9 @@ export interface OnboardingOperator {
   stripeOnboarded: boolean;
   /** La commission Linktrip, pour dire au pro ce qu'il touche sur un lot. */
   feePercent: number;
-  /** Commission offerte jusqu'à cette date (ISO), par un code reçu en lien. */
+  /** Code « commission offerte » reçu en lien : durée, à partir de la première vente. */
+  feeWaiverDays: number | null;
+  /** Fin de la période (ISO), posée à la première vente. */
   feeWaivedUntil: string | null;
   vatExempt: boolean;
   /** L'engagement sur le droit à l'image a déjà été pris. */
@@ -396,7 +398,7 @@ export function Onboarding({
                 router.refresh();
                 return;
               }
-              const body = (await res.json().catch(() => ({}))) as { slug?: string; error?: string; feeWaivedUntil?: string | null };
+              const body = (await res.json().catch(() => ({}))) as { slug?: string; error?: string; feeWaiverDays?: number | null };
               if (!res.ok || !body.slug) {
                 setError(body.error ?? NETWORK);
                 setBusy(false);
@@ -420,7 +422,8 @@ export function Onboarding({
                 packOnly: true,
                 stripeOnboarded: false,
                 feePercent: 20,
-                feeWaivedUntil: body.feeWaivedUntil ?? null,
+                feeWaiverDays: body.feeWaiverDays ?? null,
+                feeWaivedUntil: null,
                 vatExempt: false,
                 imageRightsAcked: false,
                 termsAccepted: false,
@@ -1023,7 +1026,8 @@ function StepPrices({
   // Ce que touche le pro sur un lot, à partir du prix en cours de saisie.
   const allNow = cents(all);
   const waivedUntil = op.feeWaivedUntil && new Date(op.feeWaivedUntil) > new Date() ? new Date(op.feeWaivedUntil) : null;
-  const feeNow = waivedUntil ? 0 : op.feePercent;
+  const waiverPending = !op.feeWaivedUntil && !!op.feeWaiverDays;
+  const feeNow = waivedUntil || waiverPending ? 0 : op.feePercent;
   const netCents = allNow === null ? null : Math.round((allNow * (100 - feeNow)) / 100);
   const [local, setLocal] = useState<string | null>(null);
   const oneRef = useRef<HTMLInputElement>(null);
@@ -1105,7 +1109,9 @@ function StepPrices({
           <span>Vous recevez par lot</span>
           <b>{euroLabel(netCents)}</b>
           <small>
-            {waivedUntil
+            {waiverPending
+              ? `Commission offerte pendant ${op.feeWaiverDays} jours à partir de votre première vente, puis ${op.feePercent} %. Les frais Stripe s’appliquent au paiement.`
+              : waivedUntil
               ? `Commission offerte jusqu’au ${waivedUntil.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" })}, puis ${op.feePercent} %. Les frais Stripe s’appliquent au paiement.`
               : <>Sur {euroLabel(allNow)}, Linktrip prend {op.feePercent} %. Les frais Stripe s&rsquo;appliquent au paiement.</>}
           </small>

@@ -25,6 +25,7 @@ export default async function ReglagesPage({ searchParams }: { searchParams: { c
         priceAllCents: operator.priceAllCents,
         packOnly: operator.packOnly,
         feePercent: operator.feePercent,
+        feeWaiverDays: operator.feeWaiverDays,
         feeWaivedUntil: operator.feeWaivedUntil?.toISOString() ?? null,
         feeCodeUsed: !!feeCode,
         stripeOnboarded: operator.stripeOnboarded,

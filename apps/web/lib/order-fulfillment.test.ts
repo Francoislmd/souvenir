@@ -16,6 +16,7 @@ vi.mock("./automations", () => ({ readAutomations: vi.fn(() => ({ resendUnopened
 vi.mock("./twilio", () => ({ sendWhatsAppMessage: vi.fn(), sendTextMessage: vi.fn() }));
 vi.mock("./email", () => ({ sendOrderConfirmedEmail: vi.fn() }));
 vi.mock("./receipt", () => ({ cardLabelOf: vi.fn(async () => null) }));
+vi.mock("./fee-waiver", () => ({ startFeeWaiverClock: vi.fn(async () => undefined) }));
 
 function makeIntent(overrides: Partial<Record<string, unknown>> = {}) {
   return { id: "pi_1", metadata: { participantId: "participant_1" }, ...overrides } as never;

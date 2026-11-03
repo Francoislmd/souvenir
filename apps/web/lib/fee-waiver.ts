@@ -17,11 +17,16 @@ import { track } from "./analytics";
  *
  * Le pro saisit le code dans Réglages, ou ouvre le lien `/code/{code}`. Linktrip
  * le cherche chez Stripe, vérifie qu'il est actif et porte sur un coupon à
- * 100 %, l'enregistre (FeeWaiverCode), pose `Operator.feeWaivedUntil`, puis
+ * 100 %, l'enregistre (FeeWaiverCode), pose `Operator.feeWaiverDays`, puis
  * **désactive le code chez Stripe** avec en métadonnées le pro qui l'a pris :
  * le tableau de bord montre ce qui est utilisé et par qui.
  *
- * Pendant la période, `effectiveFeePercent` vaut 0 : le PaymentIntent part
+ * 🔒 La période démarre à la **première vente**, pas à l'activation (décidé le
+ * 03/11/2026) : un pro qui active son code hors saison ne le perd pas.
+ * `startFeeWaiverClock`, appelé au paiement réussi (lib/order-fulfillment.ts),
+ * pose `feeWaivedUntil` = date de la vente + `feeWaiverDays`.
+ *
+ * Avant la première vente et pendant la période, `effectiveFeePercent` vaut 0 : le PaymentIntent part
  * sans `application_fee_amount` (lib/checkout.ts) et la vente ne figure pas sur
  * les factures de commission (lib/invoicing.ts écarte les commissions nulles).
  *
@@ -39,12 +44,26 @@ export function cleanFeeCode(raw: string): string {
   return raw.trim().replace(/\s+/g, "").slice(0, 64);
 }
 
+type WaiverFields = { feePercent: number; feeWaiverDays: number | null; feeWaivedUntil: Date | null };
+
 /** La commission qui s'applique à une vente faite maintenant. */
-export function effectiveFeePercent(
-  operator: { feePercent: number; feeWaivedUntil: Date | null },
-  now = new Date(),
-): number {
-  return operator.feeWaivedUntil && operator.feeWaivedUntil > now ? 0 : operator.feePercent;
+export function effectiveFeePercent(operator: WaiverFields, now = new Date()): number {
+  if (operator.feeWaivedUntil) return operator.feeWaivedUntil > now ? 0 : operator.feePercent;
+  // Code activé, période pas encore démarrée : la vente qui la démarre est offerte aussi.
+  return operator.feeWaiverDays ? 0 : operator.feePercent;
+}
+
+/**
+ * Première vente d'un pro qui a un code en attente : la période démarre.
+ * Sans effet si elle a déjà démarré (garde `feeWaivedUntil: null`, rejouable).
+ */
+export async function startFeeWaiverClock(
+  operator: { id: string; feeWaiverDays: number | null; feeWaivedUntil: Date | null },
+  paidAt: Date,
+): Promise<void> {
+  if (!operator.feeWaiverDays || operator.feeWaivedUntil) return;
+  const until = new Date(paidAt.getTime() + operator.feeWaiverDays * 24 * 60 * 60 * 1000);
+  await prisma.operator.updateMany({ where: { id: operator.id, feeWaivedUntil: null }, data: { feeWaivedUntil: until } });
 }
 
 /** La période offerte par un coupon Stripe. */
@@ -56,7 +75,7 @@ export function waiverDays(coupon: Stripe.Coupon): number {
 }
 
 export type RedeemResult =
-  | { ok: true; until: Date }
+  | { ok: true; days: number }
   | { ok: false; error: "invalid" | "used" | "already"; message: string };
 
 const MESSAGES = {
@@ -86,10 +105,10 @@ export async function redeemFeeCode(operatorId: string, raw: string, now = new D
   // Le même lien rouvert par le même pro : rien à refaire.
   const mine = await prisma.feeWaiverCode.findUnique({
     where: { stripePromotionCodeId: promo.id },
-    select: { operatorId: true, operator: { select: { feeWaivedUntil: true } } },
+    select: { operatorId: true, durationDays: true },
   });
   if (mine) {
-    if (mine.operatorId === operatorId && mine.operator?.feeWaivedUntil) return { ok: true, until: mine.operator.feeWaivedUntil };
+    if (mine.operatorId === operatorId) return { ok: true, days: mine.durationDays };
     return fail("used");
   }
 
@@ -103,13 +122,12 @@ export async function redeemFeeCode(operatorId: string, raw: string, now = new D
   if (promo.max_redemptions !== null && promo.times_redeemed >= promo.max_redemptions) return fail("used");
 
   const durationDays = waiverDays(coupon);
-  const until = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
   try {
     await prisma.$transaction([
       prisma.feeWaiverCode.create({
         data: { code: promo.code.toUpperCase(), stripePromotionCodeId: promo.id, stripeCouponId: coupon.id, durationDays, redeemedAt: now, operatorId },
       }),
-      prisma.operator.update({ where: { id: operatorId }, data: { feeWaivedUntil: until } }),
+      prisma.operator.update({ where: { id: operatorId }, data: { feeWaiverDays: durationDays, feeWaivedUntil: null } }),
     ]);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -131,7 +149,8 @@ export async function redeemFeeCode(operatorId: string, raw: string, now = new D
         operator: op?.name ?? "",
         slug: op?.slug ?? "",
         redeemedAt: now.toISOString(),
-        offertJusquau: until.toISOString().slice(0, 10),
+        jours: String(durationDays),
+        depart: "première vente",
       },
     });
   } catch (error) {
@@ -139,5 +158,5 @@ export async function redeemFeeCode(operatorId: string, raw: string, now = new D
   }
 
   await track("fee_code_redeemed", { operatorId, meta: { code: promo.code, promotionCode: promo.id, durationDays } }).catch(() => undefined);
-  return { ok: true, until };
+  return { ok: true, days: durationDays };
 }
