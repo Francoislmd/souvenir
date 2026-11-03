@@ -3,6 +3,7 @@ import { stripe } from "./stripe";
 import { quote, applyReducedOffer, type PricingConfig } from "./pricing";
 import { accessFromOrders, remainingCapCents, visiblePhotoWhere } from "./access";
 import { ensurePaymentDomains } from "./payment-domains";
+import { effectiveFeePercent } from "./fee-waiver";
 
 export class CheckoutError extends Error {
   constructor(public code: "not_found" | "stripe_not_ready" | "already_paid") {
@@ -50,7 +51,8 @@ export async function createOrUpdatePaymentIntent(params: {
   const q = quote(selected.length, remaining.size, pricing);
   const offerActive = !!participant.reducedOfferExpiresAt && participant.reducedOfferExpiresAt > new Date();
   const amountCents = offerActive ? applyReducedOffer(q.totalCents) : q.totalCents;
-  const feeCents = Math.round((amountCents * operator.feePercent) / 100);
+  // Un code « commission offerte » en cours ramène la commission à 0 (lib/fee-waiver.ts).
+  const feeCents = Math.round((amountCents * effectiveFeePercent(operator)) / 100);
 
   if (amountCents <= 0) throw new CheckoutError("not_found");
 
@@ -93,7 +95,8 @@ export async function createOrUpdatePaymentIntent(params: {
     try {
       const updated = await stripe.paymentIntents.update(
         order.stripePi,
-        { amount: amountCents, application_fee_amount: feeCents, payment_method_types: paymentMethodTypes },
+        // "" retire la commission d'un PaymentIntent qui en portait une.
+        { amount: amountCents, application_fee_amount: feeCents > 0 ? feeCents : "", payment_method_types: paymentMethodTypes },
         onAccount,
       );
       if (updated.client_secret) {
@@ -109,7 +112,7 @@ export async function createOrUpdatePaymentIntent(params: {
     {
       amount: amountCents,
       currency: "eur",
-      application_fee_amount: feeCents,
+      ...(feeCents > 0 ? { application_fee_amount: feeCents } : {}),
       payment_method_types: paymentMethodTypes,
       metadata: { participantId: participant.id, operatorId: operator.id },
     },

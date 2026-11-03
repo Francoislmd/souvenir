@@ -40,6 +40,10 @@ interface OperatorSettings {
   priceAllCents: number;
   packOnly: boolean;
   feePercent: number;
+  /** Commission offerte jusqu'à cette date (ISO) : code « commission offerte ». */
+  feeWaivedUntil: string | null;
+  /** Le compte a déjà utilisé un code : le champ ne s'affiche plus. */
+  feeCodeUsed: boolean;
   stripeOnboarded: boolean;
   activities: string[];
   automations: Automations;
@@ -50,6 +54,17 @@ interface OperatorSettings {
 }
 
 type Patch = Record<string, unknown>;
+
+function dateFr(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
+}
+
+const CODE_NOTICES: Record<string, string> = {
+  ok: "Code appliqué : la commission Linktrip est offerte pendant 90 jours.",
+  invalid: "Ce code n'existe pas.",
+  used: "Ce code a déjà été utilisé.",
+  already: "Votre compte a déjà profité d'un code.",
+};
 
 function toEuros(cents: number): string {
   return (cents / 100).toString();
@@ -109,7 +124,15 @@ function SwitchRow({
  * seul moyen de voir l'effet d'une couleur), les prix, les relances, les
  * paiements et reçus, les activités.
  */
-export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSettings; storeUrl: string }) {
+export function ReglagesForm({
+  operator,
+  storeUrl,
+  codeNotice = null,
+}: {
+  operator: OperatorSettings;
+  storeUrl: string;
+  codeNotice?: string | null;
+}) {
   const router = useRouter();
   const toast = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -135,6 +158,13 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
   const [vatExempt, setVatExempt] = useState(operator.vatExempt);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [copied, setCopied] = useState(false);
+  const [waivedUntil, setWaivedUntil] = useState(operator.feeWaivedUntil);
+  const [codeUsed, setCodeUsed] = useState(operator.feeCodeUsed);
+  const [code, setCode] = useState("");
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const waived = !!waivedUntil && new Date(waivedUntil) > new Date();
+  const feeNow = waived ? 0 : operator.feePercent;
 
   // Plus de bouton « Enregistrer » : les interrupteurs avaient l'air immédiats
   // alors qu'ils ne l'étaient pas. Les modifications partent seules, groupées,
@@ -193,7 +223,43 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
 
   function net(euros: string): string {
     const cents = Math.round(Number(euros || 0) * 100);
-    return ((cents * (100 - operator.feePercent)) / 100 / 100).toFixed(2).replace(".", ",");
+    return ((cents * (100 - feeNow)) / 100 / 100).toFixed(2).replace(".", ",");
+  }
+
+  // Retour d'un lien /code/{code} : le résultat dit une fois, l'adresse nettoyée.
+  useEffect(() => {
+    if (!codeNotice) return;
+    const message = CODE_NOTICES[codeNotice];
+    if (message) toast(message);
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.hash}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function applyCode(): Promise<void> {
+    if (!code.trim() || codeBusy) return;
+    setCodeBusy(true);
+    setCodeError(null);
+    try {
+      const res = await fetch("/api/operator/fee-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { until?: string; message?: string };
+      if (res.ok && body.until) {
+        setWaivedUntil(body.until);
+        setCodeUsed(true);
+        setCode("");
+        toast(CODE_NOTICES.ok);
+        router.refresh();
+      } else {
+        setCodeError(body.message ?? "Le code n'a pas pu être appliqué.");
+      }
+    } catch {
+      setCodeError("Le code n'a pas pu être appliqué, vérifiez votre connexion.");
+    } finally {
+      setCodeBusy(false);
+    }
   }
 
   async function upload(kind: "logo" | "cover", file: File): Promise<void> {
@@ -454,7 +520,14 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
         <section className={styles.rgSec} id="prix" aria-labelledby="rg-h-prix">
           <div className={styles.rgSecHead}>
             <h2 id="rg-h-prix">Vos prix</h2>
-            <p>Linktrip prélève {operator.feePercent} % sur chaque vente. Les frais Stripe sont à votre charge.</p>
+            {waived && waivedUntil ? (
+              <p>
+                Commission Linktrip offerte jusqu&rsquo;au {dateFr(waivedUntil)}, puis {operator.feePercent} % sur chaque vente. Les frais
+                Stripe sont à votre charge.
+              </p>
+            ) : (
+              <p>Linktrip prélève {operator.feePercent} % sur chaque vente. Les frais Stripe sont à votre charge.</p>
+            )}
           </div>
           <div className={styles.rgSecBody}>
             <div className={styles.rgTwo}>
@@ -514,6 +587,41 @@ export function ReglagesForm({ operator, storeUrl }: { operator: OperatorSetting
                 }}
               />
             </div>
+            {codeUsed ? null : (
+              <div className={styles.rgField}>
+                <label htmlFor="rgFeeCode">Code de réduction</label>
+                <form
+                  className={styles.rgCopy}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void applyCode();
+                  }}
+                >
+                  <input
+                    id="rgFeeCode"
+                    className={styles.rgCodeInp}
+                    value={code}
+                    placeholder="AB3K-7MQP"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    aria-invalid={!!codeError}
+                    aria-describedby="rgFeeCodeHint"
+                    onChange={(e) => {
+                      setCode(e.target.value);
+                      setCodeError(null);
+                    }}
+                  />
+                  <button type="submit" className={styles.rgCopyBtn} disabled={!code.trim() || codeBusy}>
+                    {codeBusy ? <Spinner size={14} /> : null}
+                    Appliquer
+                  </button>
+                </form>
+                <span id="rgFeeCodeHint" className={`${styles.rgHint} ${codeError ? styles.rgHintBad : ""}`}>
+                  {codeError ?? "Un code reçu de Linktrip ? Il supprime la commission pendant 90 jours."}
+                </span>
+              </div>
+            )}
           </div>
         </section>
 

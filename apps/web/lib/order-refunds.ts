@@ -145,7 +145,8 @@ export async function refundOrder(operatorId: string, orderId: string, amountCen
       {
         payment_intent: order.stripePi,
         amount: amountCents,
-        refund_application_fee: true,
+        // Sans commission (code « commission offerte »), il n'y a rien à rendre.
+        refund_application_fee: order.feeCents > 0,
         metadata: { orderId: order.id },
       },
       // Un double clic ne rembourse pas deux fois : même cumul, même montant, même clé.

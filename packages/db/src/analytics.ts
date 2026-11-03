@@ -29,7 +29,8 @@ export type EventName =
   | "sortie_deleted"
   | "storage_full"
   | "slot_assigned"
-  | "gallery_link_requested";
+  | "gallery_link_requested"
+  | "fee_code_redeemed";
 
 interface TrackParams {
   operatorId: string;

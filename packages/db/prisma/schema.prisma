@@ -31,6 +31,10 @@ model Operator {
   pricePhotoCents Int     @default(800)
   priceAllCents   Int     @default(3900) // "Toutes vos photos" — aussi "Tout le créneau" en mode GROUPE
   feePercent      Int     @default(20)
+  // Commission offerte jusqu'à cette date (code « commission offerte »,
+  // lib/fee-waiver.ts). Tant qu'elle n'est pas passée, application_fee_amount
+  // vaut 0 ; feePercent reprend ensuite tout seul.
+  feeWaivedUntil  DateTime?
   packOnly        Boolean @default(false) // true = le client ne peut acheter que le pack complet, pas photo par photo
 
   // Le vendeur, au sens du Code de la consommation : en charge directe, c'est
@@ -70,6 +74,7 @@ model Operator {
   sorties  Sortie[]
   events   Event[]
   invoices Invoice[]
+  feeWaiverCode FeeWaiverCode?
 }
 
 model User {
@@ -359,4 +364,19 @@ model Waitlist {
   photoUsage   String?
   source       String?
   userAgent    String?
+}
+
+// Un code « commission offerte », créé par Linktrip (scripts/create-fee-codes.ts)
+// et remis à un seul pro : il ne sert qu'une fois, et un pro n'en utilise qu'un
+// (operatorId @unique). À l'utilisation, Operator.feeWaivedUntil = maintenant
+// + durationDays.
+model FeeWaiverCode {
+  id           String    @id @default(cuid())
+  code         String    @unique // normalisé : majuscules, sans tiret ni espace
+  note         String? // pour qui il a été créé, ne sort jamais vers le pro
+  durationDays Int       @default(90)
+  createdAt    DateTime  @default(now())
+  redeemedAt   DateTime?
+  operatorId   String?   @unique
+  operator     Operator? @relation(fields: [operatorId], references: [id], onDelete: SetNull)
 }

@@ -2639,6 +2639,35 @@ button.sdClient:hover {
   background: #fff;
   color: var(--ink);
 }
+.rgCopyBtn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Le code « commission offerte » : même bandeau que l'adresse, mais à saisir. */
+.rgCodeInp {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.94rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  outline: none;
+}
+.rgCodeInp::placeholder {
+  color: var(--ink-4);
+  letter-spacing: 0.06em;
+}
+.rgCopy:focus-within {
+  box-shadow: 0 0 0 3px rgba(212, 68, 44, 0.12);
+}
+.rgHintBad {
+  color: #B42318;
+}
 
 /* Les prix : le montant saisi en grand, dessous ce que le pro reçoit. */
 .rgTwo {

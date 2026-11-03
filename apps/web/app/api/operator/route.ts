@@ -1,10 +1,12 @@
 import { z } from "zod";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase-server";
 import { prisma } from "@/lib/prisma";
 import { track } from "@/lib/analytics";
 import { Role } from "@souvenir/db";
 import { ACTIVITIES } from "@/lib/onboarding/activities";
 import { uniqueOperatorSlug } from "@/lib/operator-slug";
+import { FEE_CODE_COOKIE, redeemFeeCode } from "@/lib/fee-waiver";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -93,5 +95,15 @@ export async function POST(request: Request): Promise<Response> {
     await track("onboarding_qualified", { operatorId: operator.id, meta });
   }
 
-  return Response.json({ operatorId: operator.id, slug: operator.slug }, { status: 201 });
+  // Un lien « commission offerte » ouvert avant l'inscription (app/code/[code]).
+  // Un code déjà pris ou inconnu n'empêche pas la création du compte.
+  let feeWaivedUntil: string | null = null;
+  const pendingCode = cookies().get(FEE_CODE_COOKIE)?.value;
+  if (pendingCode) {
+    const result = await redeemFeeCode(operator.id, pendingCode).catch(() => null);
+    if (result?.ok) feeWaivedUntil = result.until.toISOString();
+    cookies().delete(FEE_CODE_COOKIE);
+  }
+
+  return Response.json({ operatorId: operator.id, slug: operator.slug, feeWaivedUntil }, { status: 201 });
 }
