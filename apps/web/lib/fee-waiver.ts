@@ -1,41 +1,42 @@
-import { randomInt } from "crypto";
+import type Stripe from "stripe";
 import { Prisma } from "@souvenir/db";
 import { prisma } from "./prisma";
+import { stripe } from "./stripe";
 import { track } from "./analytics";
 
 /**
- * Les codes « commission offerte » : un code, un pro, une fois.
+ * Les codes « commission offerte » : un code, un pro, une fois. Les codes
+ * vivent dans Stripe, sur le compte plateforme.
  *
- * Linktrip crée les codes (scripts/create-fee-codes.ts) et les remet un par un,
- * en lien (`/code/{code}`) ou à saisir dans Réglages. Le pro qui l'utilise ne
- * paie aucune commission pendant `durationDays` jours (90 par défaut) à partir
- * de ce moment : `Operator.feeWaivedUntil`, lu au paiement par
- * `effectiveFeePercent` (lib/checkout.ts). Les ventes de la période ont
- * `feeCents = 0` et ne partent pas sur les factures (lib/invoicing.ts écarte
- * déjà les commissions nulles).
+ * Dans le tableau de bord Stripe (Catalogue de produits → Coupons) :
+ * 1. un coupon à **100 %** ; sa durée donne la période offerte. « Plusieurs
+ *    mois » → 30 jours par mois (3 mois = 90 jours) ; sinon 90 jours. Une
+ *    métadonnée `jours` (ex. `jours = 90`) l'emporte sur tout le reste ;
+ * 2. dans ce coupon, autant de codes promo que de pros, avec ou sans date
+ *    d'expiration. Stripe garde la liste, Linktrip ne crée rien.
+ *
+ * Le pro saisit le code dans Réglages, ou ouvre le lien `/code/{code}`. Linktrip
+ * le cherche chez Stripe, vérifie qu'il est actif et porte sur un coupon à
+ * 100 %, l'enregistre (FeeWaiverCode), pose `Operator.feeWaivedUntil`, puis
+ * **désactive le code chez Stripe** avec en métadonnées le pro qui l'a pris :
+ * le tableau de bord montre ce qui est utilisé et par qui.
+ *
+ * Pendant la période, `effectiveFeePercent` vaut 0 : le PaymentIntent part
+ * sans `application_fee_amount` (lib/checkout.ts) et la vente ne figure pas sur
+ * les factures de commission (lib/invoicing.ts écarte les commissions nulles).
+ *
+ * Mode test / mode réel : le code doit exister dans le même mode que
+ * STRIPE_SECRET_KEY.
  */
-
-/** Sans 0/O ni 1/I/L : un code se lit au téléphone. */
-const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-const LENGTH = 8;
 
 /** Le cookie qui garde le code d'un lien ouvert avant d'avoir un compte. */
 export const FEE_CODE_COOKIE = "lt_fee_code";
 
-export function generateFeeCode(): string {
-  let code = "";
-  for (let i = 0; i < LENGTH; i++) code += ALPHABET[randomInt(ALPHABET.length)];
-  return code;
-}
+const DEFAULT_DAYS = 90;
 
-/** « ab3k-7mqp » , « AB3K 7MQP » → « AB3K7MQP ». */
-export function normalizeFeeCode(raw: string): string {
-  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 32);
-}
-
-/** « AB3K7MQP » → « AB3K-7MQP », la forme qu'on donne au pro. */
-export function formatFeeCode(code: string): string {
-  return code.length === LENGTH ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
+/** Ce que le pro a saisi, sans espaces autour. Stripe ignore la casse. */
+export function cleanFeeCode(raw: string): string {
+  return raw.trim().replace(/\s+/g, "").slice(0, 64);
 }
 
 /** La commission qui s'applique à une vente faite maintenant. */
@@ -46,12 +47,20 @@ export function effectiveFeePercent(
   return operator.feeWaivedUntil && operator.feeWaivedUntil > now ? 0 : operator.feePercent;
 }
 
+/** La période offerte par un coupon Stripe. */
+export function waiverDays(coupon: Stripe.Coupon): number {
+  const fromMeta = Number(coupon.metadata?.jours ?? coupon.metadata?.days);
+  if (Number.isInteger(fromMeta) && fromMeta > 0) return fromMeta;
+  if (coupon.duration === "repeating" && coupon.duration_in_months) return coupon.duration_in_months * 30;
+  return DEFAULT_DAYS;
+}
+
 export type RedeemResult =
   | { ok: true; until: Date }
   | { ok: false; error: "invalid" | "used" | "already"; message: string };
 
 const MESSAGES = {
-  invalid: "Ce code n'existe pas. Vérifiez-le, il compte 8 caractères.",
+  invalid: "Ce code n'existe pas ou n'est plus valable.",
   used: "Ce code a déjà été utilisé.",
   already: "Votre compte a déjà profité d'un code.",
 } as const;
@@ -60,44 +69,75 @@ function fail(error: keyof typeof MESSAGES): RedeemResult {
   return { ok: false, error, message: MESSAGES[error] };
 }
 
-export async function redeemFeeCode(operatorId: string, raw: string, now = new Date()): Promise<RedeemResult> {
-  const code = normalizeFeeCode(raw);
-  if (code.length < 4) return fail("invalid");
+async function findPromotionCode(code: string): Promise<Stripe.PromotionCode | null> {
+  // Le filtre `code` de Stripe ignore la casse. Un code désactivé est
+  // renvoyé aussi : c'est ce qui permet de dire « déjà utilisé ».
+  const { data } = await stripe.promotionCodes.list({ code, limit: 10 });
+  return data.find((p) => p.active) ?? data[0] ?? null;
+}
 
-  const found = await prisma.feeWaiverCode.findUnique({ where: { code } });
-  if (!found) return fail("invalid");
+export async function redeemFeeCode(operatorId: string, raw: string, now = new Date()): Promise<RedeemResult> {
+  const code = cleanFeeCode(raw);
+  if (code.length < 3) return fail("invalid");
+
+  const promo = await findPromotionCode(code);
+  if (!promo) return fail("invalid");
 
   // Le même lien rouvert par le même pro : rien à refaire.
-  if (found.operatorId === operatorId) {
-    const op = await prisma.operator.findUnique({ where: { id: operatorId }, select: { feeWaivedUntil: true } });
-    if (op?.feeWaivedUntil) return { ok: true, until: op.feeWaivedUntil };
+  const mine = await prisma.feeWaiverCode.findUnique({
+    where: { stripePromotionCodeId: promo.id },
+    select: { operatorId: true, operator: { select: { feeWaivedUntil: true } } },
+  });
+  if (mine) {
+    if (mine.operatorId === operatorId && mine.operator?.feeWaivedUntil) return { ok: true, until: mine.operator.feeWaivedUntil };
+    return fail("used");
   }
-  if (found.redeemedAt) return fail("used");
 
-  const until = new Date(now.getTime() + found.durationDays * 24 * 60 * 60 * 1000);
+  const coupon = promo.coupon;
+  if (coupon.percent_off !== 100 || !coupon.valid) return fail("invalid");
+  if (!promo.active) {
+    // Désactivé à la main, ou utilisé par une autre plateforme : pas à nous de deviner.
+    return promo.metadata?.operatorId ? fail("used") : fail("invalid");
+  }
+  if (promo.expires_at && promo.expires_at * 1000 < now.getTime()) return fail("invalid");
+  if (promo.max_redemptions !== null && promo.times_redeemed >= promo.max_redemptions) return fail("used");
+
+  const durationDays = waiverDays(coupon);
+  const until = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
   try {
-    const claimed = await prisma.$transaction(async (tx) => {
-      // Réservation : seul le premier à poser operatorId sur un code libre passe.
-      const { count } = await tx.feeWaiverCode.updateMany({
-        where: { id: found.id, redeemedAt: null },
-        data: { redeemedAt: now, operatorId },
-      });
-      if (count === 0) return false;
-      await tx.operator.update({ where: { id: operatorId }, data: { feeWaivedUntil: until } });
-      return true;
-    });
-    if (!claimed) return fail("used");
+    await prisma.$transaction([
+      prisma.feeWaiverCode.create({
+        data: { code: promo.code.toUpperCase(), stripePromotionCodeId: promo.id, stripeCouponId: coupon.id, durationDays, redeemedAt: now, operatorId },
+      }),
+      prisma.operator.update({ where: { id: operatorId }, data: { feeWaivedUntil: until } }),
+    ]);
   } catch (error) {
-    // operatorId @unique : ce pro a déjà un code.
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return fail("already");
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = String((error.meta as { target?: unknown } | undefined)?.target ?? "");
+      return fail(target.includes("operatorId") ? "already" : "used");
+    }
     throw error;
   }
 
-  await track("fee_code_redeemed", { operatorId, meta: { code, durationDays: found.durationDays } }).catch(() => undefined);
-  return { ok: true, until };
-}
+  // Le code ne sert plus : on le désactive chez Stripe, avec le nom du pro.
+  // Un échec ici ne retire rien au pro, la table locale empêche déjà un
+  // deuxième usage ; on le note pour le refaire à la main.
+  try {
+    const op = await prisma.operator.findUnique({ where: { id: operatorId }, select: { name: true, slug: true } });
+    await stripe.promotionCodes.update(promo.id, {
+      active: false,
+      metadata: {
+        operatorId,
+        operator: op?.name ?? "",
+        slug: op?.slug ?? "",
+        redeemedAt: now.toISOString(),
+        offertJusquau: until.toISOString().slice(0, 10),
+      },
+    });
+  } catch (error) {
+    console.error("[fee-code] code utilisé mais pas désactivé chez Stripe", promo.id, error);
+  }
 
-/** « 1 février 2027 ». */
-export function feeWaiverDateLabel(d: Date): string {
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
+  await track("fee_code_redeemed", { operatorId, meta: { code: promo.code, promotionCode: promo.id, durationDays } }).catch(() => undefined);
+  return { ok: true, until };
 }

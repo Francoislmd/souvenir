@@ -19,7 +19,13 @@ export async function POST(request: Request): Promise<Response> {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid", message: "Saisissez votre code." }, { status: 400 });
 
-  const result = await redeemFeeCode(dbUser.operatorId, parsed.data.code);
+  let result;
+  try {
+    result = await redeemFeeCode(dbUser.operatorId, parsed.data.code);
+  } catch (error) {
+    console.error("[fee-code] vérification chez Stripe impossible", error);
+    return Response.json({ error: "stripe", message: "Le code n'a pas pu être vérifié. Réessayez dans un instant." }, { status: 502 });
+  }
   if (!result.ok) return Response.json({ error: result.error, message: result.message }, { status: 400 });
   return Response.json({ until: result.until.toISOString() });
 }

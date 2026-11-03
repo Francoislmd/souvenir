@@ -60,8 +60,10 @@ function dateFr(iso: string): string {
 }
 
 const CODE_NOTICES: Record<string, string> = {
-  ok: "Code appliqué : la commission Linktrip est offerte pendant 90 jours.",
-  invalid: "Ce code n'existe pas.",
+  ok: "Code appliqué : la commission Linktrip est offerte.",
+  invalid: "Ce code n'existe pas ou n'est plus valable.",
+  rate_limited: "Trop d'essais. Réessayez dans une heure.",
+  stripe: "Le code n'a pas pu être vérifié. Réessayez depuis ce champ.",
   used: "Ce code a déjà été utilisé.",
   already: "Votre compte a déjà profité d'un code.",
 };
@@ -601,7 +603,7 @@ export function ReglagesForm({
                     id="rgFeeCode"
                     className={styles.rgCodeInp}
                     value={code}
-                    placeholder="AB3K-7MQP"
+                    placeholder="Votre code"
                     autoComplete="off"
                     autoCapitalize="characters"
                     spellCheck={false}
@@ -618,7 +620,7 @@ export function ReglagesForm({
                   </button>
                 </form>
                 <span id="rgFeeCodeHint" className={`${styles.rgHint} ${codeError ? styles.rgHintBad : ""}`}>
-                  {codeError ?? "Un code reçu de Linktrip ? Il supprime la commission pendant 90 jours."}
+                  {codeError ?? "Un code reçu de Linktrip ? Il supprime la commission pendant la période indiquée."}
                 </span>
               </div>
             )}
