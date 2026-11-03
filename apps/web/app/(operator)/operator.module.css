@@ -2658,6 +2658,13 @@ button.sdClient:hover {
   text-transform: uppercase;
   outline: none;
 }
+/* Le cadre de focus est porté par le bandeau, pas par le champ. */
+.rgCodeInp:focus,
+.rgCodeInp:focus-visible {
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}
 .rgCodeInp::placeholder {
   color: var(--ink-4);
   letter-spacing: 0.06em;
