@@ -6,6 +6,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import styles from "@/app/(marketing)/landing.module.css";
 import { trackEvent } from "@/lib/marketing-analytics";
+import { hubspotIdentify } from "@/lib/hubspot";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -70,6 +71,7 @@ export function WaitlistForm({ initialEmail = "" }: WaitlistFormProps) {
         body: JSON.stringify({ email, company, activity, yearlyGuests, photoUsage, website, source: "liste-attente" }),
       });
       if (!res.ok) throw new Error("waitlist submit failed");
+      hubspotIdentify(email);
       trackEvent("waitlist_submit", { photo_usage: photoUsage });
       setSuccess(true);
     } catch {

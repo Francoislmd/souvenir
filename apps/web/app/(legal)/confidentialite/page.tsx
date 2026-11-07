@@ -104,6 +104,11 @@ export default function ConfidentialitePage() {
           <strong>Google Ireland Limited</strong> — mesure d&apos;audience du site
           (Google Analytics 4 et Google Tag Manager), uniquement si vous y consentez.
         </li>
+        <li>
+          <strong>HubSpot Ireland Limited</strong> — gestion de nos contacts professionnels et
+          mesure des visites du site, uniquement si vous y consentez. Données hébergées dans
+          l&apos;Union européenne.
+        </li>
       </ul>
       <p>
         Google Analytics peut transférer des données vers les États-Unis. Ces transferts sont
@@ -178,6 +183,25 @@ export default function ConfidentialitePage() {
         d&apos;estimer statistiquement la fréquentation sans vous suivre individuellement
         (mécanisme dit de « consentement Google » — Consent Mode v2).
       </p>
+
+      <p>
+        Avec ce même consentement, nous utilisons aussi le code de suivi de HubSpot, notre outil
+        de gestion des contacts. Il enregistre les pages consultées sur le site vitrine. Si vous
+        êtes un professionnel à qui nous avons écrit, ou si vous nous avez laissé votre adresse
+        e-mail, ces visites peuvent être rattachées à votre fiche de contact : cela nous aide à
+        savoir ce qui vous intéresse avant de vous répondre. Il n&apos;est jamais chargé sur les
+        galeries photo des clients, les boutiques ni l&apos;espace pro.
+      </p>
+      <ul>
+        <li>
+          <strong>__hstc</strong> et <strong>hubspotutk</strong> — reconnaissent le navigateur
+          d&apos;une visite à l&apos;autre. Durée : 6 mois.
+        </li>
+        <li>
+          <strong>__hssc</strong> et <strong>__hssrc</strong> — suivent la session en cours.
+          Durée : 30 minutes, ou la session.
+        </li>
+      </ul>
 
       <h3>Publicité et personnalisation (avec votre consentement)</h3>
       <p>

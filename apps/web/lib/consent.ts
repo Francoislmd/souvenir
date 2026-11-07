@@ -13,6 +13,9 @@
 export const CONSENT_STORAGE_KEY = "lt_consent_v1";
 export const CONSENT_VERSION = 1;
 
+/** Événement fenêtre émis à chaque choix (detail : ConsentState) — écouté par HubSpotTracking. */
+export const CONSENT_EVENT = "linktrip:consent";
+
 /** CNIL : le choix doit être redemandé au bout de 6 mois maximum. */
 export const CONSENT_MAX_AGE_MS = 182 * 24 * 60 * 60 * 1000;
 
@@ -91,6 +94,7 @@ export function writeConsent(state: ConsentState): void {
     };
   }
   window.gtag("consent", "update", toConsentModePayload(state));
+  window.dispatchEvent(new CustomEvent<ConsentState>(CONSENT_EVENT, { detail: state }));
   window.dataLayer.push({
     event: "consent_update",
     consent_analytics: state.analytics,

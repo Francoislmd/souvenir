@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CONSENT_ALL, CONSENT_NONE, readConsent, writeConsent, type ConsentState } from "@/lib/consent";
-import { isGtmEnabled } from "@/lib/gtm";
+import { isConsentRequired } from "@/lib/gtm";
 import { useIsClientPage } from "@/components/analytics/useClientPage";
 import styles from "./cookie-banner.module.css";
 
@@ -26,7 +26,7 @@ export function CookieBanner() {
   const [draft, setDraft] = useState<ConsentState>(CONSENT_NONE);
 
   useEffect(() => {
-    if (!isGtmEnabled || clientPage) return;
+    if (!isConsentRequired || clientPage) return;
     if (readConsent() === null) setVisible(true);
 
     function reopen(): void {
@@ -82,7 +82,7 @@ export function CookieBanner() {
                   Mesure d&apos;audience
                 </label>
                 <p className={styles.rowHint}>
-                  Google Analytics : pages vues, parcours, achats. Nous aide à savoir ce qui marche.
+                  Google Analytics et HubSpot : pages vues et parcours. Nous aide à savoir ce qui marche.
                 </p>
               </div>
             </div>

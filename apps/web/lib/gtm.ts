@@ -57,6 +57,12 @@ export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "";
 export const isGtmEnabled = GTM_ID.length > 0;
 
 /**
+ * Vrai dès qu'un traceur soumis à consentement est configuré (GTM ou
+ * HubSpot) : commande l'affichage du bandeau et du lien « Gérer mes cookies ».
+ */
+export const isConsentRequired = isGtmEnabled || (process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID ?? "").length > 0;
+
+/**
  * Pousse un objet brut. Sûr côté serveur (no-op) et avant le chargement de
  * GTM : le dataLayer est une simple file, GTM rejoue tout à son démarrage.
  */

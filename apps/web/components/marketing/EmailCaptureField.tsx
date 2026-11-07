@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(marketing)/landing.module.css";
 import { trackEvent, type MarketingEventName } from "@/lib/marketing-analytics";
+import { hubspotIdentify } from "@/lib/hubspot";
 import { Spinner } from "@/components/ui/Spinner";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
@@ -48,6 +49,7 @@ export function EmailCaptureField({
         body: JSON.stringify({ email, website, source }),
       });
       if (!res.ok) throw new Error("waitlist submit failed");
+      hubspotIdentify(email);
       trackEvent(event);
       router.push(`/liste-attente?email=${encodeURIComponent(email)}`);
     } catch {

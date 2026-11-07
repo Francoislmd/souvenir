@@ -1,7 +1,7 @@
 "use client";
 
 import { openCookieBanner } from "@/components/analytics/CookieBanner";
-import { isGtmEnabled } from "@/lib/gtm";
+import { isConsentRequired } from "@/lib/gtm";
 
 /**
  * Retirer son consentement doit être aussi accessible que le donner (RGPD
@@ -10,7 +10,7 @@ import { isGtmEnabled } from "@/lib/gtm";
  * plus déroutant qu'utile.
  */
 export function ManageCookiesLink({ className }: { className?: string }) {
-  if (!isGtmEnabled) return null;
+  if (!isConsentRequired) return null;
 
   return (
     <button type="button" onClick={openCookieBanner} className={className}>

@@ -4,6 +4,7 @@ import { env } from "@/lib/env";
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/GoogleTagManager";
 import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import { CookieBanner } from "@/components/analytics/CookieBanner";
+import { HubSpotTracking } from "@/components/analytics/HubSpotTracking";
 import "./globals.css";
 import "@/styles/tokens.css";
 
@@ -76,6 +77,7 @@ export default function RootLayout({
         {children}
         <PageViewTracker />
         <CookieBanner />
+        <HubSpotTracking />
       </body>
     </html>
   );
