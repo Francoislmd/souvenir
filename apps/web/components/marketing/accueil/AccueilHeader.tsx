@@ -16,6 +16,15 @@ const NAV = [
 /** En-tête fixe : barre flottante sur ordinateur, logo + menu dépliant sous 760 px. */
 export function AccueilHeader() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  /* Dès qu'on a quitté le haut de page, le header passe en verre dépoli. */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -34,7 +43,7 @@ export function AccueilHeader() {
   }, [open]);
 
   return (
-    <header className={`${s.header} ${open ? s.headerOpen : ""}`}>
+    <header className={`${s.header} ${scrolled ? s.headerScrolled : ""} ${open ? s.headerOpen : ""}`}>
       <div className={s.headRow}>
         <Link href="/" aria-label="Linktrip, accueil" className={s.brand} onClick={() => setOpen(false)}>
           <LogoOcean height={28} />

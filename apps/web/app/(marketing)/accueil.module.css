@@ -138,6 +138,14 @@
   line-height: 20px;
   letter-spacing: -0.11px;
   box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.25);
+  transition: background-color 250ms ease, box-shadow 250ms ease;
+}
+/* Après défilement : verre dépoli, flou épais, plus de fond blanc plein. Menu ouvert : on reste blanc. */
+.headerScrolled:not(.headerOpen) {
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: 0 6px 24px -10px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 .headRow {
   height: 62px;
