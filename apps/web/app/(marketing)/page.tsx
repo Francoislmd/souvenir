@@ -22,7 +22,13 @@ import s from "./accueil.module.css";
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--lt-font" });
 const instrumentSans = Instrument_Sans({ subsets: ["latin"], weight: ["700"], variable: "--lt-display" });
 /* Geist n'est pas dans les polices Google de Next 14.2 : fichier du paquet `geist` de Vercel (OFL), copié dans ./fonts. */
-const geist = localFont({ src: "./fonts/Geist-Regular.woff2", weight: "400", variable: "--lt-body" });
+const geist = localFont({
+  src: [
+    { path: "./fonts/Geist-Regular.woff2", weight: "400" },
+    { path: "./fonts/Geist-Medium.woff2", weight: "500" },
+  ],
+  variable: "--lt-body",
+});
 
 const TITLE = "Linktrip · Monétisez vos photos, automatisez vos ventes";
 const DESCRIPTION =
