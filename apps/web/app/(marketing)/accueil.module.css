@@ -230,16 +230,20 @@
 }
 .h1 {
   margin: 0;
-  font-weight: 800;
-  font-size: clamp(40px, 3.4vw, 54px);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
+  font-family: var(--lt-display), Arial, sans-serif;
+  font-weight: 600;
+  font-size: 68px;
+  line-height: 75px;
+  letter-spacing: -2.86px;
   max-width: 560px;
 }
 .lead {
   margin: 0;
-  font-size: 17px;
-  line-height: 1.6;
+  font-family: var(--lt-body), Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 25px;
+  letter-spacing: -0.11px;
   color: var(--ink-2);
   max-width: 540px;
 }
@@ -247,18 +251,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-}
-.trust {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 24px;
-  font-size: 14px;
-  color: var(--ink-2);
-}
-.trustLine {
-  font-size: 17px;
-  color: var(--ink);
 }
 .heroRight {
   position: relative;
@@ -1617,24 +1609,15 @@
     font-size: 14px;
   }
   .h1 {
-    font-size: 38px;
-    line-height: 1.08;
+    font-size: 42px;
+    line-height: 46px;
+    letter-spacing: -1.77px;
   }
-  .lead {
-    font-size: 18px;
-    line-height: 1.6;
-  }
+
   .ctas .btn {
     flex: 1 1 100%;
     height: 54px;
     font-size: 17px;
-  }
-  .trust {
-    margin-top: 12px;
-    font-size: 15px;
-  }
-  .trustLine {
-    font-size: 18px;
   }
   .heroRight {
     min-height: 640px;
@@ -1789,7 +1772,9 @@
     animation: lt-reveal 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) 150ms both;
   }
   .phone {
-    animation: lt-rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 500ms both;
+    /* backwards, pas both : une opacité animée qui reste appliquée isole le
+       téléphone, et le flou de .phoneScreen ne voit plus la vidéo derrière. */
+    animation: lt-rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 500ms backwards;
   }
   .pol {
     animation: lt-float 5s ease-in-out infinite alternate;

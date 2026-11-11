@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Inter } from "next/font/google";
+import { Inter, Instrument_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { ManageCookiesLink } from "@/components/analytics/ManageCookiesLink";
 import { LogoOcean } from "@/components/marketing/landing-v2/LogoOcean";
 import { ACTIVITIES } from "@/components/marketing/landing-v2/landing-data";
@@ -19,6 +20,9 @@ import s from "./accueil.module.css";
    l'historique git ; ses composants LogoOcean et landing-data sont réutilisés. */
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--lt-font" });
+const instrumentSans = Instrument_Sans({ subsets: ["latin"], weight: ["600"], variable: "--lt-display" });
+/* Geist n'est pas dans les polices Google de Next 14.2 : fichier du paquet `geist` de Vercel (OFL), copié dans ./fonts. */
+const geist = localFont({ src: "./fonts/Geist-Regular.woff2", weight: "400", variable: "--lt-body" });
 
 const TITLE = "Linktrip · Monétisez vos photos, automatisez vos ventes";
 const DESCRIPTION =
@@ -98,7 +102,7 @@ export default function HomePage() {
   const year = new Date().getFullYear();
 
   return (
-    <div className={`${inter.variable} ${s.page}`}>
+    <div className={`${inter.variable} ${instrumentSans.variable} ${geist.variable} ${s.page}`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
       <AccueilHeader />
       <Reveal />
@@ -109,7 +113,7 @@ export default function HomePage() {
           <section className={s.hero}>
             <div className={`${s.heroLeft} ${s.peach}`}>
               <p className={s.heroEyebrow}>Activités outdoor</p>
-              <h1 className={s.h1}>Monétisez vos photos. Automatisez vos ventes.</h1>
+              <h1 className={s.h1}>Monétisez vos photos, augmentez vos ventes.</h1>
               <p className={s.lead}>
                 Chaque client reçoit sa galerie privée et paie les photos qu’il garde. Le paiement arrive sur votre compte, sans abonnement, depuis votre téléphone.
               </p>
@@ -121,12 +125,6 @@ export default function HomePage() {
                 <Link href="/produit#demo" className={`${s.btn} ${s.secondary}`}>
                   Voir la démo
                 </Link>
-              </div>
-              <div className={s.trust}>
-                <span>
-                  <strong>Sans abonnement</strong> · Paiement Stripe · Données hébergées en UE
-                </span>
-                <span className={s.trustLine}>Rejoignez les premiers pros qui vendent leurs photos de sortie</span>
               </div>
             </div>
 
