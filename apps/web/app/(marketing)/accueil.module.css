@@ -156,16 +156,36 @@
   color: var(--ink);
   text-decoration: none;
 }
+/* Les deux boutons du header : pilules claires, « Se connecter » blanc, « Commencer » gris clair (11/11/2026). */
 .login {
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  margin-right: -12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
 }
-.navLink:hover,
-.login:hover {
+.navLink:hover {
   color: var(--blue);
+}
+.login:hover {
+  border-color: #d4d4d4;
 }
 .headCta {
   height: 44px;
-  padding: 0 16px;
+  padding: 0 20px;
+  border-color: #e2e2e2;
+  background: #efefef;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+.headCta:hover {
+  background: #e6e6e6;
 }
 .burger {
   display: none;
@@ -1536,6 +1556,7 @@
     height: 44px;
     padding: 0 16px;
     border-radius: 999px;
+    border-color: var(--ink);
     background: var(--ink);
     color: #ffffff;
     font-size: 15px;

@@ -49,9 +49,8 @@ export function AccueilHeader() {
         <Link href="/connexion" className={s.login}>
           Se connecter
         </Link>
-        <Link href="/signup" className={`${s.btn} ${s.secondary} ${s.headCta}`}>
-          Créer un compte
-          <Arrow />
+        <Link href="/signup" className={`${s.btn} ${s.headCta}`}>
+          Commencer
         </Link>
         <button
           type="button"
