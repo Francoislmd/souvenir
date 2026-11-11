@@ -194,7 +194,8 @@
   border-radius: 24px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* 7/12 pour le texte : en moitié-moitié, le titre n'avait que ~430 px à 1440 px de large. */
+  grid-template-columns: 7fr 5fr;
   gap: 24px;
   background: #ffffff;
   min-height: 860px;
@@ -235,9 +236,12 @@
      Taille indexée sur la largeur : le titre vit dans la moitié gauche du hero, 68 px y donnait 4 lignes.
      Interligne et approche gardent les proportions de la référence (75/68, -2,86/68). */
   font-weight: 700;
-  font-size: clamp(44px, 3.6vw, 60px);
+  /* Deux lignes au-dessus de 1100 px : la taille suit la largeur de la colonne (mesuré sur la police,
+     « augmentez vos ventes. » ≈ 10,15 × la taille ; colonne ≈ 0,41 × l'écran − 62 px entre 1100 et 1440). */
+  font-size: clamp(36px, calc(4vw - 7px), 60px);
   line-height: 1.1;
   letter-spacing: -0.042em;
+  text-wrap: balance;
 }
 .lead {
   margin: 0;

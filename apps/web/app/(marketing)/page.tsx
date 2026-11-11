@@ -114,7 +114,7 @@ export default function HomePage() {
             <div className={`${s.heroLeft} ${s.peach}`}>
               <p className={s.heroEyebrow}>Activités outdoor</p>
               <h1 className={s.h1}>
-                Monétisez vos photos,<br /> augmentez<br /> vos ventes.
+                Monétisez vos photos,<br /> augmentez vos ventes.
               </h1>
               <p className={s.lead}>
                 Chaque client reçoit sa galerie privée et paie les photos qu’il garde. Le paiement arrive sur votre compte, sans abonnement, depuis votre téléphone.
