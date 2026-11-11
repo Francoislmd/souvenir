@@ -121,7 +121,7 @@ export default function HomePage() {
               </p>
               <div className={s.ctas}>
                 <Link href="/signup" className={`${s.btn} ${s.primary}`}>
-                  Créer un compte gratuit
+                  Commencer gratuitement
                   <Arrow />
                 </Link>
                 <Link href="/produit#demo" className={`${s.btn} ${s.secondary}`}>
@@ -480,7 +480,7 @@ export default function HomePage() {
                 <p>Pendant que vous préparez la prochaine sortie, Linktrip envoie les photos, encaisse les ventes et les verse sur votre compte.</p>
                 <div className={s.ctas} style={{ justifyContent: "center" }}>
                   <Link href="/signup" className={`${s.btn} ${s.primary}`}>
-                    Créer un compte gratuit
+                    Commencer gratuitement
                     <Arrow />
                   </Link>
                   <Link href="/produit#demo" className={`${s.btn} ${s.white}`}>
@@ -545,7 +545,7 @@ export default function HomePage() {
               <p>Sans abonnement, sans frais cachés.</p>
               <div className={s.ctas} style={{ justifyContent: "center" }}>
                 <Link href="/signup" className={`${s.btn} ${s.primary}`}>
-                  Créer un compte gratuit
+                  Commencer gratuitement
                   <Arrow />
                 </Link>
                 <Link href="/produit#demo" className={`${s.btn} ${s.secondary}`}>

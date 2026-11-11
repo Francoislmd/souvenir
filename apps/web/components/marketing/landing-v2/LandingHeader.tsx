@@ -117,7 +117,7 @@ export function LandingHeader() {
             <p className={styles.drawerCtaTitle}>Prêt à vendre vos photos ?</p>
             <p className={styles.drawerCtaText}>Créez votre compte en 3 minutes.</p>
             <Link href="/signup" tabIndex={open ? 0 : -1} className={`${styles.btn} ${styles.white}`} onClick={() => close()}>
-              Créer un compte gratuit
+              Commencer gratuitement
             </Link>
           </div>
           <Link href="/connexion" tabIndex={open ? 0 : -1} className={`${styles.btn} ${styles.ghost}`} onClick={() => close()}>

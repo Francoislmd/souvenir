@@ -115,7 +115,7 @@ export function Solution() {
           ))}
           <div className={s.solCta}>
             <Link href="/signup" className={`${s.btn} ${s.primary}`}>
-              Créer un compte gratuit
+              Commencer gratuitement
               <Arrow />
             </Link>
           </div>

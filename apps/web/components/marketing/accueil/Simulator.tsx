@@ -63,7 +63,7 @@ export function Simulator() {
           <div>
             <span className={s.simNote}>Estimation indicative : commission Linktrip de 20 % et frais Stripe (1,5 % + 0,25 € par paiement) déduits.</span>
             <Link href="/signup" className={`${s.btn} ${s.white}`}>
-              Créer un compte gratuit
+              Commencer gratuitement
               <Arrow />
             </Link>
           </div>

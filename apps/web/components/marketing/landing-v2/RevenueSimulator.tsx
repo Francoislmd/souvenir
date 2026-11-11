@@ -75,7 +75,7 @@ export function RevenueSimulator() {
           </div>
         </dl>
         <Link href="/signup" className={`${styles.btn} ${styles.white} ${styles.block}`}>
-          Créer un compte gratuit
+          Commencer gratuitement
         </Link>
       </div>
     </div>

@@ -79,7 +79,7 @@ export function AccueilHeader() {
         </div>
         <div className={s.drawerFoot}>
           <Link href="/signup" className={`${s.btn} ${s.primary}`} onClick={() => setOpen(false)}>
-            Créer un compte gratuit
+            Commencer gratuitement
             <Arrow />
           </Link>
           <Link href="/connexion" className={`${s.btn} ${s.drawerAlt}`} onClick={() => setOpen(false)}>
